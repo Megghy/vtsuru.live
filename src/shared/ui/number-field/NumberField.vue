@@ -69,11 +69,11 @@ const sizeClasses: Record<string, string> = {
   lg: 'h-control-lg text-base',
 }
 
-const btnPad: Record<string, string> = {
-  default: 'px-2',
-  sm: 'px-1.5',
-  xs: 'px-1',
-  lg: 'px-2.5',
+const btnWidth: Record<string, string> = {
+  default: 'w-7',
+  sm: 'w-6',
+  xs: 'w-5.5',
+  lg: 'w-8',
 }
 
 const iconSize: Record<string, string> = {
@@ -89,7 +89,7 @@ const iconSize: Record<string, string> = {
     v-bind="forwarded"
     :class="
       cn(
-        'inline-flex items-center w-full rounded-md border border-input bg-control ring-offset-background transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
+        'inline-flex items-center w-full overflow-hidden rounded-md border border-input bg-control ring-offset-background transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
         sizeClasses[props.size] || sizeClasses.sm,
         props.class,
       )
@@ -99,8 +99,8 @@ const iconSize: Record<string, string> = {
       v-if="showButtons"
       :class="
         cn(
-          'inline-flex-center h-full shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-90 transition-all rounded-sm cursor-pointer select-none disabled:pointer-events-none disabled:opacity-30',
-          btnPad[props.size],
+          'inline-flex-center h-full shrink-0 border-r border-input/70 bg-muted/25 text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted transition-colors cursor-pointer select-none disabled:pointer-events-none disabled:opacity-30',
+          btnWidth[props.size] || btnWidth.sm,
         )
       "
     >
@@ -112,7 +112,7 @@ const iconSize: Record<string, string> = {
       :class="
         cn(
           'w-full min-w-0 flex-1 bg-transparent text-center tabular-nums outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-          showButtons ? 'px-0.5' : 'px-2.5',
+          showButtons ? 'px-1' : 'px-2.5',
         )
       "
     />
@@ -121,8 +121,8 @@ const iconSize: Record<string, string> = {
       v-if="showButtons"
       :class="
         cn(
-          'inline-flex-center h-full shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-90 transition-all rounded-sm cursor-pointer select-none disabled:pointer-events-none disabled:opacity-30',
-          btnPad[props.size],
+          'inline-flex-center h-full shrink-0 border-l border-input/70 bg-muted/25 text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted transition-colors cursor-pointer select-none disabled:pointer-events-none disabled:opacity-30',
+          btnWidth[props.size] || btnWidth.sm,
         )
       "
     >

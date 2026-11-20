@@ -3,6 +3,7 @@ import { resolveReadableForeground } from '@/shared/config/theme/contrast'
 import { formatRgb } from '@/shared/config/theme/culori'
 import { getShadcnCssVars } from '@/shared/config/theme/shadcn'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
+import { transformImageUrl } from '@/shared/services/imageTransform'
 import { hexToRgba } from '@/shared/utils'
 
 import type {
@@ -229,7 +230,8 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
 }
 
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {
-  const img = bg.type === 'image' ? bg.imagePath.trim() : ''
+  const rawImg = bg.type === 'image' ? bg.imagePath.trim() : ''
+  const img = rawImg ? transformImageUrl(rawImg, '1920w_90q') : ''
   const safeUrl = img ? img.replaceAll('"', '\\"') : ''
 
   const blurPx = bg.blurMode === 'none' ? 0 : bg.blurPx

@@ -6,11 +6,13 @@ import { VueDraggable } from 'vue-draggable-plus'
 
 import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
@@ -126,26 +128,47 @@ function resetToolbarOrder() {
       </SheetHeader>
       <div class="grid gap-2.5 text-[13px] mt-4">
         <div class="font-semibold">显示</div>
-        <label class="flex-between gap-2">显示头像<Switch v-model="dashboard.settings.showAvatar" /></label>
-        <label class="flex-between gap-2">显示粉丝勋章<Switch v-model="dashboard.settings.showMedal" /></label>
-        <label class="flex-between gap-2">显示绝对时间<Switch v-model="dashboard.settings.absoluteTime" /></label>
-        <div class="flex-between gap-2">字号 {{ dashboard.settings.fontSize }}px</div>
-        <Slider
-          :model-value="[dashboard.settings.fontSize]"
-          :min="12"
-          :max="28"
-          :step="1"
-          @update:model-value="(val) => val && (dashboard.settings.fontSize = val[0])"
-        />
-        <label class="flex-between gap-2">
-          启动时载入最近（小时）
+        <SettingRow
+          variant="none"
+          title="显示头像"
+        >
+          <Switch v-model="dashboard.settings.showAvatar" />
+        </SettingRow>
+        <SettingRow
+          variant="none"
+          title="显示粉丝勋章"
+        >
+          <Switch v-model="dashboard.settings.showMedal" />
+        </SettingRow>
+        <SettingRow
+          variant="none"
+          title="显示绝对时间"
+        >
+          <Switch v-model="dashboard.settings.absoluteTime" />
+        </SettingRow>
+        <FormField
+          label="字号"
+          :extra="`${dashboard.settings.fontSize}px`"
+        >
+          <Slider
+            :model-value="[dashboard.settings.fontSize]"
+            :min="12"
+            :max="28"
+            :step="1"
+            @update:model-value="(val) => val && (dashboard.settings.fontSize = val[0])"
+          />
+        </FormField>
+        <SettingRow
+          variant="none"
+          title="启动时载入最近（小时）"
+        >
           <NumberField
             v-model="dashboard.settings.historyHours"
             :min="0"
             :max="168"
             class="w-24"
           />
-        </label>
+        </SettingRow>
 
         <Separator />
         <div class="settings__stat-header flex justify-between items-center">
@@ -190,47 +213,63 @@ function resetToolbarOrder() {
 
         <Separator />
         <div class="font-semibold">卡片模式</div>
-        <label class="flex-between gap-2">
-          卡片数量
+        <SettingRow
+          variant="none"
+          title="卡片数量"
+        >
           <NumberField
             v-model="dashboard.settings.card.size"
             :min="4"
             :max="80"
             class="w-24"
           />
-        </label>
-        <label class="flex-between gap-2">自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide" /></label>
+        </SettingRow>
+        <SettingRow
+          variant="none"
+          title="自动隐藏刷屏弹幕"
+        >
+          <Switch v-model="dashboard.settings.card.autoHide" />
+        </SettingRow>
         <template v-if="dashboard.settings.card.autoHide">
-          <label class="flex-between gap-2">
-            重复次数达到
+          <SettingRow
+            variant="none"
+            title="重复次数达到"
+          >
             <NumberField
               v-model="dashboard.settings.card.autoHideThreshold"
               :min="2"
               class="w-24"
             />
-          </label>
-          <label class="flex-between gap-2">
-            隐藏时长（秒）
+          </SettingRow>
+          <SettingRow
+            variant="none"
+            title="隐藏时长（秒）"
+          >
             <NumberField
               v-model="dashboard.settings.card.autoHideSeconds"
               :min="5"
               class="w-24"
             />
-          </label>
+          </SettingRow>
         </template>
 
         <Separator />
         <div class="font-semibold">高光打点与 OBS 回放联动</div>
-        <label class="flex-between gap-2">
-          弹幕打点指令前缀（留空关闭）
+        <SettingRow
+          variant="none"
+          title="弹幕打点指令前缀"
+          description="留空关闭"
+        >
           <Input
             v-model="dashboard.settings.highlight.danmakuMarkPrefix"
             placeholder="!mark"
             class="w-28"
           />
-        </label>
-        <label class="flex-between gap-2">
-          弹幕打点允许权限
+        </SettingRow>
+        <SettingRow
+          variant="none"
+          title="弹幕打点允许权限"
+        >
           <Select v-model="dashboard.settings.highlight.danmakuMarkRole">
             <SelectTrigger class="w-36">
               <SelectValue />
@@ -241,11 +280,14 @@ function resetToolbarOrder() {
               <SelectItem value="all">全部观众</SelectItem>
             </SelectContent>
           </Select>
-        </label>
-        <label class="flex-between gap-2">
-          <span>打点时自动保存 OBS 回放缓存 (仅客户端)</span>
+        </SettingRow>
+        <SettingRow
+          variant="none"
+          title="打点时自动保存 OBS 回放缓存"
+          description="仅客户端"
+        >
           <Switch v-model="dashboard.settings.highlight.autoSaveReplayOnMark" />
-        </label>
+        </SettingRow>
 
         <Separator />
         <div class="font-semibold">用户备注</div>

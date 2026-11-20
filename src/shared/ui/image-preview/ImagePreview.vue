@@ -2,6 +2,8 @@
 import { ImageOff, ZoomIn } from 'lucide-vue-next'
 import { computed, ref, watch, type HTMLAttributes } from 'vue'
 
+import { stripImageTransformFromUrl, type ImageTransformInput } from '@/shared/services/imageTransform'
+import { useAutoImageSrc } from '@/shared/services/useAutoImageSrc'
 import { cn } from '@/shared/utils/cn'
 
 import ImageLightbox from './ImageLightbox.vue'
@@ -12,6 +14,11 @@ const props = withDefaults(
     src: string
     alt?: string
     previewSrc?: string
+    transform?: ImageTransformInput | 'auto' | false
+    fallbackTransform?: ImageTransformInput
+    crop?: boolean
+    fileId?: number
+    isPublic?: boolean
     gallery?: GallerySource[]
     index?: number
     class?: HTMLAttributes['class']
@@ -28,6 +35,11 @@ const props = withDefaults(
   {
     alt: '图片预览',
     previewSrc: undefined,
+    transform: 'auto',
+    fallbackTransform: 'thumb',
+    crop: undefined,
+    fileId: undefined,
+    isPublic: undefined,
     gallery: undefined,
     index: 0,
     class: undefined,
@@ -43,22 +55,47 @@ const props = withDefaults(
   },
 )
 
+const wrapperRef = ref<HTMLElement | null>(null)
 const isVisible = ref(false)
 const currentIndex = ref(props.index)
 const hasError = ref(false)
 
 watch(
-  () => props.src,
+  () => [props.src, props.transform, props.fileId, props.isPublic] as const,
   () => {
     hasError.value = false
   },
 )
 
+const shouldCrop = computed(() => {
+  if (props.crop !== undefined) return props.crop
+  return typeof props.imageClass !== 'string' || !props.imageClass.includes('object-contain')
+})
+
+const { src: thumbSrc, handleError } = useAutoImageSrc(
+  wrapperRef,
+  () => props.src,
+  () => ({
+    transform: props.transform,
+    fallbackTransform: props.fallbackTransform,
+    crop: shouldCrop.value,
+    fileId: props.fileId,
+    isPublic: props.isPublic,
+  }),
+)
+
+/** 返回 true 表示已回退到原图，false 表示原图也失败。 */
+function handleThumbError(): boolean {
+  if (handleError()) return true
+  hasError.value = true
+  return false
+}
+
 const computedImgs = computed<GallerySource[]>(() => {
   if (props.gallery && props.gallery.length > 0) {
     return resolvePreviewImages(props.gallery, props.alt)
   }
-  const fallback = props.previewSrc || props.src
+  const fallback = props.previewSrc || stripImageTransformFromUrl(props.src) || props.src
   return fallback ? [{ src: fallback, alt: props.alt }] : []
 })
 
@@ -74,11 +111,16 @@ function openLightbox() {
 </script>
 
 <template>
-  <div :class="cn('inline-flex', wrapperClass)">
+  <div
+    ref="wrapperRef"
+    :class="cn('inline-flex', wrapperClass)"
+  >
     <slot
       :open="openLightbox"
       :has-error="hasError"
       :disabled="disabled"
+      :thumb-src="thumbSrc"
+      :on-error="handleThumbError"
     >
       <button
         type="button"
@@ -96,7 +138,7 @@ function openLightbox() {
       >
         <template v-if="!hasError && src">
           <img
-            :src="src"
+            :src="thumbSrc || undefined"
             :alt="alt"
             :referrerpolicy="referrerpolicy"
             :class="
@@ -107,7 +149,7 @@ function openLightbox() {
               )
             "
             loading="lazy"
-            @error="hasError = true"
+            @error="handleThumbError"
           />
           <span
             v-if="!disabled"

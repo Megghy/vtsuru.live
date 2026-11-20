@@ -7,8 +7,10 @@ import { fetchPublicPointGoods } from '@/apps/user-page/api'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -63,8 +65,7 @@ watch(
 <template>
   <div class="space-y-3">
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">自动展示数量</label>
+      <FormField label="自动展示数量">
         <Select
           :model-value="String(blockProps.count ?? 4)"
           @update:model-value="(val) => (blockProps.count = Number(val))"
@@ -82,10 +83,9 @@ watch(
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">选择方式</label>
+      <FormField label="选择方式">
         <Select v-model="blockProps.selection">
           <SelectTrigger>
             <SelectValue placeholder="选择方式" />
@@ -95,10 +95,13 @@ watch(
             <SelectItem value="available">优先库存可用</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">手动选择礼物 (最多6个)</label>
+      <FormField
+        label="手动选择礼物 (最多6个)"
+        :error="goodsLoadError ? '礼物列表加载失败，请稍后重试' : undefined"
+        class="span-full"
+      >
         <Popover>
           <PopoverTrigger as-child>
             <Button
@@ -137,23 +140,23 @@ watch(
             </div>
           </PopoverContent>
         </Popover>
-        <div
-          v-if="goodsLoadError"
-          class="text-xs text-destructive mt-1"
-        >
-          礼物列表加载失败，请稍后重试
-        </div>
-      </div>
+      </FormField>
 
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示商品说明</label>
+      <SettingRow
+        title="显示商品说明"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showDescription" />
-      </div>
+      </SettingRow>
 
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示库存状态</label>
+      <SettingRow
+        title="显示库存状态"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showStock" />
-      </div>
+      </SettingRow>
     </PropsGrid>
   </div>
 </template>

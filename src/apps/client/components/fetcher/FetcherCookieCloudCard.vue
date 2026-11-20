@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -143,34 +144,28 @@ async function handleClearCookieCloudConfig() {
         <AlertDescription class="m-0"> 设置 CookieCloud 后扫码登陆的登陆信息将被覆盖 </AlertDescription>
       </Alert>
 
-      <div class="space-y-2">
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-muted-foreground w-20 shrink-0">Key</span>
+      <div class="space-y-3">
+        <FormField label="Key">
           <Input
             v-model="cookieCloudData.key"
             placeholder="请输入 Key"
-            class="flex-1"
           />
-        </div>
+        </FormField>
 
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-muted-foreground w-20 shrink-0">Password</span>
+        <FormField label="Password">
           <Input
             v-model="cookieCloudData.password"
             placeholder="请输入 Password"
             type="password"
-            class="flex-1"
           />
-        </div>
+        </FormField>
 
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-muted-foreground w-20 shrink-0">Host (可选)</span>
+        <FormField label="Host (可选)">
           <Input
             v-model="cookieCloudData.host"
             placeholder="请输入 Host (可选)"
-            class="flex-1"
           />
-        </div>
+        </FormField>
       </div>
 
       <div class="flex items-center gap-2 pt-1">

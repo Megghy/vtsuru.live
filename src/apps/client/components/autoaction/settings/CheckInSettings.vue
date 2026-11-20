@@ -735,8 +735,7 @@ onMounted(() => {
           </Alert>
 
           <div class="border rounded-md p-3.5 bg-card space-y-3">
-            <div class="space-y-1">
-              <span class="text-xs text-muted-foreground">模拟用户 UID</span>
+            <FormField label="模拟用户 UID">
               <BiliUserSelector
                 v-model:value="testUid"
                 placeholder="请输入或选择B站用户"
@@ -746,15 +745,14 @@ onMounted(() => {
                   }
                 "
               />
-            </div>
+            </FormField>
 
-            <div class="space-y-1">
-              <span class="text-xs text-muted-foreground">模拟用户名称</span>
+            <FormField label="模拟用户名称">
               <Input
                 v-model="testUsername"
                 placeholder="默认为'测试用户'"
               />
-            </div>
+            </FormField>
 
             <div class="flex justify-end pt-1">
               <Button

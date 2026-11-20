@@ -2,22 +2,19 @@
 import Add24Filled from '@vicons/fluent/es/Add24Filled'
 import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import Info24Filled from '@vicons/fluent/es/Info24Filled'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import { ServiceFieldType, type ServiceConfigData, type ServiceField } from '@/api/point-service'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent } from '@/shared/ui/card'
+import { Card } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
 import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
-import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
-import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
-import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{ modelValue?: ServiceConfigData }>()
@@ -282,8 +279,10 @@ function removeOption(field: ServiceField, optIndex: number) {
               @change="normalizeField(field)"
             />
 
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground">字段类型</label>
+            <FormField
+              label="字段类型"
+              class="min-w-0"
+            >
               <div class="flex items-center gap-2">
                 <div class="flex-1">
                   <Select
@@ -319,14 +318,14 @@ function removeOption(field: ServiceField, optIndex: number) {
                   <Delete24Filled class="size-3.5" />
                 </Button>
               </div>
-            </div>
+            </FormField>
 
             <!-- 可选项编辑 -->
-            <div
+            <FormField
               v-if="field.type === ServiceFieldType.Select || field.type === ServiceFieldType.MultiSelect"
-              class="col-span-full space-y-1.5"
+              label="可选项配置"
+              class="col-span-full"
             >
-              <label class="text-xs font-medium text-foreground">可选项配置</label>
               <div class="flex items-center gap-2">
                 <Input
                   size="xs"
@@ -356,7 +355,7 @@ function removeOption(field: ServiceField, optIndex: number) {
                   {{ opt }}
                 </Tag>
               </div>
-            </div>
+            </FormField>
 
             <div class="col-span-full flex items-center gap-2 pt-1">
               <Checkbox

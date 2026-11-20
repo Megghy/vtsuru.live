@@ -20,6 +20,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { getPendingUploadFiles, ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -375,8 +376,10 @@ watch(
         </DialogHeader>
 
         <div class="space-y-3 text-xs">
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">类型 *</label>
+          <FormField
+            label="类型"
+            required
+          >
             <Select
               :model-value="String(draft.type)"
               @update:model-value="draft.type = Number($event) as SupportTicketType"
@@ -394,19 +397,23 @@ watch(
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">标题 *</label>
+          <FormField
+            label="标题"
+            required
+          >
             <Input
               v-model="draft.title"
               maxlength="160"
               placeholder="用一句话概括问题"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">详细内容 *</label>
+          <FormField
+            label="详细内容"
+            required
+          >
             <Textarea
               v-model="draft.content"
               rows="5"
@@ -414,11 +421,10 @@ watch(
               placeholder="说明发生了什么、如何复现，以及你期望的结果"
               class="resize-none"
             />
-          </div>
+          </FormField>
 
           <!-- 图片上传 -->
-          <div class="space-y-1.5">
-            <label class="font-medium text-foreground">图片 (最多 5 张)</label>
+          <FormField label="图片 (最多 5 张)">
             <ImageUpload
               v-model="fileList"
               :max-files="5"
@@ -426,7 +432,7 @@ watch(
               size="sm"
               placeholder="添加"
             />
-          </div>
+          </FormField>
 
           <div class="flex items-center gap-4 pt-1">
             <label class="flex items-center gap-1.5 cursor-pointer text-xs">

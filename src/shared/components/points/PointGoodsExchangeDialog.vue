@@ -52,7 +52,7 @@ const selectedAddress = ref<ShippingAddressInfo>()
 const remark = ref('')
 const serviceAnswers = ref<Record<string, string | string[] | number | undefined>>({})
 
-const emptyCover = `${IMGUR_URL}None.png`
+const emptyCover = `${IMGUR_URL}None.png?128w_128h_1c`
 
 // --- 基础派生 ---
 const hasSubItems = computed(() => (goods.value?.subItems?.length ?? 0) > 0)
@@ -473,12 +473,14 @@ const requestClose = () => {
                   <ImagePreview
                     v-if="sub.cover?.path"
                     :src="sub.cover.path"
+                    :file-id="sub.cover.id"
+                    :is-public="true"
                     :alt="sub.name"
                     :gallery="subCoverGallery"
                     :index="getSubCoverIndex(sub.cover.path)"
                     wrapper-class="shrink-0"
                   >
-                    <template #default="{ open }">
+                    <template #default="{ open, thumbSrc, onError }">
                       <button
                         type="button"
                         class="group/subimg relative size-10 rounded overflow-hidden border border-border/60 shrink-0 cursor-zoom-in focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
@@ -486,10 +488,11 @@ const requestClose = () => {
                         @click.stop="open()"
                       >
                         <img
-                          :src="sub.cover?.path"
+                          :src="thumbSrc || undefined"
                           class="size-full object-cover transition-transform duration-200 group-hover/subimg:scale-105"
                           :alt="sub.name"
                           referrerpolicy="no-referrer"
+                          @error="onError"
                         />
                         <span
                           class="pointer-events-none absolute inset-0 bg-black/0 group-hover/subimg:bg-black/25 transition-colors flex-center opacity-0 group-hover/subimg:opacity-100"

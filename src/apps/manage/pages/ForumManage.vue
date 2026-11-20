@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { format } from 'date-fns'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import {
@@ -11,7 +11,7 @@ import {
   postApiForumManageUnban,
   postApiForumManageUpdateSetting,
 } from '@/api/generated/forum/forum'
-import type { ForumUserInfo, ResponseForumModel, ResponseUserBasicInfo } from '@/api/generated/model'
+import type { ResponseForumModel, ResponseUserBasicInfo } from '@/api/generated/model'
 import { ForumUserLevels } from '@/api/generated/model'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import UserBasicInfoCard from '@/apps/manage/components/UserBasicInfoCard.vue'
@@ -21,11 +21,13 @@ import Agreement from '@/content/agreements/EnableForumAgreement.md'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Card } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Textarea } from '@/shared/ui/textarea'
@@ -249,24 +251,22 @@ onMounted(async () => {
       </Alert>
 
       <div class="space-y-3 pt-2">
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-foreground">讨论区名称</label>
+        <FormField label="讨论区名称">
           <Input
             v-model="create_Name"
             placeholder="例如：XX的粉丝根据地"
             maxlength="20"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-foreground">公告 / 描述 (可选)</label>
+        <FormField label="公告 / 描述 (可选)">
           <Textarea
             v-model="create_Description"
             rows="3"
             placeholder="简要介绍讨论区的主题或入区规则"
             maxlength="200"
           />
-        </div>
+        </FormField>
 
         <div class="flex items-center gap-2 pt-1">
           <Checkbox
@@ -360,13 +360,11 @@ onMounted(async () => {
             <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">入区与发帖策略</h4>
 
             <div class="space-y-3">
-              <div class="flex-between p-2 rounded-lg border border-border bg-muted/20">
-                <div>
-                  <div class="text-xs font-semibold text-foreground">加入需要管理员审批</div>
-                  <div class="text-[11px] text-muted-foreground">
-                    开启后，用户需申请并经由管理员在「成员与权限」面板同意后方可加入
-                  </div>
-                </div>
+              <SettingRow
+                variant="compact"
+                title="加入需要管理员审批"
+                description="开启后，用户需申请并经由管理员在「成员与权限」面板同意后方可加入"
+              >
                 <Checkbox
                   :checked="currentForum.settings.requireApply"
                   @update:checked="
@@ -376,16 +374,14 @@ onMounted(async () => {
                     }
                   "
                 />
-              </div>
+              </SettingRow>
 
-              <div
+              <SettingRow
                 v-if="currentForum.settings.requireApply"
-                class="flex-between p-2 rounded-lg border border-border bg-muted/20"
+                variant="compact"
+                title="仅允许已绑定 Bilibili 的用户申请"
+                description="过滤纯游客账号，提升粉丝群体真实度"
               >
-                <div>
-                  <div class="text-xs font-semibold text-foreground">仅允许已绑定 Bilibili 的用户申请</div>
-                  <div class="text-[11px] text-muted-foreground">过滤纯游客账号，提升粉丝群体真实度</div>
-                </div>
                 <Checkbox
                   :checked="currentForum.settings.requireAuthedToJoin"
                   @update:checked="
@@ -395,13 +391,13 @@ onMounted(async () => {
                     }
                   "
                 />
-              </div>
+              </SettingRow>
 
-              <div class="flex-between p-2 rounded-lg border border-border bg-muted/20">
-                <div>
-                  <div class="text-xs font-semibold text-foreground">允许发布帖子</div>
-                  <div class="text-[11px] text-muted-foreground">总开关，关闭后除管理员外全区禁止发表新帖</div>
-                </div>
+              <SettingRow
+                variant="compact"
+                title="允许发布帖子"
+                description="总开关，关闭后除管理员外全区禁止发表新帖"
+              >
                 <Checkbox
                   :checked="currentForum.settings.allowPost"
                   @update:checked="
@@ -411,11 +407,13 @@ onMounted(async () => {
                     }
                   "
                 />
-              </div>
+              </SettingRow>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <div class="space-y-1.5 p-3 rounded-lg border border-border bg-muted/20">
-                  <div class="text-xs font-semibold text-foreground">允许谁查看讨论区</div>
+                <FormField
+                  label="允许谁查看讨论区"
+                  class="min-w-0 p-3 rounded-lg border border-border bg-muted/20"
+                >
                   <Select
                     :model-value="String(currentForum.settings.allowedViewerLevel)"
                     @update:model-value="
@@ -438,10 +436,12 @@ onMounted(async () => {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FormField>
 
-                <div class="space-y-1.5 p-3 rounded-lg border border-border bg-muted/20">
-                  <div class="text-xs font-semibold text-foreground">允许谁发布帖子</div>
+                <FormField
+                  label="允许谁发布帖子"
+                  class="min-w-0 p-3 rounded-lg border border-border bg-muted/20"
+                >
                   <Select
                     :model-value="String(currentForum.settings.allowedPostLevel)"
                     @update:model-value="
@@ -464,7 +464,7 @@ onMounted(async () => {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FormField>
               </div>
             </div>
           </Card>

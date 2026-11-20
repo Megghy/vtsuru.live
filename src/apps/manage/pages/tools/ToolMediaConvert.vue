@@ -11,10 +11,12 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -473,8 +475,7 @@ onBeforeUnmount(() => {
             v-if="showAdvanced"
             class="advanced-panel"
           >
-            <div class="field">
-              <span class="text-xs text-muted-foreground"> 输出格式 </span>
+            <FormField label="输出格式">
               <Select
                 :model-value="settings.format"
                 @update:model-value="
@@ -497,7 +498,7 @@ onBeforeUnmount(() => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <Tabs default-value="audio">
               <TabsList class="w-full grid grid-cols-5">
@@ -525,13 +526,13 @@ onBeforeUnmount(() => {
                 class="space-y-3 pt-2"
               >
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  <div
+                  <FormField
                     v-if="settings.format === 'mp4'"
-                    class="field"
+                    label="编码器"
+                    class="min-w-0"
                   >
-                    <span class="text-xs text-muted-foreground"> 编码器 </span>
                     <Select v-model="settings.videoCodec">
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -544,14 +545,16 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 最大宽度 </span>
+                  </FormField>
+                  <FormField
+                    label="最大宽度"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="settings.videoMaxWidth === null ? 'null' : String(settings.videoMaxWidth)"
                       @update:model-value="(v) => (settings.videoMaxWidth = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -564,14 +567,16 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 帧率 </span>
+                  </FormField>
+                  <FormField
+                    label="帧率"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="settings.videoFps === null ? 'null' : String(settings.videoFps)"
                       @update:model-value="(v) => (settings.videoFps = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -584,14 +589,14 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div
+                  </FormField>
+                  <FormField
                     v-if="settings.format === 'mp4'"
-                    class="field"
+                    label="编码速度（越慢压缩越好）"
+                    class="min-w-0"
                   >
-                    <span class="text-xs text-muted-foreground"> 编码速度（越慢压缩越好） </span>
                     <Select v-model="settings.videoPreset">
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -604,7 +609,7 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </FormField>
                 </div>
 
                 <div class="flex justify-center mt-2">
@@ -622,13 +627,12 @@ onBeforeUnmount(() => {
                   </ToggleGroup>
                 </div>
 
-                <div
+                <FormField
                   v-if="settings.rateMode === 'crf'"
-                  class="slider-field"
+                  label="视频质量 CRF"
+                  :extra="settings.videoCrf"
+                  description="越小画质越高、体积越大"
                 >
-                  <span class="text-xs text-muted-foreground">
-                    视频质量 CRF：{{ settings.videoCrf }}（越小画质越高、体积越大）
-                  </span>
                   <Slider
                     :model-value="[settings.videoCrf]"
                     :min="18"
@@ -640,22 +644,20 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
-                <div
+                </FormField>
+                <FormField
                   v-else
-                  class="field target-size"
+                  label="目标体积（每个文件，MB）"
+                  description="按文件时长自动计算码率，适配 B 站群文件 / 动态大小限制"
+                  class="max-w-[280px]"
                 >
-                  <span class="text-xs text-muted-foreground"> 目标体积（每个文件，MB） </span>
                   <NumberField
                     v-model="settings.targetSizeMb"
                     :min="1"
                     :max="2000"
                     :step="1"
                   />
-                  <span class="text-xs text-muted-foreground">
-                    按文件时长自动计算码率，适配 B 站群文件 / 动态大小限制
-                  </span>
-                </div>
+                </FormField>
               </TabsContent>
 
               <!-- GIF -->
@@ -665,13 +667,15 @@ onBeforeUnmount(() => {
                 class="space-y-3 pt-2"
               >
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> GIF 宽度 </span>
+                  <FormField
+                    label="GIF 宽度"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="String(settings.gifWidth)"
                       @update:model-value="(v) => (settings.gifWidth = Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -684,14 +688,16 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> GIF 帧率 </span>
+                  </FormField>
+                  <FormField
+                    label="GIF 帧率"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="String(settings.gifFps)"
                       @update:model-value="(v) => (settings.gifFps = Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -704,14 +710,17 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field switch-field">
-                    <span class="text-xs text-muted-foreground"> 循环播放 </span>
+                  </FormField>
+                  <SettingRow
+                    title="循环播放"
+                    variant="compact"
+                    class="self-end"
+                  >
                     <Switch
                       :checked="settings.gifLoop"
                       @update:checked="(v) => (settings.gifLoop = v)"
                     />
-                  </div>
+                  </SettingRow>
                 </div>
               </TabsContent>
 
@@ -722,13 +731,15 @@ onBeforeUnmount(() => {
                 class="space-y-3 pt-2"
               >
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 旋转 </span>
+                  <FormField
+                    label="旋转"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="String(settings.rotate)"
                       @update:model-value="(v) => (settings.rotate = Number(v) as Rotate)"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -741,38 +752,52 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field switch-field">
-                    <span class="text-xs text-muted-foreground"> 水平翻转 </span>
+                  </FormField>
+                  <SettingRow
+                    title="水平翻转"
+                    variant="compact"
+                    class="self-end"
+                  >
                     <Switch
                       :checked="settings.flipH"
                       @update:checked="(v) => (settings.flipH = v)"
                     />
-                  </div>
-                  <div class="field switch-field">
-                    <span class="text-xs text-muted-foreground"> 垂直翻转 </span>
+                  </SettingRow>
+                  <SettingRow
+                    title="垂直翻转"
+                    variant="compact"
+                    class="self-end"
+                  >
                     <Switch
                       :checked="settings.flipV"
                       @update:checked="(v) => (settings.flipV = v)"
                     />
-                  </div>
-                  <div class="field switch-field">
-                    <span class="text-xs text-muted-foreground"> 锐化 </span>
+                  </SettingRow>
+                  <SettingRow
+                    title="锐化"
+                    variant="compact"
+                    class="self-end"
+                  >
                     <Switch
                       :checked="settings.sharpen"
                       @update:checked="(v) => (settings.sharpen = v)"
                     />
-                  </div>
-                  <div class="field switch-field">
-                    <span class="text-xs text-muted-foreground"> 去隔行（老录像） </span>
+                  </SettingRow>
+                  <SettingRow
+                    title="去隔行（老录像）"
+                    variant="compact"
+                    class="self-end"
+                  >
                     <Switch
                       :checked="settings.deinterlace"
                       @update:checked="(v) => (settings.deinterlace = v)"
                     />
-                  </div>
+                  </SettingRow>
                 </div>
-                <div class="slider-field">
-                  <span class="text-xs text-muted-foreground"> 亮度：{{ settings.brightness.toFixed(2) }} </span>
+                <FormField
+                  label="亮度"
+                  :extra="settings.brightness.toFixed(2)"
+                >
                   <Slider
                     :model-value="[settings.brightness]"
                     :min="-0.5"
@@ -784,9 +809,11 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
-                <div class="slider-field">
-                  <span class="text-xs text-muted-foreground"> 对比度：{{ settings.contrast.toFixed(2) }} </span>
+                </FormField>
+                <FormField
+                  label="对比度"
+                  :extra="settings.contrast.toFixed(2)"
+                >
                   <Slider
                     :model-value="[settings.contrast]"
                     :min="0.5"
@@ -798,9 +825,11 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
-                <div class="slider-field">
-                  <span class="text-xs text-muted-foreground"> 饱和度：{{ settings.saturation.toFixed(2) }} </span>
+                </FormField>
+                <FormField
+                  label="饱和度"
+                  :extra="settings.saturation.toFixed(2)"
+                >
                   <Slider
                     :model-value="[settings.saturation]"
                     :min="0"
@@ -812,7 +841,7 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
+                </FormField>
               </TabsContent>
 
               <!-- 速度 -->
@@ -821,13 +850,12 @@ onBeforeUnmount(() => {
                 value="speed"
                 class="space-y-3 pt-2"
               >
-                <div class="field">
-                  <span class="text-xs text-muted-foreground"> 播放速度（音画同步） </span>
+                <FormField label="播放速度（音画同步）">
                   <Select
                     :model-value="String(settings.speed)"
                     @update:model-value="(v) => (settings.speed = Number(v))"
                   >
-                    <SelectTrigger>
+                    <SelectTrigger class="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -840,9 +868,11 @@ onBeforeUnmount(() => {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div class="slider-field">
-                  <span class="text-xs text-muted-foreground"> 画面淡入：{{ settings.videoFadeIn }} 秒 </span>
+                </FormField>
+                <FormField
+                  label="画面淡入"
+                  :extra="`${settings.videoFadeIn} 秒`"
+                >
                   <Slider
                     :model-value="[settings.videoFadeIn]"
                     :min="0"
@@ -854,9 +884,11 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
-                <div class="slider-field">
-                  <span class="text-xs text-muted-foreground"> 画面淡出：{{ settings.videoFadeOut }} 秒 </span>
+                </FormField>
+                <FormField
+                  label="画面淡出"
+                  :extra="`${settings.videoFadeOut} 秒`"
+                >
                   <Slider
                     :model-value="[settings.videoFadeOut]"
                     :min="0"
@@ -868,7 +900,7 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
+                </FormField>
               </TabsContent>
 
               <!-- 音频 -->
@@ -877,14 +909,16 @@ onBeforeUnmount(() => {
                 class="space-y-3 pt-2"
               >
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 音频码率 </span>
+                  <FormField
+                    label="音频码率"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="String(settings.audioBitrate)"
                       :disabled="settings.format === 'wav'"
                       @update:model-value="(v) => (settings.audioBitrate = Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -897,14 +931,16 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 采样率 </span>
+                  </FormField>
+                  <FormField
+                    label="采样率"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="settings.sampleRate === null ? 'null' : String(settings.sampleRate)"
                       @update:model-value="(v) => (settings.sampleRate = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -917,11 +953,13 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 声道 </span>
+                  </FormField>
+                  <FormField
+                    label="声道"
+                    class="min-w-0"
+                  >
                     <Select v-model="settings.channelMode">
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -934,14 +972,16 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 高通滤波 </span>
+                  </FormField>
+                  <FormField
+                    label="高通滤波"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="settings.highpass === null ? 'null' : String(settings.highpass)"
                       @update:model-value="(v) => (settings.highpass = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -954,14 +994,16 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div class="field">
-                    <span class="text-xs text-muted-foreground"> 低通滤波 </span>
+                  </FormField>
+                  <FormField
+                    label="低通滤波"
+                    class="min-w-0"
+                  >
                     <Select
                       :model-value="settings.lowpass === null ? 'null' : String(settings.lowpass)"
                       @update:model-value="(v) => (settings.lowpass = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger class="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -974,30 +1016,34 @@ onBeforeUnmount(() => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div
+                  </FormField>
+                  <SettingRow
                     v-if="selectedFormat.kind === 'audio'"
-                    class="field switch-field"
+                    title="保留元数据/封面"
+                    variant="compact"
+                    class="self-end"
                   >
-                    <span class="text-xs text-muted-foreground"> 保留元数据/封面 </span>
                     <Switch
                       :checked="settings.keepMetadata"
                       @update:checked="(v) => (settings.keepMetadata = v)"
                     />
-                  </div>
-                  <div class="field switch-field">
-                    <span class="text-xs text-muted-foreground"> 响度标准化 </span>
+                  </SettingRow>
+                  <SettingRow
+                    title="响度标准化"
+                    variant="compact"
+                    class="self-end"
+                  >
                     <Switch
                       :checked="settings.loudnorm"
                       @update:checked="(v) => (settings.loudnorm = v)"
                     />
-                  </div>
+                  </SettingRow>
                 </div>
-                <div
+                <FormField
                   v-if="!settings.loudnorm"
-                  class="slider-field"
+                  label="音量"
+                  :extra="`${settings.volume}%`"
                 >
-                  <span class="text-xs text-muted-foreground"> 音量：{{ settings.volume }}% </span>
                   <Slider
                     :model-value="[settings.volume]"
                     :min="0"
@@ -1009,9 +1055,11 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
-                <div class="slider-field">
-                  <span class="text-xs text-muted-foreground"> 音频淡入：{{ settings.audioFadeIn }} 秒 </span>
+                </FormField>
+                <FormField
+                  label="音频淡入"
+                  :extra="`${settings.audioFadeIn} 秒`"
+                >
                   <Slider
                     :model-value="[settings.audioFadeIn]"
                     :min="0"
@@ -1023,9 +1071,11 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
-                <div class="slider-field">
-                  <span class="text-xs text-muted-foreground"> 音频淡出：{{ settings.audioFadeOut }} 秒 </span>
+                </FormField>
+                <FormField
+                  label="音频淡出"
+                  :extra="`${settings.audioFadeOut} 秒`"
+                >
                   <Slider
                     :model-value="[settings.audioFadeOut]"
                     :min="0"
@@ -1037,7 +1087,7 @@ onBeforeUnmount(() => {
                       }
                     "
                   />
-                </div>
+                </FormField>
               </TabsContent>
             </Tabs>
           </div>
@@ -1287,16 +1337,6 @@ onBeforeUnmount(() => {
   margin: 0 auto;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.switch-field {
-  justify-content: space-between;
-}
-
 .preset-bar {
   display: flex;
   align-items: center;
@@ -1319,16 +1359,6 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 16px;
   padding: 4px 2px 2px;
-}
-
-.target-size {
-  max-width: 280px;
-}
-
-.slider-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .drop-zone {

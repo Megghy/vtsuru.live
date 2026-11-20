@@ -30,6 +30,7 @@ export interface KeycastState {
   showCombos: boolean
   accentColor: string
   fontSize: number
+  fontFamily?: string
 }
 
 export interface KeyPressPayload {
@@ -70,6 +71,7 @@ export const DEFAULT_KEYCAST_STATE: KeycastState = {
   showCombos: true,
   accentColor: '#38bdf8',
   fontSize: 15,
+  fontFamily: '',
 }
 
 const KEY_LABEL_MAP: Record<string, string> = {

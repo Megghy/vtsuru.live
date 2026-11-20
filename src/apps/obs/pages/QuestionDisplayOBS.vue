@@ -13,8 +13,10 @@ const props = withDefaults(
     id?: number
     active?: boolean
     visible?: boolean
+    /** 供场景编辑器内嵌时同步覆盖卡片圆角（独立 OBS 页面不传，沿用提问箱自身设置） */
+    borderRadiusOverride?: number
   }>(),
-  { active: true, visible: true },
+  { active: true, visible: true, borderRadiusOverride: undefined },
 )
 
 const account = useAccount()
@@ -29,6 +31,13 @@ const { question, setting, state, version, refresh } = useQuestionDisplayOBS({
   visible: toRef(props, 'visible'),
 })
 const cardState = computed(() => (state.value === 'unauthorized' ? 'error' : state.value))
+const effectiveSetting = computed(() => {
+  if (props.borderRadiusOverride === undefined) return setting.value
+  return {
+    ...setting.value,
+    borderRadius: Math.max(0, props.borderRadiusOverride),
+  }
+})
 
 const cardRef = ref<{ setScrollProgress: (progress: number) => void }>()
 const mounted = ref(false)
@@ -70,7 +79,7 @@ onUnmounted(() => {
   <QuestionDisplayCard
     ref="cardRef"
     :question="question"
-    :setting="setting"
+    :setting="effectiveSetting"
     :status="cardState"
   />
 </template>

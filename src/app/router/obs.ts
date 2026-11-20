@@ -85,5 +85,14 @@ export default {
         forceReload: true,
       },
     },
+    {
+      path: 'scene',
+      name: 'obs-scene-player',
+      component: async () => import('@/apps/obs-scene/pages/ObsScenePlayerView.vue'),
+      meta: {
+        title: 'OBS场景输出',
+        forceReload: true,
+      },
+    },
   ],
 }

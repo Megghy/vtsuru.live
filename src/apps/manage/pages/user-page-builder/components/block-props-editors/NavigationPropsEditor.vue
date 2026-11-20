@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { SOCIAL_PLATFORM_OPTIONS } from '@/apps/user-page/block/socialPlatforms'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -22,8 +24,10 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">链接项</label>
+      <FormField
+        label="链接项"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="linkItems"
           :create-item="() => ({ label: '', url: 'https://' })"
@@ -34,21 +38,19 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">标题</label>
+              <FormField label="标题">
                 <Input v-model="item.label" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">链接</label>
+              </FormField>
+              <FormField label="链接">
                 <Input
                   v-model="item.url"
                   placeholder="链接地址"
                 />
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -58,15 +60,19 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
   >
     <PropsGrid>
       <ButtonAppearanceFields :block="props.block" />
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">按钮文本</label>
+      <FormField
+        label="按钮文本"
+        class="span-full"
+      >
         <Input
           v-model="blockProps.label"
           placeholder="例如：衣柜"
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">跳转类型</label>
+      </FormField>
+      <FormField
+        label="跳转类型"
+        class="span-full"
+      >
         <Select
           :model-value="getNavigationTargetType(blockProps)"
           @update:model-value="(value) => setNavigationTargetType(blockProps, value as any)"
@@ -80,9 +86,11 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
             <SelectItem value="back">返回</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">目标</label>
+      </FormField>
+      <FormField
+        label="目标"
+        class="span-full"
+      >
         <Select
           v-if="blockProps.page"
           v-model="blockProps.page"
@@ -111,7 +119,7 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
         >
           点击后返回上一页
         </div>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -120,8 +128,7 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">大小</label>
+      <FormField label="大小">
         <Select v-model="blockProps.size">
           <SelectTrigger>
             <SelectValue placeholder="大小" />
@@ -132,9 +139,8 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
             <SelectItem value="lg">lg</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">形状</label>
+      </FormField>
+      <FormField label="形状">
         <Select v-model="blockProps.variant">
           <SelectTrigger>
             <SelectValue placeholder="形状" />
@@ -144,13 +150,18 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
             <SelectItem value="square">square</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示文字</label>
+      </FormField>
+      <SettingRow
+        title="显示文字"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showLabel" />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">链接项</label>
+      </SettingRow>
+      <FormField
+        label="链接项"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="ensureArrayProp('items')"
           :create-item="() => ({ platform: 'bilibili', url: 'https://', label: '' })"
@@ -161,8 +172,7 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">平台</label>
+              <FormField label="平台">
                 <Select v-model="item.platform">
                   <SelectTrigger>
                     <SelectValue placeholder="平台" />
@@ -177,25 +187,26 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
                     </SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">显示名 / 无障碍名称</label>
+              </FormField>
+              <FormField label="显示名 / 无障碍名称">
                 <Input
                   v-model="item.label"
                   placeholder="可选"
                 />
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">链接</label>
+              </FormField>
+              <FormField
+                label="链接"
+                class="span-full"
+              >
                 <Input
                   v-model="item.url"
                   placeholder="链接地址"
                 />
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 </template>

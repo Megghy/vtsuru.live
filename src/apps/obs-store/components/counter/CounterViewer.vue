@@ -6,17 +6,20 @@ import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
 import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import Subtract24Regular from '@vicons/fluent/es/Subtract24Regular'
 import { useClipboard } from '@vueuse/core'
-import { computed, onActivated, onDeactivated, onUnmounted, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -31,9 +34,19 @@ import type { CounterAction, CounterState, CounterTheme } from './types'
 
 const { copy, isSupported: isCopySupported } = useClipboard()
 
+const props = defineProps<{ channelId?: string }>()
 const route = useRoute()
-const channelId = ref(resolveObsSyncChannel(route.query.channel))
+const channelId = ref(resolveObsSyncChannel(props.channelId ?? route.query.channel))
 const channelDraft = ref(channelId.value)
+watch(
+  () => props.channelId,
+  (val) => {
+    if (!val) return
+    const resolved = resolveObsSyncChannel(val)
+    channelId.value = resolved
+    channelDraft.value = resolved
+  },
+)
 const copied = ref(false)
 
 const { state, updateState, sendAction, currentHash, isSyncing, lastSyncError, hasPendingChanges, retry } =
@@ -345,36 +358,44 @@ activateKeyboard()
         <div class="deck-label mb-2">配置与样式微调</div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">标题文本</label>
+          <FormField
+            label="标题文本"
+            class="min-w-0"
+          >
             <Input
               :model-value="state.title"
               placeholder="例如：艾尔登法环 死亡挑战"
               @input="updateState({ title: ($event.target as HTMLInputElement).value })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">前缀小标</label>
+          <FormField
+            label="前缀小标"
+            class="min-w-0"
+          >
             <Input
               :model-value="state.prefix"
               placeholder="例如：DEATHS / WINS"
               @input="updateState({ prefix: ($event.target as HTMLInputElement).value })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">目标数值 (0 为不设限)</label>
+          <FormField
+            label="目标数值 (0 为不设限)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.target"
               :min="0"
               class="w-full"
               @update:model-value="updateState({ target: $event || 0 })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">视觉主题风格</label>
+          <FormField
+            label="视觉主题风格"
+            class="min-w-0"
+          >
             <Select
               :model-value="state.theme"
               @update:model-value="updateState({ theme: $event as CounterTheme })"
@@ -392,25 +413,41 @@ activateKeyboard()
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">强调高亮色</label>
+          <FormField
+            label="强调高亮色"
+            class="min-w-0"
+          >
             <ColorPicker
               :model-value="state.accentColor"
               @update:model-value="updateState({ accentColor: $event })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">显示目标进度条</label>
+          <FormField
+            label="字体"
+            class="min-w-0"
+          >
+            <GoogleFontPicker
+              :model-value="state.fontFamily || null"
+              :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+              :show-preview="false"
+              @update:model-value="updateState({ fontFamily: $event || '' })"
+            />
+          </FormField>
+
+          <FormField
+            label="显示目标进度条"
+            class="min-w-0"
+          >
             <div class="pt-1">
               <Switch
                 :checked="state.showProgress"
                 @update:checked="updateState({ showProgress: $event })"
               />
             </div>
-          </div>
+          </FormField>
         </div>
       </CardContent>
     </Card>

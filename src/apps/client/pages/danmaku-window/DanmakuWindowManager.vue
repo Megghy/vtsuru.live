@@ -15,15 +15,16 @@ import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
-import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -263,14 +264,25 @@ function toggleFilterType(val: string, checked: boolean) {
 
             <template v-if="danmakuWindow.danmakuWindowSetting.displayStyle === 'text'">
               <div class="flex flex-col gap-2 pt-2 border-t">
-                <LabelItem label="紧凑文本排版">
+                <SettingRow
+                  variant="none"
+                  title="紧凑文本排版"
+                  class="py-1"
+                >
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.textStyleCompact" />
-                </LabelItem>
-                <LabelItem label="显示消息类型角标">
+                </SettingRow>
+                <SettingRow
+                  variant="none"
+                  title="显示消息类型角标"
+                  class="py-1"
+                >
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.textStyleShowType" />
-                </LabelItem>
-                <div class="flex-between text-xs py-1">
-                  <span class="text-muted-foreground">用户名分隔符</span>
+                </SettingRow>
+                <SettingRow
+                  variant="none"
+                  title="用户名分隔符"
+                  class="py-1"
+                >
                   <div class="w-44">
                     <Select v-model="danmakuWindow.danmakuWindowSetting.textStyleNameSeparator">
                       <SelectTrigger class="w-full">
@@ -287,7 +299,7 @@ function toggleFilterType(val: string, checked: boolean) {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                </SettingRow>
               </div>
             </template>
           </CardContent>
@@ -302,56 +314,66 @@ function toggleFilterType(val: string, checked: boolean) {
           <CardContent class="p-3">
             <template v-if="danmakuWindow.danmakuWindowSetting.showStatusBar !== false">
               <div class="flex flex-col gap-2.5">
-                <LabelItem
-                  label="显示观看人数"
+                <SettingRow
+                  variant="none"
                   description="直播间累计观看人次"
+                  class="py-1"
                 >
-                  <template #icon>
-                    <Eye20Regular class="size-4 text-muted-foreground" />
+                  <template #title>
+                    <Eye20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <span class="font-medium text-foreground truncate">显示观看人数</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showWatchedCount" />
-                </LabelItem>
+                </SettingRow>
 
-                <LabelItem
-                  label="显示点赞互动数"
+                <SettingRow
+                  variant="none"
                   description="本场直播累计点赞次数"
+                  class="py-1"
                 >
-                  <template #icon>
-                    <ThumbLike20Regular class="size-4 text-muted-foreground" />
+                  <template #title>
+                    <ThumbLike20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <span class="font-medium text-foreground truncate">显示点赞互动数</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showLikeCount" />
-                </LabelItem>
+                </SettingRow>
 
-                <LabelItem
-                  label="显示本场收益金额"
+                <SettingRow
+                  variant="none"
                   description="付费礼物、SC 与大航海汇总金额"
+                  class="py-1"
                 >
-                  <template #icon>
-                    <Payment20Regular class="size-4 text-muted-foreground" />
+                  <template #title>
+                    <Payment20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <span class="font-medium text-foreground truncate">显示本场收益金额</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showIncome" />
-                </LabelItem>
+                </SettingRow>
 
-                <LabelItem
+                <SettingRow
                   v-if="danmakuWindow.danmakuWindowSetting.showIncome !== false"
-                  label="脱敏隐藏金额"
+                  variant="none"
                   description="金额显示为 ¥ ***，防止直播投屏或录屏时泄露收益"
+                  class="py-1"
                 >
-                  <template #icon>
-                    <EyeOff20Regular class="size-4 text-muted-foreground" />
+                  <template #title>
+                    <EyeOff20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <span class="font-medium text-foreground truncate">脱敏隐藏金额</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.hideIncomeAmount" />
-                </LabelItem>
+                </SettingRow>
 
-                <LabelItem
-                  label="显示在线人数"
+                <SettingRow
+                  variant="none"
                   description="在线观众人数（未获取时为活跃互动人数）"
+                  class="py-1"
                 >
-                  <template #icon>
-                    <PeopleCommunity20Regular class="size-4 text-muted-foreground" />
+                  <template #title>
+                    <PeopleCommunity20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <span class="font-medium text-foreground truncate">显示在线人数</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showOnlineCount" />
-                </LabelItem>
+                </SettingRow>
 
                 <div class="flex-between gap-3 pt-2 mt-1 border-t border-dashed text-xs">
                   <span class="text-muted-foreground">
@@ -386,35 +408,43 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">气泡背景色</span>
+              <SettingRow
+                variant="none"
+                title="气泡背景色"
+              >
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.backgroundColor"
                   :show-alpha="true"
                 />
-              </div>
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">窗口底色</span>
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="窗口底色"
+              >
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.windowBackgroundColor"
                   :show-alpha="true"
                 />
-              </div>
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">弹幕文字色</span>
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="弹幕文字色"
+              >
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.textColor"
                   :show-alpha="true"
                 />
-              </div>
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">文字阴影色</span>
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="文字阴影色"
+              >
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.shadowColor"
                   :show-alpha="true"
                   :disabled="!danmakuWindow.danmakuWindowSetting.enableShadow"
                 />
-              </div>
+              </SettingRow>
             </div>
           </CardContent>
         </Card>
@@ -425,9 +455,12 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle>排版细项</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">整体不透明度</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                label="整体不透明度"
+                :extra="`${Math.round(danmakuWindow.danmakuWindowSetting.opacity * 100)}%`"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[danmakuWindow.danmakuWindowSetting.opacity]"
                   :min="0.1"
@@ -435,15 +468,13 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="0.05"
                   @update:model-value="danmakuWindow.danmakuWindowSetting.opacity = $event?.[0] ?? 1"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ Math.round(danmakuWindow.danmakuWindowSetting.opacity * 100) }}%
-                </span>
-              </div>
-            </div>
+              </FormField>
 
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">字体大小 (px)</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+              <FormField
+                label="字体大小 (px)"
+                :extra="danmakuWindow.danmakuWindowSetting.fontSize"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[danmakuWindow.danmakuWindowSetting.fontSize]"
                   :min="10"
@@ -451,15 +482,13 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="1"
                   @update:model-value="danmakuWindow.danmakuWindowSetting.fontSize = $event?.[0] ?? 14"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ danmakuWindow.danmakuWindowSetting.fontSize }}
-                </span>
-              </div>
-            </div>
+              </FormField>
 
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">气泡圆角 (px)</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+              <FormField
+                label="气泡圆角 (px)"
+                :extra="danmakuWindow.danmakuWindowSetting.borderRadius"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[danmakuWindow.danmakuWindowSetting.borderRadius]"
                   :min="0"
@@ -467,15 +496,13 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="1"
                   @update:model-value="danmakuWindow.danmakuWindowSetting.borderRadius = $event?.[0] ?? 8"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ danmakuWindow.danmakuWindowSetting.borderRadius }}
-                </span>
-              </div>
-            </div>
+              </FormField>
 
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">条目间距 (px)</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+              <FormField
+                label="条目间距 (px)"
+                :extra="danmakuWindow.danmakuWindowSetting.itemSpacing"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[danmakuWindow.danmakuWindowSetting.itemSpacing]"
                   :min="0"
@@ -483,16 +510,17 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="1"
                   @update:model-value="danmakuWindow.danmakuWindowSetting.itemSpacing = $event?.[0] ?? 6"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ danmakuWindow.danmakuWindowSetting.itemSpacing }}
-                </span>
-              </div>
+              </FormField>
             </div>
 
             <div class="pt-1">
-              <LabelItem label="启用文字阴影">
+              <SettingRow
+                variant="none"
+                title="启用文字阴影"
+                class="py-1"
+              >
                 <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.enableShadow" />
-              </LabelItem>
+              </SettingRow>
             </div>
           </CardContent>
         </Card>
@@ -510,8 +538,10 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">宽度 (px)</span>
+              <FormField
+                label="宽度 (px)"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.width"
                   :min="200"
@@ -521,9 +551,11 @@ function toggleFilterType(val: string, checked: boolean) {
                     danmakuWindow.setDanmakuWindowSize($event || 300, danmakuWindow.danmakuWindowSetting.height)
                   "
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">高度 (px)</span>
+              </FormField>
+              <FormField
+                label="高度 (px)"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.height"
                   :min="200"
@@ -533,9 +565,11 @@ function toggleFilterType(val: string, checked: boolean) {
                     danmakuWindow.setDanmakuWindowSize(danmakuWindow.danmakuWindowSetting.width, $event || 400)
                   "
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">X 坐标</span>
+              </FormField>
+              <FormField
+                label="X 坐标"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.x"
                   :min="0"
@@ -544,9 +578,11 @@ function toggleFilterType(val: string, checked: boolean) {
                     ((danmakuWindow.danmakuWindowSetting.x = $event || 0), danmakuWindow.updateWindowPosition())
                   "
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">Y 坐标</span>
+              </FormField>
+              <FormField
+                label="Y 坐标"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.y"
                   :min="0"
@@ -555,7 +591,7 @@ function toggleFilterType(val: string, checked: boolean) {
                     ((danmakuWindow.danmakuWindowSetting.y = $event || 0), danmakuWindow.updateWindowPosition())
                   "
                 />
-              </div>
+              </FormField>
             </div>
 
             <div class="flex justify-end pt-1">
@@ -577,27 +613,33 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle>浮窗行为属性</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
-            <LabelItem
-              label="总是置顶"
+            <SettingRow
+              variant="none"
+              title="总是置顶"
               description="让弹幕窗口始终悬浮在游戏和其他全屏窗口上方"
+              class="py-1"
             >
               <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.alwaysOnTop" />
-            </LabelItem>
-            <LabelItem
-              label="鼠标穿透 (点击忽略)"
+            </SettingRow>
+            <SettingRow
+              variant="none"
+              title="鼠标穿透 (点击忽略)"
               description="开启后鼠标点击可直接穿透弹幕窗口操作底下的游戏"
+              class="py-1"
             >
               <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.interactive" />
-            </LabelItem>
-            <LabelItem
-              label="防 OBS / 屏幕共享捕捉 (防抓取)"
+            </SettingRow>
+            <SettingRow
+              variant="none"
               description="开启后 OBS 抓屏、全屏捕获与截屏工具将无法捕捉到此浮窗，防止遮挡游戏画面与隐私泄露"
+              class="py-1"
             >
-              <template #icon>
-                <WindowShield20Regular class="size-4 text-muted-foreground" />
+              <template #title>
+                <WindowShield20Regular class="size-4 text-muted-foreground shrink-0" />
+                <span class="font-medium text-foreground truncate">防 OBS / 屏幕共享捕捉 (防抓取)</span>
               </template>
               <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.contentProtected" />
-            </LabelItem>
+            </SettingRow>
           </CardContent>
         </Card>
 
@@ -607,24 +649,31 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle>滚动方向与动效</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
-            <LabelItem
-              label="滚动方向"
+            <SettingRow
+              variant="none"
+              title="滚动方向"
               description="控制弹幕流是由下往上涌现还是由上往下推进"
+              class="py-1"
             >
               <div class="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>从上往下</span>
                 <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.reverseOrder" />
                 <span>从下往上</span>
               </div>
-            </LabelItem>
-            <LabelItem label="入场淡入动画">
-              <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.enableAnimation" />
-            </LabelItem>
-            <div
-              v-if="danmakuWindow.danmakuWindowSetting.enableAnimation"
-              class="flex-between text-xs py-1"
+            </SettingRow>
+            <SettingRow
+              variant="none"
+              title="入场淡入动画"
+              class="py-1"
             >
-              <span class="text-muted-foreground">动画持续时间 (ms)</span>
+              <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.enableAnimation" />
+            </SettingRow>
+            <SettingRow
+              v-if="danmakuWindow.danmakuWindowSetting.enableAnimation"
+              variant="none"
+              title="动画持续时间 (ms)"
+              class="py-1"
+            >
               <NumberField
                 :model-value="danmakuWindow.danmakuWindowSetting.animationDuration"
                 :min="0"
@@ -633,7 +682,7 @@ function toggleFilterType(val: string, checked: boolean) {
                 class="w-32"
                 @update:model-value="danmakuWindow.danmakuWindowSetting.animationDuration = $event || 300"
               />
-            </div>
+            </SettingRow>
           </CardContent>
         </Card>
 
@@ -644,8 +693,10 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">最大保留弹幕数</span>
+              <SettingRow
+                variant="none"
+                title="最大保留弹幕数"
+              >
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount"
                   :min="10"
@@ -653,9 +704,11 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-32"
                   @update:model-value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount = $event || 50"
                 />
-              </div>
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">自动消失时间 (秒)</span>
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="自动消失时间 (秒)"
+              >
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.autoDisappearTime"
                   :min="0"
@@ -664,7 +717,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-32"
                   @update:model-value="danmakuWindow.danmakuWindowSetting.autoDisappearTime = $event || 0"
                 />
-              </div>
+              </SettingRow>
             </div>
             <span class="text-[11px] text-muted-foreground block">
               {{
@@ -711,18 +764,34 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <LabelItem label="用户头像">
+              <SettingRow
+                variant="none"
+                title="用户头像"
+                class="py-1"
+              >
                 <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showAvatar" />
-              </LabelItem>
-              <LabelItem label="用户昵称">
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="用户昵称"
+                class="py-1"
+              >
                 <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showUsername" />
-              </LabelItem>
-              <LabelItem label="粉丝勋章">
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="粉丝勋章"
+                class="py-1"
+              >
                 <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showFansMedal" />
-              </LabelItem>
-              <LabelItem label="大航海标">
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="大航海标"
+                class="py-1"
+              >
                 <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showGuardIcon" />
-              </LabelItem>
+              </SettingRow>
             </div>
           </CardContent>
         </Card>

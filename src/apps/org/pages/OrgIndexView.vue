@@ -16,6 +16,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -221,14 +222,13 @@ watch(
             @submit.prevent="createOrg"
             class="space-y-4 pt-2"
           >
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-foreground">组织名称</label>
+            <FormField label="组织名称">
               <Input
                 v-model="orgName"
                 placeholder="请输入组织名称"
                 autofocus
               />
-            </div>
+            </FormField>
 
             <DialogFooter class="gap-2">
               <Button

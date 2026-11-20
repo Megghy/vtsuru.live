@@ -5,7 +5,6 @@ import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Textarea } from '@/shared/ui/textarea'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -33,16 +32,17 @@ const levelOptions = [
         class="span-full"
         v-model="blockProps.content"
       />
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">标题</label>
+      <FormField
+        label="标题"
+        class="span-full"
+      >
         <Input
           v-model="blockProps.title"
           maxlength="100"
           placeholder="可选"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">尺寸</label>
+      </FormField>
+      <FormField label="尺寸">
         <NumberField
           v-model="blockProps.size"
           :min="128"
@@ -50,9 +50,8 @@ const levelOptions = [
           :step="16"
           class="w-full"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">纠错等级</label>
+      </FormField>
+      <FormField label="纠错等级">
         <Select v-model="blockProps.level">
           <SelectTrigger>
             <SelectValue placeholder="纠错等级" />
@@ -67,25 +66,22 @@ const levelOptions = [
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">前景色</label>
+      </FormField>
+      <FormField label="前景色">
         <ColorPicker
           v-model:value="blockProps.foreground"
           :show-alpha="false"
           :modes="['hex']"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">背景色</label>
+      </FormField>
+      <FormField label="背景色">
         <ColorPicker
           v-model:value="blockProps.background"
           :show-alpha="false"
           :modes="['hex']"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">边距</label>
+      </FormField>
+      <FormField label="边距">
         <NumberField
           v-model="blockProps.margin"
           :min="0"
@@ -93,7 +89,7 @@ const levelOptions = [
           :step="1"
           class="w-full"
         />
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 </template>

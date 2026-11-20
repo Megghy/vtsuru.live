@@ -226,22 +226,28 @@ const galleryUrls = computed(() => model.value.items.map((item) => item.src))
             </div>
             <ImagePreview
               :src="item.src"
+              :crop="model.fit === 'cover'"
+              fallback-transform="card"
               :alt="item.alt || item.desc || '图片预览'"
               :gallery="galleryUrls"
               :index="index"
               :disabled="!loadedSources.has(item.src) || failedSources.has(item.src)"
               wrapper-class="block size-full"
             >
-              <template #default="{ open, disabled }">
+              <template #default="{ open, disabled, thumbSrc, onError }">
                 <img
-                  :src="item.src"
+                  :src="thumbSrc || undefined"
                   :alt="item.alt"
                   :loading="index === 0 ? 'eager' : 'lazy'"
                   decoding="async"
                   referrerpolicy="no-referrer"
                   class="block size-full motion-reduce:transition-none transition-opacity duration-180"
                   :class="[
-                    failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0',
+                    failedSources.has(item.src)
+                      ? 'invisible'
+                      : loadedSources.has(item.src)
+                        ? 'opacity-100'
+                        : 'opacity-0',
                     !disabled && 'cursor-zoom-in',
                   ]"
                   :style="{ objectFit: model.fit }"
@@ -249,7 +255,7 @@ const galleryUrls = computed(() => model.value.items.map((item) => item.src))
                   :tabindex="!disabled ? 0 : undefined"
                   :aria-label="!disabled ? `放大查看 ${item.alt || item.desc || `第 ${index + 1} 张图片`}` : undefined"
                   @load="markLoaded(item.src)"
-                  @error="markFailed(item.src)"
+                  @error="!onError() && markFailed(item.src)"
                   @click="!disabled && open()"
                   @keydown.enter.prevent="!disabled && open()"
                   @keydown.space.prevent="!disabled && open()"
@@ -348,22 +354,28 @@ const galleryUrls = computed(() => model.value.items.map((item) => item.src))
             </div>
             <ImagePreview
               :src="item.src"
+              :crop="false"
+              fallback-transform="card"
               :alt="item.alt || item.desc || '图片预览'"
               :gallery="galleryUrls"
               :index="index"
               :disabled="!loadedSources.has(item.src) || failedSources.has(item.src)"
               :wrapper-class="model.layout === 'masonry' ? 'block w-full' : 'block size-full'"
             >
-              <template #default="{ open, disabled }">
+              <template #default="{ open, disabled, thumbSrc, onError }">
                 <img
-                  :src="item.src"
+                  :src="thumbSrc || undefined"
                   :alt="item.alt"
                   :loading="index === 0 ? 'eager' : 'lazy'"
                   decoding="async"
                   referrerpolicy="no-referrer"
                   class="block w-full motion-reduce:transition-none transition-opacity duration-180"
                   :class="[
-                    failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0',
+                    failedSources.has(item.src)
+                      ? 'invisible'
+                      : loadedSources.has(item.src)
+                        ? 'opacity-100'
+                        : 'opacity-0',
                     model.layout === 'masonry' ? 'h-auto min-h-[120px]' : 'h-full',
                     !disabled && 'cursor-zoom-in',
                   ]"
@@ -372,7 +384,7 @@ const galleryUrls = computed(() => model.value.items.map((item) => item.src))
                   :tabindex="!disabled ? 0 : undefined"
                   :aria-label="!disabled ? `放大查看 ${item.alt || item.desc || `第 ${index + 1} 张图片`}` : undefined"
                   @load="markLoaded(item.src)"
-                  @error="markFailed(item.src)"
+                  @error="!onError() && markFailed(item.src)"
                   @click="!disabled && open()"
                   @keydown.enter.prevent="!disabled && open()"
                   @keydown.space.prevent="!disabled && open()"

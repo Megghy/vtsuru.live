@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { FormField } from '@/shared/ui/form-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -12,8 +14,7 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 
 <template>
   <PropsGrid>
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">展示人数</label>
+    <FormField label="展示人数">
       <Select
         :model-value="String(blockProps.count ?? 3)"
         @update:model-value="(val) => (blockProps.count = Number(val))"
@@ -26,14 +27,20 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
           <SelectItem value="10">前十名</SelectItem>
         </SelectContent>
       </Select>
-    </div>
-    <div class="flex-between py-1">
-      <label class="text-xs text-muted-foreground">显示本月次数</label>
+    </FormField>
+    <SettingRow
+      title="显示本月次数"
+      variant="none"
+      class="py-1"
+    >
       <Switch v-model:checked="blockProps.showMonthly" />
-    </div>
-    <div class="flex-between py-1">
-      <label class="text-xs text-muted-foreground">显示累计次数</label>
+    </SettingRow>
+    <SettingRow
+      title="显示累计次数"
+      variant="none"
+      class="py-1"
+    >
       <Switch v-model:checked="blockProps.showTotal" />
-    </div>
+    </SettingRow>
   </PropsGrid>
 </template>

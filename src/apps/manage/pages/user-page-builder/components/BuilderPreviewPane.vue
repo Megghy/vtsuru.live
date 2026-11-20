@@ -19,6 +19,7 @@ import { IndexTemplateMap } from '@/shared/config/templates'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -286,8 +287,7 @@ watch(
             </Button>
           </PopoverTrigger>
           <PopoverContent class="w-64 flex flex-col gap-2.5">
-            <div class="flex flex-col gap-1">
-              <label class="text-muted-foreground font-medium">直播状态</label>
+            <FormField label="直播状态">
               <Select v-model="simulatedLiveState">
                 <SelectTrigger size="xs">
                   <SelectValue placeholder="直播状态" />
@@ -298,7 +298,7 @@ watch(
                   <SelectItem value="offline">模拟未开播</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </PopoverContent>
         </Popover>
 

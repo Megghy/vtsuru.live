@@ -2,6 +2,17 @@ import OBSWebSocket, { EventSubscription } from 'obs-websocket-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import {
+  fetchObsSceneItems,
+  fetchObsVideoCanvasSize,
+  upsertObsBrowserSource,
+} from '@/shared/obs/obsWebsocketScene'
+import type {
+  RpcObsSceneItemsResult,
+  RpcObsUpsertBrowserSourceParams,
+  RpcObsUpsertBrowserSourceResult,
+} from '@/shared/rpc/contract'
+
 import { useTauriStore } from './useTauriStore'
 
 // OBS配置接口
@@ -162,6 +173,14 @@ export const useOBSStore = defineStore('obs', () => {
       obs.on('InputCreated', refreshInputs)
       obs.on('InputRemoved', refreshInputs)
       obs.on('InputNameChanged', refreshInputs)
+      obs.on('CurrentProgramSceneChanged', (event) => {
+        if (event?.sceneName) {
+          currentObsScene.value = event.sceneName
+        }
+      })
+      obs.on('SceneListChanged', () => {
+        void fetchObsScenes().catch(() => {})
+      })
       obs.on('ConnectionClosed', () => {
         inputGeneration++
         inputMuted.clear()
@@ -553,6 +572,33 @@ export const useOBSStore = defineStore('obs', () => {
     }
   }
 
+  async function getVideoCanvasSize() {
+    if (!obs || !obsConnected.value) {
+      return { baseWidth: 1920, baseHeight: 1080 }
+    }
+    return fetchObsVideoCanvasSize(obs)
+  }
+
+  async function getSceneItems(sceneName?: string): Promise<RpcObsSceneItemsResult> {
+    if (!obs || !obsConnected.value) {
+      throw new Error('OBS 未连接')
+    }
+    const targetScene = (sceneName || currentObsScene.value || obsScenes.value[0] || '').trim()
+    if (!targetScene) {
+      throw new Error('未找到可用的 OBS 场景')
+    }
+    return fetchObsSceneItems(obs, targetScene)
+  }
+
+  async function upsertBrowserSource(
+    params: RpcObsUpsertBrowserSourceParams,
+  ): Promise<RpcObsUpsertBrowserSourceResult> {
+    if (!obs || !obsConnected.value) {
+      return { ok: false, message: 'OBS 未连接，请先在客户端中连接 OBS WebSocket' }
+    }
+    return upsertObsBrowserSource(obs, params)
+  }
+
   // 保存场景配置
   async function saveSceneConfig() {
     try {
@@ -647,6 +693,9 @@ export const useOBSStore = defineStore('obs', () => {
     fetchObsScenes,
     updateCurrentScene,
     switchToScene,
+    getVideoCanvasSize,
+    getSceneItems,
+    upsertBrowserSource,
     saveSceneConfig,
     loadSceneConfig,
     loadObsConfig,

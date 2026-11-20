@@ -7,8 +7,10 @@ import type { BlockNode, BlockType, BlockVisibility } from '@/apps/user-page/blo
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import { useBlockPropsEditor } from './block-props-editors/useBlockPropsEditor'
@@ -207,39 +209,41 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
         <AccordionTrigger class="text-xs font-semibold py-2"> 卡片外观与命名 </AccordionTrigger>
         <AccordionContent class="pt-2 pb-1">
           <PropsGrid :row-gap="0">
-            <div
-              class="flex flex-col gap-1 w-full"
+            <FormField
+              label="区块备注名称"
+              class="w-full"
               data-validation-field="name"
             >
-              <label class="text-xs text-muted-foreground">区块备注名称</label>
               <Input
                 v-model="blockNameModel"
                 maxlength="50"
                 placeholder="例如：直播信息 · 紧凑"
               />
-            </div>
+            </FormField>
 
-            <div
+            <SettingRow
               v-if="propertyAvailable('framed')"
-              class="flex-between pt-4"
+              title="显示边框"
+              variant="none"
+              class="pt-4"
             >
-              <label class="text-xs text-muted-foreground">显示边框</label>
               <Switch
                 :checked="blockFramedModel"
                 @update:checked="blockFramedModel = $event"
               />
-            </div>
+            </SettingRow>
 
-            <div
+            <SettingRow
               v-if="propertyAvailable('backgrounded')"
-              class="flex-between pt-4"
+              title="显示背景"
+              variant="none"
+              class="pt-4"
             >
-              <label class="text-xs text-muted-foreground">显示背景</label>
               <Switch
                 :checked="blockBackgroundedModel"
                 @update:checked="blockBackgroundedModel = $event"
               />
-            </div>
+            </SettingRow>
           </PropsGrid>
         </AccordionContent>
       </AccordionItem>
@@ -260,11 +264,10 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
         </AccordionTrigger>
         <AccordionContent class="pt-2 pb-1">
           <PropsGrid :row-gap="0">
-            <div
-              class="flex flex-col gap-1"
+            <FormField
+              label="直播状态"
               data-validation-field="visibility.liveState"
             >
-              <label class="text-xs text-muted-foreground">直播状态</label>
               <Select v-model="liveStateModel">
                 <SelectTrigger>
                   <SelectValue placeholder="直播状态" />
@@ -275,13 +278,12 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
                   <SelectItem value="offline">仅未开播</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div
-              class="flex flex-col gap-1"
+            <FormField
+              label="设备"
               data-validation-field="visibility.device"
             >
-              <label class="text-xs text-muted-foreground">设备</label>
               <Select v-model="deviceModel">
                 <SelectTrigger>
                   <SelectValue placeholder="设备" />
@@ -292,7 +294,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
                   <SelectItem value="mobile">仅移动端</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </PropsGrid>
         </AccordionContent>
       </AccordionItem>

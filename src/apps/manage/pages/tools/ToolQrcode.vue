@@ -10,6 +10,7 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { useMessage } from '@/shared/utils'
@@ -89,8 +90,7 @@ async function download() {
           placeholder="输入链接或文本"
         />
 
-        <div>
-          <span class="text-xs text-muted-foreground mb-1.5 block"> 链接预设 </span>
+        <FormField label="链接预设">
           <div class="flex flex-wrap gap-2">
             <Button
               v-for="p in linkPresets"
@@ -102,10 +102,9 @@ async function download() {
               {{ p.label }}
             </Button>
           </div>
-        </div>
+        </FormField>
 
-        <div>
-          <span class="text-xs text-muted-foreground mb-1.5 block"> 配色预设 </span>
+        <FormField label="配色预设">
           <div class="flex flex-wrap gap-2">
             <Button
               v-for="s in stylePresets"
@@ -121,11 +120,10 @@ async function download() {
               {{ s.label }}
             </Button>
           </div>
-        </div>
+        </FormField>
 
         <div class="flex flex-wrap items-center gap-4">
-          <div class="flex flex-col gap-2">
-            <span class="text-xs text-muted-foreground"> 尺寸 </span>
+          <FormField label="尺寸">
             <NumberField
               v-model="size"
               :min="128"
@@ -133,21 +131,25 @@ async function download() {
               :step="64"
               class="w-[100px]"
             />
-          </div>
-          <div class="flex flex-col gap-2 w-[200px]">
-            <span class="text-xs text-muted-foreground"> 前景色 </span>
+          </FormField>
+          <FormField
+            label="前景色"
+            class="w-[200px]"
+          >
             <ColorPicker
               v-model="foreground"
               :show-alpha="false"
             />
-          </div>
-          <div class="flex flex-col gap-2 w-[200px]">
-            <span class="text-xs text-muted-foreground"> 背景色 </span>
+          </FormField>
+          <FormField
+            label="背景色"
+            class="w-[200px]"
+          >
             <ColorPicker
               v-model="background"
               :show-alpha="true"
             />
-          </div>
+          </FormField>
         </div>
 
         <div

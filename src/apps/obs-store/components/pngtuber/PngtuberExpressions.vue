@@ -12,6 +12,7 @@ import type {
 } from '@/shared/pngtuber/types'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -205,8 +206,10 @@ function recordKey(event: KeyboardEvent) {
       />
 
       <div class="fields">
-        <div class="space-y-1">
-          <label class="text-xs text-muted-foreground font-medium">默认表情</label>
+        <FormField
+          label="默认表情"
+          class="min-w-0"
+        >
           <Select
             :model-value="state.defaultExpressionId"
             :disabled="disabled"
@@ -225,10 +228,12 @@ function recordKey(event: KeyboardEvent) {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="space-y-1">
-          <label class="text-xs text-muted-foreground font-medium">暂离表情</label>
+        <FormField
+          label="暂离表情"
+          class="min-w-0"
+        >
           <Select
             :model-value="state.awayExpressionId || '__default__'"
             :disabled="disabled"
@@ -250,7 +255,7 @@ function recordKey(event: KeyboardEvent) {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
       </div>
 
       <div class="fields">
@@ -281,8 +286,10 @@ function recordKey(event: KeyboardEvent) {
       </Button>
 
       <div class="fields">
-        <div class="space-y-1">
-          <label class="text-xs text-muted-foreground font-medium">表情专属说话动效</label>
+        <FormField
+          label="表情专属说话动效"
+          class="min-w-0"
+        >
           <Select
             :model-value="expression.speakingAnimation || '__inherit__'"
             :disabled="disabled"
@@ -305,10 +312,12 @@ function recordKey(event: KeyboardEvent) {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="space-y-1">
-          <label class="text-xs text-muted-foreground font-medium">表情专属待机动效</label>
+        <FormField
+          label="表情专属待机动效"
+          class="min-w-0"
+        >
           <Select
             :model-value="expression.idleAnimation || '__inherit__'"
             :disabled="disabled"
@@ -331,12 +340,14 @@ function recordKey(event: KeyboardEvent) {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
       </div>
 
       <div class="fields">
-        <div class="space-y-1">
-          <label class="text-xs text-muted-foreground font-medium">快捷键（按键录入，退格清除）</label>
+        <FormField
+          label="快捷键（按键录入，退格清除）"
+          class="min-w-0"
+        >
           <Input
             :model-value="expression.hotkey"
             readonly
@@ -344,10 +355,12 @@ function recordKey(event: KeyboardEvent) {
             placeholder="点击后按快捷键"
             @keydown="recordKey"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1">
-          <label class="text-xs text-muted-foreground font-medium">快捷键模式</label>
+        <FormField
+          label="快捷键模式"
+          class="min-w-0"
+        >
           <Select
             :model-value="expression.hotkeyMode"
             :disabled="disabled"
@@ -362,14 +375,13 @@ function recordKey(event: KeyboardEvent) {
               <SelectItem value="timed">定时</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
       </div>
 
-      <div
+      <FormField
         v-if="expression.hotkeyMode === 'timed'"
-        class="space-y-1"
+        label="持续时长 (ms)"
       >
-        <label class="text-xs text-muted-foreground font-medium">持续时长 (ms)</label>
         <NumberField
           :model-value="expression.durationMs"
           :disabled="disabled"
@@ -379,14 +391,13 @@ function recordKey(event: KeyboardEvent) {
           class="w-full"
           @update:model-value="(value) => value !== null && patch({ durationMs: value })"
         />
-      </div>
+      </FormField>
 
       <div class="text-xs text-muted-foreground leading-relaxed">
         网页快捷键在本页获得焦点时生效，编辑输入框时暂停。按住模式松开后恢复原表情。
       </div>
 
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground font-medium">动图播放</label>
+      <FormField label="动图播放">
         <Select
           :model-value="expression.playback"
           :disabled="disabled"
@@ -401,7 +412,7 @@ function recordKey(event: KeyboardEvent) {
             <SelectItem value="once">播放一次</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
       <PngtuberAccessories
         :key="expression.id"

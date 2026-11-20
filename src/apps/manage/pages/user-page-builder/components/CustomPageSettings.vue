@@ -3,8 +3,10 @@ import { computed, defineAsyncComponent, inject, ref } from 'vue'
 
 import { CUSTOM_HTML_MAX_HEIGHT, CUSTOM_HTML_MIN_HEIGHT } from '@/apps/user-page/block/customHtmlContract'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import { UserPageEditorKey } from '../context'
@@ -17,15 +19,19 @@ const CodeWorkbench = defineAsyncComponent(() => import('./CustomHtmlEditorModal
 </script>
 
 <template>
-  <section class="space-y-4 [&_label]:text-muted-foreground">
+  <section class="space-y-4">
     <Button
       class="w-full"
       @click="editorOpen = true"
       >打开全屏代码工作台</Button
     >
-    <label class="flex-between gap-3">全屏沉浸模式<Switch v-model:checked="config.immersive" /></label>
-    <div class="space-y-2">
-      <label>高度方式</label>
+    <SettingRow
+      title="全屏沉浸模式"
+      variant="none"
+    >
+      <Switch v-model:checked="config.immersive" />
+    </SettingRow>
+    <FormField label="高度方式">
       <Select v-model="config.heightMode">
         <SelectTrigger><SelectValue /></SelectTrigger>
         <SelectContent>
@@ -48,9 +54,19 @@ const CodeWorkbench = defineAsyncComponent(() => import('./CustomHtmlEditorModal
         :max="CUSTOM_HTML_MAX_HEIGHT"
         aria-label="最大高度"
       />
-    </div>
-    <label class="flex-between gap-3">外框<Switch v-model:checked="config.framed" /></label>
-    <label class="flex-between gap-3">背景<Switch v-model:checked="config.backgrounded" /></label>
+    </FormField>
+    <SettingRow
+      title="外框"
+      variant="none"
+    >
+      <Switch v-model:checked="config.framed" />
+    </SettingRow>
+    <SettingRow
+      title="背景"
+      variant="none"
+    >
+      <Switch v-model:checked="config.backgrounded" />
+    </SettingRow>
     <CodeWorkbench
       v-if="editorOpen"
       v-model:show="editorOpen"

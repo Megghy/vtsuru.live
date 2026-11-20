@@ -5,6 +5,7 @@ import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
 import type { APIFileModel } from '@/api/generated/model'
 import { FileStore } from '@/shared/services/fileUpload'
 import { Button } from '@/shared/ui/button'
+import { SmartImage } from '@/shared/ui/image'
 import { Input } from '@/shared/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -80,13 +81,10 @@ const emit = defineEmits<{
             class="resource-row-main min-w-0 flex-1 h-auto justify-start gap-2 p-1.5"
             @click="emit('attach', file)"
           >
-            <img
+            <SmartImage
               :src="file.path"
               alt=""
               class="size-8 rounded object-cover shrink-0"
-              loading="lazy"
-              decoding="async"
-              referrerpolicy="no-referrer"
             />
             <span class="min-w-0 flex-1 text-left">
               <strong class="block truncate text-foreground">{{ file.name || `资源 #${file.id}` }}</strong>

@@ -17,6 +17,7 @@ import {
   formatTextShadow,
   questionSenderLabel,
 } from '@/shared/questionDisplay'
+import { fallbackImageOnError, transformImageUrl } from '@/shared/services/imageTransform'
 
 const LOCAL_FONT_FAMILIES = new Set([
   'sans-serif',
@@ -148,7 +149,8 @@ const displayedImages = computed(() => (props.setting.showImage ? visibleImages.
 const senderLabel = computed(() => questionSenderLabel(props.question))
 const showBrand = computed(() => props.setting.showBrand !== false)
 
-function onImageError(path: string) {
+function onImageError(event: Event, path: string) {
+  if (fallbackImageOnError(event, path)) return
   failedImages.value = new Set(failedImages.value).add(path)
 }
 
@@ -270,10 +272,10 @@ defineExpose({ setScrollProgress })
                       v-for="image in displayedImages"
                       :key="image.path"
                       class="question-display-image"
-                      :src="image.path"
+                      :src="transformImageUrl(image.path, 'card')"
                       alt=""
                       loading="lazy"
-                      @error="onImageError(image.path)"
+                      @error="onImageError($event, image.path)"
                     />
                   </div>
                 </template>

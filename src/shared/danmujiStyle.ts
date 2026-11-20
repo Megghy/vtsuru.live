@@ -1,9 +1,11 @@
+import { resolveFontFamilyCss } from '@/apps/user-page/googleFonts'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
 
 export interface DanmujiStyle {
   preset: 'classic' | 'bubble' | 'minimal'
   opacity: number
   fontSize: number
+  fontFamily: string
   reverse: boolean
   autoHide: number
   pinned: boolean
@@ -15,6 +17,7 @@ export const defaultDanmujiStyle: DanmujiStyle = {
   preset: 'classic',
   opacity: 1,
   fontSize: 18,
+  fontFamily: '',
   reverse: true,
   autoHide: 0,
   pinned: false,
@@ -39,6 +42,7 @@ export function normalizeDanmujiStyle(input: unknown): DanmujiStyle {
     const value = raw[key]
     if (typeof value === 'number' && Number.isFinite(value)) style[key] = Math.min(max, Math.max(min, value))
   }
+  if (typeof raw.fontFamily === 'string') style.fontFamily = raw.fontFamily.trim().slice(0, 120)
   if (typeof raw.customCss === 'string') style.customCss = raw.customCss
   return style
 }
@@ -52,6 +56,15 @@ yt-live-chat-text-message-renderer #author-name { color: #b8c5d6 !important; }`,
 }
 
 export function buildDanmujiCss(style: DanmujiStyle): string {
+  const fontCss = resolveFontFamilyCss(style.fontFamily)
+  const fontRule = fontCss
+    ? `yt-live-chat-renderer,
+yt-live-chat-renderer *,
+yt-live-chat-renderer #author-name,
+yt-live-chat-renderer #message,
+yt-live-chat-renderer #content,
+yt-live-chat-renderer #purchase-amount { font-family: ${fontCss} !important; }\n`
+    : ''
   return `${defaultDanmujiCss}
 ${presets[style.preset]}
 yt-live-chat-renderer { opacity: ${style.opacity}; --danmuji-font-size: ${style.fontSize}px; }
@@ -59,6 +72,6 @@ yt-live-chat-renderer #message, yt-live-chat-renderer #message *,
 yt-live-chat-renderer #author-name, yt-live-chat-renderer #author-name *,
 yt-live-chat-renderer #content, yt-live-chat-renderer #content *,
 yt-live-chat-renderer #purchase-amount { font-size: var(--danmuji-font-size) !important; line-height: 1.4 !important; }
-yt-live-chat-ticker-renderer { display: ${style.pinned ? 'block' : 'none'} !important; }
+${fontRule}yt-live-chat-ticker-renderer { display: ${style.pinned ? 'block' : 'none'} !important; }
 ${style.customCss}`
 }

@@ -5,6 +5,7 @@ import type { UserPageThemeConfigV1 } from '@/apps/user-page/types'
 import { AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import { UserPageEditorKey } from '../context'
@@ -107,8 +108,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
       </div>
 
       <PropsGrid>
-        <div class="flex flex-col gap-1">
-          <label class="text-xs text-muted-foreground">主题色 primary</label>
+        <FormField label="主题色 primary">
           <div class="flex items-center gap-2">
             <ColorPicker
               v-model="primaryColor"
@@ -123,10 +123,9 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
               清除
             </Button>
           </div>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-xs text-muted-foreground">内容区域底色</label>
+        <FormField label="内容区域底色">
           <div class="flex items-center gap-2">
             <ColorPicker
               v-model="backgroundColor"
@@ -141,10 +140,9 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
               清除
             </Button>
           </div>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-xs text-muted-foreground">页面主题模式</label>
+        <FormField label="页面主题模式">
           <Select v-model="themeMode">
             <SelectTrigger>
               <SelectValue placeholder="模式" />
@@ -155,7 +153,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
               <SelectItem value="dark">强制暗色</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
       </PropsGrid>
 
       <ThemeTextColorEditor :target="textColorTarget" />

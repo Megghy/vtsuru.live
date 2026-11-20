@@ -1,3 +1,5 @@
+import { ACCOUNT } from '@/api/account'
+import { cookie } from '@/api/auth'
 import { getTtsApiUrl } from '@/shared/config'
 
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
@@ -26,10 +28,15 @@ export class AzureVoiceProvider implements VoiceProvider {
 
     this.voiceListLoading = true
     try {
-      const response = await fetch(`${getTtsApiUrl()}voices`)
+      const headers: Record<string, string> = {}
+      if (cookie.value?.cookie) headers.Authorization = `Bearer ${cookie.value.cookie}`
+      const response = await fetch(`${getTtsApiUrl()}voices`, { headers })
       if (!response.ok) throw new Error('获取语音列表失败')
 
       const voices = await response.json()
+      if (!Array.isArray(voices)) {
+        throw new Error(voices?.message || '获取语音列表失败')
+      }
       this.voiceList = voices
         .filter((v: any) => {
           const locale = v.Locale || v.locale || ''
@@ -86,6 +93,8 @@ export class AzureVoiceProvider implements VoiceProvider {
     url.searchParams.set('rate', String(speechInfo.rate ?? 1))
     url.searchParams.set('pitch', String(speechInfo.pitch ?? 1))
     url.searchParams.set('streaming', 'true')
+    const token = cookie.value?.cookie || ACCOUNT.value?.token
+    if (token) url.searchParams.set('token', token)
     return url.toString()
   }
 

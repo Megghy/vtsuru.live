@@ -24,6 +24,7 @@ export interface ClockState {
   textColor: string // 自定义文字色（空字符串表示遵循主题默认）
   bgColor: string // 自定义背景底色（空字符串表示遵循主题默认）
   bgOpacity: number // 背景不透明度 0 ~ 100
+  fontFamily?: string // 自定义字体（空字符串表示遵循主题默认）
 
   // 文本内容
   title: string
@@ -60,6 +61,7 @@ export const DEFAULT_CLOCK_STATE: ClockState = {
   textColor: '',
   bgColor: '',
   bgOpacity: 90,
+  fontFamily: '',
   title: '',
   subtitle: '',
 

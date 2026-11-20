@@ -5,6 +5,7 @@ import { toast } from 'vue-sonner'
 
 import { uploadPngtuberAsset } from '@/api/pngtuber-assets'
 import { Button } from '@/shared/ui/button'
+import { SmartImage } from '@/shared/ui/image'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 
@@ -100,11 +101,13 @@ function selectFromLibrary(selectedUrl: string) {
       :aria-label="`上传${label}`"
       @click="input?.click()"
     >
-      <img
+      <SmartImage
         v-if="value"
         :src="value"
         :alt="label"
-        class="max-h-24 max-w-full object-contain"
+        :crop="false"
+        fallback-transform="thumb"
+        class="size-full object-contain"
       />
       <span
         v-else

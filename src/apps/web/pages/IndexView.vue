@@ -409,10 +409,11 @@ onMounted(() => {
             <div class="userpage-intro-image">
               <ImagePreview
                 src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
+                fallback-transform="preview"
                 alt="自定义页面示例"
                 wrapper-class="block size-full"
               >
-                <template #default="{ open }">
+                <template #default="{ open, thumbSrc, onError }">
                   <button
                     type="button"
                     class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -420,9 +421,10 @@ onMounted(() => {
                     @click="open()"
                   >
                     <img
-                      src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
+                      :src="thumbSrc || undefined"
                       referrerpolicy="no-referrer"
                       alt="自定义页面示例"
+                      @error="onError"
                     />
                   </button>
                 </template>

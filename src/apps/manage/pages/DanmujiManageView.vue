@@ -33,6 +33,7 @@ import {
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -560,22 +561,28 @@ onActivated(() => {
           <div class="pt-2 border-t border-border space-y-2">
             <span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">测试消息参数</span>
             <div class="grid grid-cols-2 gap-2 text-xs">
-              <div class="space-y-1">
-                <span class="text-muted-foreground">用户名</span>
+              <FormField
+                label="用户名"
+                class="min-w-0"
+              >
                 <Input
                   size="xs"
                   v-model="testName"
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-muted-foreground">礼物名称</span>
+              </FormField>
+              <FormField
+                label="礼物名称"
+                class="min-w-0"
+              >
                 <Input
                   v-model="testGift"
                   size="xs"
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-muted-foreground">金额 (元)</span>
+              </FormField>
+              <FormField
+                label="金额 (元)"
+                class="min-w-0"
+              >
                 <NumberField
                   size="xs"
                   v-model="testPrice"
@@ -583,9 +590,11 @@ onActivated(() => {
                   class="font-mono"
                   :show-buttons="false"
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-muted-foreground">大航海等级</span>
+              </FormField>
+              <FormField
+                label="大航海等级"
+                class="min-w-0"
+              >
                 <Select v-model="testGuard">
                   <SelectTrigger size="xs">
                     <SelectValue />
@@ -596,14 +605,16 @@ onActivated(() => {
                     <SelectItem value="1"> 总督 </SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div class="col-span-2 space-y-1">
-                <span class="text-muted-foreground">弹幕内容</span>
+              </FormField>
+              <FormField
+                label="弹幕内容"
+                class="col-span-2 min-w-0"
+              >
                 <Textarea
                   v-model="testMessage"
                   :rows="2"
                 />
-              </div>
+              </FormField>
             </div>
           </div>
         </CardContent>

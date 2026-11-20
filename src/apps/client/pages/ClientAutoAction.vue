@@ -39,8 +39,10 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -493,13 +495,11 @@ const triggerTypeOptions = [
                   <CardTitle>全局消息队列频率</CardTitle>
                 </CardHeader>
                 <CardContent class="p-3 space-y-3">
-                  <div class="flex-between p-2.5 rounded border bg-muted/20">
-                    <div>
-                      <span class="text-xs font-medium text-foreground block">弹幕队列最小间隔</span>
-                      <span class="text-[11px] text-muted-foreground block mt-0.5">
-                        两条弹幕之间的最小发送间隔，过短可能导致被B站吞弹幕。建议 1000ms 以上。
-                      </span>
-                    </div>
+                  <SettingRow
+                    variant="compact"
+                    title="弹幕队列最小间隔"
+                    description="两条弹幕之间的最小发送间隔，过短可能导致被B站吞弹幕。建议 1000ms 以上。"
+                  >
                     <NumberField
                       :model-value="biliFunc.danmakuInterval"
                       :min="100"
@@ -507,15 +507,13 @@ const triggerTypeOptions = [
                       class="w-32"
                       @update:model-value="biliFunc.setDanmakuInterval($event || 1000)"
                     />
-                  </div>
+                  </SettingRow>
 
-                  <div class="flex-between p-2.5 rounded border bg-muted/20">
-                    <div>
-                      <span class="text-xs font-medium text-foreground block">私信队列最小间隔</span>
-                      <span class="text-[11px] text-muted-foreground block mt-0.5">
-                        私信发送频率限制，建议保持默认 1000ms 或更高以避免触发 B 站频控。
-                      </span>
-                    </div>
+                  <SettingRow
+                    variant="compact"
+                    title="私信队列最小间隔"
+                    description="私信发送频率限制，建议保持默认 1000ms 或更高以避免触发 B 站频控。"
+                  >
                     <NumberField
                       :model-value="biliFunc.pmInterval"
                       :min="1000"
@@ -523,7 +521,7 @@ const triggerTypeOptions = [
                       class="w-32"
                       @update:model-value="biliFunc.setPmInterval($event || 1000)"
                     />
-                  </div>
+                  </SettingRow>
                 </CardContent>
               </Card>
             </div>
@@ -545,8 +543,10 @@ const triggerTypeOptions = [
         <DialogHeader>
           <DialogTitle class="text-sm">添加新的自动操作</DialogTitle>
         </DialogHeader>
-        <div class="space-y-3 pt-2">
-          <span class="text-xs text-muted-foreground block">请选择要添加的自动操作类型：</span>
+        <FormField
+          label="自动操作类型"
+          class="pt-2"
+        >
           <Select v-model="selectedTriggerType">
             <SelectTrigger class="w-full">
               <SelectValue />
@@ -561,7 +561,7 @@ const triggerTypeOptions = [
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
         <DialogFooter class="pt-3">
           <Button
             variant="secondary"
@@ -580,7 +580,11 @@ const triggerTypeOptions = [
         <DialogHeader>
           <DialogTitle class="text-sm">手动指定下一条 (顺序模式)</DialogTitle>
         </DialogHeader>
-        <div class="space-y-2 pt-2">
+        <FormField
+          label="目标操作"
+          description="只会列出当前已启用、类型也已启用且使用全局定时器的操作。"
+          class="pt-2"
+        >
           <Select v-model="targetNextActionId">
             <SelectTrigger class="w-full">
               <SelectValue placeholder="选择操作" />
@@ -595,10 +599,7 @@ const triggerTypeOptions = [
               </SelectItem>
             </SelectContent>
           </Select>
-          <span class="text-[11px] text-muted-foreground block">
-            只会列出当前已启用、类型也已启用且使用全局定时器的操作。
-          </span>
-        </div>
+        </FormField>
         <DialogFooter class="pt-3">
           <Button
             variant="secondary"
@@ -617,13 +618,15 @@ const triggerTypeOptions = [
         <DialogHeader>
           <DialogTitle class="text-sm">测试舰长私信</DialogTitle>
         </DialogHeader>
-        <div class="space-y-2 pt-2">
-          <span class="text-xs text-muted-foreground block">请输入私信接收者的UID：</span>
+        <FormField
+          label="私信接收者 UID"
+          class="pt-2"
+        >
           <BiliUserSelector
             v-model:value="testUid"
             placeholder="请输入B站用户UID"
           />
-        </div>
+        </FormField>
         <DialogFooter class="pt-3">
           <Button
             variant="secondary"

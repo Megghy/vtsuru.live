@@ -17,11 +17,14 @@ import type { EventModel } from '@/api/client-types'
 import { EventDataTypes, GuardLevel } from '@/api/generated/model'
 import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -40,8 +43,18 @@ const route = useRoute()
 const account = useAccount()
 const danmakuClient = useDanmakuClient()
 
-const channelId = ref(resolveObsSyncChannel(route.query.channel))
+const props = defineProps<{ channelId?: string }>()
+const channelId = ref(resolveObsSyncChannel(props.channelId ?? route.query.channel))
 const channelDraft = ref(channelId.value)
+watch(
+  () => props.channelId,
+  (val) => {
+    if (!val) return
+    const resolved = resolveObsSyncChannel(val)
+    channelId.value = resolved
+    channelDraft.value = resolved
+  },
+)
 const copied = ref(false)
 const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 const autoTrackEvents = ref(false)
@@ -460,14 +473,16 @@ function changeChannel() {
         <Separator />
 
         <!-- 详细配置 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">显示模式</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <FormField
+            label="显示模式"
+            class="min-w-0"
+          >
             <Select
               :model-value="state.mode"
               @update:model-value="(v) => updateState({ mode: v as GoalMode })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -480,15 +495,17 @@ function changeChannel() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">进度追踪维度</span>
+          <FormField
+            label="进度追踪维度"
+            class="min-w-0"
+          >
             <Select
               :model-value="state.metric"
               @update:model-value="(v) => updateState({ metric: v as GoalMetric })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -501,15 +518,17 @@ function changeChannel() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">视觉主题</span>
+          <FormField
+            label="视觉主题"
+            class="min-w-0"
+          >
             <Select
               :model-value="state.theme"
               @update:model-value="(v) => updateState({ theme: v as GoalTheme })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -522,84 +541,114 @@ function changeChannel() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">主标题</span>
+          <FormField
+            label="主标题"
+            class="min-w-0"
+          >
             <Input
               :model-value="state.title"
               @update:model-value="(v) => updateState({ title: String(v) })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">副标题</span>
+          <FormField
+            label="副标题"
+            class="min-w-0"
+          >
             <Input
               :model-value="state.subtitle"
               @update:model-value="(v) => updateState({ subtitle: String(v) })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">强调色</span>
+          <FormField
+            label="强调色"
+            class="min-w-0"
+          >
             <ColorPicker
               :model-value="state.accentColor"
               @update:model-value="(v) => updateState({ accentColor: v })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">目标值</span>
+          <FormField
+            label="目标值"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.target"
               :min="1"
               @update:model-value="(v) => updateState({ target: v ?? 1 })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">单位文案 (如 舰 / 元)</span>
+          <FormField
+            label="单位文案 (如 舰 / 元)"
+            class="min-w-0"
+          >
             <Input
               :model-value="state.unit"
               @update:model-value="(v) => updateState({ unit: String(v) })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">每 1 元礼物/SC 加钟 (秒)</span>
+          <FormField
+            label="每 1 元礼物/SC 加钟 (秒)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.secondsPerYuan"
               :min="0"
               @update:model-value="(v) => updateState({ secondsPerYuan: v ?? 0 })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">舰长加钟 (秒)</span>
+          <FormField
+            label="舰长加钟 (秒)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.secondsPerJianzhang"
               :min="0"
               @update:model-value="(v) => updateState({ secondsPerJianzhang: v ?? 0 })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">提督加钟 (秒)</span>
+          <FormField
+            label="提督加钟 (秒)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.secondsPerTidu"
               :min="0"
               @update:model-value="(v) => updateState({ secondsPerTidu: v ?? 0 })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">总督加钟 (秒)</span>
+          <FormField
+            label="总督加钟 (秒)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.secondsPerZongdu"
               :min="0"
               @update:model-value="(v) => updateState({ secondsPerZongdu: v ?? 0 })"
             />
-          </div>
+          </FormField>
+
+          <FormField
+            label="字体"
+            class="min-w-0"
+          >
+            <GoogleFontPicker
+              :model-value="state.fontFamily || null"
+              :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+              :show-preview="false"
+              @update:model-value="updateState({ fontFamily: $event || '' })"
+            />
+          </FormField>
         </div>
       </CardContent>
     </Card>

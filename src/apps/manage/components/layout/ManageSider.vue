@@ -269,6 +269,14 @@ const baseItems = computed<ManageNavItem[]>(() => {
       group: 'tools',
     },
     {
+      key: 'manage-obsSceneEditor',
+      label: 'OBS 场景编辑器',
+      icon: Board24Regular,
+      to: { name: 'manage-obsSceneEditor' },
+      disabled: emailDisabled,
+      group: 'tools',
+    },
+    {
       key: 'manage-qqBot',
       label: 'QQ 群机器人',
       icon: Bot24Regular,

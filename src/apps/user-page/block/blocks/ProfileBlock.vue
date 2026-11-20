@@ -24,12 +24,13 @@ const model = computed(() => {
     avatarFile && typeof avatarFile.path === 'string' && avatarFile.path
       ? avatarFile.path
       : props.userInfo?.streamerInfo?.faceUrl
+  const avatarFileId = typeof avatarFile?.id === 'number' ? avatarFile.id : undefined
   const displayName = typeof o.displayName === 'string' && o.displayName ? o.displayName : props.userInfo?.name
   const bio = typeof o.bio === 'string' && o.bio ? o.bio : props.biliInfo?.sign
 
   const framed = typeof o.framed === 'boolean' ? o.framed : true
   const backgrounded = typeof o.backgrounded === 'boolean' ? o.backgrounded : true
-  return { avatarUrl, displayName, bio, framed, backgrounded }
+  return { avatarUrl, avatarFileId, displayName, bio, framed, backgrounded }
 })
 </script>
 
@@ -47,6 +48,8 @@ const model = computed(() => {
         >
           <AvatarImage
             :src="model.avatarUrl"
+            :file-id="model.avatarFileId"
+            :is-public="true"
             :alt="model.displayName || '用户头像'"
             referrerpolicy="no-referrer"
             loading="lazy"

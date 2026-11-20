@@ -1,16 +1,17 @@
 import { getVersion } from '@tauri-apps/api/app'
 import { info, warn } from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 // 开放 RPC 服务 (Tauri 客户端侧)
 //
-// 在 Tauri 客户端内启动: 把本地能力 (弹幕订阅、发送弹幕/私信) 通过 birpc 暴露给外部网页。
+// 在 Tauri 客户端内启动: 把本地能力 (弹幕订阅、发送弹幕/私信、OBS 场景联动) 通过 birpc 暴露给外部网页。
 // server/health 的传输由 Rust rpc_server.rs 负责, 本 store 只提供 ServerFunctions 实现。
 import type { EventModel } from '@/api/client-types'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
-import type { DanmakuEventName, ServerFunctions } from '@/shared/rpc/contract'
+import { useOBSStore } from '@/apps/client/store/useOBSStore'
+import type { DanmakuEventName, RpcObsStatus, ServerFunctions } from '@/shared/rpc/contract'
 import { DANMAKU_EVENT_NAMES } from '@/shared/rpc/contract'
 import type { RpcConnection } from '@/shared/rpc/server'
 import { startRpcServer } from '@/shared/rpc/server'
@@ -46,10 +47,67 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
 
   // 每个连接订阅的事件集合
   const subscriptions = new Map<string, Set<DanmakuEventName>>()
+  // 订阅了 OBS 场景事件的连接集合
+  const obsSubscribers = new Set<string>()
   // connId -> rpc 句柄 (用于推送)
   const conns = new Map<string, RpcConnection>()
 
   const danmakuClient = useDanmakuClient()
+  const obsStore = useOBSStore()
+
+  async function buildObsStatus(): Promise<RpcObsStatus> {
+    const size = obsStore.obsConnected
+      ? await obsStore.getVideoCanvasSize()
+      : { baseWidth: 1920, baseHeight: 1080 }
+    return {
+      connected: obsStore.obsConnected,
+      address: obsStore.obsAddress,
+      scenes: [...obsStore.obsScenes],
+      currentScene: obsStore.currentObsScene,
+      baseWidth: size.baseWidth,
+      baseHeight: size.baseHeight,
+    }
+  }
+
+  function pushObsSceneChanged(sceneName: string) {
+    if (!sceneName) return
+    for (const connId of obsSubscribers) {
+      try {
+        conns.get(connId)?.rpc.onObsSceneChanged?.(sceneName)
+      } catch (error) {
+        console.error(`[FetcherRpcServer] 推送 OBS 切场失败 (${connId}):`, error)
+      }
+    }
+  }
+
+  async function pushObsStatusChanged() {
+    if (obsSubscribers.size === 0) return
+    const status = await buildObsStatus()
+    for (const connId of obsSubscribers) {
+      try {
+        conns.get(connId)?.rpc.onObsStatusChanged?.(status)
+      } catch (error) {
+        console.error(`[FetcherRpcServer] 推送 OBS 状态失败 (${connId}):`, error)
+      }
+    }
+  }
+
+  watch(
+    () => obsStore.currentObsScene,
+    (sceneName, prev) => {
+      if (sceneName && sceneName !== prev) {
+        pushObsSceneChanged(sceneName)
+        void pushObsStatusChanged()
+      }
+    },
+  )
+
+  watch(
+    [() => obsStore.obsConnected, () => obsStore.obsScenes.join('\0')],
+    () => {
+      void pushObsStatusChanged()
+    },
+  )
 
   // 统一的弹幕事件分发: 推给所有订阅了该事件的连接
   function dispatch(eventName: DanmakuEventName, data: EventModel) {
@@ -106,6 +164,34 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
         const ok = await biliFunc.sendPrivateMessage(userId, message)
         return { code: ok ? 0 : -1, message: ok ? undefined : '发送失败' }
       },
+
+      obsGetStatus: async () => buildObsStatus(),
+
+      obsSwitchScene: async (sceneName) => {
+        requireWrite()
+        if (!obsStore.obsConnected) return { ok: false, message: 'OBS 未连接' }
+        await obsStore.switchToScene(sceneName)
+        return { ok: true }
+      },
+
+      obsGetSceneItems: async (sceneName) => obsStore.getSceneItems(sceneName),
+
+      obsUpsertBrowserSource: async (params) => {
+        requireWrite()
+        return obsStore.upsertBrowserSource(params)
+      },
+
+      obsSubscribeEvents: async () => {
+        obsSubscribers.add(conn.connId)
+        setSubscribed(conn.connId, true)
+        return { ok: true }
+      },
+
+      obsUnsubscribeEvents: async () => {
+        obsSubscribers.delete(conn.connId)
+        if (!subscriptions.has(conn.connId)) setSubscribed(conn.connId, false)
+        return { ok: true }
+      },
     }
   }
 
@@ -131,6 +217,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
       onClose: (connId) => {
         conns.delete(connId)
         subscriptions.delete(connId)
+        obsSubscribers.delete(connId)
         connections.value = connections.value.filter((c) => c.connId !== connId)
         info(`[RPC] 外部连接断开: ${connId}`)
       },
@@ -144,6 +231,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
     stop = undefined
     conns.clear()
     subscriptions.clear()
+    obsSubscribers.clear()
     connections.value = []
     running.value = false
     warn('[RPC] 开放接口服务已停止')

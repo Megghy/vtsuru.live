@@ -1,4 +1,5 @@
 import { ACCOUNT } from '@/api/account'
+import { cookie } from '@/api/auth'
 import { getTtsApiUrl } from '@/shared/config'
 
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from './ai-client'
@@ -49,10 +50,15 @@ export class MimoVoiceProvider implements VoiceProvider {
 
   private async fetchVoiceList(): Promise<VoiceOption[]> {
     try {
-      const response = await fetch(`${getTtsApiUrl()}voices?provider=mimo`)
+      const headers: Record<string, string> = {}
+      if (cookie.value?.cookie) headers.Authorization = `Bearer ${cookie.value.cookie}`
+      const response = await fetch(`${getTtsApiUrl()}voices?provider=mimo`, { headers })
       if (!response.ok) throw new Error('获取 MiMo 音色列表失败')
 
       const voices = await response.json()
+      if (!Array.isArray(voices)) {
+        throw new Error(voices?.message || '获取 MiMo 音色列表失败')
+      }
       this.voiceList = voices.map((voice: any) => {
         const id = voice.id ?? voice.Id
         const name = voice.name ?? voice.Name ?? id
@@ -149,12 +155,14 @@ export class MimoVoiceProvider implements VoiceProvider {
 
     const voice = cfg.mimoVoice ?? DEFAULT_MIMO_VOICE
 
+    const token = ACCOUNT.value?.token || cookie.value?.cookie
+
     if (voice.startsWith('custom:')) {
       const voiceId = voice.replace('custom:', '')
       const url = new URL(`${getTtsApiUrl()}mimo/custom`)
       url.searchParams.set('text', text)
       url.searchParams.set('voiceId', voiceId)
-      if (ACCOUNT.value?.token) url.searchParams.set('token', ACCOUNT.value.token)
+      if (token) url.searchParams.set('token', token)
       return url.toString()
     }
 
@@ -162,6 +170,7 @@ export class MimoVoiceProvider implements VoiceProvider {
     url.searchParams.set('text', text)
     url.searchParams.set('voice', voice)
     if (cfg.mimoStyleTag) url.searchParams.set('styleTag', cfg.mimoStyleTag)
+    if (token) url.searchParams.set('token', token)
     return url.toString()
   }
 

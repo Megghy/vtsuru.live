@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { FormField } from '@/shared/ui/form-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -31,8 +32,7 @@ const showIntensity = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">文字特效</label>
+  <FormField label="文字特效">
     <Select v-model="blockProps.textEffect">
       <SelectTrigger>
         <SelectValue placeholder="选择特效" />
@@ -47,12 +47,11 @@ const showIntensity = computed(() => {
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
-  <div
+  </FormField>
+  <FormField
     v-if="showIntensity"
-    class="space-y-1"
+    label="特效强度"
   >
-    <label class="text-xs text-muted-foreground">特效强度</label>
     <Select v-model="blockProps.effectIntensity">
       <SelectTrigger>
         <SelectValue placeholder="选择强度" />
@@ -67,5 +66,5 @@ const showIntensity = computed(() => {
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 </template>

@@ -15,6 +15,7 @@ import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
@@ -393,14 +394,13 @@ onUnmounted(() => turnstile.value?.remove())
                   </li>
                 </ul>
 
-                <div class="space-y-1.5">
-                  <label class="text-xs font-medium text-foreground">视频链接或 BV 号</label>
+                <FormField label="视频链接或 BV 号">
                   <Input
                     v-model="addModel.video"
                     placeholder="https://www.bilibili.com/video/BV..."
                     size="default"
                   />
-                </div>
+                </FormField>
 
                 <div
                   v-if="isBiliAuthed"
@@ -416,17 +416,21 @@ onUnmounted(() => turnstile.value?.remove())
                   v-else
                   class="identity-fields grid grid-cols-2 gap-3"
                 >
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-medium text-foreground">推荐人</label>
+                  <FormField
+                    label="推荐人"
+                    class="min-w-0"
+                  >
                     <Input
                       v-model="addModel.name"
                       placeholder="选填"
                       maxlength="50"
                       size="default"
                     />
-                  </div>
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-medium text-foreground">哔哩哔哩 UID</label>
+                  </FormField>
+                  <FormField
+                    label="哔哩哔哩 UID"
+                    class="min-w-0"
+                  >
                     <NumberField
                       :model-value="addModel.uid != null ? String(addModel.uid) : ''"
                       placeholder="选填"
@@ -434,20 +438,17 @@ onUnmounted(() => turnstile.value?.remove())
                       @update:model-value="addModel.uid = $event ? Number($event) : undefined"
                       :show-buttons="false"
                     />
-                  </div>
+                  </FormField>
                 </div>
 
-                <div class="space-y-1.5">
-                  <label class="text-xs font-medium text-foreground">
-                    {{ table.requireDescription ? '推荐理由' : '推荐理由（选填）' }}
-                  </label>
+                <FormField :label="table.requireDescription ? '推荐理由' : '推荐理由（选填）'">
                   <Textarea
                     v-model="addModel.description"
                     :placeholder="table.requireDescription ? '请说明推荐这个视频的原因' : '可补充推荐原因或看点'"
                     maxlength="200"
                     rows="3"
                   />
-                </div>
+                </FormField>
 
                 <CaptchaWidget
                   ref="turnstile"

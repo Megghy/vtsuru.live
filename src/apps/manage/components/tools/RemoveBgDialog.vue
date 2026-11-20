@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { useRemoveBg } from '@/composables/useRemoveBg'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -104,8 +105,10 @@ function cancel() {
 
       <!-- Settings -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-2">
-        <div class="flex flex-col gap-1">
-          <label class="text-[11px] text-muted-foreground">模式</label>
+        <FormField
+          label="模式"
+          class="min-w-0"
+        >
           <Select v-model="options.mode">
             <SelectTrigger>
               <SelectValue />
@@ -120,10 +123,12 @@ function cancel() {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-[11px] text-muted-foreground">模型</label>
+        <FormField
+          label="模型"
+          class="min-w-0"
+        >
           <Select v-model="options.model">
             <SelectTrigger>
               <SelectValue />
@@ -138,10 +143,12 @@ function cancel() {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-[11px] text-muted-foreground">设备</label>
+        <FormField
+          label="设备"
+          class="min-w-0"
+        >
           <Select v-model="options.device">
             <SelectTrigger>
               <SelectValue />
@@ -157,12 +164,16 @@ function cancel() {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1 justify-center">
-          <label class="text-[11px] text-muted-foreground">Worker 代理</label>
-          <Switch v-model:checked="options.proxyToWorker" />
-        </div>
+        <FormField
+          label="Worker 代理"
+          class="min-w-0"
+        >
+          <div class="flex items-center flex-1">
+            <Switch v-model:checked="options.proxyToWorker" />
+          </div>
+        </FormField>
       </div>
 
       <!-- Progress -->

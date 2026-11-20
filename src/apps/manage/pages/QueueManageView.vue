@@ -278,7 +278,7 @@ onUnmounted(() => {
           <QueueOBS
             :id="accountInfo?.id"
             :key="`${accountInfo?.id}-${styleType}-${speedMultiplier}`"
-            :style="styleType"
+            :theme-style="styleType"
             :speed-multiplier="speedMultiplier"
           />
         </template>

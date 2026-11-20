@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
@@ -19,8 +23,16 @@ const message = useMessage()
 const text = ref('')
 const canvasRef = ref<HTMLCanvasElement>()
 
-const { fontOptions, loading: fontsLoading, loadLocalFonts } = useLocalFonts()
-onMounted(loadLocalFonts)
+const { allFonts, fontOptions, loadLocalFonts } = useLocalFonts()
+const extraFontOptions = computed(() => fontOptions.value.filter((opt) => opt.value !== 'sans-serif'))
+
+onMounted(() => {
+  void loadLocalFonts()
+  document.fonts?.addEventListener('loadingdone', render)
+})
+onUnmounted(() => {
+  document.fonts?.removeEventListener('loadingdone', render)
+})
 
 const style = reactive({
   fontSize: 24,
@@ -36,9 +48,17 @@ const style = reactive({
   bold: false,
 })
 
-function onFontChange(val: string) {
-  style.fontFamily = val
-  markFontUsed(val)
+const remoteGoogleFont = computed(() => {
+  const family = style.fontFamily
+  if (!family || allFonts.value.includes(family)) return undefined
+  return family
+})
+useGoogleFont(remoteGoogleFont)
+
+function onFontChange(val: string | null) {
+  style.fontFamily = val || 'sans-serif'
+  if (val) markFontUsed(val)
+  void document.fonts?.ready.then(() => render())
 }
 
 const alignOptions = [
@@ -53,7 +73,7 @@ const vAlignOptions = [
 ]
 
 function getFont() {
-  const family = style.fontFamily
+  const family = resolveFontFamilyCss(style.fontFamily) || 'sans-serif'
   const weight = style.bold ? 'bold ' : ''
   return `${weight}${style.fontSize}px ${family}`
 }
@@ -159,44 +179,41 @@ async function download() {
     <CardContent>
       <div class="text-to-image-layout">
         <div class="controls-panel">
-          <span class="text-xs text-muted-foreground mb-2 block"> 输入文本 </span>
-          <Textarea
-            v-model="text"
-            placeholder="在此粘贴长文本，将自动渲染为图片..."
-            class="min-h-[140px]"
-          />
+          <FormField label="输入文本">
+            <Textarea
+              v-model="text"
+              placeholder="在此粘贴长文本，将自动渲染为图片..."
+              class="min-h-[140px]"
+            />
+          </FormField>
           <div class="flex flex-col mt-4 gap-3">
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 字体 </span>
-              <Select
-                :model-value="style.fontFamily"
+            <SettingRow
+              title="字体"
+              variant="none"
+            >
+              <GoogleFontPicker
+                class="w-56"
+                :model-value="style.fontFamily === 'sans-serif' ? null : style.fontFamily"
+                :extra-options="extraFontOptions"
+                :show-preview="false"
                 @update:model-value="onFontChange"
-              >
-                <SelectTrigger class="flex-1">
-                  <SelectValue :placeholder="fontsLoading ? '加载字体中...' : '选择字体'" />
-                </SelectTrigger>
-                <SelectContent class="max-h-60">
-                  <SelectItem
-                    v-for="opt in fontOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                  >
-                    {{ opt.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 加粗 </span>
+              />
+            </SettingRow>
+            <SettingRow
+              title="加粗"
+              variant="none"
+            >
               <Switch
                 :checked="style.bold"
                 @update:checked="(v) => (style.bold = v)"
               />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 水平对齐 </span>
+            </SettingRow>
+            <SettingRow
+              title="水平对齐"
+              variant="none"
+            >
               <Select v-model="style.textAlign">
-                <SelectTrigger class="w-[120px]">
+                <SelectTrigger class="w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -209,11 +226,13 @@ async function download() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 垂直对齐 </span>
+            </SettingRow>
+            <SettingRow
+              title="垂直对齐"
+              variant="none"
+            >
               <Select v-model="style.verticalAlign">
-                <SelectTrigger class="w-[120px]">
+                <SelectTrigger class="w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -226,115 +245,125 @@ async function download() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 字号 </span>
-              <Slider
-                :model-value="[style.fontSize]"
-                :min="14"
-                :max="48"
-                :step="1"
-                class="flex-1"
-                @update:model-value="
-                  (val) => {
-                    if (val?.[0] !== undefined) style.fontSize = val[0]
-                  }
-                "
-              />
-              <NumberField
-                v-model="style.fontSize"
-                :min="14"
-                :max="48"
-                class="w-20"
-              />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 行高 </span>
-              <Slider
-                :model-value="[style.lineHeight]"
-                :min="1.2"
-                :max="2.5"
-                :step="0.1"
-                class="flex-1"
-                @update:model-value="
-                  (val) => {
-                    if (val?.[0] !== undefined) style.lineHeight = Number(val[0].toFixed(1))
-                  }
-                "
-              />
-              <NumberField
-                v-model="style.lineHeight"
-                :min="1.2"
-                :max="2.5"
-                :step="0.1"
-                class="w-20"
-              />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 内边距 </span>
-              <Slider
-                :model-value="[style.padding]"
-                :min="16"
-                :max="80"
-                :step="4"
-                class="flex-1"
-                @update:model-value="
-                  (val) => {
-                    if (val?.[0] !== undefined) style.padding = val[0]
-                  }
-                "
-              />
-              <NumberField
-                v-model="style.padding"
-                :min="16"
-                :max="80"
-                class="w-20"
-              />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 最大宽度 </span>
-              <Slider
-                :model-value="[style.maxWidth]"
-                :min="400"
-                :max="1200"
-                :step="50"
-                class="flex-1"
-                @update:model-value="
-                  (val) => {
-                    if (val?.[0] !== undefined) style.maxWidth = val[0]
-                  }
-                "
-              />
-              <NumberField
-                v-model="style.maxWidth"
-                :min="400"
-                :max="1200"
-                :step="50"
-                class="w-24"
-              />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 文字颜色 </span>
+            </SettingRow>
+            <FormField label="字号">
+              <div class="flex items-center gap-2">
+                <Slider
+                  :model-value="[style.fontSize]"
+                  :min="14"
+                  :max="48"
+                  :step="1"
+                  class="flex-1"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) style.fontSize = val[0]
+                    }
+                  "
+                />
+                <NumberField
+                  v-model="style.fontSize"
+                  :min="14"
+                  :max="48"
+                  class="w-20"
+                />
+              </div>
+            </FormField>
+            <FormField label="行高">
+              <div class="flex items-center gap-2">
+                <Slider
+                  :model-value="[style.lineHeight]"
+                  :min="1.2"
+                  :max="2.5"
+                  :step="0.1"
+                  class="flex-1"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) style.lineHeight = Number(val[0].toFixed(1))
+                    }
+                  "
+                />
+                <NumberField
+                  v-model="style.lineHeight"
+                  :min="1.2"
+                  :max="2.5"
+                  :step="0.1"
+                  class="w-20"
+                />
+              </div>
+            </FormField>
+            <FormField label="内边距">
+              <div class="flex items-center gap-2">
+                <Slider
+                  :model-value="[style.padding]"
+                  :min="16"
+                  :max="80"
+                  :step="4"
+                  class="flex-1"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) style.padding = val[0]
+                    }
+                  "
+                />
+                <NumberField
+                  v-model="style.padding"
+                  :min="16"
+                  :max="80"
+                  class="w-20"
+                />
+              </div>
+            </FormField>
+            <FormField label="最大宽度">
+              <div class="flex items-center gap-2">
+                <Slider
+                  :model-value="[style.maxWidth]"
+                  :min="400"
+                  :max="1200"
+                  :step="50"
+                  class="flex-1"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) style.maxWidth = val[0]
+                    }
+                  "
+                />
+                <NumberField
+                  v-model="style.maxWidth"
+                  :min="400"
+                  :max="1200"
+                  :step="50"
+                  class="w-24"
+                />
+              </div>
+            </FormField>
+            <SettingRow
+              title="文字颜色"
+              variant="none"
+            >
               <ColorPicker
                 v-model="style.color"
-                class="flex-1"
+                class="w-40"
               />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 背景色 </span>
+            </SettingRow>
+            <SettingRow
+              title="背景色"
+              variant="none"
+            >
               <ColorPicker
                 v-model="style.bgColor"
-                class="flex-1"
+                class="w-40"
               />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 渐变终色 </span>
+            </SettingRow>
+            <SettingRow
+              title="渐变终色"
+              description="留空则使用纯色背景"
+              variant="none"
+            >
               <ColorPicker
                 v-model="style.bgGradient"
-                class="flex-1"
+                class="w-40"
               />
-            </div>
-            <span class="text-xs text-muted-foreground"> 渐变终色留空则使用纯色背景 </span>
+            </SettingRow>
           </div>
         </div>
         <div class="preview-panel">

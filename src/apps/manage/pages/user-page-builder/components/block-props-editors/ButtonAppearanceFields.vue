@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import ColorPicker from '@/shared/ui/color-picker/ColorPicker.vue'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -67,11 +69,10 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
 </script>
 
 <template>
-  <div
+  <FormField
     v-if="propertyAvailable('align')"
-    class="space-y-1"
+    label="对齐方式"
   >
-    <label class="text-xs text-muted-foreground">对齐方式</label>
     <Select v-model="blockProps.align">
       <SelectTrigger>
         <SelectValue placeholder="对齐方式" />
@@ -86,18 +87,18 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 
-  <div
+  <SettingRow
     v-if="propertyAvailable('fullWidth')"
-    class="flex-between py-1"
+    title="按钮铺满宽度"
+    variant="none"
+    class="py-1"
   >
-    <label class="text-xs text-muted-foreground">按钮铺满宽度</label>
     <Switch v-model:checked="blockProps.fullWidth" />
-  </div>
+  </SettingRow>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">按钮类型</label>
+  <FormField label="按钮类型">
     <Select v-model="blockProps.type">
       <SelectTrigger>
         <SelectValue placeholder="按钮类型" />
@@ -112,10 +113,9 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">样式变体</label>
+  <FormField label="样式变体">
     <Select v-model="blockProps.variant">
       <SelectTrigger>
         <SelectValue placeholder="样式变体" />
@@ -130,10 +130,9 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">尺寸</label>
+  <FormField label="尺寸">
     <Select v-model="blockProps.size">
       <SelectTrigger>
         <SelectValue placeholder="尺寸" />
@@ -148,10 +147,9 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">形态</label>
+  <FormField label="形态">
     <Select v-model="blockProps.radius">
       <SelectTrigger>
         <SelectValue placeholder="形态" />
@@ -166,60 +164,54 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 
-  <div
+  <FormField
     v-if="propertyAvailable('radiusPx')"
-    class="space-y-1"
+    label="圆角 px"
   >
-    <label class="text-xs text-muted-foreground">圆角 px</label>
     <NumberField
       v-model="blockProps.radiusPx"
       :min="0"
       :max="48"
       class="w-full"
     />
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">背景色</label>
+  <FormField label="背景色">
     <ColorPicker
       :value="colorValue('color')"
       :show-alpha="true"
       @update:value="(value) => setColor('color', value)"
     />
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">文字色</label>
+  <FormField label="文字色">
     <ColorPicker
       :value="colorValue('textColor')"
       :show-alpha="true"
       @update:value="(value) => setColor('textColor', value)"
     />
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">边框粗细</label>
+  <FormField label="边框粗细">
     <NumberField
       v-model="blockProps.borderWidth"
       :min="0"
       :max="8"
       class="w-full"
     />
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">边框颜色</label>
+  <FormField label="边框颜色">
     <ColorPicker
       :value="colorValue('borderColor')"
       :show-alpha="true"
       @update:value="(value) => setColor('borderColor', value)"
     />
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">透明度</label>
+  <FormField label="透明度">
     <NumberField
       v-model="blockProps.opacity"
       :min="0.15"
@@ -227,10 +219,9 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
       :step="0.05"
       class="w-full"
     />
-  </div>
+  </FormField>
 
-  <div class="space-y-1">
-    <label class="text-xs text-muted-foreground">特效</label>
+  <FormField label="特效">
     <Select v-model="blockProps.effect">
       <SelectTrigger>
         <SelectValue placeholder="选择特效" />
@@ -245,13 +236,12 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 
-  <div
+  <FormField
     v-if="blockProps.effect && blockProps.effect !== 'none'"
-    class="space-y-1"
+    label="特效强度"
   >
-    <label class="text-xs text-muted-foreground">特效强度</label>
     <Select v-model="blockProps.effectIntensity">
       <SelectTrigger>
         <SelectValue placeholder="特效强度" />
@@ -266,5 +256,5 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         </SelectItem>
       </SelectContent>
     </Select>
-  </div>
+  </FormField>
 </template>

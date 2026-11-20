@@ -7,22 +7,26 @@ import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import Play24Regular from '@vicons/fluent/es/Play24Regular'
 import Subtract24Regular from '@vicons/fluent/es/Subtract24Regular'
 import { useClipboard } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
@@ -37,8 +41,18 @@ const { copy, isSupported: isCopySupported } = useClipboard()
 const route = useRoute()
 const account = useAccount()
 
-const channelId = ref(resolveObsSyncChannel(route.query.channel))
+const props = defineProps<{ channelId?: string }>()
+const channelId = ref(resolveObsSyncChannel(props.channelId ?? route.query.channel))
 const channelDraft = ref(channelId.value)
+watch(
+  () => props.channelId,
+  (val) => {
+    if (!val) return
+    const resolved = resolveObsSyncChannel(val)
+    channelId.value = resolved
+    channelDraft.value = resolved
+  },
+)
 const copied = ref(false)
 const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 const isSpinningLock = ref(false)
@@ -387,22 +401,26 @@ function changeChannel() {
         <Separator />
 
         <!-- 外观与行为配置 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">转盘标题</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <FormField
+            label="转盘标题"
+            class="min-w-0"
+          >
             <Input
               :model-value="state.title"
               @update:model-value="(v) => updateState({ title: String(v) })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">视觉风格</span>
+          <FormField
+            label="视觉风格"
+            class="min-w-0"
+          >
             <Select
               :model-value="state.theme"
               @update:model-value="(v) => updateState({ theme: v as WheelTheme })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -415,18 +433,34 @@ function changeChannel() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">指针颜色</span>
+          <FormField
+            label="指针颜色"
+            class="min-w-0"
+          >
             <ColorPicker
               :model-value="state.pointerColor"
               @update:model-value="(v) => updateState({ pointerColor: v })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">转动时长 (毫秒)</span>
+          <FormField
+            label="字体"
+            class="min-w-0"
+          >
+            <GoogleFontPicker
+              :model-value="state.fontFamily || null"
+              :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+              :show-preview="false"
+              @update:model-value="updateState({ fontFamily: $event || '' })"
+            />
+          </FormField>
+
+          <FormField
+            label="转动时长 (毫秒)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.durationMs"
               :min="1500"
@@ -434,10 +468,12 @@ function changeChannel() {
               :step="500"
               @update:model-value="(v) => updateState({ durationMs: v ?? 4500 })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-muted-foreground">转盘直径 (px)</span>
+          <FormField
+            label="转盘直径 (px)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.sizePx"
               :min="240"
@@ -445,23 +481,27 @@ function changeChannel() {
               :step="20"
               @update:model-value="(v) => updateState({ sizePx: v ?? 420 })"
             />
-          </div>
+          </FormField>
 
-          <div class="flex flex-col justify-end gap-2 pb-1">
-            <label class="flex-between cursor-pointer">
-              <span>按权重比例绘制扇区大小</span>
+          <div class="flex flex-col justify-end gap-2 pb-1 min-w-0">
+            <SettingRow
+              title="按权重比例绘制扇区大小"
+              variant="none"
+            >
               <Switch
                 :model-value="state.proportionalAngles"
                 @update:model-value="(v: boolean) => updateState({ proportionalAngles: v })"
               />
-            </label>
-            <label class="flex-between cursor-pointer">
-              <span>开启拨片哒哒声与中奖音效</span>
+            </SettingRow>
+            <SettingRow
+              title="开启拨片哒哒声与中奖音效"
+              variant="none"
+            >
               <Switch
                 :model-value="state.soundEnabled"
                 @update:model-value="(v: boolean) => updateState({ soundEnabled: v })"
               />
-            </label>
+            </SettingRow>
           </div>
         </div>
       </CardContent>

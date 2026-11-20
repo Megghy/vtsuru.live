@@ -6,8 +6,9 @@ import { ref, watch } from 'vue'
 
 import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
+import { Card, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { NumberField } from '@/shared/ui/number-field'
@@ -107,7 +108,7 @@ function moveImage(id: number, offset: -1 | 1) {
               :index="idx"
               wrapper-class="shrink-0"
             >
-              <template #default="{ open }">
+              <template #default="{ open, thumbSrc, onError }">
                 <button
                   type="button"
                   class="size-10 rounded overflow-hidden border border-border shrink-0 cursor-zoom-in p-0 bg-muted/20 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
@@ -115,9 +116,10 @@ function moveImage(id: number, offset: -1 | 1) {
                   @click.stop="open()"
                 >
                   <img
-                    :src="image.path"
+                    :src="thumbSrc || undefined"
                     :alt="image.name"
                     class="size-full object-cover"
+                    @error="onError"
                   />
                 </button>
               </template>
@@ -186,8 +188,10 @@ function moveImage(id: number, offset: -1 | 1) {
         class="p-3 flex flex-col gap-3 border-t bg-muted/10"
       >
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-3">
-          <div class="space-y-1">
-            <span class="text-[11px] text-muted-foreground">X (%)</span>
+          <FormField
+            label="X (%)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="image.x"
               :disabled="disabled"
@@ -196,9 +200,11 @@ function moveImage(id: number, offset: -1 | 1) {
               class="w-full"
               @update:model-value="updateImage(image.id, { x: $event ?? 0 })"
             />
-          </div>
-          <div class="space-y-1">
-            <span class="text-[11px] text-muted-foreground">Y (%)</span>
+          </FormField>
+          <FormField
+            label="Y (%)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="image.y"
               :disabled="disabled"
@@ -207,9 +213,11 @@ function moveImage(id: number, offset: -1 | 1) {
               class="w-full"
               @update:model-value="updateImage(image.id, { y: $event ?? 0 })"
             />
-          </div>
-          <div class="space-y-1">
-            <span class="text-[11px] text-muted-foreground">宽度 (%)</span>
+          </FormField>
+          <FormField
+            label="宽度 (%)"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="image.width"
               :disabled="disabled"
@@ -217,22 +225,24 @@ function moveImage(id: number, offset: -1 | 1) {
               class="w-full"
               @update:model-value="updateImage(image.id, { width: $event ?? 1 })"
             />
-          </div>
-          <div class="space-y-1">
-            <span class="text-[11px] text-muted-foreground">层级</span>
+          </FormField>
+          <FormField
+            label="层级"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="image.zIndex"
               readonly
               class="w-full opacity-60"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div class="space-y-1.5 w-full">
-          <div class="flex justify-between text-[11px] text-muted-foreground">
-            <span>旋转</span>
-            <span>{{ image.rotation }}°</span>
-          </div>
+        <FormField
+          label="旋转"
+          :extra="`${image.rotation}°`"
+          class="w-full"
+        >
           <Slider
             :model-value="[image.rotation]"
             :disabled="disabled"
@@ -241,13 +251,13 @@ function moveImage(id: number, offset: -1 | 1) {
             :step="1"
             @update:model-value="updateImage(image.id, { rotation: $event?.[0] ?? 0 })"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5 w-full">
-          <div class="flex justify-between text-[11px] text-muted-foreground">
-            <span>透明度</span>
-            <span>{{ Math.round(image.opacity * 100) }}%</span>
-          </div>
+        <FormField
+          label="透明度"
+          :extra="`${Math.round(image.opacity * 100)}%`"
+          class="w-full"
+        >
           <Slider
             :model-value="[image.opacity]"
             :disabled="disabled"
@@ -256,7 +266,7 @@ function moveImage(id: number, offset: -1 | 1) {
             :step="0.01"
             @update:model-value="updateImage(image.id, { opacity: $event?.[0] ?? 1 })"
           />
-        </div>
+        </FormField>
       </CardFooter>
     </Card>
   </div>

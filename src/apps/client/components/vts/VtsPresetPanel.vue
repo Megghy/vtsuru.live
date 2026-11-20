@@ -6,6 +6,7 @@ import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -136,11 +137,13 @@ function addFromCurrent() {
       <DialogHeader>
         <DialogTitle class="text-base">编辑机位预设</DialogTitle>
       </DialogHeader>
-      <div class="flex flex-col gap-3 py-2 text-xs">
-        <Input
-          v-model="form.name"
-          placeholder="预设名称"
-        />
+      <div class="flex flex-col gap-3 py-2">
+        <FormField label="预设名称">
+          <Input
+            v-model="form.name"
+            placeholder="预设名称"
+          />
+        </FormField>
 
         <div class="flex items-center gap-2 flex-wrap">
           <Button
@@ -154,51 +157,61 @@ function addFromCurrent() {
           >
             填入当前位置
           </Button>
-          <span class="text-[11px] text-[var(--muted-foreground)]">需要 VTS 已鉴权且模型有移动事件</span>
+          <span class="text-[11px] text-muted-foreground">需要 VTS 已鉴权且模型有移动事件</span>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-          <div class="space-y-1">
-            <label class="text-[11px] text-[var(--muted-foreground)]">过渡时间 (s)</label>
+          <FormField
+            label="过渡时间 (s)"
+            class="min-w-0"
+          >
             <NumberField
               v-model="form.timeInSeconds"
               :min="0"
               :step="0.05"
               placeholder="过渡时间(s)"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-[11px] text-[var(--muted-foreground)]">X 坐标</label>
+          </FormField>
+          <FormField
+            label="X 坐标"
+            class="min-w-0"
+          >
             <NumberField
               v-model="form.positionX"
               :step="0.01"
               placeholder="X"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-[11px] text-[var(--muted-foreground)]">Y 坐标</label>
+          </FormField>
+          <FormField
+            label="Y 坐标"
+            class="min-w-0"
+          >
             <NumberField
               v-model="form.positionY"
               :step="0.01"
               placeholder="Y"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-[11px] text-[var(--muted-foreground)]">旋转</label>
+          </FormField>
+          <FormField
+            label="旋转"
+            class="min-w-0"
+          >
             <NumberField
               v-model="form.rotation"
               :step="0.1"
               placeholder="旋转"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-[11px] text-[var(--muted-foreground)]">缩放大小</label>
+          </FormField>
+          <FormField
+            label="缩放大小"
+            class="min-w-0"
+          >
             <NumberField
               v-model="form.size"
               :step="0.5"
               placeholder="大小"
             />
-          </div>
+          </FormField>
         </div>
       </div>
       <DialogFooter class="flex justify-end gap-2 pt-2">

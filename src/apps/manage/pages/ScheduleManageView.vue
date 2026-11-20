@@ -25,9 +25,10 @@ import ScheduleList from '@/components/ScheduleList.vue'
 import { CURRENT_HOST, SCHEDULE_API_URL } from '@/shared/config'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
@@ -875,8 +876,7 @@ onMounted(() => {
         </DialogHeader>
 
         <div class="space-y-3 py-2">
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">年份</span>
+          <FormField label="年份">
             <Select v-model="selectedScheduleYear">
               <SelectTrigger>
                 <SelectValue />
@@ -891,10 +891,9 @@ onMounted(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">第几周</span>
+          <FormField label="第几周">
             <Select v-model="selectedScheduleWeek">
               <SelectTrigger>
                 <SelectValue />
@@ -910,7 +909,7 @@ onMounted(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </div>
 
         <DialogFooter>
@@ -953,8 +952,7 @@ onMounted(() => {
             </AlertDescription>
           </Alert>
 
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">目标年份</span>
+          <FormField label="目标年份">
             <Select v-model="selectedScheduleYear">
               <SelectTrigger>
                 <SelectValue />
@@ -969,10 +967,9 @@ onMounted(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">目标周</span>
+          <FormField label="目标周">
             <Select v-model="selectedScheduleWeek">
               <SelectTrigger>
                 <SelectValue />
@@ -987,10 +984,9 @@ onMounted(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">复制方式</span>
+          <FormField label="复制方式">
             <Select v-model="copyMode">
               <SelectTrigger>
                 <SelectValue />
@@ -1000,7 +996,7 @@ onMounted(() => {
                 <SelectItem value="replace"> 替换手工行程 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </div>
 
         <DialogFooter>
@@ -1207,8 +1203,10 @@ onMounted(() => {
           </DialogDescription>
         </DialogHeader>
 
-        <div class="py-2 space-y-1">
-          <span class="text-xs text-muted-foreground">目标星期</span>
+        <FormField
+          label="目标星期"
+          class="py-2"
+        >
           <Select v-model="itemTransferTargetDay">
             <SelectTrigger>
               <SelectValue />
@@ -1223,7 +1221,7 @@ onMounted(() => {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
         <DialogFooter>
           <Button
@@ -1254,8 +1252,10 @@ onMounted(() => {
 
         <div class="space-y-3 py-2 text-xs">
           <div class="grid grid-cols-2 gap-2">
-            <div class="space-y-1">
-              <span class="text-muted-foreground">年份</span>
+            <FormField
+              label="年份"
+              class="min-w-0"
+            >
               <Select v-model="batchAddYear">
                 <SelectTrigger>
                   <SelectValue />
@@ -1270,10 +1270,12 @@ onMounted(() => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div class="space-y-1">
-              <span class="text-muted-foreground">星期</span>
+            <FormField
+              label="星期"
+              class="min-w-0"
+            >
               <Select v-model="batchAddDay">
                 <SelectTrigger>
                   <SelectValue />
@@ -1288,11 +1290,10 @@ onMounted(() => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </div>
 
-          <div class="space-y-1">
-            <span class="text-muted-foreground">周范围</span>
+          <FormField label="周范围">
             <div class="flex items-center gap-2">
               <Select v-model="batchAddWeekFrom">
                 <SelectTrigger class="flex-1">
@@ -1324,7 +1325,7 @@ onMounted(() => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </FormField>
 
           <Separator />
 

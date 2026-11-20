@@ -161,7 +161,7 @@ onBeforeUnmount(() => recognition?.abort())
             :index="i"
             wrapper-class="block size-full"
           >
-            <template #default="{ open }">
+            <template #default="{ open, thumbSrc, onError }">
               <button
                 type="button"
                 class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
@@ -169,9 +169,10 @@ onBeforeUnmount(() => recognition?.abort())
                 @click="open()"
               >
                 <img
-                  :src="img"
+                  :src="thumbSrc || undefined"
                   alt="附件"
                   class="size-full object-cover block"
+                  @error="onError"
                 />
               </button>
             </template>

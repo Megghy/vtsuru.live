@@ -6,9 +6,11 @@ import PngtuberCollabCard from '@/shared/pngtuber/PngtuberCollabCard.vue'
 import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
@@ -100,21 +102,25 @@ onMounted(() => {
       </CardHeader>
       <CardContent class="px-4 pb-4 space-y-4">
         <div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-[var(--muted-foreground)]">频道</label>
+          <FormField
+            label="频道"
+            class="min-w-0"
+          >
             <Input
               v-model="driver.channel"
               placeholder="default"
               :disabled="locked"
             />
-          </div>
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-[var(--muted-foreground)]">音频来源</label>
+          </FormField>
+          <FormField
+            label="音频来源"
+            class="min-w-0"
+          >
             <Select
               v-model="driver.audioMode"
               :disabled="locked"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="选择音频来源" />
               </SelectTrigger>
               <SelectContent>
@@ -122,17 +128,17 @@ onMounted(() => {
                 <SelectItem value="obs">OBS 输入源</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div
+          </FormField>
+          <FormField
             v-if="driver.audioMode === 'microphone'"
-            class="space-y-1.5"
+            label="麦克风设备"
+            class="min-w-0"
           >
-            <label class="text-xs font-medium text-[var(--muted-foreground)]">麦克风设备</label>
             <Select
               v-model="driver.deviceId"
               :disabled="locked"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="选择麦克风设备" />
               </SelectTrigger>
               <SelectContent>
@@ -145,17 +151,17 @@ onMounted(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div
+          </FormField>
+          <FormField
             v-else
-            class="space-y-1.5"
+            label="OBS 输入源"
+            class="min-w-0"
           >
-            <label class="text-xs font-medium text-[var(--muted-foreground)]">OBS 输入源</label>
             <Select
               v-model="driver.obsInput"
               :disabled="locked"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="选择音频输入源" />
               </SelectTrigger>
               <SelectContent>
@@ -168,7 +174,7 @@ onMounted(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
@@ -233,17 +239,19 @@ onMounted(() => {
         <Progress :model-value="Math.min(100, Math.max(0, Math.round(driver.volume)))" />
 
         <div
-          class="space-y-3"
+          class="space-y-2.5 max-w-md"
           :class="{ 'opacity-50 pointer-events-none': !driver.running || !driver.connected }"
         >
-          <div class="flex items-center gap-4">
-            <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">表情</span>
-            <div class="flex-1 max-w-xs">
+          <SettingRow
+            variant="none"
+            title="表情"
+          >
+            <div class="w-56">
               <Select
                 :model-value="driver.runtime.expressionId || driver.config.defaultExpressionId"
                 @update:model-value="(value) => control({ expressionId: String(value) })"
               >
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="选择表情" />
                 </SelectTrigger>
                 <SelectContent>
@@ -257,23 +265,27 @@ onMounted(() => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </SettingRow>
 
-          <div class="flex items-center gap-4">
-            <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">静音</span>
+          <SettingRow
+            variant="none"
+            title="静音"
+          >
             <Switch
               :checked="driver.runtime.muted"
               @update:checked="(value) => control({ muted: value })"
             />
-          </div>
+          </SettingRow>
 
-          <div class="flex items-center gap-4">
-            <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">暂离</span>
+          <SettingRow
+            variant="none"
+            title="暂离"
+          >
             <Switch
               :checked="driver.runtime.away"
               @update:checked="(value) => control({ away: value })"
             />
-          </div>
+          </SettingRow>
         </div>
 
         <div class="flex items-center gap-2 pt-2">

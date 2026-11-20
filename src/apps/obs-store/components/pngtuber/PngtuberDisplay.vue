@@ -24,6 +24,7 @@ const props = defineProps<{
   editableAccessories?: boolean
   selectedAccessoryId?: string
   showGuides?: boolean
+  noShadow?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -332,7 +333,7 @@ function onAccessoryWheel(event: WheelEvent, accessory: PngtuberAccessory) {
 
       <div class="avatar-stage">
         <div
-          v-if="viewState.shadow && !empty"
+          v-if="viewState.shadow && !empty && !noShadow"
           class="avatar-ground-shadow"
         />
         <div

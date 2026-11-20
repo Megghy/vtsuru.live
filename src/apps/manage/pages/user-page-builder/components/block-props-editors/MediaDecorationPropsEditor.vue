@@ -5,10 +5,12 @@ import { computed, onMounted, ref } from 'vue'
 import { getApiQaGetTags } from '@/api/generated/qa/qa'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -68,19 +70,19 @@ function enableFeedbackEmbed(enabled: boolean) {
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">内容</label>
+      <FormField
+        label="内容"
+        class="span-full"
+      >
         <Textarea
           v-model="blockProps.text"
           class="min-h-[70px]"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">作者</label>
+      </FormField>
+      <FormField label="作者">
         <Input v-model="blockProps.author" />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">对齐</label>
+      </FormField>
+      <FormField label="对齐">
         <Select v-model="blockProps.align">
           <SelectTrigger>
             <SelectValue placeholder="对齐" />
@@ -91,7 +93,7 @@ function enableFeedbackEmbed(enabled: boolean) {
             <SelectItem value="right">right</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
       <TextAppearanceFields :block="props.block" />
     </PropsGrid>
   </div>
@@ -101,15 +103,16 @@ function enableFeedbackEmbed(enabled: boolean) {
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">文本</label>
+      <FormField
+        label="文本"
+        class="span-full"
+      >
         <Textarea
           v-model="blockProps.text"
           class="min-h-[50px]"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">方向</label>
+      </FormField>
+      <FormField label="方向">
         <Select v-model="blockProps.direction">
           <SelectTrigger>
             <SelectValue placeholder="方向" />
@@ -121,20 +124,22 @@ function enableFeedbackEmbed(enabled: boolean) {
             <SelectItem value="down">向下</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">滚动时长 秒</label>
+      </FormField>
+      <FormField label="滚动时长 秒">
         <NumberField
           v-model="blockProps.durationSec"
           :min="4"
           :max="120"
           class="w-full"
         />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">悬停暂停</label>
+      </FormField>
+      <SettingRow
+        title="悬停暂停"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.pauseOnHover" />
-      </div>
+      </SettingRow>
     </PropsGrid>
   </div>
 
@@ -143,22 +148,25 @@ function enableFeedbackEmbed(enabled: boolean) {
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">标题</label>
+      <FormField
+        label="标题"
+        class="span-full"
+      >
         <Input
           v-model="blockProps.title"
           placeholder="例如：生日倒计时"
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">目标时间</label>
+      </FormField>
+      <FormField
+        label="目标时间"
+        class="span-full"
+      >
         <Input
           v-model="countdownTarget"
           type="datetime-local"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">展示样式</label>
+      </FormField>
+      <FormField label="展示样式">
         <Select v-model="blockProps.style">
           <SelectTrigger>
             <SelectValue placeholder="展示样式" />
@@ -168,18 +176,23 @@ function enableFeedbackEmbed(enabled: boolean) {
             <SelectItem value="inline">inline</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示秒</label>
+      </FormField>
+      <SettingRow
+        title="显示秒"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showSeconds" />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">到达后文案</label>
+      </SettingRow>
+      <FormField
+        label="到达后文案"
+        class="span-full"
+      >
         <Input
           v-model="blockProps.doneText"
           placeholder="已到达"
         />
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -188,50 +201,45 @@ function enableFeedbackEmbed(enabled: boolean) {
     class="space-y-3"
   >
     <PropsGrid>
-      <div
+      <FormField
         v-if="propertyAvailable('title')"
-        class="space-y-1"
+        label="标题"
       >
-        <label class="text-xs text-muted-foreground">标题</label>
         <Input v-model="blockProps.title" />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('buttonText')"
-        class="space-y-1"
+        label="按钮文字"
       >
-        <label class="text-xs text-muted-foreground">按钮文字</label>
         <Input v-model="blockProps.buttonText" />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('description')"
-        class="span-full space-y-1"
+        label="描述"
+        class="span-full"
       >
-        <label class="text-xs text-muted-foreground">描述</label>
         <Textarea
           v-model="blockProps.description"
           class="min-h-[50px]"
         />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('url')"
-        class="span-full space-y-1"
+        label="链接 (https)"
+        :required="Boolean(blockProps.embed && blockProps.embedMode === 'iframe')"
+        class="span-full"
       >
-        <label class="text-xs text-muted-foreground">
-          链接 (https)
-          <span
-            v-if="blockProps.embed && blockProps.embedMode === 'iframe'"
-            class="text-destructive"
-            >*</span
-          >
-        </label>
         <Input
           v-model="blockProps.url"
           placeholder="https://..."
         />
-      </div>
+      </FormField>
       <div class="span-full space-y-1">
-        <div class="flex-between py-1">
-          <label class="text-xs text-muted-foreground">嵌入到页面</label>
+        <SettingRow
+          title="嵌入到页面"
+          variant="none"
+          class="py-1"
+        >
           <Switch
             :checked="blockProps.embed"
             @update:checked="
@@ -241,14 +249,14 @@ function enableFeedbackEmbed(enabled: boolean) {
               }
             "
           />
-        </div>
+        </SettingRow>
         <div class="rounded p-2 text-xs text-muted-foreground bg-muted/40">开启“嵌入到页面”后，可选择站内提问箱</div>
       </div>
-      <div
+      <FormField
         v-if="propertyAvailable('embedMode')"
-        class="span-full space-y-1"
+        label="嵌入内容"
+        class="span-full"
       >
-        <label class="text-xs text-muted-foreground">嵌入内容</label>
         <Select v-model="blockProps.embedMode">
           <SelectTrigger>
             <SelectValue placeholder="嵌入内容" />
@@ -258,24 +266,22 @@ function enableFeedbackEmbed(enabled: boolean) {
             <SelectItem value="iframe">站外 iframe</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('height')"
-        class="space-y-1"
+        label="内嵌高度"
       >
-        <label class="text-xs text-muted-foreground">内嵌高度</label>
         <NumberField
           v-model="blockProps.height"
           :min="200"
           :max="1200"
           class="w-full"
         />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('defaultTag')"
-        class="space-y-1"
+        label="默认话题"
       >
-        <label class="text-xs text-muted-foreground">默认话题</label>
         <Select v-model="blockProps.defaultTag">
           <SelectTrigger>
             <SelectValue placeholder="不预设话题" />
@@ -290,14 +296,15 @@ function enableFeedbackEmbed(enabled: boolean) {
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div
+      </FormField>
+      <SettingRow
         v-if="propertyAvailable('showPublicQuestions')"
-        class="flex-between py-1"
+        title="显示公开问题"
+        variant="none"
+        class="py-1"
       >
-        <label class="text-xs text-muted-foreground">显示公开问题</label>
         <Switch v-model:checked="blockProps.showPublicQuestions" />
-      </div>
+      </SettingRow>
     </PropsGrid>
   </div>
 
@@ -306,22 +313,19 @@ function enableFeedbackEmbed(enabled: boolean) {
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">最大宽度</label>
+      <FormField label="最大宽度">
         <Input
           v-model="blockProps.maxWidth"
           placeholder="例如 100% 或 480px"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">最大高度</label>
+      </FormField>
+      <FormField label="最大高度">
         <Input
           v-model="blockProps.maxHeight"
           placeholder="例如 100% 或 320px"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">形状</label>
+      </FormField>
+      <FormField label="形状">
         <Select v-model="blockProps.shape">
           <SelectTrigger>
             <SelectValue placeholder="形状" />
@@ -332,16 +336,17 @@ function enableFeedbackEmbed(enabled: boolean) {
             <SelectItem value="circle">圆形 - Circle</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">图片描述 (Alt)</label>
+      </FormField>
+      <FormField label="图片描述 (Alt)">
         <Input
           v-model="blockProps.alt"
           placeholder="图片加载失败时显示的文字"
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">本地图片</label>
+      </FormField>
+      <FormField
+        label="本地图片"
+        class="span-full"
+      >
         <div class="flex items-center gap-2">
           <Button
             variant="outline"
@@ -369,7 +374,7 @@ function enableFeedbackEmbed(enabled: boolean) {
             {{ blockProps.imageFile?.name || blockProps.imageFile?.path || '' }}
           </span>
         </div>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -378,20 +383,21 @@ function enableFeedbackEmbed(enabled: boolean) {
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">嵌入链接 (支持 Bilibili / YouTube)</label>
+      <FormField
+        label="嵌入链接 (支持 Bilibili / YouTube)"
+        class="span-full"
+      >
         <Input
           v-model="blockProps.url"
           placeholder="https://www.youtube.com/watch?v=..."
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">标题</label>
+      </FormField>
+      <FormField label="标题">
         <Input
           v-model="blockProps.title"
           placeholder="可选，用于无障碍访问"
         />
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -400,15 +406,13 @@ function enableFeedbackEmbed(enabled: boolean) {
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">文字</label>
+      <FormField label="文字">
         <Input v-model="blockProps.text" />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('titlePlacement')"
-        class="space-y-1"
+        label="文字位置"
       >
-        <label class="text-xs text-muted-foreground">文字位置</label>
         <Select v-model="blockProps.titlePlacement">
           <SelectTrigger>
             <SelectValue placeholder="文字位置" />
@@ -419,25 +423,23 @@ function enableFeedbackEmbed(enabled: boolean) {
             <SelectItem value="right">居右</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">上边距 px</label>
+      </FormField>
+      <FormField label="上边距 px">
         <NumberField
           v-model="blockProps.marginTop"
           :min="0"
           :max="80"
           class="w-full"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">下边距 px</label>
+      </FormField>
+      <FormField label="下边距 px">
         <NumberField
           v-model="blockProps.marginBottom"
           :min="0"
           :max="80"
           class="w-full"
         />
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -445,8 +447,7 @@ function enableFeedbackEmbed(enabled: boolean) {
     v-else-if="props.block.type === 'spacer'"
     class="space-y-3"
   >
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">大小</label>
+    <FormField label="大小">
       <Select v-model="blockProps.size">
         <SelectTrigger>
           <SelectValue placeholder="大小" />
@@ -457,16 +458,15 @@ function enableFeedbackEmbed(enabled: boolean) {
           <SelectItem value="lg">lg</SelectItem>
         </SelectContent>
       </Select>
-    </div>
+    </FormField>
   </div>
 
   <div
     v-else-if="props.block.type === 'footer'"
     class="space-y-3"
   >
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">文字</label>
+    <FormField label="文字">
       <Input v-model="blockProps.text" />
-    </div>
+    </FormField>
   </div>
 </template>

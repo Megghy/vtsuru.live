@@ -6,7 +6,7 @@ import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import Pause24Regular from '@vicons/fluent/es/Pause24Regular'
 import Play24Regular from '@vicons/fluent/es/Play24Regular'
 import { useClipboard } from '@vueuse/core'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -14,10 +14,13 @@ import { useAccount } from '@/api/account'
 import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { loadObsStoreFonts, OBS_CLOCK_FONTS } from '@/apps/obs-store/utils/fontLoader'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
@@ -31,9 +34,19 @@ import type { ClockAction, ClockMode, ClockState } from './types'
 
 const { copy, isSupported: isCopySupported } = useClipboard()
 
+const props = defineProps<{ channelId?: string }>()
 const route = useRoute()
-const channelId = ref(resolveObsSyncChannel(route.query.channel))
+const channelId = ref(resolveObsSyncChannel(props.channelId ?? route.query.channel))
 const channelDraft = ref(channelId.value)
+watch(
+  () => props.channelId,
+  (val) => {
+    if (!val) return
+    const resolved = resolveObsSyncChannel(val)
+    channelId.value = resolved
+    channelDraft.value = resolved
+  },
+)
 const copied = ref(false)
 
 const { state, updateState, sendAction, currentHash, isSyncing, lastSyncError, hasPendingChanges, retry } =
@@ -419,6 +432,18 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                   />
                 </div>
               </div>
+
+              <FormField
+                label="自定义字体"
+                description="默认遵循当前时钟风格字体"
+              >
+                <GoogleFontPicker
+                  :model-value="state.fontFamily || null"
+                  :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+                  :show-preview="false"
+                  @update:model-value="updateState({ fontFamily: $event || '' })"
+                />
+              </FormField>
 
               <!-- 标题文本输入行 -->
               <div class="text-inputs-row">

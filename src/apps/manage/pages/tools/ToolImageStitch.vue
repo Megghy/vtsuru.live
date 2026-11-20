@@ -11,9 +11,11 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
@@ -473,140 +475,148 @@ onBeforeUnmount(clearAll)
             <div class="panel-block">
               <span class="font-medium text-foreground text-sm"> 画布参数 </span>
               <div class="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label class="field">
-                    <span>布局</span>
-                    <Select v-model="settings.layout">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          v-for="opt in layoutOptions"
-                          :key="opt.value"
-                          :value="opt.value"
-                        >
-                          {{ opt.label }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </label>
-                </div>
-                <div>
-                  <label class="field">
-                    <span>格式</span>
-                    <Select v-model="settings.format">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          v-for="opt in formatOptions"
-                          :key="opt.value"
-                          :value="opt.value"
-                        >
-                          {{ opt.label }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </label>
-                </div>
-                <div v-if="settings.layout === 'vertical'">
-                  <label class="field">
-                    <span>输出宽度</span>
-                    <NumberField
-                      v-model="settings.outputWidth"
-                      :min="320"
-                      :max="6000"
-                      :step="20"
-                    />
-                  </label>
-                </div>
-                <div v-if="settings.layout === 'horizontal'">
-                  <label class="field">
-                    <span>图片高度</span>
-                    <NumberField
-                      v-model="settings.stripHeight"
-                      :min="120"
-                      :max="4000"
-                      :step="20"
-                    />
-                  </label>
-                </div>
-                <div v-if="settings.layout === 'grid'">
-                  <label class="field">
-                    <span>列数</span>
-                    <NumberField
-                      v-model="settings.columns"
-                      :min="1"
-                      :max="8"
-                    />
-                  </label>
-                </div>
-                <div v-if="settings.layout === 'grid'">
-                  <label class="field">
-                    <span>单格尺寸</span>
-                    <NumberField
-                      v-model="settings.cellSize"
-                      :min="120"
-                      :max="2400"
-                      :step="20"
-                    />
-                  </label>
-                </div>
-                <div>
-                  <label class="field">
-                    <span>间距</span>
-                    <NumberField
-                      v-model="settings.gap"
-                      :min="0"
-                      :max="200"
-                    />
-                  </label>
-                </div>
-                <div>
-                  <label class="field">
-                    <span>边距</span>
-                    <NumberField
-                      v-model="settings.padding"
-                      :min="0"
-                      :max="300"
-                    />
-                  </label>
-                </div>
-                <div v-if="settings.layout === 'grid'">
-                  <label class="field">
-                    <span>填充方式</span>
-                    <Select v-model="settings.fit">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          v-for="opt in fitOptions"
-                          :key="opt.value"
-                          :value="opt.value"
-                        >
-                          {{ opt.label }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </label>
-                </div>
-                <div>
-                  <label class="field">
-                    <span>圆角</span>
-                    <NumberField
-                      v-model="settings.radius"
-                      :min="0"
-                      :max="300"
-                    />
-                  </label>
-                </div>
+                <FormField
+                  label="布局"
+                  class="min-w-0"
+                >
+                  <Select v-model="settings.layout">
+                    <SelectTrigger class="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="opt in layoutOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                      >
+                        {{ opt.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                <FormField
+                  label="格式"
+                  class="min-w-0"
+                >
+                  <Select v-model="settings.format">
+                    <SelectTrigger class="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="opt in formatOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                      >
+                        {{ opt.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                <FormField
+                  v-if="settings.layout === 'vertical'"
+                  label="输出宽度"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    v-model="settings.outputWidth"
+                    :min="320"
+                    :max="6000"
+                    :step="20"
+                  />
+                </FormField>
+                <FormField
+                  v-if="settings.layout === 'horizontal'"
+                  label="图片高度"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    v-model="settings.stripHeight"
+                    :min="120"
+                    :max="4000"
+                    :step="20"
+                  />
+                </FormField>
+                <FormField
+                  v-if="settings.layout === 'grid'"
+                  label="列数"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    v-model="settings.columns"
+                    :min="1"
+                    :max="8"
+                  />
+                </FormField>
+                <FormField
+                  v-if="settings.layout === 'grid'"
+                  label="单格尺寸"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    v-model="settings.cellSize"
+                    :min="120"
+                    :max="2400"
+                    :step="20"
+                  />
+                </FormField>
+                <FormField
+                  label="间距"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    v-model="settings.gap"
+                    :min="0"
+                    :max="200"
+                  />
+                </FormField>
+                <FormField
+                  label="边距"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    v-model="settings.padding"
+                    :min="0"
+                    :max="300"
+                  />
+                </FormField>
+                <FormField
+                  v-if="settings.layout === 'grid'"
+                  label="填充方式"
+                  class="min-w-0"
+                >
+                  <Select v-model="settings.fit">
+                    <SelectTrigger class="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="opt in fitOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                      >
+                        {{ opt.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                <FormField
+                  label="圆角"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    v-model="settings.radius"
+                    :min="0"
+                    :max="300"
+                  />
+                </FormField>
               </div>
 
-              <div class="field quality-field">
-                <span>导出质量 {{ Math.round(settings.quality * 100) }}%</span>
+              <FormField
+                label="导出质量"
+                :extra="`${Math.round(settings.quality * 100)}%`"
+                class="mt-2.5"
+              >
                 <Slider
                   :model-value="[settings.quality]"
                   :disabled="settings.format === 'png'"
@@ -619,26 +629,29 @@ onBeforeUnmount(clearAll)
                     }
                   "
                 />
-              </div>
+              </FormField>
 
-              <div class="color-row">
-                <label class="field color-field">
-                  <span>背景色</span>
-                  <ColorPicker
-                    v-model="settings.background"
-                    size="small"
-                    :disabled="settings.transparent && settings.format !== 'jpeg'"
-                  />
-                </label>
-                <div class="flex items-center gap-2">
-                  <Switch
-                    :checked="settings.transparent"
-                    :disabled="settings.format === 'jpeg'"
-                    @update:checked="(v) => (settings.transparent = v)"
-                  />
-                  <span class="text-xs text-muted-foreground"> 透明背景 </span>
-                </div>
-              </div>
+              <FormField
+                label="背景色"
+                class="min-w-0"
+              >
+                <ColorPicker
+                  v-model="settings.background"
+                  size="small"
+                  :disabled="settings.transparent && settings.format !== 'jpeg'"
+                />
+              </FormField>
+
+              <SettingRow
+                title="透明背景"
+                variant="none"
+              >
+                <Switch
+                  :checked="settings.transparent"
+                  :disabled="settings.format === 'jpeg'"
+                  @update:checked="(v) => (settings.transparent = v)"
+                />
+              </SettingRow>
             </div>
 
             <div class="panel-block">
@@ -901,29 +914,6 @@ onBeforeUnmount(clearAll)
   grid-template-columns: repeat(2, 1fr);
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.quality-field {
-  margin-top: 10px;
-}
-
-.color-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-}
-
-.color-field {
-  min-width: 0;
-}
-
 .image-list {
   display: flex;
   flex-direction: column;
@@ -1000,9 +990,7 @@ onBeforeUnmount(clearAll)
 }
 
 @media (max-width: 640px) {
-  .preview-toolbar,
-  .color-row {
-    grid-template-columns: 1fr;
+  .preview-toolbar {
     flex-direction: column;
   }
 

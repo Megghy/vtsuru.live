@@ -6,6 +6,7 @@ import type { PngtuberState } from '@/shared/pngtuber/types'
 import { useAudioReactive } from '@/shared/pngtuber/useAudioReactive'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
@@ -84,28 +85,23 @@ const currentDeviceLabel = computed(() => {
       OBS。若无法采集，请使用控制页或客户端输入。
     </div>
 
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground font-medium">
-        {{ obs ? '当前 OBS 麦克风' : '本机麦克风（仅本地保存）' }}
-      </label>
+    <FormField :label="obs ? '当前 OBS 麦克风' : '本机麦克风（仅本地保存）'">
       <Select v-model="deviceId">
         <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="default">系统默认麦克风</SelectItem
-          >
+          <SelectItem value="default">系统默认麦克风</SelectItem>
           <SelectItem
             v-for="d in deviceList.filter((item) => Boolean(item.deviceId) && item.deviceId !== 'default')"
             :key="d.deviceId"
             :value="d.deviceId"
-            class="text-xs"
           >
             {{ d.label }}
           </SelectItem>
         </SelectContent>
       </Select>
-    </div>
+    </FormField>
 
     <div class="text-xs text-muted-foreground">
       设备：{{ currentDeviceLabel }} · 权限：{{ permissionState }} ·

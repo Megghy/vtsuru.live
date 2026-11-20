@@ -48,6 +48,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { Empty } from '@/shared/ui/empty'
+import { SmartImage } from '@/shared/ui/image'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -705,12 +706,14 @@ async function batchDeleteGoods() {
                   </TableCell>
                   <TableCell>
                     <div class="flex items-center gap-2.5 min-w-0">
-                      <img
+                      <SmartImage
                         v-if="item.cover?.path"
                         :src="item.cover.path"
+                        :file-id="item.cover.id"
+                        :is-public="true"
+                        :preview="true"
                         :alt="item.name"
                         class="size-9 rounded object-cover shrink-0 border border-border/60"
-                        referrerpolicy="no-referrer"
                       />
                       <div class="min-w-0">
                         <div class="flex items-center gap-1.5">

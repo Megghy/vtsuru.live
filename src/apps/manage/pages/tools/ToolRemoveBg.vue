@@ -8,9 +8,11 @@ import { useRemoveBg } from '@/composables/useRemoveBg'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
@@ -178,10 +180,12 @@ function download() {
 
         <!-- Settings row -->
         <div class="settings-grid">
-          <div class="setting-item">
-            <span class="text-[11px] text-muted-foreground">处理模式</span>
+          <FormField
+            label="处理模式"
+            class="min-w-0"
+          >
             <Select v-model="options.mode">
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -194,11 +198,13 @@ function download() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div class="setting-item">
-            <span class="text-[11px] text-muted-foreground">模型精度（首次使用需下载）</span>
+          </FormField>
+          <FormField
+            label="模型精度（首次使用需下载）"
+            class="min-w-0"
+          >
             <Select v-model="options.model">
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -211,11 +217,13 @@ function download() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div class="setting-item">
-            <span class="text-[11px] text-muted-foreground">计算设备</span>
+          </FormField>
+          <FormField
+            label="计算设备"
+            class="min-w-0"
+          >
             <Select v-model="options.device">
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -236,11 +244,13 @@ function download() {
               当前浏览器不支持 WebGPU。Chrome 113+ 默认启用；Edge/Firefox 需在
               <code>chrome://flags</code> 或 <code>about:config</code> 中开启 WebGPU 标志
             </span>
-          </div>
-          <div class="setting-item">
-            <span class="text-[11px] text-muted-foreground">输出格式</span>
+          </FormField>
+          <FormField
+            label="输出格式"
+            class="min-w-0"
+          >
             <Select v-model="options.format">
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -253,9 +263,12 @@ function download() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div class="setting-item">
-            <span class="text-[11px] text-muted-foreground">输出质量 {{ Math.round(options.quality * 100) }}%</span>
+          </FormField>
+          <FormField
+            label="输出质量"
+            :extra="`${Math.round(options.quality * 100)}%`"
+            class="min-w-0"
+          >
             <Slider
               :model-value="[options.quality]"
               :min="0.1"
@@ -267,17 +280,18 @@ function download() {
                 }
               "
             />
-          </div>
-          <div class="setting-item">
-            <span class="text-[11px] text-muted-foreground">后台处理 (Web Worker)</span>
-            <div class="pt-1">
-              <Switch
-                :checked="options.proxyToWorker"
-                @update:checked="(v) => (options.proxyToWorker = v)"
-              />
-            </div>
-            <span class="text-[10px] text-muted-foreground leading-tight"> 开启后处理不会阻塞页面操作 </span>
-          </div>
+          </FormField>
+          <SettingRow
+            title="后台处理 (Web Worker)"
+            description="开启后处理不会阻塞页面操作"
+            variant="none"
+            class="self-start"
+          >
+            <Switch
+              :checked="options.proxyToWorker"
+              @update:checked="(v) => (options.proxyToWorker = v)"
+            />
+          </SettingRow>
         </div>
 
         <!-- Upload -->
@@ -395,11 +409,6 @@ function download() {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--muted);
-}
-.setting-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 .upload-zone {
   display: flex;

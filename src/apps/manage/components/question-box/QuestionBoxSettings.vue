@@ -4,7 +4,7 @@ import Eye24Filled from '@vicons/fluent/es/Eye24Filled'
 import EyeOff24Filled from '@vicons/fluent/es/EyeOff24Filled'
 import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import { ViolationTypes } from '@/api/generated/model'
@@ -13,6 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { SettingRow } from '@/shared/ui/setting-row'
@@ -236,12 +237,10 @@ function addTag() {
           <CardTitle class="text-xs">内容审查</CardTitle>
         </CardHeader>
         <CardContent class="p-4 space-y-4">
-          <div class="space-y-2">
-            <div class="flex-between">
-              <span class="text-xs text-muted-foreground">设置过滤强度，自动拦截恶意提问</span>
-              <span class="text-[11px] text-muted-foreground/80 font-medium">{{ currentLevelDesc }}</span>
-            </div>
-
+          <FormField
+            label="设置过滤强度，自动拦截恶意提问"
+            :extra="currentLevelDesc"
+          >
             <ToggleGroup
               v-model="selectedSaftyLevel"
               type="single"
@@ -257,38 +256,42 @@ function addTag() {
                 {{ item.label }}
               </ToggleGroupItem>
             </ToggleGroup>
-          </div>
+          </FormField>
 
           <!-- 详细审查选项: 自选拦截分类与图片审查 -->
           <div
             v-if="Number(selectedSaftyLevel) > 0 && accountInfo?.settings?.questionBox"
             class="pt-3 border-t border-border/60 space-y-3"
           >
-            <div class="flex-between">
-              <span class="text-xs font-medium text-foreground">自选拦截分类</span>
-              <span class="text-[11px] text-muted-foreground">勾选你希望自动拦截的类型</span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div
-                v-for="tag in availableBlockTags"
-                :key="tag.type"
-                class="flex items-start gap-2 p-2 rounded-md border border-border/50 hover:bg-muted/40 transition-colors cursor-pointer"
-                @click="toggleBlockTag(tag.type)"
-              >
-                <Checkbox
-                  :checked="isTagBlocked(tag.type)"
-                  :disabled="useQB.isLoading"
-                  class="mt-0.5 pointer-events-none"
-                />
-                <div class="flex-1 min-w-0">
-                  <div class="text-xs font-medium text-foreground leading-none">{{ tag.label }}</div>
-                  <div class="text-[11px] text-muted-foreground mt-1 line-clamp-1">{{ tag.desc }}</div>
+            <FormField
+              label="自选拦截分类"
+              extra="勾选你希望自动拦截的类型"
+            >
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div
+                  v-for="tag in availableBlockTags"
+                  :key="tag.type"
+                  class="flex items-start gap-2 p-2 rounded-md border border-border/50 hover:bg-muted/40 transition-colors cursor-pointer"
+                  @click="toggleBlockTag(tag.type)"
+                >
+                  <Checkbox
+                    :checked="isTagBlocked(tag.type)"
+                    :disabled="useQB.isLoading"
+                    class="mt-0.5 pointer-events-none"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <div class="text-xs font-medium text-foreground leading-none">{{ tag.label }}</div>
+                    <div class="text-[11px] text-muted-foreground mt-1 line-clamp-1">{{ tag.desc }}</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </FormField>
 
-            <label class="flex items-center gap-2 cursor-pointer text-xs pt-1">
+            <SettingRow
+              variant="compact"
+              title="审查提问附带的图片"
+              description="多模态识别违规配图"
+            >
               <Checkbox
                 :checked="accountInfo.settings.questionBox.reviewImages !== false"
                 :disabled="useQB.isLoading"
@@ -301,8 +304,7 @@ function addTag() {
                   }
                 "
               />
-              <span>审查提问附带的图片（多模态识别违规配图）</span>
-            </label>
+            </SettingRow>
           </div>
         </CardContent>
       </Card>

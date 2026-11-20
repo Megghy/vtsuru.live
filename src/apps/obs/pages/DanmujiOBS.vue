@@ -11,6 +11,7 @@ import { getRichContent } from '@/apps/obs/components/blivechat/richContent'
 import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciation'
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
 import { useDanmujiConfig } from '@/apps/obs/composables/useDanmujiConfig'
+import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { type DanmujiConfig } from '@/shared/danmujiConfig'
 import { buildDanmujiCss } from '@/shared/danmujiStyle'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
@@ -46,6 +47,7 @@ const isOBS = computed(() => {
 })
 
 const effectiveConfig = useDanmujiConfig(props)
+useGoogleFont(computed(() => effectiveConfig.value.style.fontFamily || undefined))
 const effectiveCss = computed(() => props.customCss ?? buildDanmujiCss(effectiveConfig.value.style))
 const messageRender = ref<InstanceType<typeof MessageRender> | null>(null)
 const danmakuClient = useDanmakuClient()

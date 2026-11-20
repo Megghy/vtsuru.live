@@ -24,6 +24,7 @@ export interface WheelState {
   proportionalAngles: boolean
   theme: WheelTheme
   pointerColor: string
+  fontFamily?: string
   sizePx: number
   /** 仅用于跨端同步同一次开奖动画与落点 */
   lastSpin: WheelSpinRecord | null
@@ -78,6 +79,7 @@ export const DEFAULT_WHEEL_STATE: WheelState = {
   proportionalAngles: true,
   theme: 'classic',
   pointerColor: '#f43f5e',
+  fontFamily: '',
   sizePx: 420,
   lastSpin: null,
 }

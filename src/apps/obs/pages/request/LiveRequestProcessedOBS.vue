@@ -23,7 +23,7 @@ const props = withDefaults(
     active?: boolean
     visible?: boolean
     speedMultiplier?: number
-    style?: 'classic' | 'fresh' | 'minimal' | 'glass' | 'transparent'
+    themeStyle?: 'classic' | 'fresh' | 'minimal' | 'glass' | 'transparent'
   }>(),
   { active: true, visible: true },
 )
@@ -49,7 +49,7 @@ const speedMultiplier = computed(() => {
 
 const styleType = computed(() => {
   const queryStyle = route.query.style
-  return props.style || (typeof queryStyle === 'string' ? queryStyle : 'classic')
+  return props.themeStyle || (typeof queryStyle === 'string' ? queryStyle : 'classic')
 })
 
 const panelComponent = computed(() => {

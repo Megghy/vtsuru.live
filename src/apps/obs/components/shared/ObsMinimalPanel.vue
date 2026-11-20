@@ -34,22 +34,41 @@ const topSubtitle = computed(() => {
 </script>
 
 <template>
-  <div class="size-full flex flex-col text-white bg-transparent">
-    <div class="flex items-center gap-2 px-1 pb-1.5">
+  <div class="size-full flex flex-col p-3 box-border text-white bg-transparent overflow-hidden tabular-nums">
+    <!-- 顶部标题与计数 -->
+    <div class="flex-between gap-2 pb-2 mb-2 border-b border-white/15 shrink-0">
+      <div class="flex items-center gap-2 min-w-0">
+        <span
+          class="size-2 rounded-full shrink-0 transition-all"
+          :class="
+            current.active
+              ? 'bg-emerald-500 shadow-[0_0_8px_rgba(34,197,94,0.9)] animate-pulse'
+              : 'bg-slate-400/90 shadow-[0_0_6px_rgba(0,0,0,0.6)]'
+          "
+        />
+        <span class="text-base font-bold truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+          {{ title }}
+        </span>
+      </div>
       <span
-        class="size-1.5 rounded-full shrink-0 transition-all"
-        :class="
-          current.active
-            ? 'bg-emerald-500 shadow-[0_0_8px_rgba(34,197,94,0.9)] animate-pulse'
-            : 'bg-slate-400/90 shadow-[0_0_6px_rgba(0,0,0,0.6)]'
-        "
-      />
-      <div class="text-sm font-bold truncate max-w-[65%] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+        v-if="countText"
+        class="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-black/35 backdrop-blur-xs text-white/95 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+      >
+        {{ countText }}
+      </span>
+    </div>
+
+    <!-- 当前处理项 -->
+    <div class="flex items-baseline gap-2 pb-2 shrink-0 min-w-0">
+      <div
+        class="text-sm font-bold truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+        :class="current.active ? 'text-white' : 'text-white/75'"
+      >
         {{ current.active ? current.title : current.emptyText }}
       </div>
       <div
-        v-if="topSubtitle"
-        class="text-xs opacity-90 drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]"
+        v-if="current.active && topSubtitle"
+        class="text-xs text-white/85 shrink-0 truncate max-w-[40%] drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]"
       >
         {{ topSubtitle }}
       </div>
@@ -57,7 +76,7 @@ const topSubtitle = computed(() => {
 
     <div
       v-if="current.active && (current.badges?.length ?? 0) > 0"
-      class="flex flex-wrap gap-1.5 px-1 pb-1.5"
+      class="flex flex-wrap gap-1.5 pb-2 shrink-0"
     >
       <span
         v-for="(badge, index) in current.badges ?? []"
@@ -71,7 +90,7 @@ const topSubtitle = computed(() => {
 
     <div
       ref="listContainerRef"
-      class="flex-1 overflow-hidden"
+      class="flex-1 min-h-0 overflow-hidden"
     >
       <template v-if="items.length > 0">
         <div
@@ -87,10 +106,10 @@ const topSubtitle = computed(() => {
             <div
               v-for="(item, index) in items"
               :key="item.id"
-              class="flex items-center gap-2"
+              class="flex items-center gap-2 py-0.5"
             >
               <div
-                class="min-w-4.5 text-center font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
+                class="min-w-5 text-center text-sm font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] shrink-0"
                 :class="
                   index === 0
                     ? '!text-amber-300 [text-shadow:0_0_6px_rgba(252,211,77,0.9),0_0_14px_rgba(252,211,77,0.6),0_2px_6px_rgba(0,0,0,0.9)]'
@@ -105,14 +124,14 @@ const topSubtitle = computed(() => {
               </div>
               <div class="flex-1 min-w-0">
                 <div
-                  class="text-sm font-semibold truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
+                  class="text-[15px] font-semibold truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
                   :title="item.primary"
                 >
                   {{ item.primary }}
                 </div>
                 <div
                   v-if="(item.badges?.length ?? 0) > 0"
-                  class="flex gap-1.5 text-[11px] opacity-95 drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] flex-wrap"
+                  class="flex gap-1.5 mt-0.5 text-[11px] opacity-95 drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] flex-wrap"
                 >
                   <span
                     v-for="(badge, badgeIndex) in item.badges ?? []"
@@ -130,23 +149,23 @@ const topSubtitle = computed(() => {
       </template>
       <Empty
         v-else
-        class="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]"
+        class="size-full flex-center !text-white/85 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] [&_svg]:!text-white/60"
         :description="emptyText"
       />
     </div>
 
     <div
       v-if="footerTags.length > 0"
-      class="mt-1.5 px-1 pt-1 flex flex-col gap-1 text-[11px] text-slate-200 drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]"
+      class="mt-2 pt-1.5 border-t border-white/10 shrink-0 flex flex-col gap-1 text-[11px] text-slate-200 drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]"
     >
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-2 gap-1.5">
         <div
           v-for="tag in footerTags"
           :key="tag.type"
           class="min-w-0 inline-flex items-center gap-1 px-2 py-0.75 rounded-full bg-black/35 backdrop-blur-xs"
         >
-          <span class="text-[10px] tracking-wider text-slate-300/75 uppercase opacity-80">{{ tag.label }}</span>
-          <span class="text-xs font-semibold text-slate-200 truncate">{{ tag.value }}</span>
+          <span class="text-[10px] tracking-wider text-slate-300/75 uppercase opacity-80 shrink-0">{{ tag.label }}</span>
+          <span class="text-xs font-semibold text-slate-100 truncate">{{ tag.value }}</span>
         </div>
       </div>
     </div>

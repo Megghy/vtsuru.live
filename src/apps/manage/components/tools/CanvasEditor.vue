@@ -5,6 +5,9 @@ import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, ref, wa
 // @ts-expect-error vue3-konva types
 import VueKonva from 'vue3-konva'
 
+import { resolveFontFamilyCss, useGoogleFonts } from '@/apps/user-page/googleFonts'
+import { useLocalFonts } from '@/composables/useLocalFonts'
+
 const registeredKonvaApps = new WeakSet<object>()
 const currentApp = getCurrentInstance()?.appContext.app
 if (currentApp && !registeredKonvaApps.has(currentApp)) {
@@ -69,6 +72,32 @@ const layers = ref<EditorLayer[]>([])
 const selectedId = ref<string | null>(null)
 const containerWidth = ref(800)
 const containerHeight = ref(500)
+
+const { allFonts: localFonts } = useLocalFonts()
+const remoteGoogleFontFamilies = computed(() => {
+  const localSet = new Set(localFonts.value)
+  return layers.value
+    .filter((layer): layer is TextLayer => layer.type === 'text')
+    .map((layer) => layer.fontFamily)
+    .filter((family) => family && !localSet.has(family))
+})
+useGoogleFonts(remoteGoogleFontFamilies)
+
+function redrawTextLayers() {
+  const stage = stageRef.value?.getStage() as Konva.Stage | undefined
+  const konvaLayer = stage?.getLayers()[1]
+  if (!konvaLayer) return
+  for (const node of konvaLayer.find('Text')) {
+    const textNode = node as Konva.Text
+    textNode.fontFamily(textNode.fontFamily())
+  }
+  konvaLayer.batchDraw()
+  updateTransformer()
+}
+
+watch(remoteGoogleFontFamilies, () => {
+  void document.fonts?.ready.then(() => redrawTextLayers())
+})
 
 // Scale to fit both width and height, centered
 const stageScale = computed(() => {
@@ -376,12 +405,14 @@ onMounted(async () => {
   resizeObs = new ResizeObserver(updateContainerSize)
   resizeObs.observe(containerRef.value!)
   document.addEventListener('keydown', handleKeydown)
+  document.fonts?.addEventListener('loadingdone', redrawTextLayers)
   await loadFromIDB()
   snapshot()
 })
 onUnmounted(() => {
   resizeObs?.disconnect()
   document.removeEventListener('keydown', handleKeydown)
+  document.fonts?.removeEventListener('loadingdone', redrawTextLayers)
 })
 
 const canUndo = computed(() => historyIndex.value > 0)
@@ -576,7 +607,7 @@ defineExpose({
                 y: layer.y,
                 text: layer.text,
                 fontSize: layer.fontSize,
-                fontFamily: layer.fontFamily,
+                fontFamily: resolveFontFamilyCss(layer.fontFamily) || layer.fontFamily,
                 fontStyle:
                   [layer.bold ? 'bold' : '', layer.italic ? 'italic' : ''].filter(Boolean).join(' ') || 'normal',
                 textDecoration: layer.underline ? 'underline' : '',

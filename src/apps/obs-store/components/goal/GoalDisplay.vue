@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 import { computeGoalProgressPercent, formatCountdownClock, getVisibleRemainingMs } from './goalEngine'
 import { DEFAULT_GOAL_STATE } from './types'
@@ -10,6 +11,7 @@ import type { GoalAction, GoalState } from './types'
 
 const props = defineProps<{
   channelId?: string
+  userId?: number
   inlineMode?: boolean
 }>()
 
@@ -19,6 +21,7 @@ const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? ro
 const { state, onAction } = useObsBridge<GoalState, GoalAction>({
   componentId: 'goal',
   channelId: targetChannel,
+  userId: () => props.userId,
   defaultState: DEFAULT_GOAL_STATE,
   role: 'viewer',
 })
@@ -78,13 +81,16 @@ onMounted(() => {
     }
   })
 })
+
+useGoogleFont(computed(() => state.value.fontFamily || undefined))
+const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily))
 </script>
 
 <template>
   <div
     class="goal-obs-root"
     :class="[`theme-${state.theme}`, { 'is-inline': props.inlineMode }]"
-    :style="{ '--goal-accent': state.accentColor }"
+    :style="{ '--goal-accent': state.accentColor, fontFamily: customFontCss }"
   >
     <div class="goal-container">
       <div class="goal-top-row">

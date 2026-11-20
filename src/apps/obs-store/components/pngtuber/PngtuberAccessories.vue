@@ -5,10 +5,12 @@ import { useDebounceFn } from '@vueuse/core'
 import type { PngtuberAccessory } from '@/shared/pngtuber/types'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PngtuberImageSlot from './PngtuberImageSlot.vue'
@@ -118,12 +120,12 @@ const fields = [
           />
 
           <div class="fields">
-            <div
+            <FormField
               v-for="f in fields"
               :key="f.key"
-              class="space-y-1"
+              :label="f.label"
+              class="min-w-0"
             >
-              <label class="text-[11px] text-muted-foreground font-medium">{{ f.label }}</label>
               <NumberField
                 :model-value="a[f.key]"
                 :min="f.min"
@@ -133,7 +135,7 @@ const fields = [
                 class="w-full"
                 @update:model-value="(value) => value !== null && patch(a.id, { [f.key]: value })"
               />
-            </div>
+            </FormField>
           </div>
 
           <Select
@@ -151,16 +153,18 @@ const fields = [
             </SelectContent>
           </Select>
 
-          <div class="flex-between gap-2 pt-1">
-            <div class="flex items-center gap-2">
-              <span class="text-xs">置于立绘前方</span>
-              <Switch
-                :checked="a.front"
-                :disabled="disabled"
-                @update:checked="patch(a.id, { front: $event })"
-              />
-            </div>
+          <SettingRow
+            title="置于立绘前方"
+            variant="compact"
+          >
+            <Switch
+              :checked="a.front"
+              :disabled="disabled"
+              @update:checked="patch(a.id, { front: $event })"
+            />
+          </SettingRow>
 
+          <div class="flex justify-end">
             <Popconfirm
               title="删除配件"
               :disabled="disabled"

@@ -144,7 +144,7 @@ const topSubtitle = computed(() => {
       </template>
       <Empty
         v-else
-        class="mt-10"
+        class="size-full flex-center !text-slate-300 [&_svg]:!text-slate-400/70"
         :description="emptyText"
       />
     </div>

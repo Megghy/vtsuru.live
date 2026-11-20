@@ -20,6 +20,7 @@ import { computed } from 'vue'
 import type { ResponsePointGoodModel } from '@/api/client-types'
 import { GoodsSalePhase, GoodsStatus, GoodsTypes, VirtualKeySelectionMode } from '@/api/generated/model'
 import { IMGUR_URL } from '@/shared/config'
+import { transformImageUrl } from '@/shared/services/imageTransform'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardFooter } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
@@ -32,7 +33,7 @@ const props = defineProps<{
   isManage?: boolean
 }>()
 
-const emptyCover = `${IMGUR_URL}None.png`
+const emptyCover = transformImageUrl(`${IMGUR_URL}None.png`, 'card')
 
 const hasSubItems = computed(() => (props.goods?.subItems?.length ?? 0) > 0)
 const subItems = computed(() => props.goods?.subItems ?? [])
@@ -183,10 +184,13 @@ const scheduleBadgeText = computed(() => {
       <ImagePreview
         v-if="goods.cover?.path"
         :src="goods.cover.path"
+        :file-id="goods.cover.id"
+        :is-public="true"
+        fallback-transform="card"
         :alt="goods.name"
         wrapper-class="block size-full"
       >
-        <template #default="{ open }">
+        <template #default="{ open, thumbSrc, onError }">
           <button
             type="button"
             class="relative block size-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -194,11 +198,12 @@ const scheduleBadgeText = computed(() => {
             @click="open()"
           >
             <img
-              :src="goods.cover?.path"
+              :src="thumbSrc || undefined"
               :alt="goods.name"
               loading="lazy"
               referrerpolicy="no-referrer"
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              @error="onError"
             />
             <span
               class="pointer-events-none absolute bottom-2 right-2 size-6 rounded-full bg-black/60 text-white flex-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"

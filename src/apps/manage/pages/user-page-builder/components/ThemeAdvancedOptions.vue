@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import type { UserPageAppearanceTheme } from '@/apps/user-page/themeConfig'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -104,8 +105,7 @@ const radiusPresets = [
         <span class="text-xs text-muted-foreground"> 未设置的项目会继承全局主题或使用站点默认值。 </span>
 
         <PropsGrid :min-item-width="210">
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">圆角大小</label>
+          <FormField label="圆角大小">
             <NumberField
               v-model="radius"
               :min="0"
@@ -123,10 +123,9 @@ const radiusPresets = [
                 {{ preset.label }}
               </Button>
             </div>
-          </div>
+          </FormField>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">边框强度</label>
+          <FormField label="边框强度">
             <Select v-model="borderStrength">
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
@@ -138,10 +137,9 @@ const radiusPresets = [
                 <SelectItem value="strong">明显</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">边框样式</label>
+          <FormField label="边框样式">
             <Select v-model="borderStyle">
               <SelectTrigger>
                 <SelectValue placeholder="继承（实线）" />
@@ -151,10 +149,9 @@ const radiusPresets = [
                 <SelectItem value="dashed">虚线 (dashed)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">阴影层级</label>
+          <FormField label="阴影层级">
             <Select v-model="shadowLevel">
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
@@ -166,20 +163,18 @@ const radiusPresets = [
                 <SelectItem value="floating">悬浮立体</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">表面不透明度 %</label>
+          <FormField label="表面不透明度 %">
             <NumberField
               v-model="surfaceOpacity"
               :min="15"
               :max="100"
               placeholder="跟随主题"
             />
-          </div>
+          </FormField>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">布局密度</label>
+          <FormField label="布局密度">
             <Select v-model="spacing">
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
@@ -190,10 +185,9 @@ const radiusPresets = [
                 <SelectItem value="relaxed">宽松 (relaxed)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">组件尺寸</label>
+          <FormField label="组件尺寸">
             <Select v-model="controlSize">
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
@@ -204,15 +198,14 @@ const radiusPresets = [
                 <SelectItem value="comfortable">舒适 (comfortable)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-muted-foreground">内容最大宽度</label>
+          <FormField label="内容最大宽度">
             <Input
               v-model="pageMaxWidth"
               placeholder="默认 820px；例如 100% / 1200px"
             />
-          </div>
+          </FormField>
         </PropsGrid>
 
         <div class="flex justify-end pt-1">

@@ -10,6 +10,7 @@ export interface CounterState {
   showProgress: boolean
   theme: CounterTheme
   accentColor: string
+  fontFamily?: string
   soundEnabled: boolean
 }
 
@@ -29,5 +30,6 @@ export const DEFAULT_COUNTER_STATE: CounterState = {
   showProgress: false,
   theme: 'card',
   accentColor: '#38bdf8',
+  fontFamily: '',
   soundEnabled: false,
 }

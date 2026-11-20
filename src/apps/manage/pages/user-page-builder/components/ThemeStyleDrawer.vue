@@ -1,26 +1,22 @@
 <script setup lang="ts">
-import ArrowUndoOutline from '@vicons/ionicons5/es/ArrowUndoOutline'
 import CheckmarkOutline from '@vicons/ionicons5/es/CheckmarkOutline'
 import CodeSlashOutline from '@vicons/ionicons5/es/CodeSlashOutline'
 import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
-import ContrastOutline from '@vicons/ionicons5/es/ContrastOutline'
-import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
-import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
 import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
-import TextOutline from '@vicons/ionicons5/es/TextOutline'
 import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, defineAsyncComponent, inject, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { BlockPageTheme, PageThemeMode } from '@/apps/user-page/block/schema'
+import type { PageThemeMode } from '@/apps/user-page/block/schema'
 import { extractThemeFromImage, type ExtractedThemePalette } from '@/apps/user-page/colorExtraction'
-import type { UserPageAppearanceTheme } from '@/apps/user-page/themeConfig'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -559,18 +555,21 @@ function clearCurrentTheme() {
             class="pt-3 flex flex-col gap-3"
           >
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">主题主色</label>
+              <FormField
+                label="主题主色"
+                class="min-w-0"
+              >
                 <ColorPicker v-model="primaryColor" />
-              </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">内容底色</label>
+              </FormField>
+              <FormField
+                label="内容底色"
+                class="min-w-0"
+              >
                 <ColorPicker v-model="backgroundColor" />
-              </div>
+              </FormField>
             </div>
 
-            <div class="flex flex-col gap-1">
-              <label class="text-xs text-muted-foreground">主题模式</label>
+            <FormField label="主题模式">
               <Select v-model="themeMode">
                 <SelectTrigger>
                   <SelectValue placeholder="主题模式" />
@@ -581,7 +580,7 @@ function clearCurrentTheme() {
                   <SelectItem value="dark">强制深色</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <div class="pt-2 border-t border-border flex flex-col gap-2">
               <span class="text-xs font-semibold text-muted-foreground uppercase">文字与对比度</span>
@@ -605,21 +604,15 @@ function clearCurrentTheme() {
           >
             <ThemeAdvancedOptions :target="appearanceTarget" />
 
-            <div class="pt-2 border-t border-border flex flex-col gap-2">
-              <div class="flex-between">
-                <span class="text-xs font-semibold text-muted-foreground uppercase">全局自定义 CSS</span>
-                <Badge
-                  v-if="isPageScope"
-                  variant="outline"
-                  size="xs"
-                >
-                  作用于全部页面
-                </Badge>
-              </div>
-              <div class="flex-between p-2.5 rounded-lg border border-border bg-muted text-xs">
-                <span class="text-muted-foreground">
-                  {{ editor.settings.value.customCss ? '已配置全局 CSS（实时同步到预览）' : '未配置全局 CSS' }}
-                </span>
+            <div class="pt-2 border-t border-border">
+              <SettingRow
+                title="全局自定义 CSS"
+                :badge="isPageScope ? '作用于全部页面' : undefined"
+                :description="
+                  editor.settings.value.customCss ? '已配置全局 CSS（实时同步到预览）' : '未配置全局 CSS'
+                "
+                variant="card"
+              >
                 <Button
                   variant="outline"
                   @click="openCssEditor"
@@ -630,7 +623,7 @@ function clearCurrentTheme() {
                   />
                   编辑 CSS
                 </Button>
-              </div>
+              </SettingRow>
             </div>
           </TabsContent>
         </Tabs>

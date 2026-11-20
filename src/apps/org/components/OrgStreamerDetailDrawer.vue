@@ -10,6 +10,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -163,8 +164,7 @@ function getHeatmapColor(val: number) {
               <CardTitle class="text-xs">主播设置</CardTitle>
             </CardHeader>
             <CardContent class="p-3 space-y-3">
-              <div class="space-y-1">
-                <label class="font-medium text-foreground text-xs">状态</label>
+              <FormField label="状态">
                 <Select
                   :model-value="String(d.editStatus.value ?? 1)"
                   @update:model-value="d.editStatus.value = Number($event)"
@@ -177,17 +177,16 @@ function getHeatmapColor(val: number) {
                     <SelectItem value="3">Removed</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </FormField>
 
-              <div class="space-y-1">
-                <label class="font-medium text-foreground text-xs">备注</label>
+              <FormField label="备注">
                 <Textarea
                   v-model="d.editNote.value"
                   rows="2"
                   placeholder="仅组织管理员可见"
                   class="resize-none"
                 />
-              </div>
+              </FormField>
 
               <Button
                 :disabled="d.saving.value"

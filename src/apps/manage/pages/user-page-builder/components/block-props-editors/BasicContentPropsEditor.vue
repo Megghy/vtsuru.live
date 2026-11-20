@@ -4,17 +4,19 @@ import { defineAsyncComponent } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
-
-const RichTextEditor = defineAsyncComponent(() => import('@/apps/user-page/editor/RichTextEditor.vue'))
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 
 import PropsGrid from '../PropsGrid.vue'
 import TextAppearanceFields from './TextAppearanceFields.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
+
+const RichTextEditor = defineAsyncComponent(() => import('@/apps/user-page/editor/RichTextEditor.vue'))
 
 const props = defineProps<{ block: BlockNode }>()
 const { editor, blockProps } = useBlockPropsEditor(() => props.block)
@@ -26,15 +28,16 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">显示名称</label>
+      <FormField label="显示名称">
         <Input
           v-model="blockProps.displayName"
           placeholder="为空则显示账号名"
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">头像图片</label>
+      </FormField>
+      <FormField
+        label="头像图片"
+        class="span-full"
+      >
         <div class="flex items-center gap-2">
           <Button
             variant="outline"
@@ -56,15 +59,17 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
             {{ blockProps.avatarFile?.name || blockProps.avatarFile?.path || '' }}
           </span>
         </div>
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">个人简介</label>
+      </FormField>
+      <FormField
+        label="个人简介"
+        class="span-full"
+      >
         <Textarea
           v-model="blockProps.bio"
           class="min-h-[60px]"
           placeholder="个人简介"
         />
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -73,22 +78,20 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">标题文字</label>
+      <FormField label="标题文字">
         <Input
           v-model="blockProps.text"
           placeholder="请输入标题"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">标题级别 1/2/3</label>
+      </FormField>
+      <FormField label="标题级别 1/2/3">
         <NumberField
           v-model="blockProps.level"
           :min="1"
           :max="3"
           class="w-full"
         />
-      </div>
+      </FormField>
       <TextAppearanceFields :block="props.block" />
     </PropsGrid>
   </div>
@@ -98,36 +101,36 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">文本内容</label>
+      <FormField
+        label="文本内容"
+        class="span-full"
+      >
         <Textarea
           v-model="blockProps.text"
           class="min-h-[120px]"
           placeholder="请输入文本"
         />
-      </div>
+      </FormField>
       <TextAppearanceFields :block="props.block" />
     </PropsGrid>
   </div>
 
-  <div
+  <FormField
     v-else-if="props.block.type === 'richText'"
-    class="space-y-2"
+    label="富文本内容"
   >
-    <label class="text-xs text-muted-foreground font-medium">富文本内容</label>
     <RichTextEditor
       v-model:html="editor.ensureRichTextProps(props.block).html"
       v-model:images-file="editor.ensureRichTextProps(props.block).imagesFile"
     />
-  </div>
+  </FormField>
 
   <div
     v-else-if="props.block.type === 'alert'"
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">提示类型</label>
+      <FormField label="提示类型">
         <Select v-model="blockProps.type">
           <SelectTrigger>
             <SelectValue placeholder="提示类型" />
@@ -140,30 +143,37 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
             <SelectItem value="default">默认</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">标题</label>
+      </FormField>
+      <FormField label="标题">
         <Input
           v-model="blockProps.title"
           placeholder="可选"
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">内容</label>
+      </FormField>
+      <FormField
+        label="内容"
+        class="span-full"
+      >
         <Textarea
           v-model="blockProps.text"
           placeholder="请输入提示内容"
           class="min-h-[70px]"
         />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示图标</label>
+      </FormField>
+      <SettingRow
+        title="显示图标"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showIcon" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示边框</label>
+      </SettingRow>
+      <SettingRow
+        title="显示边框"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.bordered" />
-      </div>
+      </SettingRow>
     </PropsGrid>
   </div>
 </template>

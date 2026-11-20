@@ -253,14 +253,14 @@ onUnmounted(() => {
             v-if="obsPreviewMode === 'live-request'"
             :id="accountInfo?.id"
             :key="`lr-${accountInfo?.id}-${styleType}-${speedMultiplier}`"
-            :style="styleType"
+            :theme-style="styleType"
             :speed-multiplier="speedMultiplier"
           />
           <LiveRequestProcessedOBS
             v-else
             :id="accountInfo?.id"
             :key="`lr-today-${accountInfo?.id}-${styleType}-${speedMultiplier}`"
-            :style="styleType"
+            :theme-style="styleType"
             :speed-multiplier="speedMultiplier"
           />
         </template>

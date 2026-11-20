@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick, ref } from 'vue'
 
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog'
+import { SmartImage } from '@/shared/ui/image'
 
 import { ImageLightbox, ImagePreview, useHtmlImagePreview } from '../index'
 
@@ -189,5 +190,97 @@ describe('ImagePreview & ImageLightbox', () => {
 
     expect(wrapper.find('img').exists()).toBe(false)
     expect(wrapper.text()).toContain('无法加载')
+  })
+
+  it('站内图片按容器尺寸自动拉取小图、失败时回退原图，点开灯箱仍看原图', async () => {
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      width: 96,
+      height: 96,
+      top: 0,
+      left: 0,
+      bottom: 96,
+      right: 96,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    try {
+      const wrapper = mount(ImagePreview, {
+        attachTo: document.body,
+        props: {
+          src: 'https://files.vtsuru.suki.club/vtsuru/objects/019abc?fid=12&sig=xyz',
+          alt: '站内缩略图',
+        },
+      })
+
+      // 挂载前未发射处理 URL，避免双发请求；挂载后按 96x96 * dpr=1 对齐到 100w_100h_1c
+      expect(wrapper.find('img').attributes('src')).toBeUndefined()
+      await nextTick()
+      expect(wrapper.find('img').attributes('src')).toBe(
+        'https://files.vtsuru.suki.club/vtsuru/objects/019abc?fid=12&sig=xyz&100w_100h_1c',
+      )
+
+      // 点开灯箱应还原原图链接
+      await wrapper.find('button').trigger('click')
+      await nextTick()
+      const lightbox = document.body.querySelector('[data-testid="image-lightbox"]')
+      expect(lightbox?.querySelector('img')?.getAttribute('src')).toBe(
+        'https://files.vtsuru.suki.club/vtsuru/objects/019abc?fid=12&sig=xyz',
+      )
+
+      // 第一次 error 回退原图，第二次 error 显示无法加载
+      await wrapper.find('img').trigger('error')
+      await nextTick()
+      expect(wrapper.find('img').attributes('src')).toBe(
+        'https://files.vtsuru.suki.club/vtsuru/objects/019abc?fid=12&sig=xyz',
+      )
+      await wrapper.find('img').trigger('error')
+      await nextTick()
+      expect(wrapper.find('img').exists()).toBe(false)
+      expect(wrapper.text()).toContain('无法加载')
+
+      wrapper.unmount()
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('SmartImage 按容器缩放并在开启 preview 时点击打开原图灯箱', async () => {
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      width: 48,
+      height: 48,
+      top: 0,
+      left: 0,
+      bottom: 48,
+      right: 48,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    try {
+      const wrapper = mount(SmartImage, {
+        attachTo: document.body,
+        props: {
+          src: 'https://files.vtsuru.suki.club/imgur/demo.png',
+          alt: '表格封面',
+          preview: true,
+          class: 'size-12 rounded object-cover',
+        },
+      })
+
+      await nextTick()
+      expect(wrapper.find('img').attributes('src')).toBe('https://files.vtsuru.suki.club/imgur/demo.png?64w_64h_1c')
+
+      await wrapper.find('img').trigger('click')
+      await nextTick()
+      const lightbox = document.body.querySelector('[data-testid="image-lightbox"]')
+      expect(lightbox?.querySelector('img')?.getAttribute('src')).toBe('https://files.vtsuru.suki.club/imgur/demo.png')
+
+      wrapper.unmount()
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

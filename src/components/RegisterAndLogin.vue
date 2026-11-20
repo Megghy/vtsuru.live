@@ -14,6 +14,7 @@ import { QueryRequestError } from '@/api/query'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { toast } from '@/shared/utils'
@@ -540,17 +541,15 @@ onUnmounted(() => {
           value="login"
           class="pt-3 space-y-3"
         >
-          <div class="space-y-1">
-            <label class="font-medium text-foreground text-xs">用户名 / 邮箱 / B站 UID</label>
+          <FormField label="用户名 / 邮箱 / B站 UID">
             <Input
               v-model="loginModel.account"
               placeholder="输入用户名 / 邮箱 / B站 UID"
               autocomplete="username"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground text-xs">密码</label>
+          <FormField label="密码">
             <Input
               v-model="loginModel.password"
               type="password"
@@ -558,7 +557,7 @@ onUnmounted(() => {
               autocomplete="current-password"
               @keydown.enter="onLoginButtonClick"
             />
-          </div>
+          </FormField>
 
           <div class="flex-between pt-1">
             <Button
@@ -593,37 +592,33 @@ onUnmounted(() => {
           value="register"
           class="pt-3 space-y-3"
         >
-          <div class="space-y-1">
-            <label class="font-medium text-foreground text-xs">用户名</label>
+          <FormField label="用户名">
             <Input
               v-model="registerModel.username"
               placeholder="输入一个用户名，不允许纯数字"
               autocomplete="username"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground text-xs">邮箱</label>
+          <FormField label="邮箱">
             <Input
               v-model="registerModel.email"
               type="email"
               placeholder="请输入可接收邮件的邮箱"
               autocomplete="email"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground text-xs">密码</label>
+          <FormField label="密码">
             <Input
               v-model="registerModel.password"
               type="password"
               placeholder="输入密码，需要包含英文和数字"
               autocomplete="new-password"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground text-xs">重复密码</label>
+          <FormField label="重复密码">
             <Input
               v-model="registerModel.reenteredPassword"
               type="password"
@@ -631,7 +626,7 @@ onUnmounted(() => {
               autocomplete="new-password"
               @keydown.enter="onRegisterButtonClick"
             />
-          </div>
+          </FormField>
 
           <div class="flex items-center justify-end gap-2 pt-1">
             <Button
@@ -669,14 +664,13 @@ onUnmounted(() => {
             通过 B 站认证重置密码
           </Button>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground text-xs">注册邮箱</label>
+          <FormField label="注册邮箱">
             <Input
               v-model="inputForgetPasswordValue"
               type="email"
               placeholder="请输入注册邮箱"
             />
-          </div>
+          </FormField>
 
           <div class="flex-between pt-1">
             <Button

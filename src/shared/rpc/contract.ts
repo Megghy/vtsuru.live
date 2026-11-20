@@ -25,6 +25,49 @@ export interface SendResult {
   message?: string
 }
 
+export interface RpcObsStatus {
+  connected: boolean
+  address: string
+  scenes: string[]
+  currentScene: string
+  baseWidth: number
+  baseHeight: number
+}
+
+export interface RpcObsSceneItemRef {
+  sceneItemId: number
+  sourceName: string
+  inputKind: string
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation: number
+  enabled: boolean
+}
+
+export interface RpcObsSceneItemsResult {
+  sceneName: string
+  baseWidth: number
+  baseHeight: number
+  items: RpcObsSceneItemRef[]
+}
+
+export interface RpcObsUpsertBrowserSourceParams {
+  sceneName: string
+  sourceName: string
+  url: string
+  width: number
+  height: number
+}
+
+export interface RpcObsUpsertBrowserSourceResult {
+  ok: boolean
+  created?: boolean
+  sceneItemId?: number
+  message?: string
+}
+
 /**
  * ServerFunctions —— 由 Tauri 客户端实现, 供外部网页调用。
  * 加接口就在这里加一行, 两端自动获得类型提示。
@@ -42,6 +85,14 @@ export interface ServerFunctions {
   danmakuSend: (roomId: number, message: string) => Promise<SendResult>
   /** 发送私信 (写操作, 需授权) */
   messageSend: (userId: number, message: string) => Promise<SendResult>
+
+  /** OBS 场景联动接口 */
+  obsGetStatus: () => Promise<RpcObsStatus>
+  obsSwitchScene: (sceneName: string) => Promise<{ ok: boolean; message?: string }>
+  obsGetSceneItems: (sceneName?: string) => Promise<RpcObsSceneItemsResult>
+  obsUpsertBrowserSource: (params: RpcObsUpsertBrowserSourceParams) => Promise<RpcObsUpsertBrowserSourceResult>
+  obsSubscribeEvents: () => Promise<{ ok: true }>
+  obsUnsubscribeEvents: () => Promise<{ ok: true }>
 }
 
 /**
@@ -51,10 +102,14 @@ export interface ServerFunctions {
 export interface ClientFunctions {
   /** 服务端推送的弹幕事件 */
   onDanmakuEvent: (eventName: DanmakuEventName, data: EventModel) => void
+  /** OBS 当前场景变化推送 */
+  onObsSceneChanged?: (sceneName: string) => void
+  /** OBS 连接/场景列表状态变化推送 */
+  onObsStatusChanged?: (status: RpcObsStatus) => void
 }
 
 /** birpc eventNames: 声明为单向事件的方法 (调用即发, 不等 round-trip) */
-export const CLIENT_EVENT_NAMES = ['onDanmakuEvent'] as const
+export const CLIENT_EVENT_NAMES = ['onDanmakuEvent', 'onObsSceneChanged', 'onObsStatusChanged'] as const
 
 /** 本地 RPC 服务监听端口 (须与 Rust rpc_server.rs 的 RPC_PORT 保持一致) */
 export const RPC_PORT = 29304

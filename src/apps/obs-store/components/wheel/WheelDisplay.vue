@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 import { DEFAULT_WHEEL_STATE } from './types'
 import type { WheelAction, WheelSpinRecord, WheelState } from './types'
@@ -10,7 +11,9 @@ import { computeSectorArcs, easeOutQuart, resolveSectorAtRotation } from './whee
 
 const props = defineProps<{
   channelId?: string
+  userId?: number
   inlineMode?: boolean
+  noShadow?: boolean
 }>()
 
 const route = useRoute()
@@ -19,9 +22,13 @@ const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? ro
 const { state, onAction } = useObsBridge<WheelState, WheelAction>({
   componentId: 'wheel',
   channelId: targetChannel,
+  userId: () => props.userId,
   defaultState: DEFAULT_WHEEL_STATE,
   role: 'viewer',
 })
+
+useGoogleFont(computed(() => state.value.fontFamily || undefined))
+const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily))
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const rotationDeg = ref(0)
@@ -126,9 +133,12 @@ function drawWheel() {
       ctx.textBaseline = 'middle'
       ctx.fillStyle = '#ffffff'
       const fontSize = Math.max(11, Math.min(16, Math.round(size * 0.036)))
-      ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
-      ctx.shadowColor = 'rgba(0,0,0,0.65)'
-      ctx.shadowBlur = 4
+      const fontFamily = customFontCss.value || '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+      ctx.font = `700 ${fontSize}px ${fontFamily}`
+      if (!props.noShadow) {
+        ctx.shadowColor = 'rgba(0,0,0,0.65)'
+        ctx.shadowBlur = 4
+      }
 
       const label = arc.segment.label.length > 10 ? `${arc.segment.label.slice(0, 9)}…` : arc.segment.label
       ctx.fillText(label, outerRadius - 18, 0)
@@ -224,9 +234,10 @@ function startSpinAnimation(spin: WheelSpinRecord) {
 }
 
 watch(
-  () => [state.value.segments, state.value.proportionalAngles, state.value.theme, state.value.pointerColor, state.value.sizePx],
+  () => [state.value.segments, state.value.proportionalAngles, state.value.theme, state.value.pointerColor, state.value.sizePx, state.value.fontFamily],
   () => {
     drawWheel()
+    if (state.value.fontFamily) void document.fonts?.ready.then(() => drawWheel())
   },
   { deep: true },
 )
@@ -243,6 +254,7 @@ watch(
 
 onMounted(() => {
   drawWheel()
+  document.fonts?.addEventListener('loadingdone', drawWheel)
   onAction((action) => {
     if (action.type === 'SPIN') {
       startSpinAnimation(action.spin)
@@ -257,6 +269,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  document.fonts?.removeEventListener('loadingdone', drawWheel)
   if (animFrameId !== null) cancelAnimationFrame(animFrameId)
   if (winnerTimer) clearTimeout(winnerTimer)
   if (audioCtx) {
@@ -264,12 +277,20 @@ onUnmounted(() => {
     audioCtx = null
   }
 })
+watch(
+  () => props.noShadow,
+  () => {
+    drawWheel()
+  },
+)
+
 </script>
 
 <template>
   <div
     class="wheel-obs-root"
     :class="{ 'is-inline': props.inlineMode }"
+    :style="customFontCss ? { fontFamily: customFontCss } : undefined"
   >
     <div
       v-if="state.title"

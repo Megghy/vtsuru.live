@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -19,8 +21,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">样式</label>
+      <FormField label="样式">
         <Select v-model="blockProps.variant">
           <SelectTrigger>
             <SelectValue placeholder="样式" />
@@ -30,23 +31,35 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <SelectItem value="compact">紧凑</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示标题</label>
+      </FormField>
+      <SettingRow
+        title="显示标题"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showTitle" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示分区</label>
+      </SettingRow>
+      <SettingRow
+        title="显示分区"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showArea" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示封面</label>
+      </SettingRow>
+      <SettingRow
+        title="显示封面"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showCover" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示按钮</label>
+      </SettingRow>
+      <SettingRow
+        title="显示按钮"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showButtons" />
-      </div>
+      </SettingRow>
     </PropsGrid>
   </div>
 
@@ -55,11 +68,10 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
     class="space-y-3"
   >
     <PropsGrid>
-      <div
+      <FormField
         v-if="propertyAvailable('layout')"
-        class="space-y-1"
+        label="布局"
       >
-        <label class="text-xs text-muted-foreground">布局</label>
         <Select v-model="blockProps.layout">
           <SelectTrigger>
             <SelectValue placeholder="布局" />
@@ -69,28 +81,36 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <SelectItem value="table">表格</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">展示周数 1~8</label>
+      </FormField>
+      <FormField label="展示周数 1~8">
         <NumberField
           v-model="blockProps.weeksCount"
           :min="1"
           :max="8"
           class="w-full"
         />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示订阅(ICS)</label>
+      </FormField>
+      <SettingRow
+        title="显示订阅(ICS)"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showIcs" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">高亮今天</label>
+      </SettingRow>
+      <SettingRow
+        title="高亮今天"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.highlightToday" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示标签</label>
+      </SettingRow>
+      <SettingRow
+        title="显示标签"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showTag" />
-      </div>
+      </SettingRow>
     </PropsGrid>
   </div>
 
@@ -99,8 +119,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">样式</label>
+      <FormField label="样式">
         <Select v-model="blockProps.variant">
           <SelectTrigger>
             <SelectValue placeholder="样式" />
@@ -110,44 +129,60 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <SelectItem value="compact">紧凑</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示头像</label>
+      </FormField>
+      <SettingRow
+        title="显示头像"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showAvatar" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示昵称</label>
+      </SettingRow>
+      <SettingRow
+        title="显示昵称"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showName" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示签名</label>
+      </SettingRow>
+      <SettingRow
+        title="显示签名"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showSign" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示统计</label>
+      </SettingRow>
+      <SettingRow
+        title="显示统计"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showStats" />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示按钮</label>
+      </SettingRow>
+      <SettingRow
+        title="显示按钮"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.showButtons" />
-      </div>
-      <div
+      </SettingRow>
+      <SettingRow
         v-if="propertyAvailable('showLiveRoom')"
-        class="flex-between py-1"
+        title="显示直播间按钮"
+        variant="none"
+        class="py-1"
       >
-        <label class="text-xs text-muted-foreground">显示直播间按钮</label>
         <Switch v-model:checked="blockProps.showLiveRoom" />
-      </div>
-      <div
+      </SettingRow>
+      <FormField
         v-if="propertyAvailable('spaceUrl')"
-        class="span-full space-y-1"
+        label="个人主页链接"
+        class="span-full"
       >
-        <label class="text-xs text-muted-foreground">个人主页链接</label>
         <Input
           v-model="blockProps.spaceUrl"
           placeholder="https://space.bilibili.com/..."
         />
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -156,8 +191,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">数据源</label>
+      <FormField label="数据源">
         <Select v-model="blockProps.source">
           <SelectTrigger>
             <SelectValue placeholder="数据源" />
@@ -167,9 +201,8 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <SelectItem value="userIndex">用户主页数据 - 近期视频</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">布局</label>
+      </FormField>
+      <FormField label="布局">
         <Select v-model="blockProps.layout">
           <SelectTrigger>
             <SelectValue placeholder="布局" />
@@ -179,47 +212,48 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <SelectItem value="row">横向滚动</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('columns')"
-        class="space-y-1"
+        label="网格列数"
       >
-        <label class="text-xs text-muted-foreground">网格列数</label>
         <NumberField
           v-model="blockProps.columns"
           :min="1"
           :max="6"
           class="w-full"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">最多数量</label>
+      </FormField>
+      <FormField label="最多数量">
         <NumberField
           v-model="blockProps.maxItems"
           :min="1"
           :max="50"
           class="w-full"
         />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">显示标题栏</label>
-        <Switch v-model:checked="blockProps.showTitle" />
-      </div>
-      <div
-        v-if="propertyAvailable('title')"
-        class="span-full space-y-1"
+      </FormField>
+      <SettingRow
+        title="显示标题栏"
+        variant="none"
+        class="py-1"
       >
-        <label class="text-xs text-muted-foreground">标题</label>
+        <Switch v-model:checked="blockProps.showTitle" />
+      </SettingRow>
+      <FormField
+        v-if="propertyAvailable('title')"
+        label="标题"
+        class="span-full"
+      >
         <Input
           v-model="blockProps.title"
           placeholder="例如：最近视频"
         />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('items')"
-        class="span-full space-y-1"
+        label="手动视频列表"
+        class="span-full"
       >
-        <label class="text-xs text-muted-foreground">手动视频列表</label>
         <RepeaterEditor
           :items="ensureArrayProp('items')"
           :create-item="() => ({ title: '', url: 'https://' })"
@@ -230,24 +264,22 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">标题</label>
+              <FormField label="标题">
                 <Input
                   v-model="item.title"
                   placeholder="可选"
                 />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">链接</label>
+              </FormField>
+              <FormField label="链接">
                 <Input
                   v-model="item.url"
                   placeholder="链接地址"
                 />
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -256,8 +288,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">平台</label>
+      <FormField label="平台">
         <Select v-model="blockProps.provider">
           <SelectTrigger>
             <SelectValue placeholder="平台" />
@@ -268,30 +299,34 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <SelectItem value="custom">custom</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('height')"
-        class="space-y-1"
+        label="高度 px"
       >
-        <label class="text-xs text-muted-foreground">高度 px</label>
         <NumberField
           v-model="blockProps.height"
           :min="propertyNumberRange('height')?.min"
           :max="propertyNumberRange('height')?.max"
           class="w-full"
         />
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">紧凑模式</label>
+      </FormField>
+      <SettingRow
+        title="紧凑模式"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.compact" />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">链接</label>
+      </SettingRow>
+      <FormField
+        label="链接"
+        class="span-full"
+      >
         <Input
           v-model="blockProps.url"
           placeholder="https://..."
         />
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 </template>

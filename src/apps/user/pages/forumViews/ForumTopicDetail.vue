@@ -15,10 +15,11 @@ import type { ResponseForumTopicModel, ResponseUserInfo } from '@/api/generated/
 import { ForumCommentSortTypes } from '@/api/generated/model'
 import type { PaginationResponseOfListOfResponseForumCommentBaseModel } from '@/api/generated/model'
 import router from '@/app/router'
+import { sanitizeForumHtml } from '@/apps/user-page/block/richTextSanitizer'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { refreshCaptcha } from '@/shared/captcha'
-import { sanitizeForumHtml } from '@/apps/user-page/block/richTextSanitizer'
+import { transformHtmlImages } from '@/shared/services/imageTransform'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -85,7 +86,7 @@ const canOprate = computed(() => {
   return !topic.value.isLocked && accountInfo.value.id > 0
 })
 
-const safeTopicHtml = computed(() => sanitizeForumHtml(topic.value?.content))
+const safeTopicHtml = computed(() => transformHtmlImages(sanitizeForumHtml(topic.value?.content), 'card'))
 const topicImagePreview = useHtmlImagePreview()
 
 async function refreshComments() {

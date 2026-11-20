@@ -7,10 +7,12 @@ import { computed, ref, watch } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
+import { transformImageUrl } from '@/shared/services/imageTransform'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { SmartImage } from '@/shared/ui/image'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -253,7 +255,7 @@ function getSafeUrl(value?: string) {
       :class="{ 'has-background': config?.backgroundFile?.length }"
       :style="{
         '--song-list-bg-image': config?.backgroundFile?.length
-          ? `url(&quot;${config.backgroundFile[0].path}&quot;)`
+          ? `url(&quot;${transformImageUrl(config.backgroundFile[0].path, '1920w_90q')}&quot;)`
           : undefined,
       }"
     >
@@ -261,10 +263,11 @@ function getSafeUrl(value?: string) {
         <header
           class="profile-panel flex flex-wrap items-center gap-6 p-6 rounded-2xl bg-card/80 backdrop-blur-md border border-border/80 shadow-xs"
         >
-          <img
+          <SmartImage
             class="profile-avatar size-20 rounded-full object-cover border-2 border-primary/20"
             :src="userInfo?.faceUrl || userInfo?.streamerInfo?.faceUrl || getUserAvatarUrl(userInfo?.id)"
             :alt="userInfo?.name ?? '主播头像'"
+            fallback-transform="avatar"
             referrerpolicy="no-referrer"
           />
           <div class="profile-copy flex-1 min-w-48">

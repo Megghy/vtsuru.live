@@ -12,6 +12,7 @@ import {
 } from '@/apps/user-page/block/customHtmlContract'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/shared/ui/select'
 
@@ -60,8 +61,7 @@ const maxHeight = computed({
     </span>
 
     <PropsGrid :row-gap="0">
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">高度方式</label>
+      <FormField label="高度方式">
         <Select v-model="heightMode">
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -70,12 +70,11 @@ const maxHeight = computed({
             <SelectItem value="viewport">铺满视口</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="heightMode === 'fixed'"
-        class="space-y-1"
+        label="固定高度"
       >
-        <label class="text-xs text-muted-foreground">固定高度</label>
         <NumberField
           v-model="fixedHeight"
           :min="CUSTOM_HTML_MIN_HEIGHT"
@@ -83,12 +82,11 @@ const maxHeight = computed({
           :step="20"
           class="w-full"
         />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-else-if="heightMode === 'auto'"
-        class="space-y-1"
+        label="最大高度"
       >
-        <label class="text-xs text-muted-foreground">最大高度</label>
         <NumberField
           v-model="maxHeight"
           :min="CUSTOM_HTML_MIN_AUTO_HEIGHT"
@@ -96,7 +94,7 @@ const maxHeight = computed({
           :step="20"
           class="w-full"
         />
-      </div>
+      </FormField>
     </PropsGrid>
 
     <CustomHtmlEditorModal

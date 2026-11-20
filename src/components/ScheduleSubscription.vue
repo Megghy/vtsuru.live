@@ -8,6 +8,7 @@ import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -190,8 +191,7 @@ onBeforeUnmount(() => {
             <span class="text-[11px] text-muted-foreground block truncate">{{ settingsSummary }}</span>
           </div>
 
-          <div class="space-y-1">
-            <span class="text-[11px] text-muted-foreground font-medium block">开播提醒</span>
+          <FormField label="开播提醒">
             <ToggleGroup
               type="single"
               size="xs"
@@ -210,10 +210,9 @@ onBeforeUnmount(() => {
                 {{ opt.label }}
               </ToggleGroupItem>
             </ToggleGroup>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <span class="text-[11px] text-muted-foreground font-medium block">标题标签</span>
+          <FormField label="标题标签">
             <ToggleGroup
               type="single"
               size="xs"
@@ -232,7 +231,7 @@ onBeforeUnmount(() => {
                 {{ opt.label }}
               </ToggleGroupItem>
             </ToggleGroup>
-          </div>
+          </FormField>
 
           <div class="pt-1">
             <Input

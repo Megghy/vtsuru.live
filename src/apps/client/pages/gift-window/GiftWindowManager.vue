@@ -19,7 +19,6 @@ import { getApiLiveGetAll, getApiLiveRanking } from '@/api/generated/live/live'
 import type { ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/generated/model'
 import { GuardLevel } from '@/api/generated/model'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
-import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -27,9 +26,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
@@ -561,34 +562,42 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">卡片背景色</span>
+              <SettingRow
+                variant="none"
+                title="卡片背景色"
+              >
                 <ColorPicker
                   v-model:value="giftWindow.settings.backgroundColor"
                   :show-alpha="true"
                 />
-              </div>
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">窗口背景色</span>
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="窗口背景色"
+              >
                 <ColorPicker
                   v-model:value="giftWindow.settings.windowBackgroundColor"
                   :show-alpha="true"
                 />
-              </div>
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">文字主色</span>
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="文字主色"
+              >
                 <ColorPicker
                   v-model:value="giftWindow.settings.textColor"
                   :show-alpha="true"
                 />
-              </div>
-              <div class="flex-between text-xs">
-                <span class="text-muted-foreground">金额高亮色</span>
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="金额高亮色"
+              >
                 <ColorPicker
                   v-model:value="giftWindow.settings.highlightColor"
                   :show-alpha="true"
                 />
-              </div>
+              </SettingRow>
             </div>
           </CardContent>
         </Card>
@@ -599,9 +608,12 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle>排版与细节</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">整体不透明度</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                label="整体不透明度"
+                :extra="`${Math.round(giftWindow.settings.opacity * 100)}%`"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[giftWindow.settings.opacity]"
                   :min="0.1"
@@ -609,15 +621,13 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="0.05"
                   @update:model-value="giftWindow.settings.opacity = $event?.[0] ?? 1"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ Math.round(giftWindow.settings.opacity * 100) }}%
-                </span>
-              </div>
-            </div>
+              </FormField>
 
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">字号大小 (px)</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+              <FormField
+                label="字号大小 (px)"
+                :extra="giftWindow.settings.fontSize"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[giftWindow.settings.fontSize]"
                   :min="10"
@@ -625,15 +635,13 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="1"
                   @update:model-value="giftWindow.settings.fontSize = $event?.[0] ?? 14"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ giftWindow.settings.fontSize }}
-                </span>
-              </div>
-            </div>
+              </FormField>
 
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">卡片圆角 (px)</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+              <FormField
+                label="卡片圆角 (px)"
+                :extra="giftWindow.settings.borderRadius"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[giftWindow.settings.borderRadius]"
                   :min="0"
@@ -641,15 +649,13 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="1"
                   @update:model-value="giftWindow.settings.borderRadius = $event?.[0] ?? 6"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ giftWindow.settings.borderRadius }}
-                </span>
-              </div>
-            </div>
+              </FormField>
 
-            <div class="flex-between gap-4 text-xs">
-              <span class="text-muted-foreground w-28 shrink-0">条目间距 (px)</span>
-              <div class="flex-1 max-w-xs flex items-center gap-3">
+              <FormField
+                label="条目间距 (px)"
+                :extra="giftWindow.settings.itemSpacing"
+                class="min-w-0"
+              >
                 <Slider
                   :model-value="[giftWindow.settings.itemSpacing]"
                   :min="0"
@@ -657,33 +663,48 @@ function toggleFilterType(val: string, checked: boolean) {
                   :step="1"
                   @update:model-value="giftWindow.settings.itemSpacing = $event?.[0] ?? 6"
                 />
-                <span class="text-[11px] text-muted-foreground w-8 text-right tabular-nums">
-                  {{ giftWindow.settings.itemSpacing }}
-                </span>
-              </div>
+              </FormField>
             </div>
 
             <Separator class="my-2" />
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <LabelItem label="显示头像">
+              <SettingRow
+                variant="none"
+                title="显示头像"
+                class="py-1"
+              >
                 <Switch v-model:checked="giftWindow.settings.showAvatar" />
-              </LabelItem>
-              <LabelItem label="显示金额">
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="显示金额"
+                class="py-1"
+              >
                 <Switch v-model:checked="giftWindow.settings.showPrice" />
-              </LabelItem>
-              <LabelItem label="显示时间">
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="显示时间"
+                class="py-1"
+              >
                 <Switch v-model:checked="giftWindow.settings.showTime" />
-              </LabelItem>
-              <LabelItem label="紧凑模式">
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="紧凑模式"
+                class="py-1"
+              >
                 <Switch v-model:checked="giftWindow.settings.compactMode" />
-              </LabelItem>
-              <LabelItem
-                label="浮窗滚动条"
+              </SettingRow>
+              <SettingRow
+                variant="none"
+                title="浮窗滚动条"
                 description="显示极简半透明细滚动条"
+                class="py-1"
               >
                 <Switch v-model:checked="giftWindow.settings.showScrollbar" />
-              </LabelItem>
+              </SettingRow>
             </div>
           </CardContent>
         </Card>
@@ -701,8 +722,10 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">宽度 (px)</span>
+              <FormField
+                label="宽度 (px)"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.width"
                   :min="200"
@@ -710,9 +733,11 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.setSize($event || 300, giftWindow.settings.height)"
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">高度 (px)</span>
+              </FormField>
+              <FormField
+                label="高度 (px)"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.height"
                   :min="200"
@@ -720,25 +745,29 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.setSize(giftWindow.settings.width, $event || 400)"
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">X 坐标</span>
+              </FormField>
+              <FormField
+                label="X 坐标"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.x"
                   :min="0"
                   class="w-full"
                   @update:model-value="((giftWindow.settings.x = $event || 0), giftWindow.updateWindowPosition())"
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">Y 坐标</span>
+              </FormField>
+              <FormField
+                label="Y 坐标"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.y"
                   :min="0"
                   class="w-full"
                   @update:model-value="((giftWindow.settings.y = $event || 0), giftWindow.updateWindowPosition())"
                 />
-              </div>
+              </FormField>
             </div>
 
             <div class="flex justify-end pt-1">
@@ -760,27 +789,30 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle>同窗口展示模块</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
-            <LabelItem
-              label="启用礼物列表"
+            <SettingRow
+              variant="none"
+              title="启用礼物列表"
               description="实时滚动显示观众送出的礼物、SC 与大航海"
+              class="py-1"
             >
               <Switch v-model:checked="giftWindow.settings.showGiftList" />
-            </LabelItem>
-            <LabelItem
-              label="启用高能排行榜"
+            </SettingRow>
+            <SettingRow
+              variant="none"
+              title="启用高能排行榜"
               description="在同窗口内展示本场直播打赏榜与在场舰长名单"
+              class="py-1"
             >
               <Switch v-model:checked="giftWindow.settings.showRanking" />
-            </LabelItem>
+            </SettingRow>
 
-            <div
+            <SettingRow
               v-if="giftWindow.settings.showRanking"
-              class="flex-between text-xs py-1 border-t pt-2"
+              variant="none"
+              title="浮窗默认排行视图"
+              description="打开浮窗时默认聚焦的排行板块"
+              class="border-t pt-2.5"
             >
-              <div class="flex flex-col gap-0.5">
-                <span class="font-medium text-foreground">浮窗默认排行视图</span>
-                <span class="text-[11px] text-muted-foreground">打开浮窗时默认聚焦的排行板块</span>
-              </div>
               <ToggleGroup
                 type="single"
                 :model-value="giftWindow.settings.rankViewMode"
@@ -798,7 +830,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   {{ opt.label }}
                 </ToggleGroupItem>
               </ToggleGroup>
-            </div>
+            </SettingRow>
           </CardContent>
         </Card>
 
@@ -808,27 +840,33 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle>浮窗行为属性</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
-            <LabelItem
-              label="总是置顶"
+            <SettingRow
+              variant="none"
+              title="总是置顶"
               description="让礼物窗口始终保持在游戏等应用程序上层"
+              class="py-1"
             >
               <Switch v-model:checked="giftWindow.settings.alwaysOnTop" />
-            </LabelItem>
-            <LabelItem
-              label="鼠标穿透 (点击忽略)"
+            </SettingRow>
+            <SettingRow
+              variant="none"
+              title="鼠标穿透 (点击忽略)"
               description="点击事件穿透到下层游戏界面，不影响直播操作"
+              class="py-1"
             >
               <Switch v-model:checked="giftWindow.settings.interactive" />
-            </LabelItem>
-            <LabelItem
-              label="防 OBS / 屏幕共享捕捉 (防抓取)"
+            </SettingRow>
+            <SettingRow
+              variant="none"
               description="开启后 OBS 抓屏、全屏捕获与截屏工具将无法捕捉到此浮窗，防止遮挡游戏画面与隐私泄露"
+              class="py-1"
             >
-              <template #icon>
-                <WindowShield20Regular class="size-4 text-muted-foreground" />
+              <template #title>
+                <WindowShield20Regular class="size-4 text-muted-foreground shrink-0" />
+                <span class="font-medium text-foreground truncate">防 OBS / 屏幕共享捕捉 (防抓取)</span>
               </template>
               <Switch v-model:checked="giftWindow.settings.contentProtected" />
-            </LabelItem>
+            </SettingRow>
           </CardContent>
         </Card>
       </TabsContent>
@@ -883,9 +921,13 @@ function toggleFilterType(val: string, checked: boolean) {
                 {{ opt.label }}
               </ToggleGroupItem>
             </ToggleGroup>
-            <LabelItem label="倒序呈现 (新消息排在前面)">
+            <SettingRow
+              variant="none"
+              title="倒序呈现 (新消息排在前面)"
+              class="py-1"
+            >
               <Switch v-model:checked="giftWindow.settings.reverseOrder" />
-            </LabelItem>
+            </SettingRow>
           </CardContent>
         </Card>
 
@@ -896,8 +938,11 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">最低展示金额 (金瓜子)</span>
+              <FormField
+                label="最低展示金额 (金瓜子)"
+                description="1000 金瓜子 = ¥1。设为 0 则不过滤免费或微额礼物。"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.minPrice"
                   :min="0"
@@ -905,12 +950,12 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.settings.minPrice = $event || 0"
                 />
-                <span class="text-[11px] text-muted-foreground block">
-                  1000 金瓜子 = ¥1。设为 0 则不过滤免费或微额礼物。
-                </span>
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">合并时间窗口 (秒)</span>
+              </FormField>
+              <FormField
+                label="合并时间窗口 (秒)"
+                description="同一用户在此时间内送出的相同礼物自动合并为一条连击。"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.mergeWindowSeconds"
                   :min="0"
@@ -919,12 +964,11 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.settings.mergeWindowSeconds = $event || 0"
                 />
-                <span class="text-[11px] text-muted-foreground block">
-                  同一用户在此时间内送出的相同礼物自动合并为一条连击。
-                </span>
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">列表最大保留条数</span>
+              </FormField>
+              <FormField
+                label="列表最大保留条数"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.maxItemCount"
                   :min="5"
@@ -932,9 +976,11 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.settings.maxItemCount = $event || 50"
                 />
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">礼物自动淡出消失 (秒)</span>
+              </FormField>
+              <FormField
+                label="礼物自动淡出消失 (秒)"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.autoDisappearTime"
                   :min="0"
@@ -943,7 +989,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.settings.autoDisappearTime = $event || 0"
                 />
-              </div>
+              </FormField>
             </div>
           </CardContent>
         </Card>
@@ -955,8 +1001,11 @@ function toggleFilterType(val: string, checked: boolean) {
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">排行榜显示人数上限</span>
+              <FormField
+                label="排行榜显示人数上限"
+                description="依据本场直播累计送出的付费礼物与大航海总价值计算，建议设为 50。"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.rankDisplayCount"
                   :min="5"
@@ -965,12 +1014,12 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.settings.rankDisplayCount = $event || 50"
                 />
-                <span class="text-[11px] text-muted-foreground block">
-                  依据本场直播累计送出的付费礼物与大航海总价值计算，建议设为 50。
-                </span>
-              </div>
-              <div class="space-y-1">
-                <span class="text-xs text-muted-foreground">在场活跃判定时间 (分钟)</span>
+              </FormField>
+              <FormField
+                label="在场活跃判定时间 (分钟)"
+                description="观众在该时间内有发言、送礼、进入或点赞即视为「还在直播间」。"
+                class="min-w-0"
+              >
                 <NumberField
                   :model-value="giftWindow.settings.onlineThresholdMinutes"
                   :min="5"
@@ -979,10 +1028,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="w-full"
                   @update:model-value="giftWindow.settings.onlineThresholdMinutes = $event || 10"
                 />
-                <span class="text-[11px] text-muted-foreground block">
-                  观众在该时间内有发言、送礼、进入或点赞即视为「还在直播间」。
-                </span>
-              </div>
+              </FormField>
             </div>
           </CardContent>
         </Card>

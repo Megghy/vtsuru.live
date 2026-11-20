@@ -26,7 +26,6 @@ import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
-import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 const setting = defineModel<SettingQuestionDisplay>({ required: true })
@@ -189,17 +188,21 @@ function resetToDefault() {
     <section class="setting-section space-y-3 pt-3 border-t border-border/60">
       <h3 class="text-xs font-semibold text-foreground uppercase tracking-wider">文字排版</h3>
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">内容字体</label>
+        <FormField
+          label="内容字体"
+          class="min-w-0"
+        >
           <GoogleFontPicker
             v-model="contentFont"
             :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
             :show-preview="false"
             placeholder="选择内容字体"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">昵称字体</label>
+        </FormField>
+        <FormField
+          label="昵称字体"
+          class="min-w-0"
+        >
           <GoogleFontPicker
             v-model="nameFont"
             :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
@@ -207,25 +210,29 @@ function resetToDefault() {
             :show-preview="false"
             placeholder="选择昵称字体"
           />
-        </div>
+        </FormField>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">内容字号</label>
+        <FormField
+          label="内容字号"
+          class="min-w-0"
+        >
           <NumberField
             v-model="setting.fontSize"
             :min="12"
             :max="160"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">内容字重</label>
+        </FormField>
+        <FormField
+          label="内容字重"
+          class="min-w-0"
+        >
           <Select
             :model-value="String(setting.fontWeight ?? 400)"
             @update:model-value="setting.fontWeight = Number($event)"
           >
-            <SelectTrigger>
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -238,23 +245,27 @@ function resetToDefault() {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">昵称字号</label>
+        <FormField
+          label="昵称字号"
+          class="min-w-0"
+        >
           <NumberField
             v-model="setting.nameFontSize"
             :min="12"
             :max="120"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">昵称字重</label>
+        </FormField>
+        <FormField
+          label="昵称字重"
+          class="min-w-0"
+        >
           <Select
             :model-value="String(setting.nameFontWeight ?? 400)"
             @update:model-value="setting.nameFontWeight = Number($event)"
           >
-            <SelectTrigger>
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -267,14 +278,13 @@ function resetToDefault() {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
       </div>
 
-      <div class="space-y-1">
-        <div class="flex-between text-[11px] text-muted-foreground">
-          <span class="font-medium">行高倍数</span>
-          <span class="font-mono">{{ setting.lineHeight }}</span>
-        </div>
+      <FormField
+        label="行高倍数"
+        :extra="setting.lineHeight"
+      >
         <div class="flex items-center gap-2">
           <Slider
             :model-value="[setting.lineHeight ?? 1.5]"
@@ -292,11 +302,13 @@ function resetToDefault() {
             class="w-20"
           />
         </div>
-      </div>
+      </FormField>
 
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">水平对齐</label>
+        <FormField
+          label="水平对齐"
+          class="min-w-0"
+        >
           <ToggleGroup
             type="single"
             size="xs"
@@ -321,9 +333,11 @@ function resetToDefault() {
               {{ al.label }}
             </ToggleGroupItem>
           </ToggleGroup>
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">垂直对齐</label>
+        </FormField>
+        <FormField
+          label="垂直对齐"
+          class="min-w-0"
+        >
           <ToggleGroup
             type="single"
             size="xs"
@@ -348,14 +362,13 @@ function resetToDefault() {
               {{ val.label }}
             </ToggleGroupItem>
           </ToggleGroup>
-        </div>
+        </FormField>
       </div>
 
-      <div class="space-y-1">
-        <div class="flex-between text-[11px] text-muted-foreground">
-          <span class="font-medium">内容最大宽度 (0 为不限)</span>
-          <span class="font-mono">{{ setting.contentMaxWidth || 0 }}</span>
-        </div>
+      <FormField
+        label="内容最大宽度 (0 为不限)"
+        :extra="setting.contentMaxWidth || 0"
+      >
         <div class="flex items-center gap-2">
           <Slider
             :model-value="[setting.contentMaxWidth ?? 0]"
@@ -373,15 +386,14 @@ function resetToDefault() {
             class="w-20"
           />
         </div>
-      </div>
+      </FormField>
 
-      <div class="space-y-1">
-        <label class="text-[11px] text-muted-foreground font-medium">文字阴影</label>
+      <FormField label="文字阴影">
         <Select
           :model-value="setting.textShadow ?? QuestionDisplayShadow.None"
           @update:model-value="setting.textShadow = $event as any"
         >
-          <SelectTrigger>
+          <SelectTrigger class="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -394,25 +406,29 @@ function resetToDefault() {
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">内容文字颜色</label>
+        <FormField
+          label="内容文字颜色"
+          class="min-w-0"
+        >
           <ColorPicker
             :model-value="colorValue(setting.fontColor)"
             :show-alpha="false"
             @update:model-value="updateColor('fontColor', $event)"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">昵称文字颜色</label>
+        </FormField>
+        <FormField
+          label="昵称文字颜色"
+          class="min-w-0"
+        >
           <ColorPicker
             :model-value="colorValue(setting.nameFontColor)"
             :show-alpha="false"
             @update:model-value="updateColor('nameFontColor', $event)"
           />
-        </div>
+        </FormField>
       </div>
     </section>
 
@@ -420,29 +436,32 @@ function resetToDefault() {
     <section class="setting-section space-y-3 pt-3 border-t border-border/60">
       <h3 class="text-xs font-semibold text-foreground uppercase tracking-wider">卡片外观</h3>
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">背景颜色</label>
+        <FormField
+          label="背景颜色"
+          class="min-w-0"
+        >
           <ColorPicker
             :model-value="colorValue(setting.backgroundColor)"
             :show-alpha="false"
             @update:model-value="updateColor('backgroundColor', $event)"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">边框颜色</label>
+        </FormField>
+        <FormField
+          label="边框颜色"
+          class="min-w-0"
+        >
           <ColorPicker
             :model-value="colorValue(setting.borderColor)"
             :show-alpha="false"
             @update:model-value="updateColor('borderColor', $event)"
           />
-        </div>
+        </FormField>
       </div>
 
-      <div class="space-y-1">
-        <div class="flex-between text-[11px] text-muted-foreground">
-          <span class="font-medium">背景不透明度 (%)</span>
-          <span class="font-mono">{{ setting.backgroundOpacity ?? 100 }}%</span>
-        </div>
+      <FormField
+        label="背景不透明度 (%)"
+        :extra="`${setting.backgroundOpacity ?? 100}%`"
+      >
         <div class="flex items-center gap-2">
           <Slider
             :model-value="[setting.backgroundOpacity ?? 100]"
@@ -458,40 +477,48 @@ function resetToDefault() {
             class="w-20"
           />
         </div>
-      </div>
+      </FormField>
 
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">内边距 (px)</label>
+        <FormField
+          label="内边距 (px)"
+          class="min-w-0"
+        >
           <NumberField
             v-model="setting.contentPadding"
             :min="0"
             :max="96"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">卡片圆角 (px)</label>
+        </FormField>
+        <FormField
+          label="卡片圆角 (px)"
+          class="min-w-0"
+        >
           <NumberField
             v-model="setting.borderRadius"
             :min="0"
             :max="64"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">边框宽度 (px)</label>
+        </FormField>
+        <FormField
+          label="边框宽度 (px)"
+          class="min-w-0"
+        >
           <NumberField
             v-model="setting.borderWidth"
             :min="0"
             :max="32"
           />
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">卡片阴影</label>
+        </FormField>
+        <FormField
+          label="卡片阴影"
+          class="min-w-0"
+        >
           <Select
             :model-value="setting.shadow ?? QuestionDisplayShadow.None"
             @update:model-value="setting.shadow = $event as any"
           >
-            <SelectTrigger>
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -504,7 +531,7 @@ function resetToDefault() {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
       </div>
     </section>
 

@@ -2,6 +2,8 @@
 import Konva from 'konva'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { resolveFontFamilyCss } from '@/apps/user-page/googleFonts'
+
 import { computeKeyboardGeometry } from './keyboardLayouts'
 import { buildStaticKonvaScene, renderDynamicKonvaFrame, STAGE_MARGIN } from './keycastCanvasRenderer'
 import type { MouseLayoutRect, PressEffectInstance, SparkParticle, TrailPoint } from './keycastCanvasRenderer'
@@ -21,9 +23,11 @@ const props = withDefaults(
     apm: number
     totalPresses: number
     interactive?: boolean
+    noShadow?: boolean
   }>(),
   {
     interactive: false,
+    noShadow: false,
   },
 )
 
@@ -72,7 +76,16 @@ const stageWidth = computed(() => {
 })
 
 const stageHeight = computed(() => STAGE_MARGIN * 2 + hudHeight.value + hudGap.value + keyboardGeom.value.height)
-const palette = computed(() => buildKeycastCanvasPalette(props.state.theme, props.state.accentColor))
+const palette = computed(() => {
+  const base = buildKeycastCanvasPalette(props.state.theme, props.state.accentColor)
+  if (!props.noShadow) return base
+  return {
+    ...base,
+    shellShadowColor: 'transparent',
+    shellShadowBlur: 0,
+    textShadowColor: 'transparent',
+  }
+})
 
 let stage: Konva.Stage | null = null
 let staticLayer: Konva.Layer | null = null
@@ -164,6 +177,7 @@ function rebuildStaticScene() {
         if (stage) stage.container().style.cursor = cursor
       },
     },
+    resolveFontFamilyCss(props.state.fontFamily),
   )
   scheduleFrame()
 }
@@ -304,6 +318,7 @@ onMounted(() => {
   dynamicLayer.add(dynamicShape)
   stage.add(staticLayer)
   stage.add(dynamicLayer)
+  document.fonts?.addEventListener('loadingdone', rebuildStaticScene)
   rebuildStaticScene()
 })
 
@@ -315,9 +330,13 @@ watch(
     () => props.state.theme,
     () => props.state.accentColor,
     () => props.state.fontSize,
+    () => props.state.fontFamily,
     () => props.interactive,
   ],
-  rebuildStaticScene,
+  () => {
+    rebuildStaticScene()
+    if (props.state.fontFamily) void document.fonts?.ready.then(() => rebuildStaticScene())
+  },
 )
 
 watch(
@@ -340,6 +359,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  document.fonts?.removeEventListener('loadingdone', rebuildStaticScene)
   if (rafId !== null) {
     cancelAnimationFrame(rafId)
     rafId = null

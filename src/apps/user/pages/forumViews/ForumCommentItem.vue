@@ -7,9 +7,10 @@ import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { sanitizeForumHtml } from '@/apps/user-page/block/richTextSanitizer'
 import type { ForumCommentModel } from '@/api/client-types'
 import type { ResponseForumTopicModel } from '@/api/generated/model'
+import { sanitizeForumHtml } from '@/apps/user-page/block/richTextSanitizer'
+import { transformHtmlImages } from '@/shared/services/imageTransform'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -37,7 +38,7 @@ const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
 })
 
-const safeCommentHtml = computed(() => sanitizeForumHtml(props.item.content))
+const safeCommentHtml = computed(() => transformHtmlImages(sanitizeForumHtml(props.item.content), 'card'))
 const commentImagePreview = useHtmlImagePreview()
 
 function delComment(id: number) {

@@ -7,6 +7,7 @@ import type { SupportTicketModel } from '@/api/generated/model'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { SmartImage } from '@/shared/ui/image'
 
 const props = defineProps<{
   ticket: SupportTicketModel
@@ -33,10 +34,12 @@ const badgeVariant = computed(() => {
     variant="outline"
     class="flex min-w-0 min-h-24 h-auto overflow-hidden p-0 rounded-lg text-left font-normal items-stretch justify-start"
   >
-    <img
+    <SmartImage
       v-if="ticket.images[0]"
       class="size-24 shrink-0 self-center object-cover border-r border-border"
       :src="ticket.images[0].path"
+      :file-id="ticket.images[0].id"
+      :is-public="true"
       :alt="ticket.images[0].name"
     />
     <div class="flex min-w-0 flex-1 flex-col gap-2 py-3 px-3.5">

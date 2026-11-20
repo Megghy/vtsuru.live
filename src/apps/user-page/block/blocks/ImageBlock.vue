@@ -26,6 +26,7 @@ const model = computed(() => {
   const file = asObject(o.imageFile)
   return {
     url: file && typeof file.path === 'string' && file.path ? file.path : '',
+    fileId: file && typeof file.id === 'number' ? file.id : undefined,
     alt: typeof o.alt === 'string' ? o.alt : '',
     maxWidth: asCssSize(o.maxWidth),
     maxHeight: asCssSize(o.maxHeight),
@@ -92,15 +93,19 @@ watch(
       <ImagePreview
         v-if="!failed"
         :src="model.url"
+        :file-id="model.fileId"
+        :is-public="true"
+        fallback-transform="preview"
+        :crop="false"
         :alt="model.alt || '图片预览'"
         :disabled="!loaded || failed"
         wrapper-class="block w-full"
       >
-        <template #default="{ open }">
+        <template #default="{ open, thumbSrc, onError }">
           <img
             class="relative z-1 motion-reduce:transition-none transition-opacity duration-180"
             :class="[loaded ? 'opacity-100 cursor-zoom-in' : 'opacity-0']"
-            :src="model.url"
+            :src="thumbSrc || undefined"
             :alt="model.alt"
             :role="loaded ? 'button' : undefined"
             :tabindex="loaded ? 0 : undefined"
@@ -109,7 +114,7 @@ watch(
             decoding="async"
             :style="imgStyle"
             @load="loaded = true"
-            @error="failed = true"
+            @error="!onError() && (failed = true)"
             @click="loaded && open()"
             @keydown.enter.prevent="loaded && open()"
             @keydown.space.prevent="loaded && open()"

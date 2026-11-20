@@ -85,6 +85,7 @@
     "md5": "^2.3.0",
     "mitt": "^3.0.1",
     "monaco-editor": "^0.57.0",
+    "moveable": "^0.53.0",
     "nanoid": "^6.0.2",
     "obs-websocket-js": "^5.0.8",
     "onnxruntime-web": "^1.30.0",

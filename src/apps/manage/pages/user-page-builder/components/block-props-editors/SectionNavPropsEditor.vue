@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -28,8 +30,7 @@ function hasLevel(level: number) {
 
 <template>
   <PropsGrid>
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">排列方式</label>
+    <FormField label="排列方式">
       <Select v-model="blockProps.layout">
         <SelectTrigger>
           <SelectValue placeholder="排列方式" />
@@ -39,9 +40,8 @@ function hasLevel(level: number) {
           <SelectItem value="vertical">纵向</SelectItem>
         </SelectContent>
       </Select>
-    </div>
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">包含标题级别</label>
+    </FormField>
+    <FormField label="包含标题级别">
       <div class="flex items-center gap-3 pt-1">
         <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
           <Checkbox
@@ -65,10 +65,13 @@ function hasLevel(level: number) {
           <span>三级</span>
         </label>
       </div>
-    </div>
-    <div class="flex-between py-1">
-      <label class="text-xs text-muted-foreground">显示序号</label>
+    </FormField>
+    <SettingRow
+      title="显示序号"
+      variant="none"
+      class="py-1"
+    >
       <Switch v-model:checked="blockProps.showNumbers" />
-    </div>
+    </SettingRow>
   </PropsGrid>
 </template>

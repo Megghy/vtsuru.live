@@ -12,11 +12,13 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -263,10 +265,12 @@ function runMacro(macroId: string) {
       </DialogHeader>
 
       <div class="flex-1 overflow-y-auto space-y-3 pt-2 text-xs pr-1">
-        <Input
-          v-model="macroName"
-          placeholder="宏名称"
-        />
+        <FormField label="宏名称">
+          <Input
+            v-model="macroName"
+            placeholder="宏名称"
+          />
+        </FormField>
 
         <div class="flex-between gap-2">
           <span class="text-xs text-muted-foreground">拖拽排序，串行执行</span>
@@ -353,9 +357,9 @@ function runMacro(macroId: string) {
             <Separator class="my-1" />
 
             <!-- hotkey -->
-            <div
+            <FormField
               v-if="element.step.type === 'hotkey'"
-              class="w-full"
+              label="目标热键"
             >
               <Select
                 :model-value="element.step.hotkeyID"
@@ -374,12 +378,12 @@ function runMacro(macroId: string) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <!-- preset -->
-            <div
+            <FormField
               v-else-if="element.step.type === 'preset'"
-              class="w-full"
+              label="目标机位"
             >
               <Select
                 :model-value="element.step.presetId"
@@ -398,14 +402,14 @@ function runMacro(macroId: string) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <!-- wait -->
-            <div
+            <SettingRow
               v-else-if="element.step.type === 'wait'"
-              class="flex items-center gap-2"
+              variant="none"
+              title="等待时长 (秒)"
             >
-              <span class="text-muted-foreground">等待</span>
               <NumberField
                 :model-value="element.step.seconds"
                 :min="0"
@@ -413,42 +417,53 @@ function runMacro(macroId: string) {
                 class="w-28"
                 @update:model-value="(v) => upsertStep(element.id, { type: 'wait', seconds: Number(v ?? 0) })"
               />
-              <span class="text-muted-foreground">秒</span>
-            </div>
+            </SettingRow>
 
             <!-- injectParam -->
             <div
               v-else-if="element.step.type === 'injectParam'"
-              class="flex flex-wrap items-center gap-2"
+              class="grid grid-cols-1 sm:grid-cols-3 gap-2"
             >
-              <Input
-                :model-value="element.step.parameterId"
-                placeholder="参数 ID"
-                class="w-40"
-                @input="patchStep(element.id, { parameterId: ($event.target as HTMLInputElement).value })"
-              />
-              <NumberField
-                :model-value="element.step.value"
-                placeholder="值"
-                class="w-24"
-                @update:model-value="(v) => patchStep(element.id, { value: Number(v ?? 0) })"
-              />
-              <NumberField
-                :model-value="element.step.weight ?? 1"
-                placeholder="权重"
-                :min="0"
-                :step="0.1"
-                class="w-24"
-                @update:model-value="(v) => patchStep(element.id, { weight: Number(v ?? 1) })"
-              />
+              <FormField
+                label="参数 ID"
+                class="min-w-0"
+              >
+                <Input
+                  :model-value="element.step.parameterId"
+                  placeholder="参数 ID"
+                  @input="patchStep(element.id, { parameterId: ($event.target as HTMLInputElement).value })"
+                />
+              </FormField>
+              <FormField
+                label="目标值"
+                class="min-w-0"
+              >
+                <NumberField
+                  :model-value="element.step.value"
+                  placeholder="值"
+                  @update:model-value="(v) => patchStep(element.id, { value: Number(v ?? 0) })"
+                />
+              </FormField>
+              <FormField
+                label="权重"
+                class="min-w-0"
+              >
+                <NumberField
+                  :model-value="element.step.weight ?? 1"
+                  placeholder="权重"
+                  :min="0"
+                  :step="0.1"
+                  @update:model-value="(v) => patchStep(element.id, { weight: Number(v ?? 1) })"
+                />
+              </FormField>
             </div>
 
             <!-- accessory -->
             <div
               v-else-if="element.step.type === 'accessory'"
-              class="flex items-center gap-3 flex-wrap"
+              class="space-y-2"
             >
-              <div class="w-64">
+              <FormField label="目标配饰">
                 <Select
                   :model-value="element.step.accessoryId"
                   @update:model-value="(v) => patchStep(element.id, { accessoryId: v })"
@@ -466,20 +481,22 @@ function runMacro(macroId: string) {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div class="flex items-center gap-1.5 cursor-pointer select-none">
+              </FormField>
+              <SettingRow
+                variant="none"
+                :title="element.step.visible ? '显示配饰' : '隐藏配饰'"
+              >
                 <Switch
                   :checked="element.step.visible"
                   @update:checked="(v: boolean) => patchStep(element.id, { visible: v })"
                 />
-                <span class="text-muted-foreground">{{ element.step.visible ? '显示' : '隐藏' }}</span>
-              </div>
+              </SettingRow>
             </div>
 
             <!-- prank -->
-            <div
+            <FormField
               v-else-if="element.step.type === 'prank'"
-              class="w-full"
+              label="目标整活"
             >
               <Select
                 :model-value="element.step.prankId"
@@ -498,35 +515,47 @@ function runMacro(macroId: string) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <!-- playAudio -->
             <div
               v-else-if="element.step.type === 'playAudio'"
-              class="flex flex-wrap items-center gap-2"
+              class="space-y-2"
             >
-              <Input
-                :model-value="element.step.url"
-                placeholder="音效 URL"
-                class="flex-1 min-w-[200px]"
-                @input="patchStep(element.id, { url: ($event.target as HTMLInputElement).value })"
-              />
-              <NumberField
-                :model-value="element.step.volume ?? 0.8"
-                placeholder="音量"
-                :min="0"
-                :max="1"
-                :step="0.05"
-                class="w-24"
-                @update:model-value="(v) => patchStep(element.id, { volume: Number(v ?? 0.8) })"
-              />
-              <div class="flex items-center gap-1.5 cursor-pointer select-none">
+              <div class="grid grid-cols-1 sm:grid-cols-[1fr_110px] gap-2">
+                <FormField
+                  label="音效 URL"
+                  class="min-w-0"
+                >
+                  <Input
+                    :model-value="element.step.url"
+                    placeholder="音效 URL"
+                    @input="patchStep(element.id, { url: ($event.target as HTMLInputElement).value })"
+                  />
+                </FormField>
+                <FormField
+                  label="音量"
+                  class="min-w-0"
+                >
+                  <NumberField
+                    :model-value="element.step.volume ?? 0.8"
+                    placeholder="音量"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    @update:model-value="(v) => patchStep(element.id, { volume: Number(v ?? 0.8) })"
+                  />
+                </FormField>
+              </div>
+              <SettingRow
+                variant="none"
+                title="等待播放结束"
+              >
                 <Switch
                   :checked="element.step.waitForEnd ?? false"
                   @update:checked="(v: boolean) => patchStep(element.id, { waitForEnd: v })"
                 />
-                <span class="text-muted-foreground">等待结束</span>
-              </div>
+              </SettingRow>
             </div>
           </div>
         </VueDraggable>

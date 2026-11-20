@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
+import { SmartImage } from '@/shared/ui/image'
 import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
@@ -185,11 +186,13 @@ watch(
           <div
             class="relative aspect-video overflow-hidden bg-muted @max-[380px]:aspect-auto @max-[380px]:min-h-[100px]"
           >
-            <img
+            <SmartImage
               v-if="item.cover?.path"
               :src="item.cover.path"
+              :file-id="item.cover.id"
+              :is-public="true"
+              fallback-transform="card"
               alt=""
-              loading="lazy"
               class="w-full h-full object-cover"
             />
             <div

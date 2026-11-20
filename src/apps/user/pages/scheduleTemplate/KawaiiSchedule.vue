@@ -6,6 +6,7 @@ import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
+import { SmartImage } from '@/shared/ui/image'
 
 import { resolveScheduleCategory, type ScheduleCategoryKey } from './scheduleCategories'
 import { ensureGoogleFont } from './scheduleFonts'
@@ -161,9 +162,12 @@ defineExpose({ Config, DefaultConfig })
             zIndex: image.zIndex,
           }"
         >
-          <img
+          <SmartImage
             :src="image.path"
             alt=""
+            :crop="false"
+            fallback-transform="card"
+            class="block w-full h-auto"
           />
         </div>
 

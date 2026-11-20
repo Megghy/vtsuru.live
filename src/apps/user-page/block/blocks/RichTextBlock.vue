@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { transformHtmlImages } from '@/shared/services/imageTransform'
 import { ImageLightbox, useHtmlImagePreview } from '@/shared/ui/image-preview'
 
 import BlockCard from '../BlockCard.vue'
@@ -20,7 +21,7 @@ const config = computed(() => {
   }
 })
 
-const safeHtml = computed(() => sanitizeRichText(config.value.html))
+const safeHtml = computed(() => transformHtmlImages(sanitizeRichText(config.value.html), 'card'))
 const richTextImagePreview = useHtmlImagePreview()
 </script>
 

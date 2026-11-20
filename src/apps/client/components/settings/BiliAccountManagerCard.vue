@@ -26,13 +26,15 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Textarea } from '@/shared/ui/textarea'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { TooltipProvider } from '@/shared/ui/tooltip'
 
 const accountManager = useBiliAccountManager()
 
@@ -314,12 +316,14 @@ async function handleRemoveAccount(id: string) {
       <CardContent class="p-3">
         <!-- 快速身份路由配置 -->
         <div class="p-3 bg-muted rounded-md border border-border">
-          <div class="flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-[240px]">
-              <div class="text-xs font-medium text-foreground mb-1 flex items-center gap-1">
-                <StarOutline class="size-3.5 text-amber-500" />
-                <span>主播管理账号（主管开播/关播/改分区/房管禁言）</span>
-              </div>
+          <div class="flex flex-wrap items-end gap-4">
+            <FormField class="flex-1 min-w-[240px]">
+              <template #label>
+                <label class="font-medium text-foreground select-none flex items-center gap-1">
+                  <StarOutline class="size-3.5 text-amber-500" />
+                  <span>主播管理账号（主管开播/关播/改分区/房管禁言）</span>
+                </label>
+              </template>
               <Select
                 :model-value="accountManager.routing.mainAccountId"
                 @update:model-value="(val) => accountManager.setMainAccount(String(val ?? ''))"
@@ -338,13 +342,15 @@ async function handleRemoveAccount(id: string) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div class="flex-1 min-w-[240px]">
-              <div class="text-xs font-medium text-foreground mb-1 flex items-center gap-1">
-                <ChatbubbleEllipsesOutline class="size-3.5 text-primary" />
-                <span>自动操作发弹幕/私信账号（入场/礼物/SC/回复/定时）</span>
-              </div>
+            <FormField class="flex-1 min-w-[240px]">
+              <template #label>
+                <label class="font-medium text-foreground select-none flex items-center gap-1">
+                  <ChatbubbleEllipsesOutline class="size-3.5 text-primary" />
+                  <span>自动操作发弹幕/私信账号（入场/礼物/SC/回复/定时）</span>
+                </label>
+              </template>
               <Select
                 :model-value="accountManager.routing.danmakuAccountId"
                 @update:model-value="(val) => accountManager.setDanmakuAccount(String(val ?? ''))"
@@ -362,24 +368,20 @@ async function handleRemoveAccount(id: string) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div class="flex flex-col justify-center pt-3.5">
+            <div class="flex items-center h-8">
               <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <div class="flex items-center gap-2 cursor-pointer select-none">
-                      <Switch
-                        :checked="accountManager.routing.fallbackToMain"
-                        @update:checked="(val) => accountManager.setFallbackToMain(val)"
-                      />
-                      <span class="text-xs text-muted-foreground">小号失效自动回退主账号</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent class="max-w-[260px]">
-                    当选中的小号 Cookie 过期或异常时，自动回退到主播主账号发送，避免互动断档
-                  </TooltipContent>
-                </Tooltip>
+                <SettingRow
+                  variant="none"
+                  title="小号失效自动回退主账号"
+                  hint="当选中的小号 Cookie 过期或异常时，自动回退到主播主账号发送，避免互动断档"
+                >
+                  <Switch
+                    :checked="accountManager.routing.fallbackToMain"
+                    @update:checked="(val) => accountManager.setFallbackToMain(val)"
+                  />
+                </SettingRow>
               </TooltipProvider>
             </div>
           </div>
@@ -657,13 +659,15 @@ async function handleRemoveAccount(id: string) {
                 {{ isQRCodeLogining ? loginStatusText : '请使用手机哔哩哔哩客户端扫码' }}
               </div>
 
-              <div class="w-[85%] space-y-1">
-                <span class="text-xs text-muted-foreground">账号备注别名 (可选)</span>
+              <FormField
+                label="账号备注别名 (可选)"
+                class="w-[85%]"
+              >
                 <Input
                   v-model="newAccountAlias"
                   placeholder="例如: 房管机器人、小号、副播"
                 />
-              </div>
+              </FormField>
 
               <Button
                 v-if="isQRCodeLogining"
@@ -681,30 +685,27 @@ async function handleRemoveAccount(id: string) {
             value="cloud"
             class="pt-3 space-y-3"
           >
-            <div class="space-y-1">
-              <span class="text-xs text-muted-foreground">CookieCloud 服务地址</span>
+            <FormField label="CookieCloud 服务地址">
               <Input
                 v-model="cloudConfig.host"
                 placeholder="https://cookie.vtsuru.live"
               />
-            </div>
+            </FormField>
 
-            <div class="space-y-1">
-              <span class="text-xs text-muted-foreground">用户 Key</span>
+            <FormField label="用户 Key">
               <Input
                 v-model="cloudConfig.key"
                 placeholder="请输入 CookieCloud Key"
               />
-            </div>
+            </FormField>
 
-            <div class="space-y-1">
-              <span class="text-xs text-muted-foreground">端到端加密密码</span>
+            <FormField label="端到端加密密码">
               <Input
                 v-model="cloudConfig.password"
                 type="password"
                 placeholder="请输入加密密码"
               />
-            </div>
+            </FormField>
 
             <div class="flex justify-end pt-2">
               <Button
@@ -721,22 +722,20 @@ async function handleRemoveAccount(id: string) {
             value="manual"
             class="pt-3 space-y-3"
           >
-            <div class="space-y-1">
-              <span class="text-xs text-muted-foreground">账号备注别名 (可选)</span>
+            <FormField label="账号备注别名 (可选)">
               <Input
                 v-model="manualAliasInput"
                 placeholder="例如: 感谢机器人"
               />
-            </div>
+            </FormField>
 
-            <div class="space-y-1">
-              <span class="text-xs text-muted-foreground">Cookie 完整字符串</span>
+            <FormField label="Cookie 完整字符串">
               <Textarea
                 v-model="manualCookieInput"
                 placeholder="粘贴包含 SESSDATA 和 bili_jct 的完整 Cookie"
                 class="resize-none h-24"
               />
-            </div>
+            </FormField>
 
             <div class="flex justify-end pt-2">
               <Button @click="handleManualAdd"> 验证并添加账号 </Button>

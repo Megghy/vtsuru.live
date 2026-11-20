@@ -52,9 +52,22 @@ function goBack() {
   void router.push(standalone.value ? { name: 'manage-obsStore' } : { name: 'client-pngtuber' })
 }
 
+const props = defineProps<{ channelId?: string }>()
 const { copy, isSupported: isCopySupported } = useClipboard()
-const channel = ref(resolveObsSyncChannel(route.query.channel))
+const channel = ref(resolveObsSyncChannel(props.channelId ?? route.query.channel))
 const channelDraft = ref(channel.value)
+
+watch(
+  () => props.channelId,
+  (raw) => {
+    if (!raw) return
+    const resolved = resolveObsSyncChannel(raw)
+    if (resolved !== channel.value) {
+      channel.value = resolved
+      channelDraft.value = resolved
+    }
+  },
+)
 
 watch(
   () => route.query.channel,

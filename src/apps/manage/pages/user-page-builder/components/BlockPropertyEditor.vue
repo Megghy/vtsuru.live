@@ -24,11 +24,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
@@ -281,16 +283,14 @@ function groupSelection() {
           <AccordionTrigger class="text-xs font-semibold py-2"> 页面基本信息 (子页面属性) </AccordionTrigger>
           <AccordionContent class="pt-2 pb-1">
             <PropsGrid>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">页面名称</label>
+              <FormField label="页面名称">
                 <Input
                   v-model="editor.currentPage.value.title"
                   placeholder="例如：我的作品 / 赞助支持"
                 />
-              </div>
+              </FormField>
 
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">导航图标</label>
+              <FormField label="导航图标">
                 <Button
                   variant="outline"
                   class="justify-start"
@@ -308,35 +308,38 @@ function groupSelection() {
                   :value="editor.currentPage.value.navIcon"
                   @select="setCurrentPageNavIcon"
                 />
-              </div>
+              </FormField>
 
-              <div class="flex-between pt-4">
-                <label class="text-xs text-muted-foreground">在导航菜单中显示</label>
+              <SettingRow
+                title="在导航菜单中显示"
+                variant="none"
+                class="pt-4"
+              >
                 <Switch
                   :checked="editor.currentPage.value.navVisible"
                   @update:checked="editor.currentPage.value.navVisible = $event"
                 />
-              </div>
+              </SettingRow>
 
-              <div class="span-full flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">页面描述</label>
+              <FormField
+                label="页面描述"
+                class="span-full"
+              >
                 <Textarea
                   v-model="editor.currentPage.value.description"
                   placeholder="可选描述，用于 SEO 和展示"
                   rows="2"
                 />
-              </div>
+              </FormField>
 
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">排序权重</label>
+              <FormField label="排序权重">
                 <NumberField
                   v-model="editor.currentPage.value.navOrder"
                   placeholder="数字越小越靠前"
                 />
-              </div>
+              </FormField>
 
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">链接路径 (Slug)</label>
+              <FormField label="链接路径 (Slug)">
                 <div class="flex items-center gap-1.5">
                   <Input
                     v-model="pageSlug"
@@ -353,7 +356,7 @@ function groupSelection() {
                     修改
                   </Button>
                 </div>
-              </div>
+              </FormField>
             </PropsGrid>
           </AccordionContent>
         </AccordionItem>
@@ -382,8 +385,7 @@ function groupSelection() {
               扩展组件参数
             </div>
             <PropsGrid>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">作用域</label>
+              <FormField label="作用域">
                 <Select v-model="editor.currentContrib.value!.scope">
                   <SelectTrigger>
                     <SelectValue placeholder="作用域" />
@@ -393,10 +395,9 @@ function groupSelection() {
                     <SelectItem value="streamer">主播专属扩展</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </FormField>
 
-              <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-foreground">页面组件 ID (pageId)</label>
+              <FormField label="页面组件 ID (pageId)">
                 <div class="flex flex-col gap-1.5">
                   <Select
                     v-if="contribPageOptions.length"
@@ -429,18 +430,17 @@ function groupSelection() {
                     placeholder="选择或输入 pageId"
                   />
                 </div>
-              </div>
+              </FormField>
 
-              <div
+              <FormField
                 v-if="editor.currentContrib.value!.scope === 'streamer'"
-                class="flex flex-col gap-1"
+                label="关联主播 ID"
               >
-                <label class="text-xs text-muted-foreground">关联主播 ID</label>
                 <Input
                   :model-value="String(editor.account.value.id ?? '')"
                   disabled
                 />
-              </div>
+              </FormField>
             </PropsGrid>
 
             <Alert

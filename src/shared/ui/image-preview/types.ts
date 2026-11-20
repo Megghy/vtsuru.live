@@ -1,3 +1,5 @@
+import { stripImageTransformFromUrl } from '@/shared/services/imageTransform'
+
 export interface GalleryItemLike {
   path?: string
   url?: string
@@ -18,10 +20,12 @@ export function resolvePreviewImages(imgs?: GallerySource[], fallbackAlt = 'å›¾ç
   const result: ResolvedPreviewImage[] = []
   for (const item of imgs) {
     if (typeof item === 'string') {
-      if (item) result.push({ src: item, alt: fallbackAlt })
+      const clean = stripImageTransformFromUrl(item)
+      if (clean) result.push({ src: clean, alt: fallbackAlt })
       continue
     }
-    const src = item?.path || item?.url || item?.src || ''
+    const raw = item?.path || item?.url || item?.src || ''
+    const src = stripImageTransformFromUrl(raw)
     if (!src) continue
     result.push({
       src,

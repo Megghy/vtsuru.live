@@ -39,7 +39,7 @@ const useAuth = useBiliAuth()
 const cart = usePointCart(props.vId)
 const isLoading = ref(false)
 const selectedAddress = ref<ShippingAddressInfo>()
-const emptyCover = `${IMGUR_URL}None.png`
+const emptyCover = `${IMGUR_URL}None.png?100w_100h_1c`
 
 function simpleMax(good: ResponsePointGoodModel) {
   return Math.min((good.maxBuyCount ?? 100000) - (good.purchasedCount ?? 0), good.count ?? 100000)

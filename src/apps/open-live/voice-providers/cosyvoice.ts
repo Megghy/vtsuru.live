@@ -1,3 +1,4 @@
+import { cookie } from '@/api/auth'
 import { getTtsApiUrl } from '@/shared/config'
 
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
@@ -158,14 +159,17 @@ export class CosyVoiceProvider implements VoiceProvider {
       streaming: true,
     }
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (cookie.value?.cookie) headers.Authorization = `Bearer ${cookie.value.cookie}`
+
     const response = await fetch(`${getTtsApiUrl()}synthesize`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
     })
-    if (!response.ok) {
+    if (!response.ok || response.headers?.get('content-type')?.includes('application/json')) {
       const error = await response.json().catch(() => null)
-      throw new Error(error?.details || error?.error || `CosyVoice 请求失败: ${response.status}`)
+      throw new Error(error?.details || error?.error || error?.message || `CosyVoice 请求失败: ${response.status}`)
     }
     return response.blob()
   }

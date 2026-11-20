@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -19,21 +21,19 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
     class="space-y-3"
   >
     <PropsGrid>
-      <div
+      <FormField
         v-if="propertyAvailable('borderTitle')"
-        class="space-y-1"
+        label="边框标题"
       >
-        <label class="text-xs text-muted-foreground">边框标题</label>
         <Input
           v-model="blockProps.borderTitle"
           placeholder="例如：标签"
         />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('borderTitleAlign')"
-        class="space-y-1"
+        label="标题对齐"
       >
-        <label class="text-xs text-muted-foreground">标题对齐</label>
         <Select v-model="blockProps.borderTitleAlign">
           <SelectTrigger>
             <SelectValue placeholder="标题对齐" />
@@ -44,9 +44,8 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
             <SelectItem value="right">右</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">大小</label>
+      </FormField>
+      <FormField label="大小">
         <Select v-model="blockProps.size">
           <SelectTrigger>
             <SelectValue placeholder="大小" />
@@ -56,13 +55,18 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
             <SelectItem value="medium">medium</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">圆角</label>
+      </FormField>
+      <SettingRow
+        title="圆角"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.rounded" />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">标签项</label>
+      </SettingRow>
+      <FormField
+        label="标签项"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="ensureArrayProp('items')"
           :create-item="() => ({ text: '#唱见', type: 'default', color: '' })"
@@ -73,15 +77,13 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">文本</label>
+              <FormField label="文本">
                 <Input
                   v-model="item.text"
                   placeholder="#标签"
                 />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">类型</label>
+              </FormField>
+              <FormField label="类型">
                 <Select v-model="item.type">
                   <SelectTrigger>
                     <SelectValue placeholder="类型" />
@@ -96,18 +98,20 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
                     </SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">自定义颜色</label>
+              </FormField>
+              <FormField
+                label="自定义颜色"
+                class="span-full"
+              >
                 <Input
                   v-model="item.color"
                   placeholder="#fb7299，可选"
                 />
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -116,15 +120,13 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">区块标题</label>
+      <FormField label="区块标题">
         <Input
           v-model="blockProps.title"
           placeholder="里程碑"
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">展示方式</label>
+      </FormField>
+      <FormField label="展示方式">
         <Select v-model="blockProps.mode">
           <SelectTrigger>
             <SelectValue placeholder="展示方式" />
@@ -134,9 +136,11 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
             <SelectItem value="list">list</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">条目</label>
+      </FormField>
+      <FormField
+        label="条目"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="ensureArrayProp('items')"
           :create-item="() => ({ date: '', title: '', description: '' })"
@@ -147,29 +151,28 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">日期</label>
+              <FormField label="日期">
                 <Input
                   v-model="item.date"
                   type="date"
                 />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">标题</label>
+              </FormField>
+              <FormField label="标题">
                 <Input v-model="item.title" />
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">内容</label>
+              </FormField>
+              <FormField
+                label="内容"
+                class="span-full"
+              >
                 <Textarea
                   v-model="item.description"
                   rows="2"
-                  
                 />
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -178,12 +181,17 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="flex-between py-1">
-        <label class="text-xs text-muted-foreground">手风琴模式</label>
+      <SettingRow
+        title="手风琴模式"
+        variant="none"
+        class="py-1"
+      >
         <Switch v-model:checked="blockProps.accordion" />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">问答</label>
+      </SettingRow>
+      <FormField
+        label="问答"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="ensureArrayProp('items')"
           :create-item="() => ({ q: '', a: '' })"
@@ -194,22 +202,25 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">问题</label>
+              <FormField
+                label="问题"
+                class="span-full"
+              >
                 <Input v-model="item.q" />
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">回答</label>
+              </FormField>
+              <FormField
+                label="回答"
+                class="span-full"
+              >
                 <Textarea
                   v-model="item.a"
                   rows="3"
-                  
                 />
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 
@@ -218,20 +229,22 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">标题</label>
+      <FormField label="标题">
         <Input v-model="blockProps.title" />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">描述</label>
+      </FormField>
+      <FormField
+        label="描述"
+        class="span-full"
+      >
         <Textarea
           v-model="blockProps.description"
           rows="3"
-          
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">赞助平台</label>
+      </FormField>
+      <FormField
+        label="赞助平台"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="ensureArrayProp('items')"
           :create-item="() => ({ platform: 'afdian', url: 'https://', label: '' })"
@@ -242,8 +255,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">平台</label>
+              <FormField label="平台">
                 <Select v-model="item.platform">
                   <SelectTrigger>
                     <SelectValue placeholder="平台" />
@@ -258,25 +270,26 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
                     </SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">显示名</label>
+              </FormField>
+              <FormField label="显示名">
                 <Input
                   v-model="item.label"
                   placeholder="可选"
                 />
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">链接</label>
+              </FormField>
+              <FormField
+                label="链接"
+                class="span-full"
+              >
                 <Input
                   v-model="item.url"
                   placeholder="链接地址"
                 />
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 </template>

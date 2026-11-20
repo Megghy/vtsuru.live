@@ -5,9 +5,11 @@ import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -168,8 +170,7 @@ function clearAll() {
 
 <template>
   <div class="flex flex-col gap-3">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs text-muted-foreground font-medium">背景类型</label>
+    <FormField label="背景类型">
       <div class="flex items-center gap-2">
         <ToggleGroup
           type="single"
@@ -195,7 +196,7 @@ function clearAll() {
           清空
         </Button>
       </div>
-    </div>
+    </FormField>
 
     <div
       v-if="type === 'none' && noneHint"
@@ -204,20 +205,18 @@ function clearAll() {
       {{ noneHint }}
     </div>
 
-    <div
+    <FormField
       v-if="type === 'color'"
-      class="flex flex-col gap-1.5"
+      label="背景颜色"
     >
-      <label class="text-xs text-muted-foreground">背景颜色</label>
       <ColorPicker v-model="color" />
-    </div>
+    </FormField>
 
     <div
       v-else-if="type === 'image'"
       class="flex flex-col gap-3"
     >
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs text-muted-foreground">背景图片</label>
+      <FormField label="背景图片">
         <div
           v-if="!imagePath"
           class="flex-col-center p-4 border border-dashed border-border rounded-lg bg-muted cursor-pointer transition w-full box-border hover:border-primary hover:bg-popover"
@@ -265,10 +264,9 @@ function clearAll() {
             </Button>
           </div>
         </div>
-      </div>
+      </FormField>
 
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-muted-foreground">图片填充方式</label>
+      <FormField label="图片填充方式">
         <Select v-model="fit">
           <SelectTrigger>
             <SelectValue placeholder="填充方式" />
@@ -280,25 +278,26 @@ function clearAll() {
             <SelectItem value="none">原始大小 (none)</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
     </div>
 
     <template v-if="type !== 'none'">
-      <div class="flex-between py-1">
-        <span
-          class="text-xs text-foreground cursor-help"
-          title="开启后背景将延伸覆盖左侧导航区域"
-        >
-          延伸覆盖侧边导航栏
-        </span>
+      <SettingRow
+        title="延伸覆盖侧边导航栏"
+        hint="开启后背景将延伸覆盖左侧导航区域"
+        variant="none"
+        class="py-1"
+      >
         <Switch
           :checked="coverSidebar"
           @update:checked="coverSidebar = $event"
         />
-      </div>
+      </SettingRow>
 
-      <div class="flex flex-col gap-2 pt-2 border-t border-border">
-        <label class="text-xs text-muted-foreground font-medium">遮罩色调与透明度</label>
+      <FormField
+        label="遮罩色调与透明度"
+        class="gap-2 pt-2 border-t border-border"
+      >
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
           <Button
             :variant="scrimMode === 'auto' ? 'default' : 'ghost'"
@@ -336,10 +335,12 @@ function clearAll() {
             class="w-20"
           />
         </div>
-      </div>
+      </FormField>
 
-      <div class="flex flex-col gap-2 pt-2 border-t border-border">
-        <label class="text-xs text-muted-foreground font-medium">视觉滤镜与模糊</label>
+      <FormField
+        label="视觉滤镜与模糊"
+        class="gap-2 pt-2 border-t border-border"
+      >
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
           <Button
             :variant="blurMode === 'none' ? 'default' : 'ghost'"
@@ -380,7 +381,7 @@ function clearAll() {
             class="w-20"
           />
         </div>
-      </div>
+      </FormField>
     </template>
   </div>
 </template>

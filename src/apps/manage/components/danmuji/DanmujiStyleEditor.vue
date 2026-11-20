@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import type { DanmujiStyle } from '@/shared/danmujiStyle'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { FormField } from '@/shared/ui/form-field'
 
@@ -27,6 +29,18 @@ const presets = [
       :max="72"
       v-model="style.fontSize"
     />
+
+    <FormField
+      label="字体"
+      class="col-span-full"
+    >
+      <GoogleFontPicker
+        :model-value="style.fontFamily || null"
+        :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+        :show-preview="false"
+        @update:model-value="style.fontFamily = $event || ''"
+      />
+    </FormField>
 
     <FormField
       type="number"

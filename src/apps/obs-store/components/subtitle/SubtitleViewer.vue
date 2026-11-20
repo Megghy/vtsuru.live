@@ -12,11 +12,14 @@ import { toast } from 'vue-sonner'
 import { useAccount } from '@/api/account'
 import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -30,8 +33,18 @@ const { copy, isSupported: isCopySupported } = useClipboard()
 const route = useRoute()
 const account = useAccount()
 
-const channelId = ref(resolveObsSyncChannel(route.query.channel))
+const props = defineProps<{ channelId?: string }>()
+const channelId = ref(resolveObsSyncChannel(props.channelId ?? route.query.channel))
 const channelDraft = ref(channelId.value)
+watch(
+  () => props.channelId,
+  (val) => {
+    if (!val) return
+    const resolved = resolveObsSyncChannel(val)
+    channelId.value = resolved
+    channelDraft.value = resolved
+  },
+)
 const copied = ref(false)
 const testSentence = ref('')
 
@@ -211,13 +224,15 @@ function clearSubtitles() {
 
     <Card>
       <CardContent class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-        <div class="space-y-1.5">
-          <span class="text-muted-foreground block">对齐方向</span>
+        <FormField
+          label="对齐方向"
+          class="min-w-0"
+        >
           <Select
             :model-value="state.align"
             @update:model-value="(v) => updateState({ align: v as SubtitleAlign })"
           >
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger class="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem
                 v-for="opt in alignOptions"
@@ -228,49 +243,70 @@ function clearSubtitles() {
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5">
-          <span class="text-muted-foreground block">同时显示行数 (1-5)</span>
+        <FormField
+          label="同时显示行数 (1-5)"
+          class="min-w-0"
+        >
           <NumberField
             :model-value="state.maxLines"
             :min="1"
             :max="5"
             @update:model-value="(v) => updateState({ maxLines: Number(v) || 2 })"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5">
-          <span class="text-muted-foreground block">自动淡出隐藏秒数 (0 为常驻)</span>
+        <FormField
+          label="自动淡出隐藏秒数 (0 为常驻)"
+          class="min-w-0"
+        >
           <NumberField
             :model-value="state.fadeSeconds"
             :min="0"
             :max="120"
             @update:model-value="(v) => updateState({ fadeSeconds: Math.max(0, Number(v) || 0) })"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5">
-          <span class="text-muted-foreground block">字体大小 (px)</span>
+        <FormField
+          label="字体大小 (px)"
+          class="min-w-0"
+        >
           <NumberField
             :model-value="state.fontSize"
             :min="14"
             :max="72"
             @update:model-value="(v) => updateState({ fontSize: Math.max(14, Number(v) || 32) })"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5">
-          <span class="text-muted-foreground block">文字颜色</span>
-          <ColorPicker
-            :value="state.textColor"
-            :show-alpha="false"
-            @update:value="(v) => updateState({ textColor: String(v || '#ffffff') })"
+        <FormField
+          label="字体"
+          class="min-w-0"
+        >
+          <GoogleFontPicker
+            :model-value="state.fontFamily || null"
+            :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+            :show-preview="false"
+            @update:model-value="updateState({ fontFamily: $event || '' })"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5">
-          <span class="text-muted-foreground block">显示识别中临时句子</span>
+        <FormField
+          label="文字颜色"
+          class="min-w-0"
+        >
+          <ColorPicker
+            :model-value="state.textColor"
+            @update:model-value="(v) => updateState({ textColor: String(v || '#ffffff') })"
+          />
+        </FormField>
+
+        <FormField
+          label="显示识别中临时句子"
+          class="min-w-0"
+        >
           <div class="flex items-center gap-2 pt-1">
             <Switch
               :checked="state.showPartial"
@@ -278,7 +314,7 @@ function clearSubtitles() {
             />
             <span>{{ state.showPartial ? '开启（更低延迟）' : '仅输出定稿句' }}</span>
           </div>
-        </div>
+        </FormField>
       </CardContent>
     </Card>
   </div>

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import { Badge } from '@/shared/ui/badge'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
@@ -105,14 +106,12 @@ function displayValue(f: EditableField) {
           v-if="editable && item.fields?.length"
           class="generic-item__edit flex flex-col gap-2 mt-1 pt-1 border-t border-border/40"
         >
-          <div
+          <FormField
             v-for="f in item.fields"
             :key="f.key"
-            class="edit-field flex flex-col gap-1"
+            :label="f.label"
+            class="edit-field"
           >
-            <span class="edit-field__label text-[11px] text-muted-foreground font-medium">
-              {{ f.label }}
-            </span>
             <Select
               v-if="f.type === 'select'"
               :model-value="fieldValue(i, f.key)"
@@ -142,7 +141,7 @@ function displayValue(f: EditableField) {
               :placeholder="f.type === 'tags' ? '逗号分隔' : f.label"
               @update:model-value="setFieldValue(i, f.key, $event)"
             />
-          </div>
+          </FormField>
         </div>
 
         <!-- 只读态: 结构化字段对比 (field 带 before, 编辑后不过期) -->

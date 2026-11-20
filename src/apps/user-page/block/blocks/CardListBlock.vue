@@ -75,14 +75,15 @@ function getImageIndex(image: string) {
         <ImagePreview
           v-if="item.image"
           :src="item.image"
+          fallback-transform="card"
           :alt="item.title || '图片预览'"
           :gallery="galleryImages"
           :index="getImageIndex(item.image)"
           :wrapper-class="layout === 'list' ? 'block w-full h-full' : 'block w-full'"
         >
-          <template #default="{ open }">
+          <template #default="{ open, thumbSrc, onError }">
             <img
-              :src="item.image"
+              :src="thumbSrc || undefined"
               :alt="item.title"
               loading="lazy"
               decoding="async"
@@ -96,6 +97,7 @@ function getImageIndex(image: string) {
                   ? 'h-full min-h-[150px] aspect-auto @max-[620px]:min-h-0 @max-[620px]:aspect-video'
                   : 'aspect-video'
               "
+              @error="onError"
               @click="open()"
               @keydown.enter.prevent="open()"
               @keydown.space.prevent="open()"
@@ -119,7 +121,13 @@ function getImageIndex(image: string) {
             v-if="item.tags.length"
             class="flex gap-1.5 flex-wrap"
           >
-            <Badge v-for="tag in item.tags" :key="tag" variant="secondary" size="xs" class="py-0.5">
+            <Badge
+              v-for="tag in item.tags"
+              :key="tag"
+              variant="secondary"
+              size="xs"
+              class="py-0.5"
+            >
               {{ tag }}
             </Badge>
           </div>

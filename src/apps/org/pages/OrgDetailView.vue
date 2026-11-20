@@ -18,6 +18,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -348,14 +349,13 @@ function openRename() {
             <DialogTitle class="text-sm">重命名组织</DialogTitle>
           </DialogHeader>
 
-          <div class="space-y-1 text-xs">
-            <label class="font-medium text-foreground text-xs">新名称</label>
+          <FormField label="新名称">
             <Input
               v-model="newOrgName"
               placeholder="请输入新名称"
               @keydown.enter.prevent="renameOrg"
             />
-          </div>
+          </FormField>
 
           <DialogFooter class="pt-2 border-t border-border/60">
             <Button

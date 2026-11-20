@@ -3,6 +3,7 @@ import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 import { DEFAULT_KEYCAST_STATE, formatKeyboardEvent, mapMouseButton } from './types'
 import type { KeycastAction, KeycastState, KeyPressPayload, MouseButtonName, MouseWheelDirection } from './types'
@@ -20,12 +21,15 @@ interface KeycastStreamItem {
 const props = withDefaults(
   defineProps<{
     channelId?: string
+    userId?: number
     inlineMode?: boolean
     interactive?: boolean
+    noShadow?: boolean
   }>(),
   {
     inlineMode: false,
     interactive: false,
+    noShadow: false,
   },
 )
 
@@ -42,6 +46,7 @@ const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? ro
 const { state, onAction } = useObsBridge<KeycastState, KeycastAction>({
   componentId: 'keycast',
   channelId: targetChannel,
+  userId: () => props.userId,
   defaultState: DEFAULT_KEYCAST_STATE,
   role: 'viewer',
 })
@@ -315,6 +320,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('blur', releaseAllHeldInputs)
   if (tickTimer) clearInterval(tickTimer)
 })
+
+useGoogleFont(computed(() => state.value.fontFamily || undefined))
+const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily))
 </script>
 
 <template>
@@ -330,6 +338,7 @@ onBeforeUnmount(() => {
     :apm="apm"
     :total-presses="totalPresses"
     :interactive="interactive"
+    :no-shadow="noShadow"
     @virtual-key-down="(code) => emit('virtualKeyDown', code)"
     @virtual-key-up="(code) => emit('virtualKeyUp', code)"
     @virtual-mouse-down="(btn) => emit('virtualMouseDown', btn)"
@@ -343,6 +352,7 @@ onBeforeUnmount(() => {
     :style="{
       '--keycast-accent': state.accentColor,
       '--keycast-font-size': `${state.fontSize}px`,
+      '--keycast-font': customFontCss,
       opacity: Math.max(0.3, Math.min(1, (state.opacity ?? 100) / 100)),
     }"
   >
@@ -398,11 +408,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--keycast-font, ui-sans-serif, system-ui, -apple-system, sans-serif);
   user-select: none;
 }
 
@@ -468,7 +474,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   line-height: 1.1;
   border-radius: 8px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--keycast-font, ui-monospace, SFMono-Regular, Menlo, monospace);
 }
 
 .keycap-repeat {

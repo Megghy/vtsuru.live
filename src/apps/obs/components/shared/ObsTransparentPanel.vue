@@ -35,25 +35,45 @@ const topSubtitle = computed(() => {
 
 <template>
   <div
-    class="size-full flex flex-col bg-transparent p-1 box-border text-white overflow-hidden tabular-nums [text-shadow:0_2px_4px_rgba(0,0,0,0.95),0_0_8px_rgba(0,0,0,0.8),-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000]"
+    class="size-full flex flex-col bg-transparent p-3 box-border text-white overflow-hidden tabular-nums [text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_0_8px_rgba(0,0,0,0.75)]"
   >
-    <!-- 头部当前处理中提示 -->
-    <div class="mb-1.5">
-      <div class="flex items-center gap-1.5">
+    <!-- 顶部标题与计数 -->
+    <div class="flex-between gap-2 pb-1.5 shrink-0">
+      <div class="flex items-center gap-2 min-w-0">
         <span
-          class="size-2 rounded-full transition-all"
+          class="size-2 rounded-full shrink-0 transition-all"
           :class="
-            current.active ? 'bg-emerald-500 shadow-[0_0_8px_#22c55e]' : 'bg-slate-400 shadow-[0_0_6px_rgba(0,0,0,0.8)]'
+            current.active
+              ? 'bg-emerald-400 shadow-[0_0_8px_#22c55e] animate-pulse'
+              : 'bg-slate-300/90 shadow-[0_0_6px_rgba(0,0,0,0.8)]'
           "
         />
-        <span class="text-[11px] font-black text-cyan-300 tracking-wide">{{ current.active ? 'NOW' : 'IDLE' }}</span>
-        <span class="text-[15px] font-extrabold text-white truncate">{{
-          current.active ? current.title : current.emptyText
-        }}</span>
+        <span class="text-base font-extrabold tracking-wide text-white truncate">{{ title }}</span>
+      </div>
+      <span
+        v-if="countText"
+        class="text-xs font-bold text-white/85 shrink-0"
+      >
+        {{ countText }}
+      </span>
+    </div>
+
+    <!-- 头部当前处理中提示 -->
+    <div class="pb-2 mb-1.5 border-b border-white/20 shrink-0">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="text-[11px] font-black text-cyan-300 tracking-wide shrink-0">
+          {{ current.active ? 'NOW' : 'IDLE' }}
+        </span>
+        <span
+          class="text-sm font-bold truncate"
+          :class="current.active ? 'text-white' : 'text-white/80'"
+        >
+          {{ current.active ? current.title : current.emptyText }}
+        </span>
       </div>
       <div
         v-if="topSubtitle && current.active"
-        class="text-[11px] text-yellow-300 ml-3.5 mt-0.25"
+        class="text-xs text-yellow-200 mt-0.5 truncate"
       >
         {{ topSubtitle }}
       </div>
@@ -67,41 +87,42 @@ const topSubtitle = computed(() => {
       <template v-if="items.length > 0">
         <div
           ref="listInnerRef"
-          class="flex flex-col gap-1"
+          class="flex flex-col gap-1.5 pointer-events-none"
           :class="{ animating: isMoreThanContainer }"
         >
           <TransitionGroup
             name="obs-trans-item-anim"
             tag="div"
-            class="flex flex-col gap-1"
+            class="flex flex-col gap-1.5"
           >
             <div
               v-for="(item, index) in items"
               :key="item.id"
-              class="flex items-center gap-1.5 py-0.5"
+              class="flex items-center gap-2 py-0.5"
             >
               <span
                 class="text-xs font-extrabold w-6 shrink-0"
-                :class="index === 0 ? 'text-amber-500' : 'text-slate-400'"
+                :class="index === 0 ? 'text-amber-300' : 'text-slate-300'"
               >
                 #{{ index + 1 }}
               </span>
               <div class="flex-1 min-w-0 flex items-baseline gap-1.5">
-                <span class="text-sm font-bold text-white truncate">{{ item.primary }}</span>
+                <span class="text-[15px] font-bold text-white truncate">{{ item.primary }}</span>
                 <span
                   v-if="item.secondary"
-                  class="text-[11px] text-slate-300"
-                  >{{ item.secondary }}</span
+                  class="text-xs text-slate-200 truncate"
                 >
+                  {{ item.secondary }}
+                </span>
               </div>
               <div
                 v-if="(item.badges?.length ?? 0) > 0"
-                class="flex gap-1 shrink-0"
+                class="flex gap-1.5 shrink-0"
               >
                 <span
                   v-for="(badge, bIdx) in item.badges ?? []"
                   :key="`${item.id}-${bIdx}-${badge.text}`"
-                  class="text-[10px] font-bold text-cyan-300"
+                  class="text-[11px] font-bold text-cyan-200"
                 >
                   {{ badge.text }}
                 </span>
@@ -112,16 +133,40 @@ const topSubtitle = computed(() => {
       </template>
       <Empty
         v-else
-        class="mt-7.5"
+        class="size-full flex-center !text-white/90 [&_svg]:!text-white/70 [&_svg]:drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]"
         :description="emptyText"
       />
+    </div>
+
+    <!-- 底部条件标签（纯文字透明风） -->
+    <div
+      v-if="footerTags.length > 0"
+      class="mt-2 pt-1.5 border-t border-white/15 shrink-0 flex flex-wrap gap-x-3 gap-y-1 text-xs"
+    >
+      <div
+        v-for="tag in footerTags"
+        :key="tag.type"
+        class="inline-flex items-baseline gap-1 min-w-0"
+      >
+        <span class="text-[10px] text-white/75 shrink-0">{{ tag.label }}</span>
+        <span class="font-bold text-white truncate">{{ tag.value }}</span>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .animating {
-  animation: obs-trans-scroll v-bind(animationDurationCss) linear infinite;
+  animation-name: obs-trans-scroll;
+  animation-duration: v-bind(animationDurationCss);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  pointer-events: auto;
+}
+
+.animating:hover {
+  animation-play-state: paused;
 }
 
 @keyframes obs-trans-scroll {

@@ -291,18 +291,19 @@ function handleSubAreaChange(val: any) {
 
       <!-- 直播间公告 -->
       <div class="space-y-2">
-        <div class="flex-between">
-          <label class="text-xs font-semibold text-foreground block">直播间公告</label>
-          <span class="text-[11px] text-muted-foreground">{{ (c.roomAnnouncement.value || '').length }} / 60</span>
-        </div>
-        <Textarea
-          :model-value="c.roomAnnouncement.value"
-          placeholder="输入直播间公告（最多 60 个字符）"
-          maxlength="60"
-          rows="2"
-          class="min-h-[56px] resize-y"
-          @update:model-value="c.roomAnnouncement.value = String($event)"
-        />
+        <FormField
+          label="直播间公告"
+          :extra="`${(c.roomAnnouncement.value || '').length} / 60`"
+        >
+          <Textarea
+            :model-value="c.roomAnnouncement.value"
+            placeholder="输入直播间公告（最多 60 个字符）"
+            maxlength="60"
+            rows="2"
+            class="min-h-[56px] resize-y"
+            @update:model-value="c.roomAnnouncement.value = String($event)"
+          />
+        </FormField>
         <div class="flex justify-end">
           <Button
             type="button"

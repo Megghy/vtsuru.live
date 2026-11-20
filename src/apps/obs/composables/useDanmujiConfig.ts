@@ -8,7 +8,7 @@ import { normalizeDanmujiStyle } from '@/shared/danmujiStyle'
 export function useDanmujiConfig(props: { preview: boolean; config?: DanmujiConfig }) {
   const cloud = ref(normalizeDanmujiConfig())
   const query = Object.fromEntries(
-    ['preset', 'opacity', 'fontSize', 'reverse', 'autoHide', 'pinned', 'pinnedMinPrice'].map((key) => [
+    ['preset', 'opacity', 'fontSize', 'fontFamily', 'reverse', 'autoHide', 'pinned', 'pinnedMinPrice'].map((key) => [
       key,
       useRouteQueryParam(key),
     ]),
@@ -21,7 +21,7 @@ export function useDanmujiConfig(props: { preview: boolean; config?: DanmujiConf
       if (value.value === undefined) continue
       if (key === 'reverse' || key === 'pinned') {
         if (value.value === 'true' || value.value === 'false') overrides[key] = value.value === 'true'
-      } else overrides[key] = key === 'preset' ? value.value : Number(value.value)
+      } else overrides[key] = key === 'preset' || key === 'fontFamily' ? value.value : Number(value.value)
     }
     return { ...base, style: normalizeDanmujiStyle({ ...base.style, ...overrides }) }
   })

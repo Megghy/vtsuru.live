@@ -3,6 +3,7 @@ import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, watc
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 import CalculatorClock from './styles/CalculatorClock.vue'
 import CasioClock from './styles/CasioClock.vue'
@@ -22,6 +23,7 @@ import type { ClockAction, ClockState } from './types'
 
 const props = defineProps<{
   channelId?: string
+  userId?: number
   inlineMode?: boolean
 }>()
 
@@ -31,9 +33,13 @@ const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? ro
 const { state } = useObsBridge<ClockState, ClockAction>({
   componentId: 'clock',
   channelId: targetChannel,
+  userId: () => props.userId,
   defaultState: DEFAULT_CLOCK_STATE,
   role: 'viewer',
 })
+
+useGoogleFont(computed(() => state.value.fontFamily || undefined))
+const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily))
 
 // 本地高精度时间驱动：仅显示毫秒时启用 rAF，其余场景降为 250ms 定时器
 const now = ref(Date.now())
@@ -208,7 +214,8 @@ const stopwatchData = computed(() => {
 <template>
   <div
     class="clock-obs-wrapper"
-    :class="{ 'is-inline': props.inlineMode }"
+    :class="{ 'is-inline': props.inlineMode, 'has-custom-font': Boolean(customFontCss) }"
+    :style="customFontCss ? { '--clock-custom-font': customFontCss } : undefined"
   >
     <!-- 1. 复古电子表 / 卡西欧 -->
     <CasioClock
@@ -340,5 +347,10 @@ const stopwatchData = computed(() => {
 .clock-obs-wrapper.is-inline {
   width: 100%;
   height: 100%;
+}
+
+.clock-obs-wrapper.has-custom-font,
+.clock-obs-wrapper.has-custom-font :deep(*) {
+  font-family: var(--clock-custom-font) !important;
 }
 </style>

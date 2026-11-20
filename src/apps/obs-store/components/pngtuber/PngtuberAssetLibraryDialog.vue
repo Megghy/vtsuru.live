@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
 import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
 import Image24Regular from '@vicons/fluent/es/Image24Regular'
-import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
 import { ZoomIn } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -14,14 +14,7 @@ import {
 } from '@/api/pngtuber-assets'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { ImageLightbox } from '@/shared/ui/image-preview'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Spin } from '@/shared/ui/spin'
@@ -230,10 +223,11 @@ async function cleanupUnused() {
               :class="!selectable && 'cursor-zoom-in'"
               @click="!selectable && openPreview(idx)"
             >
-              <img
+              <SmartImage
                 :src="asset.url"
                 :alt="asset.assetId"
-                loading="lazy"
+                :crop="false"
+                fallback-transform="thumb"
                 class="max-h-full max-w-full object-contain"
               />
               <Badge
@@ -262,7 +256,9 @@ async function cleanupUnused() {
               </button>
             </div>
 
-            <div class="p-2 flex items-center justify-between gap-1 text-[11px] text-muted-foreground border-t border-border/60">
+            <div
+              class="p-2 flex items-center justify-between gap-1 text-[11px] text-muted-foreground border-t border-border/60"
+            >
               <div class="min-w-0 truncate">
                 <div class="font-mono text-foreground">{{ asset.width }}×{{ asset.height }}</div>
                 <div>{{ formatBytes(asset.byteSize) }}</div>

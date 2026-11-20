@@ -12,6 +12,7 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -258,55 +259,70 @@ async function addUploadFileSong() {
         class="p-3 rounded-lg border border-border bg-muted/20 space-y-3"
       >
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div class="space-y-1">
-            <label class="text-muted-foreground">歌曲名称 (必填)</label>
+          <FormField
+            label="歌曲名称"
+            required
+            class="min-w-0"
+          >
             <Input
               v-model="columnMappings.name"
               size="xs"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-muted-foreground">翻译名称</label>
+          </FormField>
+          <FormField
+            label="翻译名称"
+            class="min-w-0"
+          >
             <Input
               v-model="columnMappings.translateName"
               size="xs"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-muted-foreground">作者</label>
+          </FormField>
+          <FormField
+            label="作者"
+            class="min-w-0"
+          >
             <Input
               v-model="columnMappings.author"
               size="xs"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-muted-foreground">描述</label>
+          </FormField>
+          <FormField
+            label="描述"
+            class="min-w-0"
+          >
             <Input
               v-model="columnMappings.description"
               size="xs"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-muted-foreground">链接</label>
+          </FormField>
+          <FormField
+            label="链接"
+            class="min-w-0"
+          >
             <Input
               v-model="columnMappings.url"
               size="xs"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="text-muted-foreground">语言</label>
+          </FormField>
+          <FormField
+            label="语言"
+            class="min-w-0"
+          >
             <Input
               v-model="columnMappings.language"
               size="xs"
             />
-          </div>
-          <div class="space-y-1 col-span-full">
-            <label class="text-muted-foreground">标签</label>
+          </FormField>
+          <FormField
+            label="标签"
+            class="col-span-full min-w-0"
+          >
             <Input
               v-model="columnMappings.tags"
               size="xs"
             />
-          </div>
+          </FormField>
         </div>
 
         <div class="flex items-center gap-2 pt-1">

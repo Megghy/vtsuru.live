@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -12,22 +14,27 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 
 <template>
   <PropsGrid>
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">最多展示</label>
+    <FormField label="最多展示">
       <NumberField
         v-model="blockProps.count"
         :min="1"
         :max="6"
         class="w-full"
       />
-    </div>
-    <div class="flex-between py-1">
-      <label class="text-xs text-muted-foreground">显示活动说明</label>
+    </FormField>
+    <SettingRow
+      title="显示活动说明"
+      variant="none"
+      class="py-1"
+    >
       <Switch v-model:checked="blockProps.showDescription" />
-    </div>
-    <div class="flex-between py-1">
-      <label class="text-xs text-muted-foreground">显示投稿进度</label>
+    </SettingRow>
+    <SettingRow
+      title="显示投稿进度"
+      variant="none"
+      class="py-1"
+    >
       <Switch v-model:checked="blockProps.showProgress" />
-    </div>
+    </SettingRow>
   </PropsGrid>
 </template>

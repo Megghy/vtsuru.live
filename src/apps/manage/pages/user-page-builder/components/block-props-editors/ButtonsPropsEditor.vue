@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -17,21 +18,19 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
 <template>
   <div class="space-y-3">
     <PropsGrid>
-      <div
+      <FormField
         v-if="propertyAvailable('borderTitle')"
-        class="space-y-1"
+        label="边框标题"
       >
-        <label class="text-xs text-muted-foreground">边框标题</label>
         <Input
           v-model="blockProps.borderTitle"
           placeholder="例如：导航"
         />
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('borderTitleAlign')"
-        class="space-y-1"
+        label="标题对齐"
       >
-        <label class="text-xs text-muted-foreground">标题对齐</label>
         <Select v-model="blockProps.borderTitleAlign">
           <SelectTrigger>
             <SelectValue placeholder="标题对齐" />
@@ -42,9 +41,8 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
             <SelectItem value="right">右</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">排列方向</label>
+      </FormField>
+      <FormField label="排列方向">
         <Select v-model="blockProps.direction">
           <SelectTrigger>
             <SelectValue placeholder="排列方向" />
@@ -54,19 +52,20 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
             <SelectItem value="horizontal">横向 - 自动换行</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
       <ButtonAppearanceFields :block="props.block" />
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">间距 px</label>
+      <FormField label="间距 px">
         <NumberField
           v-model="blockProps.gap"
           :min="0"
           :max="32"
           class="w-full"
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">按钮项</label>
+      </FormField>
+      <FormField
+        label="按钮项"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="editor.ensureItems(props.block)"
           :create-item="() => ({ label: '', url: 'https://' })"
@@ -77,12 +76,10 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">标题</label>
+              <FormField label="标题">
                 <Input v-model="item.label" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">跳转类型</label>
+              </FormField>
+              <FormField label="跳转类型">
                 <Select
                   :model-value="getNavigationTargetType(item)"
                   @update:model-value="(value) => setNavigationTargetType(item, value as any)"
@@ -96,9 +93,11 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                     <SelectItem value="back">返回</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">目标</label>
+              </FormField>
+              <FormField
+                label="目标"
+                class="span-full"
+              >
                 <Select
                   v-if="item.page"
                   v-model="item.page"
@@ -127,11 +126,11 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                 >
                   点击后返回上一页
                 </span>
-              </div>
+              </FormField>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 </template>

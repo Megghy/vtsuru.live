@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -11,9 +12,12 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 
 <template>
   <PropsGrid>
-    <div class="flex-between py-1">
-      <label class="text-xs text-muted-foreground">显示点歌用户</label>
+    <SettingRow
+      title="显示点歌用户"
+      variant="none"
+      class="py-1"
+    >
       <Switch v-model:checked="blockProps.showRequester" />
-    </div>
+    </SettingRow>
   </PropsGrid>
 </template>

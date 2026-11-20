@@ -11,10 +11,16 @@ import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
 const props = withDefaults(
   defineProps<{
+    id?: string | number
+    token?: string
+    theme?: string
+    position?: string
+    max?: number
+    inlineMode?: boolean
     active?: boolean
     visible?: boolean
   }>(),
-  { active: true, visible: true },
+  { active: true, visible: true, inlineMode: false },
 )
 
 const route = useRoute()
@@ -26,17 +32,20 @@ const lastHash = ref<string>('')
 const isLoading = ref<boolean>(true)
 const nowMs = ref(Date.now())
 
-// 路由与凭证参数
-const targetUserId = computed(() => parsePositiveId(firstQueryValue(route.query.id)))
-const token = computed(() => firstQueryValue(route.query.token) || undefined)
+// 路由与凭证参数（优先使用显式 props，兼容独立路由 query）
+const targetUserId = computed(() =>
+  parsePositiveId(props.id !== undefined ? String(props.id) : firstQueryValue(route.query.id)),
+)
+const token = computed(() => props.token || firstQueryValue(route.query.token) || undefined)
 const voteTopic = computed(() => {
   const uid = targetUserId.value || (account.value.id > 0 ? String(account.value.id) : '')
   return uid ? `obs:display:vote:${uid}` : ''
 })
-const currentTheme = computed(() => firstQueryValue(route.query.theme) || undefined)
+const currentTheme = computed(() => props.theme || firstQueryValue(route.query.theme) || undefined)
 // 未显式指定位置时铺满视口：OBS 里一般把本页作为单组件源嵌入，尺寸由源决定
-const currentPosition = computed(() => firstQueryValue(route.query.position) || 'fill')
+const currentPosition = computed(() => props.position || firstQueryValue(route.query.position) || 'fill')
 const maxDisplayCount = computed(() => {
+  if (props.max && props.max > 0) return props.max
   const parsed = Number(parsePositiveId(firstQueryValue(route.query.max)))
   return parsed > 0 ? parsed : 6
 })
@@ -125,7 +134,10 @@ watch([targetUserId, token], () => {
 </script>
 
 <template>
-  <div class="w-screen h-screen overflow-hidden bg-transparent">
+  <div
+    class="overflow-hidden bg-transparent"
+    :class="props.inlineMode ? 'w-full h-full' : 'w-screen h-screen'"
+  >
     <DanmakuVoteCard
       :data="voteData"
       :theme="currentTheme"

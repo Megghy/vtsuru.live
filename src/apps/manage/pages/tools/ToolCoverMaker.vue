@@ -12,11 +12,14 @@ import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { markFontUsed, useLocalFonts } from '@/composables/useLocalFonts'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Textarea } from '@/shared/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -27,13 +30,15 @@ const WIDTH = 1146
 const HEIGHT = 717
 const editorRef = ref<InstanceType<typeof CanvasEditor>>()
 
-const { fontOptions, loading: fontsLoading, loadLocalFonts } = useLocalFonts()
+const { fontOptions, loadLocalFonts } = useLocalFonts()
+const extraFontOptions = computed(() => fontOptions.value.filter((opt) => opt.value !== 'sans-serif'))
 onMounted(loadLocalFonts)
 
-function onFontChange(val: string) {
+function onFontChange(val: string | null) {
   if (!selectedLayer.value || selectedLayer.value.type !== 'text') return
-  ;(selectedLayer.value as TextLayer).fontFamily = val
-  markFontUsed(val)
+  const next = val || 'sans-serif'
+  ;(selectedLayer.value as TextLayer).fontFamily = next
+  if (val) markFontUsed(val)
 }
 
 const bg = reactive({
@@ -322,18 +327,18 @@ async function onRemoveBgConfirm(blob: Blob) {
                 class="flex-1"
               />
             </div>
-            <div class="flex items-center gap-2 pt-1">
-              <span class="text-[11px] text-muted-foreground w-8 shrink-0">角度</span>
-              <div class="flex-1">
-                <Slider
-                  :model-value="[bg.gradientAngle]"
-                  :min="0"
-                  :max="360"
-                  @update:model-value="bg.gradientAngle = $event?.[0] ?? bg.gradientAngle"
-                />
-              </div>
-              <span class="w-8 text-right font-mono text-[11px]">{{ bg.gradientAngle }}°</span>
-            </div>
+            <FormField
+              label="角度"
+              :extra="`${bg.gradientAngle}°`"
+              class="pt-1"
+            >
+              <Slider
+                :model-value="[bg.gradientAngle]"
+                :min="0"
+                :max="360"
+                @update:model-value="bg.gradientAngle = $event?.[0] ?? bg.gradientAngle"
+              />
+            </FormField>
           </template>
           <Button
             v-if="bg.type === 'image'"
@@ -359,59 +364,51 @@ async function onRemoveBgConfirm(blob: Blob) {
               v-model="(selectedLayer as TextLayer).text"
               class="min-h-[60px]"
             />
-            <div class="prop-row">
-              <span class="text-muted-foreground">字号</span>
-              <div class="w-20">
-                <NumberField
-                  v-model="(selectedLayer as TextLayer).fontSize"
-                  :min="12"
-                  :max="300"
-                />
-              </div>
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">字体</span>
-              <div class="flex-1">
-                <Select
-                  :model-value="(selectedLayer as TextLayer).fontFamily"
-                  @update:model-value="onFontChange(String($event))"
+            <SettingRow
+              title="字号"
+              variant="none"
+            >
+              <NumberField
+                v-model="(selectedLayer as TextLayer).fontSize"
+                :min="12"
+                :max="300"
+                class="w-20"
+              />
+            </SettingRow>
+            <FormField label="字体">
+              <GoogleFontPicker
+                :model-value="(selectedLayer as TextLayer).fontFamily === 'sans-serif' ? null : (selectedLayer as TextLayer).fontFamily"
+                :extra-options="extraFontOptions"
+                :show-preview="false"
+                @update:model-value="onFontChange"
+              />
+            </FormField>
+            <SettingRow
+              title="对齐"
+              variant="none"
+            >
+              <Select v-model="(selectedLayer as TextLayer).align">
+                <SelectTrigger
+                  size="xs"
+                  class="w-20"
                 >
-                  <SelectTrigger size="xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem
-                      v-for="opt in fontOptions"
-                      :key="opt.value"
-                      :value="opt.value"
-                    >
-                      {{ opt.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">对齐</span>
-              <div class="w-20">
-                <Select v-model="(selectedLayer as TextLayer).align">
-                  <SelectTrigger size="xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem
-                      v-for="opt in alignOptions"
-                      :key="opt.value"
-                      :value="opt.value"
-                    >
-                      {{ opt.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">样式</span>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in alignOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </SettingRow>
+            <SettingRow
+              title="样式"
+              variant="none"
+            >
               <ToggleGroup
                 type="multiple"
                 size="xs"
@@ -451,75 +448,76 @@ async function onRemoveBgConfirm(blob: Blob) {
                   U
                 </ToggleGroupItem>
               </ToggleGroup>
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">颜色</span>
+            </SettingRow>
+            <SettingRow
+              title="颜色"
+              variant="none"
+            >
               <ColorPicker
                 v-model="(selectedLayer as TextLayer).fill"
-                class="flex-1"
+                class="w-32"
               />
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">描边</span>
+            </SettingRow>
+            <SettingRow
+              title="描边"
+              variant="none"
+            >
               <ColorPicker
                 v-model="(selectedLayer as TextLayer).stroke"
-                class="flex-1"
+                class="w-32"
               />
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">描边宽</span>
-              <div class="flex-1 flex items-center gap-2">
-                <Slider
-                  :model-value="[(selectedLayer as TextLayer).strokeWidth]"
-                  :min="0"
-                  :max="20"
-                  @update:model-value="
-                    (selectedLayer as TextLayer).strokeWidth = $event?.[0] ?? (selectedLayer as TextLayer).strokeWidth
-                  "
-                />
-                <span class="font-mono text-[11px] w-4">{{ (selectedLayer as TextLayer).strokeWidth }}</span>
-              </div>
-            </div>
+            </SettingRow>
+            <FormField
+              label="描边宽"
+              :extra="(selectedLayer as TextLayer).strokeWidth"
+            >
+              <Slider
+                :model-value="[(selectedLayer as TextLayer).strokeWidth]"
+                :min="0"
+                :max="20"
+                @update:model-value="
+                  (selectedLayer as TextLayer).strokeWidth = $event?.[0] ?? (selectedLayer as TextLayer).strokeWidth
+                "
+              />
+            </FormField>
           </template>
           <template v-if="selectedLayer?.type === 'image'">
-            <div class="prop-row">
-              <span class="text-muted-foreground">透明度</span>
-              <div class="flex-1 flex items-center gap-2">
-                <Slider
-                  :model-value="[(selectedLayer as ImageLayer).opacity]"
-                  :min="0"
-                  :max="1"
-                  :step="0.05"
-                  @update:model-value="
-                    (selectedLayer as ImageLayer).opacity = $event?.[0] ?? (selectedLayer as ImageLayer).opacity
-                  "
-                />
-                <span class="font-mono text-[11px] w-6"
-                  >{{ Math.round((selectedLayer as ImageLayer).opacity * 100) }}%</span
-                >
-              </div>
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">描边</span>
+            <FormField
+              label="透明度"
+              :extra="`${Math.round((selectedLayer as ImageLayer).opacity * 100)}%`"
+            >
+              <Slider
+                :model-value="[(selectedLayer as ImageLayer).opacity]"
+                :min="0"
+                :max="1"
+                :step="0.05"
+                @update:model-value="
+                  (selectedLayer as ImageLayer).opacity = $event?.[0] ?? (selectedLayer as ImageLayer).opacity
+                "
+              />
+            </FormField>
+            <SettingRow
+              title="描边"
+              variant="none"
+            >
               <ColorPicker
                 v-model="(selectedLayer as ImageLayer).stroke"
-                class="flex-1"
+                class="w-32"
               />
-            </div>
-            <div class="prop-row">
-              <span class="text-muted-foreground">描边宽</span>
-              <div class="flex-1 flex items-center gap-2">
-                <Slider
-                  :model-value="[(selectedLayer as ImageLayer).strokeWidth]"
-                  :min="0"
-                  :max="20"
-                  @update:model-value="
-                    (selectedLayer as ImageLayer).strokeWidth = $event?.[0] ?? (selectedLayer as ImageLayer).strokeWidth
-                  "
-                />
-                <span class="font-mono text-[11px] w-4">{{ (selectedLayer as ImageLayer).strokeWidth }}</span>
-              </div>
-            </div>
+            </SettingRow>
+            <FormField
+              label="描边宽"
+              :extra="(selectedLayer as ImageLayer).strokeWidth"
+            >
+              <Slider
+                :model-value="[(selectedLayer as ImageLayer).strokeWidth]"
+                :min="0"
+                :max="20"
+                @update:model-value="
+                  (selectedLayer as ImageLayer).strokeWidth = $event?.[0] ?? (selectedLayer as ImageLayer).strokeWidth
+                "
+              />
+            </FormField>
             <Button
               variant="outline"
               class="w-full mt-2"
@@ -634,12 +632,5 @@ async function onRemoveBgConfirm(blob: Blob) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.prop-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
 }
 </style>

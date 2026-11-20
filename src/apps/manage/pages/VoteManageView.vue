@@ -59,7 +59,6 @@ import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
-import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Textarea } from '@/shared/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -1226,8 +1225,7 @@ onUnmounted(() => {
           </CardHeader>
 
           <CardContent class="space-y-3.5">
-            <div>
-              <span class="text-xs text-muted-foreground block mb-2">一键载入场景:</span>
+            <FormField label="一键载入场景">
               <div class="flex flex-wrap gap-1.5">
                 <Button
                   size="xs"
@@ -1279,12 +1277,11 @@ onUnmounted(() => {
                   零票
                 </Button>
               </div>
-            </div>
+            </FormField>
 
             <Separator />
 
-            <div>
-              <span class="text-xs text-muted-foreground block mb-1.5">预设主题:</span>
+            <FormField label="预设主题">
               <div class="grid grid-cols-2 gap-1.5">
                 <Button
                   v-for="th in [
@@ -1302,10 +1299,9 @@ onUnmounted(() => {
                   {{ th.label }}
                 </Button>
               </div>
-            </div>
+            </FormField>
 
-            <div class="space-y-1.5">
-              <span class="text-xs text-muted-foreground block">屏幕对齐位置:</span>
+            <FormField label="屏幕对齐位置">
               <Select v-model="previewPosition">
                 <SelectTrigger>
                   <SelectValue />
@@ -1319,10 +1315,12 @@ onUnmounted(() => {
                   <SelectItem value="top-left"> 左上角 </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div class="flex-between">
-              <span class="text-xs text-muted-foreground">排行榜最大显示行数:</span>
+            <SettingRow
+              title="排行榜最大显示行数"
+              variant="none"
+            >
               <NumberField
                 v-model="previewMaxDisplay"
                 min="2"
@@ -1330,7 +1328,7 @@ onUnmounted(() => {
                 class="w-20 font-mono"
                 :show-buttons="false"
               />
-            </div>
+            </SettingRow>
           </CardContent>
         </Card>
 

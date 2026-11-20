@@ -1,5 +1,7 @@
 import Konva from 'konva'
 
+import { resolveFontFamilyCss } from '@/apps/user-page/googleFonts'
+
 import type { ComputedKeyboardGeometry, ComputedKeyBox } from './keyboardLayouts'
 import { resolveKeyAccentTokens, withAlpha } from './keycastTheme'
 import type { KeycastCanvasPalette } from './keycastTheme'
@@ -23,6 +25,9 @@ export const TRAIL_LIFETIME_MS = 560
 export const RIPPLE_DURATION_MS = 420
 export const BEAM_DURATION_MS = 480
 export const SPARK_DURATION_MS = 440
+
+const DEFAULT_MONO_FONT = 'ui-monospace, SFMono-Regular, Menlo, monospace'
+const DEFAULT_SANS_FONT = 'ui-sans-serif, system-ui, sans-serif'
 export const STAGE_MARGIN = 10
 
 export interface PressEffectInstance {
@@ -144,6 +149,7 @@ function renderKeyLabel(
   textColor: string,
   subTextColor: string,
   yOffset: number,
+  fontFamily: string,
   countText?: string,
 ) {
   const baseFont = Math.max(9, Math.round(keyUnit * 0.32))
@@ -154,15 +160,15 @@ function renderKeyLabel(
 
   if (box.subLabel) {
     ctx.fillStyle = subTextColor
-    ctx.font = `600 ${Math.max(8, Math.round(baseFont * 0.72))}px ui-monospace, SFMono-Regular, Menlo, monospace`
+    ctx.font = `600 ${Math.max(8, Math.round(baseFont * 0.72))}px ${fontFamily}`
     ctx.fillText(box.subLabel, box.x + box.width / 2, box.y + yOffset + box.height * 0.3)
 
     ctx.fillStyle = textColor
-    ctx.font = `700 ${mainFont}px ui-monospace, SFMono-Regular, Menlo, monospace`
+    ctx.font = `700 ${mainFont}px ${fontFamily}`
     ctx.fillText(box.label, box.x + box.width / 2, box.y + yOffset + box.height * 0.64)
   } else {
     ctx.fillStyle = textColor
-    ctx.font = `700 ${mainFont}px ui-monospace, SFMono-Regular, Menlo, monospace`
+    ctx.font = `700 ${mainFont}px ${fontFamily}`
     ctx.fillText(box.label, box.x + box.width / 2, box.y + yOffset + box.height * 0.5)
   }
 
@@ -170,7 +176,7 @@ function renderKeyLabel(
     ctx.textAlign = 'right'
     ctx.textBaseline = 'bottom'
     ctx.fillStyle = subTextColor
-    ctx.font = '600 8px ui-monospace, SFMono-Regular, Menlo, monospace'
+    ctx.font = `600 8px ${fontFamily}`
     ctx.fillText(countText, box.x + box.width - 3, box.y + yOffset + box.height - 2)
   }
 }
@@ -183,8 +189,10 @@ export function buildStaticKonvaScene(
   keyUnit: number,
   interactive: boolean,
   callbacks: StaticSceneCallbacks,
+  fontFamily?: string,
 ) {
   staticLayer.destroyChildren()
+  const keyFont = fontFamily || DEFAULT_MONO_FONT
 
   const activeVirtualKeys = new Set<string>()
   const activeVirtualMouse = new Set<MouseButtonName>()
@@ -269,7 +277,7 @@ export function buildStaticKonvaScene(
           text: box.subLabel,
           fontSize: Math.max(8, Math.round(baseFont * 0.72)),
           fontStyle: '600',
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontFamily: keyFont,
           fill: pal.keySubText,
           listening: false,
           ...textShadowProps,
@@ -284,7 +292,7 @@ export function buildStaticKonvaScene(
           text: box.label,
           fontSize: mainFont,
           fontStyle: '700',
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontFamily: keyFont,
           fill: pal.keyText,
           listening: false,
           ...textShadowProps,
@@ -302,7 +310,7 @@ export function buildStaticKonvaScene(
           text: box.label,
           fontSize: mainFont,
           fontStyle: '700',
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontFamily: keyFont,
           fill: pal.keyText,
           listening: false,
           ...textShadowProps,
@@ -377,7 +385,7 @@ export function buildStaticKonvaScene(
           text: meta.text,
           fontSize: 12,
           fontStyle: '700',
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontFamily: keyFont,
           fill: pal.mouseText,
           listening: false,
           ...textShadowProps,
@@ -453,7 +461,7 @@ export function buildStaticKonvaScene(
             text: rect.label,
             fontSize: 8,
             fontStyle: '700',
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+            fontFamily: keyFont,
             fill: withAlpha(pal.mouseText, 0.65),
             listening: false,
             ...textShadowProps,
@@ -575,6 +583,9 @@ export function renderDynamicKonvaFrame(
   const afterglowMs = resolveAfterglowMs(rc.state)
   const pressEffect = resolvePressEffect(rc.state)
   const colorMode = rc.state.colorMode || 'solid'
+  const customFont = resolveFontFamilyCss(rc.state.fontFamily)
+  const keyFont = customFont || DEFAULT_MONO_FONT
+  const hudFont = customFont || DEFAULT_SANS_FONT
   const wallNow = Date.now()
   let keepAnimating = false
   let wheelUpExpired = false
@@ -583,7 +594,7 @@ export function renderDynamicKonvaFrame(
   // 1. HUD 状态条
   if (rc.state.showApm) {
     const hudText = `KPS ${rc.kps}  ·  APM ${rc.apm}  ·  KEYS ${rc.totalPresses}`
-    ctx.font = '700 11px ui-sans-serif, system-ui, sans-serif'
+    ctx.font = `700 11px ${hudFont}`
     const pillW = Math.round(ctx.measureText(hudText).width + 34)
     const pillH = 24
     const pillX = STAGE_MARGIN
@@ -687,6 +698,7 @@ export function renderDynamicKonvaFrame(
         labelColor,
         subColor,
         pressOffset,
+        keyFont,
         showKeyCount && count > 0 ? String(count) : undefined,
       )
     } else {
@@ -703,7 +715,7 @@ export function renderDynamicKonvaFrame(
         ctx.textAlign = 'right'
         ctx.textBaseline = 'bottom'
         ctx.fillStyle = pal.keySubText
-        ctx.font = '600 8px ui-monospace, SFMono-Regular, Menlo, monospace'
+        ctx.font = `600 8px ${keyFont}`
         ctx.fillText(String(count), box.x + box.width - 3, box.y + box.height - 2)
       }
     }
@@ -761,7 +773,7 @@ export function renderDynamicKonvaFrame(
       }
       const meta = MOUSE_BUTTON_LABELS[btn]
       ctx.fillStyle = ratio > 0.45 ? token.activeText : pal.mouseText
-      ctx.font = '700 12px ui-monospace, SFMono-Regular, Menlo, monospace'
+      ctx.font = `700 12px ${keyFont}`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText(showKeyCount && count > 0 ? String(count) : meta.text, meta.x, meta.y)

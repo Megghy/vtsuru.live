@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import { Button } from '@/shared/ui/button'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import type { PanelId } from '../core/types'
@@ -45,18 +46,24 @@ function toggle(id: PanelId, visible: boolean) {
         />
       </div>
     </VueDraggable>
-    <label class="flex-between gap-2">
-      竖屏布局（上下排列）
+    <SettingRow
+      variant="none"
+      title="竖屏布局（上下排列）"
+    >
       <Switch v-model="layout.vertical" />
-    </label>
-    <label class="flex-between gap-2">
-      互动区在弹幕上方
+    </SettingRow>
+    <SettingRow
+      variant="none"
+      title="互动区在弹幕上方"
+    >
       <Switch v-model="layout.interactionOnTop" />
-    </label>
-    <label class="flex-between gap-2">
-      专注模式（隐藏面板原地虚化）
+    </SettingRow>
+    <SettingRow
+      variant="none"
+      title="专注模式（隐藏面板原地虚化）"
+    >
       <Switch v-model="layout.focusMode" />
-    </label>
+    </SettingRow>
     <Button
       variant="secondary"
       class="w-full"

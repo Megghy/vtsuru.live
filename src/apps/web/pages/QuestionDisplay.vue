@@ -34,8 +34,10 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -707,8 +709,7 @@ onBeforeUnmount(() => {
               value="obs"
               class="pt-3 space-y-4 text-xs"
             >
-              <div class="space-y-1.5">
-                <label class="font-medium text-foreground">OBS 浏览器源链接</label>
+              <FormField label="OBS 浏览器源链接">
                 <div class="flex gap-1.5">
                   <Input
                     readonly
@@ -729,25 +730,29 @@ onBeforeUnmount(() => {
                     />
                   </Button>
                 </div>
-              </div>
+              </FormField>
 
               <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-1">
-                  <label class="font-medium text-foreground">画布宽度 (px)</label>
+                <FormField
+                  label="画布宽度 (px)"
+                  class="min-w-0"
+                >
                   <NumberField
                     v-model="savedCardSize.width"
                     :min="240"
                     :max="3840"
                   />
-                </div>
-                <div class="space-y-1">
-                  <label class="font-medium text-foreground">画布高度 (px)</label>
+                </FormField>
+                <FormField
+                  label="画布高度 (px)"
+                  class="min-w-0"
+                >
                   <NumberField
                     v-model="savedCardSize.height"
                     :min="180"
                     :max="2160"
                   />
-                </div>
+                </FormField>
               </div>
 
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -777,16 +782,14 @@ onBeforeUnmount(() => {
                 </Button>
               </div>
 
-              <div
+              <SettingRow
                 v-if="settingDraft"
-                class="flex-between p-3 rounded-lg border border-border/80 bg-muted/30"
+                title="实时滚动同步"
+                :description="syncStatusText"
+                variant="card"
               >
-                <div class="flex flex-col">
-                  <strong class="text-xs">实时滚动同步</strong>
-                  <small class="text-[11px] text-muted-foreground">{{ syncStatusText }}</small>
-                </div>
                 <Switch v-model:checked="settingDraft.syncScroll" />
-              </div>
+              </SettingRow>
             </TabsContent>
           </Tabs>
         </div>

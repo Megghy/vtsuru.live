@@ -3,12 +3,14 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 import { DEFAULT_COUNTER_STATE } from './types'
 import type { CounterAction, CounterState } from './types'
 
 const props = defineProps<{
   channelId?: string
+  userId?: number
   inlineMode?: boolean
 }>()
 
@@ -18,6 +20,7 @@ const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? ro
 const { state, onAction } = useObsBridge<CounterState, CounterAction>({
   componentId: 'counter',
   channelId: targetChannel,
+  userId: () => props.userId,
   defaultState: DEFAULT_COUNTER_STATE,
   role: 'viewer',
 })
@@ -61,13 +64,16 @@ const progressPercent = computed(() => {
   if (!state.value.target || state.value.target <= 0) return 0
   return Math.min(100, Math.max(0, (state.value.count / state.value.target) * 100))
 })
+
+useGoogleFont(computed(() => state.value.fontFamily || undefined))
+const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily))
 </script>
 
 <template>
   <div
     class="counter-obs-root"
     :class="[`theme-${state.theme}`, { 'is-inline': props.inlineMode }]"
-    :style="{ '--counter-accent': state.accentColor }"
+    :style="{ '--counter-accent': state.accentColor, fontFamily: customFontCss }"
   >
     <div class="counter-container">
       <!-- 头部：标题与前缀 -->

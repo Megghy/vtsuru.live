@@ -35,6 +35,7 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -870,47 +871,35 @@ onMounted(() => {
             </Button>
           </div>
 
-          <div
+          <FormField
             v-else
-            class="space-y-1"
+            label="目标用户"
           >
-            <label class="text-xs font-medium text-foreground">目标用户</label>
             <BiliUserSelector
               v-model:value="addPointTarget"
               placeholder="请输入 B站用户 UID"
               @user-info-loaded="(userInfo) => (selectedTargetUserName = userInfo?.name)"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <div class="flex items-center gap-1.5">
-              <label class="text-xs font-medium text-foreground">积分数量</label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p class="text-xs">正数为给予，负数为扣除</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+          <FormField
+            label="积分数量"
+            hint="正数为给予，负数为扣除"
+          >
             <NumberField
               v-model="addPointCount"
               placeholder="输入要给予或扣除的积分"
               class="w-full"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="text-xs font-medium text-foreground">备注说明 (选填)</label>
+          <FormField label="备注说明 (选填)">
             <Input
               v-model="addPointReason"
               placeholder="请输入备注"
               maxlength="100"
             />
-          </div>
+          </FormField>
         </div>
 
         <DialogFooter>
@@ -943,19 +932,17 @@ onMounted(() => {
         </DialogHeader>
 
         <div class="space-y-3.5 py-2 text-xs">
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">新赛季 / 结算标识 (选填)</label>
+          <FormField label="新赛季 / 结算标识 (选填)">
             <Input
               v-model="seasonNameInput"
               placeholder="例如: 2026 夏日祭 S2"
               maxlength="64"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <div class="flex-between">
-              <label class="font-medium text-foreground">积分结转比例 (%)</label>
-              <div class="flex items-center gap-1">
+          <FormField label="积分结转比例 (%)">
+            <template #extra>
+              <div class="ml-auto flex items-center gap-1">
                 <Button
                   type="button"
                   variant="outline"
@@ -981,13 +968,13 @@ onMounted(() => {
                   50%
                 </Button>
               </div>
-            </div>
+            </template>
             <NumberField
               v-model="seasonCarryOverPercent"
               :min="0"
               :max="100"
             />
-          </div>
+          </FormField>
 
           <div class="p-2.5 rounded-lg border border-border/70 bg-muted/30 space-y-1">
             <div class="flex-between">

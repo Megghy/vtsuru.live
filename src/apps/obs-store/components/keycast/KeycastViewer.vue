@@ -6,20 +6,24 @@ import Keyboard24Regular from '@vicons/fluent/es/Keyboard24Regular'
 import Play24Regular from '@vicons/fluent/es/Play24Regular'
 import Stop24Regular from '@vicons/fluent/es/Stop24Regular'
 import { useClipboard } from '@vueuse/core'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -50,8 +54,18 @@ const { copy, isSupported: isCopySupported } = useClipboard()
 const route = useRoute()
 const account = useAccount()
 
-const channelId = ref(resolveObsSyncChannel(route.query.channel))
+const props = defineProps<{ channelId?: string }>()
+const channelId = ref(resolveObsSyncChannel(props.channelId ?? route.query.channel))
 const channelDraft = ref(channelId.value)
+watch(
+  () => props.channelId,
+  (val) => {
+    if (!val) return
+    const resolved = resolveObsSyncChannel(val)
+    channelId.value = resolved
+    channelDraft.value = resolved
+  },
+)
 const copied = ref(false)
 const captureFocused = ref(true)
 const isSimulating = ref(false)
@@ -536,13 +550,15 @@ onBeforeUnmount(() => {
         <div class="text-xs font-semibold text-foreground">展示模式与外观配置</div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">展示形式</label>
+          <FormField
+            label="展示形式"
+            class="min-w-0"
+          >
             <Select
               :model-value="state.displayMode"
               @update:model-value="(val) => updateState({ displayMode: val as KeycastDisplayMode })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -555,18 +571,18 @@ onBeforeUnmount(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div
+          <FormField
             v-if="state.displayMode === 'overlay'"
-            class="space-y-1.5"
+            label="键盘布局预设"
+            class="min-w-0"
           >
-            <label class="text-xs font-medium text-foreground">键盘布局预设</label>
             <Select
               :model-value="state.keyboardLayout"
               @update:model-value="(val) => updateState({ keyboardLayout: val as KeyboardLayoutPreset })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -579,18 +595,18 @@ onBeforeUnmount(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div
+          <FormField
             v-else
-            class="space-y-1.5"
+            label="排列方向"
+            class="min-w-0"
           >
-            <label class="text-xs font-medium text-foreground">排列方向</label>
             <Select
               :model-value="state.direction"
               @update:model-value="(val) => updateState({ direction: val as KeycastDirection })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -603,15 +619,17 @@ onBeforeUnmount(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">视觉主题</label>
+          <FormField
+            label="视觉主题"
+            class="min-w-0"
+          >
             <Select
               :model-value="state.theme"
               @update:model-value="(val) => updateState({ theme: val as KeycastTheme })"
             >
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -624,33 +642,47 @@ onBeforeUnmount(() => {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">高亮强调色</label>
+          <FormField
+            label="高亮强调色"
+            class="min-w-0"
+          >
             <ColorPicker
               :model-value="state.accentColor"
               @update:model-value="(val) => updateState({ accentColor: val })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-foreground">
-              {{ state.displayMode === 'overlay' ? '画布缩放基准' : '键帽字号 (px)' }}
-            </label>
+          <FormField
+            :label="state.displayMode === 'overlay' ? '画布缩放基准' : '键帽字号 (px)'"
+            class="min-w-0"
+          >
             <NumberField
               :model-value="state.fontSize"
               :min="11"
               :max="26"
               @update:model-value="(val) => updateState({ fontSize: Number(val ?? 15) })"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <div class="flex-between text-xs">
-              <label class="font-medium text-foreground">整体不透明度</label>
-              <span class="font-mono text-muted-foreground">{{ state.opacity ?? 100 }}%</span>
-            </div>
+          <FormField
+            label="字体"
+            class="min-w-0"
+          >
+            <GoogleFontPicker
+              :model-value="state.fontFamily || null"
+              :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+              :show-preview="false"
+              @update:model-value="updateState({ fontFamily: $event || '' })"
+            />
+          </FormField>
+
+          <FormField
+            label="整体不透明度"
+            :extra="`${state.opacity ?? 100}%`"
+            class="min-w-0"
+          >
             <Slider
               :model-value="[state.opacity ?? 100]"
               :min="35"
@@ -659,16 +691,18 @@ onBeforeUnmount(() => {
               class="pt-2"
               @update:model-value="(vals) => vals && updateState({ opacity: vals[0] })"
             />
-          </div>
+          </FormField>
 
           <template v-if="state.displayMode === 'overlay'">
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-foreground">配色方案</label>
+            <FormField
+              label="配色方案"
+              class="min-w-0"
+            >
               <Select
                 :model-value="state.colorMode || 'solid'"
                 @update:model-value="(val) => updateState({ colorMode: val as KeycastColorMode })"
               >
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -681,10 +715,12 @@ onBeforeUnmount(() => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-foreground">敲击特效样式</label>
+            <FormField
+              label="敲击特效样式"
+              class="min-w-0"
+            >
               <Select
                 :model-value="resolvePressEffect(state)"
                 @update:model-value="
@@ -694,7 +730,7 @@ onBeforeUnmount(() => {
                   }
                 "
               >
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -707,10 +743,12 @@ onBeforeUnmount(() => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-foreground">余晖拖尾时长</label>
+            <FormField
+              label="余晖拖尾时长"
+              class="min-w-0"
+            >
               <Select
                 :model-value="String(resolveAfterglowMs(state))"
                 @update:model-value="
@@ -720,7 +758,7 @@ onBeforeUnmount(() => {
                   }
                 "
               >
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -733,22 +771,26 @@ onBeforeUnmount(() => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </template>
 
           <template v-else>
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-foreground">最大同屏按键数</label>
+            <FormField
+              label="最大同屏按键数"
+              class="min-w-0"
+            >
               <NumberField
                 :model-value="state.maxKeys"
                 :min="1"
                 :max="12"
                 @update:model-value="(val) => updateState({ maxKeys: Number(val ?? 6) })"
               />
-            </div>
+            </FormField>
 
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-foreground">淡出停留时长 (ms)</label>
+            <FormField
+              label="淡出停留时长 (ms)"
+              class="min-w-0"
+            >
               <NumberField
                 :model-value="state.fadeDelayMs"
                 :min="400"
@@ -756,64 +798,74 @@ onBeforeUnmount(() => {
                 :step="200"
                 @update:model-value="(val) => updateState({ fadeDelayMs: Number(val ?? 2200) })"
               />
-            </div>
+            </FormField>
           </template>
         </div>
 
         <!-- 可视化增强特性开关 -->
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-2.5 pt-1">
-          <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+          <SettingRow
+            title="显示实时 KPS / APM 状态条"
+            variant="compact"
+          >
             <Switch
               :checked="state.showApm"
               @update:checked="(val: boolean) => updateState({ showApm: val })"
             />
-            <span>显示实时 KPS / APM 状态条</span>
-          </label>
+          </SettingRow>
 
           <template v-if="state.displayMode === 'overlay'">
-            <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+            <SettingRow
+              title="联动显示右侧鼠标与侧键"
+              variant="compact"
+            >
               <Switch
                 :checked="state.showMouse"
                 @update:checked="(val: boolean) => updateState({ showMouse: val })"
               />
-              <span>联动显示右侧鼠标与侧键</span>
-            </label>
+            </SettingRow>
 
-            <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+            <SettingRow
+              title="鼠标掌托移动光轨"
+              variant="compact"
+            >
               <Switch
                 :checked="state.enableMouseTrail"
                 @update:checked="(val: boolean) => updateState({ enableMouseTrail: val })"
               />
-              <span>鼠标掌托移动光轨</span>
-            </label>
+            </SettingRow>
 
-            <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+            <SettingRow
+              title="高频按键热力染色"
+              variant="compact"
+            >
               <Switch
                 :checked="state.enableHeatmap"
                 @update:checked="(val: boolean) => updateState({ enableHeatmap: val })"
               />
-              <span>高频按键热力染色</span>
-            </label>
+            </SettingRow>
 
-            <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+            <SettingRow
+              title="键帽累计敲击次数角标"
+              variant="compact"
+            >
               <Switch
                 :checked="state.showKeyCount"
                 @update:checked="(val: boolean) => updateState({ showKeyCount: val })"
               />
-              <span>键帽累计敲击次数角标</span>
-            </label>
+            </SettingRow>
           </template>
 
-          <label
+          <SettingRow
             v-else
-            class="flex items-center gap-2 text-xs cursor-pointer select-none"
+            title="合并显示组合修饰键 (Ctrl / Shift / Alt)"
+            variant="compact"
           >
             <Switch
               :checked="state.showCombos"
               @update:checked="(val: boolean) => updateState({ showCombos: val })"
             />
-            <span>合并显示组合修饰键 (Ctrl / Shift / Alt)</span>
-          </label>
+          </SettingRow>
         </div>
       </CardContent>
     </Card>

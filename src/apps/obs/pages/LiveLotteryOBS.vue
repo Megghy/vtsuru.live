@@ -23,7 +23,7 @@ const props = withDefaults(
     id?: number | string | null
     active?: boolean
     visible?: boolean
-    style?: LotteryObsStyle | string
+    themeStyle?: LotteryObsStyle | string
     mode?: LotteryObsMode | string
   }>(),
   { active: true, visible: true },
@@ -51,7 +51,7 @@ const activeMode = computed<LotteryObsMode>(() => {
 })
 
 const activeStyle = computed<string>(() => {
-  const queryStyle = firstQueryValue(props.style ?? route.query.style ?? route.query.theme)
+  const queryStyle = firstQueryValue(props.themeStyle ?? route.query.style ?? route.query.theme)
     .trim()
     .toLowerCase()
   if (['slate', 'transparent', 'champagne', 'classic'].includes(queryStyle)) {

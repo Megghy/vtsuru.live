@@ -15,8 +15,10 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import type { PaidReadFilter } from '../store/settings'
@@ -86,17 +88,20 @@ function markAllRead() {
           class="w-[220px]"
           align="end"
         >
-          <div class="grid gap-2 w-[200px] text-xs">
-            <label class="text-muted-foreground">最低金额（元），大航海不受影响</label>
-            <NumberField
-              v-model="dashboard.settings.giftMinPrice"
-              :min="0"
-              :step="1"
-            />
-            <label class="flex-between items-center">
-              显示免费礼物
+          <div class="grid gap-2.5 w-[200px] text-xs">
+            <FormField label="最低金额（元），大航海不受影响">
+              <NumberField
+                v-model="dashboard.settings.giftMinPrice"
+                :min="0"
+                :step="1"
+              />
+            </FormField>
+            <SettingRow
+              variant="none"
+              title="显示免费礼物"
+            >
               <Switch v-model="dashboard.settings.showFreeGift" />
-            </label>
+            </SettingRow>
           </div>
         </PopoverContent>
       </Popover>

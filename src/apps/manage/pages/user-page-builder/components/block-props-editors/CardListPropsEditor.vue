@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ImageIcon, Plus, X } from 'lucide-vue-next'
+import { ImageIcon, Plus } from 'lucide-vue-next'
 import { ref } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
@@ -48,8 +49,7 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
 <template>
   <div class="space-y-3">
     <PropsGrid>
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">布局</label>
+      <FormField label="布局">
         <Select v-model="blockProps.layout">
           <SelectTrigger>
             <SelectValue placeholder="布局" />
@@ -59,21 +59,22 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
             <SelectItem value="list">列表</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      <div
+      </FormField>
+      <FormField
         v-if="propertyAvailable('columns')"
-        class="space-y-1"
+        label="列数"
       >
-        <label class="text-xs text-muted-foreground">列数</label>
         <NumberField
           v-model="blockProps.columns"
           :min="1"
           :max="4"
           class="w-full"
         />
-      </div>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground">卡片</label>
+      </FormField>
+      <FormField
+        label="卡片"
+        class="span-full"
+      >
         <RepeaterEditor
           :items="items"
           :create-item="
@@ -92,8 +93,10 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
           </template>
           <template #default="{ item, index }">
             <PropsGrid>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">图片</label>
+              <FormField
+                label="图片"
+                class="span-full"
+              >
                 <div class="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -117,25 +120,27 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
                     class="w-14 h-10 border-border rounded shrink-0"
                   />
                 </div>
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">标题</label>
+              </FormField>
+              <FormField label="标题">
                 <Input
                   v-model="item.title"
                   maxlength="100"
                 />
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">正文</label>
+              </FormField>
+              <FormField
+                label="正文"
+                class="span-full"
+              >
                 <Textarea
                   v-model="item.body"
                   maxlength="1000"
                   rows="3"
-                  
                 />
-              </div>
-              <div class="span-full space-y-1">
-                <label class="text-xs text-muted-foreground">标签</label>
+              </FormField>
+              <FormField
+                label="标签"
+                class="span-full"
+              >
                 <div class="flex flex-wrap items-center gap-1.5">
                   <Tag
                     v-for="(t, tagIdx) in item.tags || []"
@@ -159,7 +164,7 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </FormField>
             </PropsGrid>
             <CardActionEditor
               :action="ensureAction(item, 'primaryAction')"
@@ -173,7 +178,7 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
             />
           </template>
         </RepeaterEditor>
-      </div>
+      </FormField>
     </PropsGrid>
   </div>
 </template>

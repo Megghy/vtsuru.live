@@ -3,13 +3,16 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 import { DEFAULT_SUBTITLE_STATE } from './types'
 import type { SubtitleAction, SubtitleState } from './types'
 
 const props = defineProps<{
   channelId?: string
+  userId?: number
   inlineMode?: boolean
+  noShadow?: boolean
 }>()
 
 const route = useRoute()
@@ -18,6 +21,7 @@ const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? ro
 const { state } = useObsBridge<SubtitleState, SubtitleAction>({
   componentId: 'subtitle',
   channelId: targetChannel,
+  userId: () => props.userId,
   defaultState: DEFAULT_SUBTITLE_STATE,
   role: 'viewer',
 })
@@ -61,6 +65,9 @@ const alignClass = computed(() => {
       return 'items-center text-center'
   }
 })
+
+useGoogleFont(computed(() => state.value.fontFamily || undefined))
+const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily))
 </script>
 
 <template>
@@ -79,11 +86,14 @@ const alignClass = computed(() => {
         :key="`${idx}-${line}`"
         class="px-3.5 py-1.5 rounded-lg leading-snug break-words transition-all duration-200 max-w-full"
         :style="{
+          fontFamily: customFontCss,
           fontSize: `${state.fontSize || 32}px`,
           fontWeight: state.fontWeight || 700,
           color: state.textColor || '#ffffff',
           backgroundColor: state.bgColor || 'rgba(15, 23, 42, 0.55)',
-          textShadow: `0 2px 6px ${state.strokeColor || '#000000'}, 0 0 2px ${state.strokeColor || '#000000'}`,
+          textShadow: props.noShadow
+            ? 'none'
+            : `0 2px 6px ${state.strokeColor || '#000000'}, 0 0 2px ${state.strokeColor || '#000000'}`,
         }"
       >
         {{ line }}

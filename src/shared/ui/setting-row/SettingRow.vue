@@ -66,7 +66,7 @@ const variantClasses: Record<string, string> = {
     :class="
       cn(
         'flex-between gap-3 text-xs',
-        variantClasses[props.variant] || variantClasses.card,
+        variantClasses[props.variant] ?? variantClasses.card,
         props.class,
       )
     "

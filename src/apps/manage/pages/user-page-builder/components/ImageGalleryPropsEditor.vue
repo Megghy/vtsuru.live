@@ -8,10 +8,12 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from './PropsGrid.vue'
@@ -93,8 +95,7 @@ function propertyAvailable(property: string) {
 <template>
   <div class="image-gallery-props-editor flex flex-col gap-3">
     <PropsGrid>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-muted-foreground">样式</label>
+      <FormField label="样式">
         <Select v-model="gallery.layout">
           <SelectTrigger>
             <SelectValue placeholder="选择样式" />
@@ -105,56 +106,51 @@ function propertyAvailable(property: string) {
             <SelectItem value="carousel">轮播</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
-      <div
+      <FormField
         v-if="propertyAvailable('columns')"
-        class="flex flex-col gap-1"
+        label="列数"
       >
-        <label class="text-xs text-muted-foreground">列数</label>
         <NumberField
           v-model="gallery.columns"
           :min="1"
           :max="12"
         />
-      </div>
+      </FormField>
 
-      <div
+      <FormField
         v-if="propertyAvailable('gap')"
-        class="flex flex-col gap-1"
+        label="间距 px"
       >
-        <label class="text-xs text-muted-foreground">间距 px</label>
         <NumberField
           v-model="gallery.gap"
           :min="0"
           :max="80"
         />
-      </div>
+      </FormField>
 
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-muted-foreground">最大宽度</label>
+      <FormField label="最大宽度">
         <Input
           v-model="gallery.maxWidth"
           placeholder="例如 100% 或 720px"
         />
-      </div>
+      </FormField>
 
-      <div
+      <FormField
         v-if="propertyAvailable('maxHeight')"
-        class="flex flex-col gap-1"
+        label="图片最大高度"
       >
-        <label class="text-xs text-muted-foreground">图片最大高度</label>
         <Input
           v-model="gallery.maxHeight"
           placeholder="例如 320px"
         />
-      </div>
+      </FormField>
 
-      <div
+      <FormField
         v-if="propertyAvailable('fit')"
-        class="flex flex-col gap-1"
+        label="图片裁剪方式"
       >
-        <label class="text-xs text-muted-foreground">图片裁剪方式</label>
         <Select v-model="gallery.fit">
           <SelectTrigger>
             <SelectValue placeholder="裁剪方式" />
@@ -164,27 +160,27 @@ function propertyAvailable(property: string) {
             <SelectItem value="contain">完整显示 - contain</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
-      <div
+      <SettingRow
         v-if="propertyAvailable('autoplay')"
-        class="flex-between pt-4"
+        title="自动轮播"
+        variant="none"
+        class="pt-4"
       >
-        <label class="text-xs text-muted-foreground">自动轮播</label>
         <Switch
           :checked="gallery.autoplay"
           @update:checked="gallery.autoplay = $event"
         />
-      </div>
+      </SettingRow>
     </PropsGrid>
 
     <template v-if="gallery.layout === 'carousel'">
       <PropsGrid>
-        <div
+        <FormField
           v-if="propertyAvailable('effect')"
-          class="flex flex-col gap-1"
+          label="切换动效"
         >
-          <label class="text-xs text-muted-foreground">切换动效</label>
           <Select v-model="gallery.effect">
             <SelectTrigger>
               <SelectValue placeholder="动效" />
@@ -195,47 +191,47 @@ function propertyAvailable(property: string) {
               <SelectItem value="card">卡片 - card</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div
+        <FormField
           v-if="propertyAvailable('interval')"
-          class="flex flex-col gap-1"
+          label="轮播间隔 ms"
         >
-          <label class="text-xs text-muted-foreground">轮播间隔 ms</label>
           <NumberField
             v-model="gallery.interval"
             :min="1000"
             :max="20000"
           />
-        </div>
+        </FormField>
 
-        <div
+        <SettingRow
           v-if="propertyAvailable('showDots')"
-          class="flex-between pt-4"
+          title="显示指示点"
+          variant="none"
+          class="pt-4"
         >
-          <label class="text-xs text-muted-foreground">显示指示点</label>
           <Switch
             :checked="gallery.showDots"
             @update:checked="gallery.showDots = $event"
           />
-        </div>
+        </SettingRow>
 
-        <div
+        <SettingRow
           v-if="propertyAvailable('showArrow')"
-          class="flex-between pt-4"
+          title="显示切换箭头"
+          variant="none"
+          class="pt-4"
         >
-          <label class="text-xs text-muted-foreground">显示切换箭头</label>
           <Switch
             :checked="gallery.showArrow"
             @update:checked="gallery.showArrow = $event"
           />
-        </div>
+        </SettingRow>
 
-        <div
+        <FormField
           v-if="propertyAvailable('dotType')"
-          class="flex flex-col gap-1"
+          label="指示点样式"
         >
-          <label class="text-xs text-muted-foreground">指示点样式</label>
           <Select v-model="gallery.dotType">
             <SelectTrigger>
               <SelectValue placeholder="样式" />
@@ -245,13 +241,12 @@ function propertyAvailable(property: string) {
               <SelectItem value="dot">圆点</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div
+        <FormField
           v-if="propertyAvailable('dotPlacement')"
-          class="flex flex-col gap-1"
+          label="指示点位置"
         >
-          <label class="text-xs text-muted-foreground">指示点位置</label>
           <Select v-model="gallery.dotPlacement">
             <SelectTrigger>
               <SelectValue placeholder="位置" />
@@ -263,34 +258,42 @@ function propertyAvailable(property: string) {
               <SelectItem value="right">右侧</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
-        <div class="flex-between pt-4">
-          <label class="text-xs text-muted-foreground">循环播放</label>
+        <SettingRow
+          title="循环播放"
+          variant="none"
+          class="pt-4"
+        >
           <Switch
             :checked="gallery.loop"
             @update:checked="gallery.loop = $event"
           />
-        </div>
+        </SettingRow>
 
-        <div class="flex-between pt-4">
-          <label class="text-xs text-muted-foreground">鼠标拖拽切换</label>
+        <SettingRow
+          title="鼠标拖拽切换"
+          variant="none"
+          class="pt-4"
+        >
           <Switch
             :checked="gallery.draggable"
             @update:checked="gallery.draggable = $event"
           />
-        </div>
+        </SettingRow>
 
-        <div class="flex-between pt-4">
-          <label class="text-xs text-muted-foreground">触屏滑动切换</label>
+        <SettingRow
+          title="触屏滑动切换"
+          variant="none"
+          class="pt-4"
+        >
           <Switch
             :checked="gallery.touchable"
             @update:checked="gallery.touchable = $event"
           />
-        </div>
+        </SettingRow>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-xs text-muted-foreground">切换触发方式</label>
+        <FormField label="切换触发方式">
           <Select v-model="gallery.trigger">
             <SelectTrigger>
               <SelectValue placeholder="方式" />
@@ -300,7 +303,7 @@ function propertyAvailable(property: string) {
               <SelectItem value="hover">悬停</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
       </PropsGrid>
     </template>
 

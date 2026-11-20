@@ -13,11 +13,13 @@ import {
   type Color,
 } from 'reka-ui'
 import { ChevronsUpDown, Pipette } from 'lucide-vue-next'
+import type { HTMLAttributes } from 'vue'
 import { computed, ref, watch } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { cn } from '@/shared/utils/cn'
 
 import {
   DEFAULT_SOLID_SWATCHES,
@@ -48,6 +50,7 @@ const props = withDefaults(
     modes?: ColorMode[]
     swatches?: string[]
     size?: 'small' | 'medium' | 'large' | 'xs'
+    class?: HTMLAttributes['class']
   }>(),
   {
     modelValue: '#000000',
@@ -319,7 +322,7 @@ function isSwatchActive(swatch: string): boolean {
 </script>
 
 <template>
-  <div class="inline-flex items-center">
+  <div :class="cn('flex items-center', props.class)">
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
         <Button

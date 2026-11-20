@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import Info16Regular from '@vicons/fluent/es/Info16Regular'
 import { computed } from 'vue'
 
 import type { UserPageTextTheme } from '@/apps/user-page/theme'
 import { resolveUserPageTextColor } from '@/apps/user-page/theme'
 import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import PropsGrid from './PropsGrid.vue'
 
@@ -68,61 +67,44 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
 
 <template>
   <div class="w-full flex flex-col gap-3">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs text-muted-foreground">字体</label>
+    <FormField label="字体">
       <GoogleFontPicker
         v-model="fontFamily"
         placeholder="使用上级或站点默认字体"
       />
-    </div>
+    </FormField>
 
     <PropsGrid :min-item-width="220">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs text-muted-foreground">基础文字颜色</label>
+      <FormField label="基础文字颜色">
         <ColorPicker v-model="textColor" />
-      </div>
+      </FormField>
 
-      <div class="flex flex-col gap-1.5 justify-center">
-        <div class="flex items-center gap-1.5">
-          <span class="text-xs text-muted-foreground">自动保证对比度</span>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <component
-                  :is="Info16Regular"
-                  class="size-3.5 text-muted-foreground cursor-help"
-                />
-              </TooltipTrigger>
-              <TooltipContent class="max-w-xs">
-                根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1
-                对比度。不会修改已选择的颜色，亮色或暗色覆盖色会优先于基础文字颜色。
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+      <FormField
+        label="自动保证对比度"
+        hint="根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1 对比度。不会修改已选择的颜色，亮色或暗色覆盖色会优先于基础文字颜色。"
+        class="justify-center"
+      >
         <div class="pt-1">
           <Switch
             :checked="autoTextContrast"
             @update:checked="autoTextContrast = $event"
           />
         </div>
-      </div>
+      </FormField>
 
-      <div
+      <FormField
         v-if="showLightColor"
-        class="flex flex-col gap-1.5"
+        label="亮色模式覆盖"
       >
-        <label class="text-xs text-muted-foreground">亮色模式覆盖</label>
         <ColorPicker v-model="textColorLight" />
-      </div>
+      </FormField>
 
-      <div
+      <FormField
         v-if="showDarkColor"
-        class="flex flex-col gap-1.5"
+        label="暗色模式覆盖"
       >
-        <label class="text-xs text-muted-foreground">暗色模式覆盖</label>
         <ColorPicker v-model="textColorDark" />
-      </div>
+      </FormField>
     </PropsGrid>
 
     <div class="flex flex-wrap gap-2 pt-1">

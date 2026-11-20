@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
@@ -14,15 +15,13 @@ defineProps<{
 
 <template>
   <PropsGrid>
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">{{ label }}文字</label>
+    <FormField :label="`${label}文字`">
       <Input
         v-model="action.label"
         placeholder="留空则不显示"
       />
-    </div>
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">{{ label }}目标类型</label>
+    </FormField>
+    <FormField :label="`${label}目标类型`">
       <Select
         :model-value="getNavigationTargetType(action)"
         @update:model-value="(value) => setNavigationTargetType(action, value as any)"
@@ -35,9 +34,11 @@ defineProps<{
           <SelectItem value="external">外链</SelectItem>
         </SelectContent>
       </Select>
-    </div>
-    <div class="span-full space-y-1">
-      <label class="text-xs text-muted-foreground">{{ label }}目标</label>
+    </FormField>
+    <FormField
+      :label="`${label}目标`"
+      class="span-full"
+    >
       <Select
         v-if="action.page"
         v-model="action.page"
@@ -60,6 +61,6 @@ defineProps<{
         v-model="action.url"
         placeholder="https://..."
       />
-    </div>
+    </FormField>
   </PropsGrid>
 </template>

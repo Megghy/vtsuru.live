@@ -12,6 +12,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Textarea } from '@/shared/ui/textarea'
 import { objectsToCSV, toast } from '@/shared/utils'
 
@@ -207,18 +208,17 @@ async function submitImport() {
           </div>
         </div>
 
-        <div class="space-y-1.5">
-          <div class="flex-between">
-            <label class="font-medium text-foreground">粘贴表格内容或 CSV 文本</label>
-            <span class="text-[11px] text-muted-foreground">示例: 1024,顺丰,SF1234567890</span>
-          </div>
+        <FormField
+          label="粘贴表格内容或 CSV 文本"
+          extra="示例: 1024,顺丰,SF1234567890"
+        >
           <Textarea
             v-model="rawInput"
             :rows="5"
             placeholder="订单号,快递公司,快递单号&#10;1024,顺丰,SF1234567890"
             class="font-mono text-xs"
           />
-        </div>
+        </FormField>
 
         <div
           v-if="parsedRows.length > 0"

@@ -533,13 +533,13 @@ async function saveSettings() {
         </div>
 
         <div class="pt-2 border-t border-border/60">
-          <div class="flex-between rounded-lg border border-border/70 bg-muted/20 p-2.5 text-xs">
-            <div>
-              <div class="font-medium text-foreground">自动关闭点播失败提醒通知</div>
-              <div class="text-muted-foreground">仅保存在当前浏览器本地，开启后失败弹窗将在 3 秒后自动关闭</div>
-            </div>
+          <SettingRow
+            variant="compact"
+            title="自动关闭点播失败提醒通知"
+            description="仅保存在当前浏览器本地，开启后失败弹窗将在 3 秒后自动关闭"
+          >
             <Switch v-model:checked="liveRequest.isWarnMessageAutoClose" />
-          </div>
+          </SettingRow>
         </div>
       </CardContent>
     </Card>

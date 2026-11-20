@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import AddSquare24Regular from '@vicons/fluent/es/AddSquare24Regular'
-import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/client-types'
@@ -19,12 +18,12 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Textarea } from '@/shared/ui/textarea'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
@@ -303,36 +302,25 @@ async function givePoint() {
         </DialogHeader>
 
         <div class="space-y-3 py-2">
-          <div class="space-y-1">
-            <div class="flex items-center gap-1.5">
-              <label class="text-xs font-medium text-foreground">积分数量</label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p class="text-xs">正数为给予，负数为扣除</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+          <FormField
+            label="积分数量"
+            hint="正数为给予，负数为扣除"
+          >
             <NumberField
               v-model="addPointCount"
               placeholder="积分数量"
               class="w-full"
             />
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="text-xs font-medium text-foreground">备注说明 (可选)</label>
+          <FormField label="备注说明 (可选)">
             <Textarea
               v-model="addPointReason"
               placeholder="请输入调整备注"
               :maxlength="100"
               :rows="3"
             />
-          </div>
+          </FormField>
         </div>
 
         <DialogFooter>

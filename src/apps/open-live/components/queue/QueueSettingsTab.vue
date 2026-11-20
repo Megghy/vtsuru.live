@@ -490,13 +490,13 @@ const sortOptions = [
         </div>
 
         <div class="pt-2 border-t border-border/60">
-          <div class="flex-between rounded-lg border border-border/70 bg-muted/20 p-2.5 text-xs">
-            <div>
-              <div class="font-medium text-foreground">自动关闭排队失败提醒通知</div>
-              <div class="text-muted-foreground">仅保存在当前浏览器本地，3 秒后自动收起</div>
-            </div>
+          <SettingRow
+            variant="compact"
+            title="自动关闭排队失败提醒通知"
+            description="仅保存在当前浏览器本地，3 秒后自动收起"
+          >
             <Switch v-model:checked="store.isWarnMessageAutoClose" />
-          </div>
+          </SettingRow>
         </div>
       </CardContent>
     </Card>

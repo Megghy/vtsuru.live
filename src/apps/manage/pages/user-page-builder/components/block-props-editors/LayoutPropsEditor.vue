@@ -2,9 +2,11 @@
 import { computed } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -76,8 +78,7 @@ const verticalOptions = computed(() =>
       :col-gap="8"
       :row-gap="0"
     >
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">布局类型</label>
+      <FormField label="布局类型">
         <Select v-model="layout.layout">
           <SelectTrigger>
             <SelectValue placeholder="布局类型" />
@@ -88,49 +89,46 @@ const verticalOptions = computed(() =>
             <SelectItem value="grid">Grid - 网格</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
-      <div
+      <SettingRow
         v-if="layout.layout === 'row'"
-        class="flex-between py-1"
+        title="允许换行"
+        variant="none"
+        class="py-1"
       >
-        <label class="text-xs text-muted-foreground">允许换行</label>
         <Switch v-model:checked="layout.wrap" />
-      </div>
+      </SettingRow>
 
-      <div
+      <FormField
         v-if="layout.layout === 'grid'"
-        class="space-y-1"
+        label="列数"
       >
-        <label class="text-xs text-muted-foreground">列数</label>
         <NumberField
           v-model="layout.columns"
           :min="1"
           :max="12"
           class="w-full"
         />
-      </div>
+      </FormField>
 
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">间距</label>
+      <FormField label="间距">
         <NumberField
           v-model="layout.gap"
           :min="0"
           :max="80"
           class="w-full"
         />
-      </div>
+      </FormField>
 
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">最大宽度</label>
+      <FormField label="最大宽度">
         <Input
           v-model="layout.maxWidth"
           placeholder="如 100% / 480px"
         />
-      </div>
+      </FormField>
 
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">横向对齐</label>
+      <FormField label="横向对齐">
         <Select v-model="horizontalModel">
           <SelectTrigger>
             <SelectValue placeholder="横向对齐" />
@@ -145,10 +143,9 @@ const verticalOptions = computed(() =>
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
 
-      <div class="space-y-1">
-        <label class="text-xs text-muted-foreground">纵向对齐</label>
+      <FormField label="纵向对齐">
         <Select v-model="verticalModel">
           <SelectTrigger>
             <SelectValue placeholder="纵向对齐" />
@@ -163,7 +160,7 @@ const verticalOptions = computed(() =>
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FormField>
     </PropsGrid>
     <div class="mt-3 rounded p-2 text-xs text-muted-foreground bg-muted/50 leading-relaxed">
       子区块请在「区块管理」中管理：选中多个区块点击「成组」按钮，或拖入已展开的组。

@@ -18,6 +18,7 @@ export interface SubtitleState {
   align: SubtitleAlign
   showPartial: boolean
   fontWeight: number
+  fontFamily?: string
 }
 
 export type SubtitleAction =
@@ -37,4 +38,5 @@ export const DEFAULT_SUBTITLE_STATE: SubtitleState = {
   align: 'center',
   showPartial: true,
   fontWeight: 700,
+  fontFamily: '',
 }

@@ -29,6 +29,7 @@ export interface GoalState {
   /** 视觉样式 */
   theme: GoalTheme
   accentColor: string
+  fontFamily?: string
   showPercent: boolean
 }
 
@@ -57,5 +58,6 @@ export const DEFAULT_GOAL_STATE: GoalState = {
   allowOverflow: true,
   theme: 'card',
   accentColor: '#f43f5e',
+  fontFamily: '',
   showPercent: true,
 }

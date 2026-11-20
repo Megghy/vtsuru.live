@@ -8,6 +8,7 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Slider } from '@/shared/ui/slider'
 import { useMessage } from '@/shared/utils'
 
@@ -132,14 +133,18 @@ const copy = () =>
           </div>
         </div>
         <div class="image-dialog__options flex flex-col gap-2.5">
-          <label class="text-xs">宽度 {{ options.width }}px</label>
-          <Slider
-            :model-value="[options.width]"
-            :min="300"
-            :max="600"
-            :step="10"
-            @update:model-value="(val) => val && (options.width = val[0])"
-          />
+          <FormField
+            label="宽度"
+            :extra="`${options.width}px`"
+          >
+            <Slider
+              :model-value="[options.width]"
+              :min="300"
+              :max="600"
+              :step="10"
+              @update:model-value="(val) => val && (options.width = val[0])"
+            />
+          </FormField>
           <label class="flex items-center gap-2 text-xs cursor-pointer">
             <Checkbox v-model:checked="options.showMedal" />
             粉丝勋章

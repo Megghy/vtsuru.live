@@ -151,6 +151,16 @@ const manageRoute: RouteRecordRaw = {
       },
     },
     {
+      path: 'obs-scene-editor',
+      name: 'manage-obsSceneEditor',
+      component: async () => import('@/apps/obs-scene/pages/ObsSceneEditorView.vue'),
+      meta: {
+        title: 'OBS场景编辑器',
+        keepAlive: true,
+        pageWidth: 'full',
+      },
+    },
+    {
       path: 'queue',
       name: 'manage-liveQueue',
       component: async () => import('@/apps/manage/pages/QueueManageView.vue'),

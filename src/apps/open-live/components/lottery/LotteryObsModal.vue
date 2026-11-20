@@ -219,7 +219,7 @@ const previewBoxStyle = computed(() => {
                 <LiveLotteryOBS
                   :code="code"
                   :id="userId"
-                  :style="selectedStyle"
+                  :theme-style="selectedStyle"
                   :mode="selectedMode"
                 />
               </div>
