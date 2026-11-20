@@ -16,12 +16,19 @@ import { computed, onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponsePointGoodModel } from '@/api/client-types'
-import { FunctionTypes, GoodsStatus, GoodsTypes, VirtualKeySelectionMode } from '@/api/generated/model'
+import {
+  FunctionTypes,
+  GoodsStatus,
+  GoodsTypes,
+  PointOrderStatus,
+  VirtualKeySelectionMode,
+} from '@/api/generated/model'
 import {
   postApiPointDeleteGoods,
   postApiPointToggleGoodsPin,
   postApiPointUpdateGoodsStatus,
 } from '@/api/generated/point/point'
+import { fetchOwnerOrders } from '@/api/point-orders'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
@@ -126,8 +133,25 @@ async function refreshGoods() {
   }
 }
 
+async function refreshOrderStatsBadge() {
+  try {
+    const list = await fetchOwnerOrders({ kind: 'owner' })
+    orderStatsBadge.value = {
+      total: list.length,
+      pending: list.filter((o) => o.status === PointOrderStatus.Pending).length,
+      inProgress: list.filter((o) => o.status === PointOrderStatus.InProgress).length,
+      needTracking: list.filter(
+        (o) => o.type === GoodsTypes.Physical && o.status === PointOrderStatus.Shipped && !o.trackingNumber,
+      ).length,
+    }
+  } catch (err) {
+    console.warn('[PointManage] 获取初始订单统计失败', err)
+  }
+}
+
 onMounted(() => {
   void refreshGoods()
+  void refreshOrderStatsBadge()
 })
 
 function isGoodsSoldOut(item: ResponsePointGoodModel) {
@@ -299,8 +323,17 @@ async function toggleGoodsPin(item: ResponsePointGoodModel) {
 
 function handleGoodsSaved(saved: ResponsePointGoodModel) {
   const index = goods.value.findIndex((g) => g.id === saved.id)
-  if (index >= 0) goods.value[index] = saved
-  else goods.value.push(saved)
+  if (index >= 0) {
+    const existing = goods.value[index]
+    goods.value[index] = {
+      ...saved,
+      soldCount: saved.soldCount || existing.soldCount,
+      purchasedCount: saved.purchasedCount || existing.purchasedCount,
+      hasPurchased: saved.hasPurchased || existing.hasPurchased,
+    }
+  } else {
+    goods.value.push(saved)
+  }
 }
 
 async function batchSetGoodsStatus(ids: number[], status: GoodsStatus) {
@@ -353,8 +386,15 @@ async function batchDeleteGoods() {
       }
     })
     goods.value = goods.value.filter((g) => !deletedIds.has(g.id))
-    selectedGoodsIds.value = []
-    message.success(`已删除 ${deletedIds.size} 件礼物`)
+    selectedGoodsIds.value = selectedGoodsIds.value.filter((id) => !deletedIds.has(id))
+    const failedCount = targets.length - deletedIds.size
+    if (deletedIds.size === 0) {
+      message.error(`批量删除失败（${failedCount} 件未删除）`)
+    } else if (failedCount > 0) {
+      message.warning(`已删除 ${deletedIds.size} 件礼物，${failedCount} 件删除失败`)
+    } else {
+      message.success(`已删除 ${deletedIds.size} 件礼物`)
+    }
   } finally {
     isBatchGoodsLoading.value = false
   }
@@ -935,10 +975,11 @@ async function batchDeleteGoods() {
         <PointCheckInOverview v-if="usersSubTab === 'checkin'" />
       </TabsContent>
 
-      <!-- 积分规则 -->
+      <!-- 积分规则（保留未保存草稿状态） -->
       <TabsContent
         value="settings"
-        class="pt-4"
+        :force-mount="true"
+        class="pt-4 data-[state=inactive]:hidden"
       >
         <PointSettings source-anchor-id="point-source-settings" />
       </TabsContent>

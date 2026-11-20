@@ -4,7 +4,7 @@ import ArrowDown24Filled from '@vicons/fluent/es/ArrowDown24Filled'
 import ArrowUp24Filled from '@vicons/fluent/es/ArrowUp24Filled'
 import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import Info24Regular from '@vicons/fluent/es/Info24Regular'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import type { UploadPointGoodsModel } from '@/api/client-types'
 import type { TempSubPointGoodsModel } from '@/api/generated/model'
@@ -24,26 +24,26 @@ import { nextTempSubItemId, type SubItemsSortMode } from './goodsFormHelpers'
 const goods = defineModel<UploadPointGoodsModel>('goods', { required: true })
 const subItemCoverFiles = defineModel<Record<number, UploadImageItem[]>>('subItemCoverFiles', { required: true })
 
-const subItemsSortMode = ref<SubItemsSortMode>('manual')
+const sortSelectValue = ref<SubItemsSortMode | ''>('')
 
 const subItemsSortOptions: { label: string; value: SubItemsSortMode }[] = [
-  { label: '手动排序', value: 'manual' },
   { label: '按名称排序', value: 'name' },
   { label: '按价格排序', value: 'price' },
   { label: '按库存排序', value: 'stock' },
 ]
 
-const subItemsForDisplay = computed(() => {
+function applySubItemsSort(mode: SubItemsSortMode) {
   const list = [...(goods.value.subItems ?? [])]
-  if (subItemsSortMode.value === 'name') {
+  if (mode === 'name') {
     list.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'zh-CN'))
-  } else if (subItemsSortMode.value === 'price') {
+  } else if (mode === 'price') {
     list.sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
-  } else if (subItemsSortMode.value === 'stock') {
+  } else if (mode === 'stock') {
     list.sort((a, b) => (a.stock ?? Number.MAX_SAFE_INTEGER) - (b.stock ?? Number.MAX_SAFE_INTEGER))
   }
-  return list
-})
+  goods.value.subItems = list
+  sortSelectValue.value = ''
+}
 
 function addSubItem() {
   const tempId = nextTempSubItemId()
@@ -73,7 +73,7 @@ function removeSubItem(subId: number | null | undefined) {
 
 function moveSubItem(subId: number | null | undefined, direction: -1 | 1) {
   const list = goods.value.subItems
-  if (!list || subItemsSortMode.value !== 'manual') return
+  if (!list) return
   const idx = list.findIndex((s) => s.id === subId)
   const target = idx + direction
   if (idx < 0 || target < 0 || target >= list.length) return
@@ -124,9 +124,12 @@ function updateSubItemInheritFlag(
           <span class="text-xs text-muted-foreground">种 (0为不限)</span>
         </div>
 
-        <Select v-model="subItemsSortMode">
+        <Select
+          :model-value="sortSelectValue"
+          @update:model-value="(val) => val && applySubItemsSort(val as SubItemsSortMode)"
+        >
           <SelectTrigger class="w-32">
-            <SelectValue />
+            <SelectValue placeholder="一键排序..." />
           </SelectTrigger>
           <SelectContent>
             <SelectItem
@@ -161,7 +164,7 @@ function updateSubItemInheritFlag(
       class="space-y-3"
     >
       <Card
-        v-for="sub in subItemsForDisplay"
+        v-for="sub in goods.subItems"
         :key="sub.id ?? sub.name"
         class="bg-muted/20"
       >
@@ -173,7 +176,7 @@ function updateSubItemInheritFlag(
                 type="button"
                 variant="ghost"
                 size="xs"
-                :disabled="subItemsSortMode !== 'manual' || getSubItemIndex(sub) <= 1"
+                :disabled="getSubItemIndex(sub) <= 1"
                 @click="moveSubItem(sub.id, -1)"
               >
                 <ArrowUp24Filled class="size-3.5" />
@@ -182,7 +185,7 @@ function updateSubItemInheritFlag(
                 type="button"
                 variant="ghost"
                 size="xs"
-                :disabled="subItemsSortMode !== 'manual' || getSubItemIndex(sub) >= (goods.subItems?.length ?? 0)"
+                :disabled="getSubItemIndex(sub) >= (goods.subItems?.length ?? 0)"
                 @click="moveSubItem(sub.id, 1)"
               >
                 <ArrowDown24Filled class="size-3.5" />

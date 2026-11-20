@@ -28,18 +28,25 @@ const message = useMessage()
 const accountInfo = useAccount()
 const musicRequestStore = useMusicRequestProvider()
 
-function normalizeDraft(raw?: Partial<MusicRequestSettings> | null): MusicRequestSettings {
+type MusicRuleDraft = Pick<
+  MusicRequestSettings,
+  'orderPrefix' | 'obsTitle' | 'platform' | 'orderMusicFirst' | 'playMusicWhenFree' | 'orderCooldown' | 'blacklist'
+>
+
+function normalizeDraft(raw?: Partial<MusicRequestSettings> | null): MusicRuleDraft {
   const base = createDefaultMusicRequestSettings()
   return {
-    ...base,
-    ...raw,
+    orderPrefix: raw?.orderPrefix ?? base.orderPrefix,
     obsTitle: (raw?.obsTitle ?? base.obsTitle) || '点歌机',
     platform: raw?.platform === 'kugou' ? 'kugou' : 'netease',
+    orderMusicFirst: raw?.orderMusicFirst ?? base.orderMusicFirst,
+    playMusicWhenFree: raw?.playMusicWhenFree ?? base.playMusicWhenFree,
+    orderCooldown: raw?.orderCooldown ?? base.orderCooldown,
     blacklist: [...(raw?.blacklist ?? [])],
   }
 }
 
-const draft = ref<MusicRequestSettings>(normalizeDraft(musicRequestStore.settings))
+const draft = ref<MusicRuleDraft>(normalizeDraft(musicRequestStore.settings))
 const savedSnapshot = ref(JSON.stringify(draft.value))
 const isSaving = ref(false)
 const newBlacklistKeyword = ref('')
@@ -53,7 +60,15 @@ function syncFromStore() {
 }
 
 watch(
-  () => musicRequestStore.settings,
+  () => [
+    musicRequestStore.settings.orderPrefix,
+    musicRequestStore.settings.obsTitle,
+    musicRequestStore.settings.platform,
+    musicRequestStore.settings.orderMusicFirst,
+    musicRequestStore.settings.playMusicWhenFree,
+    musicRequestStore.settings.orderCooldown,
+    musicRequestStore.settings.blacklist,
+  ],
   () => {
     if (!isDirty.value) {
       syncFromStore()
@@ -125,9 +140,8 @@ async function loadAudioDevices() {
 }
 
 const selectedDeviceId = computed({
-  get: () => draft.value.deviceId || 'default',
+  get: () => musicRequestStore.settings.deviceId || 'default',
   set: (val: string) => {
-    draft.value.deviceId = val
     musicRequestStore.settings.deviceId = val
     musicRequestStore.setSinkId()
   },

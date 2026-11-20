@@ -98,8 +98,16 @@ function updateCountdown() {
   canResendEmail.value = remain <= 0
 }
 
+function clearCountdownTimer() {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+}
+
 watchEffect(() => {
   if (isEmailWaitPreview.value) {
+    clearCountdownTimer()
     canResendEmail.value = true
     return
   }
@@ -110,11 +118,12 @@ watchEffect(() => {
     }
     return
   }
+  clearCountdownTimer()
   canResendEmail.value = false
 })
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer)
+  clearCountdownTimer()
 })
 
 async function resendEmail() {
@@ -170,26 +179,20 @@ async function resendEmail() {
           </AlertDescription>
         </Alert>
         <div class="manage-page__view flex-1 min-w-0 flex flex-col">
-          <Transition
-            v-if="!routeError"
-            name="page-fade"
-            mode="out-in"
-          >
-            <KeepAlive :include="keepAliveNames">
-              <Suspense>
-                <component
-                  :is="Component"
-                  v-if="Component"
-                  :key="resolveRouteComponentKey(viewRoute)"
-                />
-                <template #fallback>
-                  <div class="flex-center min-h-[40vh] w-full">
-                    <Spin size="large" />
-                  </div>
-                </template>
-              </Suspense>
-            </KeepAlive>
-          </Transition>
+          <KeepAlive :include="keepAliveNames">
+            <Suspense>
+              <component
+                :is="Component"
+                v-if="Component && !routeError"
+                :key="resolveRouteComponentKey(viewRoute)"
+              />
+              <template #fallback>
+                <div class="flex-center min-h-[40vh] w-full">
+                  <Spin size="large" />
+                </div>
+              </template>
+            </Suspense>
+          </KeepAlive>
         </div>
       </div>
     </RouterView>

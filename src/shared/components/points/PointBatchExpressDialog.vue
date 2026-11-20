@@ -15,14 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Textarea } from '@/shared/ui/textarea'
 import { objectsToCSV, toast } from '@/shared/utils'
 
-interface ParsedExpressRow {
-  lineNo: number
-  orderId: number | null
-  expressCompany: string
-  trackingNumber: string
-  matchedOrder?: ResponsePointOrder2OwnerModel
-  error?: string
-}
+import { parseExpressCsvRows } from './pointExpressCsv'
 
 const props = defineProps<{
   orders: ResponsePointOrder2OwnerModel[]
@@ -67,108 +60,7 @@ const pendingPhysicalOrders = computed(() =>
 
 const orderMap = computed(() => new Map(props.orders.map((o) => [Number(o.id), o])))
 
-function parseLineCells(line: string): string[] {
-  if (line.includes('\t')) {
-    return line.split('\t').map((s) => s.trim().replace(/^"|"$/g, ''))
-  }
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'
-        i++
-      } else {
-        inQuotes = !inQuotes
-      }
-    } else if (ch === ',' && !inQuotes) {
-      result.push(current.trim())
-      current = ''
-    } else {
-      current += ch
-    }
-  }
-  result.push(current.trim())
-  return result
-}
-
-const parsedRows = computed<ParsedExpressRow[]>(() => {
-  const lines = rawInput.value
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-
-  if (!lines.length) return []
-
-  const firstCells = parseLineCells(lines[0]).map((c) => c.toLowerCase())
-  let orderCol = 0
-  let companyCol = 1
-  let trackingCol = 2
-  let startIndex = 0
-
-  const hasHeader =
-    firstCells.some((c) => c.includes('订单') || c === 'orderid' || c === 'id') ||
-    firstCells.some((c) => c.includes('单号') || c.includes('快递'))
-
-  if (hasHeader) {
-    startIndex = 1
-    const foundOrder = firstCells.findIndex((c) => c.includes('订单') || c === 'orderid' || c === 'id')
-    const foundCompany = firstCells.findIndex(
-      (c) => c.includes('快递公司') || c.includes('物流公司') || c.includes('公司'),
-    )
-    const foundTracking = firstCells.findIndex((c) => c.includes('单号') || c.includes('tracking'))
-    if (foundOrder >= 0) orderCol = foundOrder
-    if (foundCompany >= 0) companyCol = foundCompany
-    if (foundTracking >= 0) trackingCol = foundTracking
-    else if (firstCells.length >= 3) trackingCol = firstCells.length - 1
-  }
-
-  const fallbackCompany = props.defaultExpressCompany?.trim() || '顺丰'
-  const rows: ParsedExpressRow[] = []
-
-  for (let i = startIndex; i < lines.length; i++) {
-    const cells = parseLineCells(lines[i])
-    const rawId = (cells[orderCol] ?? '').replace(/^#/, '').trim()
-    const orderId = /^\d+$/.test(rawId) ? Number(rawId) : null
-
-    let expressCompany = ''
-    let trackingNumber = ''
-
-    if (!hasHeader && cells.length === 2) {
-      expressCompany = fallbackCompany
-      trackingNumber = cells[1] ?? ''
-    } else {
-      expressCompany = (cells[companyCol] ?? '') || fallbackCompany
-      trackingNumber = cells[trackingCol] ?? ''
-    }
-
-    const matchedOrder = orderId != null ? orderMap.value.get(orderId) : undefined
-    let error: string | undefined
-    if (orderId == null) {
-      error = '订单号格式无效'
-    } else if (!matchedOrder) {
-      error = '未找到此订单'
-    } else if (matchedOrder.type === GoodsTypes.Service) {
-      error = '服务订单不支持快递单号'
-    } else if (!trackingNumber) {
-      error = '缺少快递单号'
-    }
-
-    rows.push({
-      lineNo: i + 1,
-      orderId,
-      expressCompany: expressCompany.slice(0, 20),
-      trackingNumber: trackingNumber.slice(0, 100),
-      matchedOrder,
-      error,
-    })
-  }
-
-  return rows
-})
+const parsedRows = computed(() => parseExpressCsvRows(rawInput.value, orderMap.value, props.defaultExpressCompany))
 
 const validRows = computed(() => parsedRows.value.filter((r) => !r.error && r.orderId != null))
 

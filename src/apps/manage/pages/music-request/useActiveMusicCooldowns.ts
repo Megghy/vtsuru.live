@@ -26,9 +26,18 @@ export function useActiveMusicCooldowns() {
   })
 
   watch(
+    [() => musicRequestStore.cooldownMap, () => musicRequestStore.settings.orderCooldown],
+    () => {
+      nowTick.value = Date.now()
+    },
+    { deep: true },
+  )
+
+  watch(
     () => activeCooldowns.value.length > 0,
     (hasActive) => {
       if (hasActive && !cooldownTimer) {
+        nowTick.value = Date.now()
         cooldownTimer = setInterval(() => {
           nowTick.value = Date.now()
         }, 1000)

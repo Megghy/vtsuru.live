@@ -107,12 +107,13 @@ onMounted(() => {
 })
 
 watch(
-  () => accountInfo.value?.id,
+  [() => accountInfo.value?.id, () => accountInfo.value?.settings?.songRequest],
   () => {
     if (!isDirty.value) {
       initDraft()
     }
   },
+  { deep: true },
 )
 
 function resetDraft() {

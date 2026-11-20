@@ -2,9 +2,10 @@ import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { ResponseQueueModel } from '@/api/client-types'
 import type { SettingQueue } from '@/api/generated/model'
-import { QueueFrom, QueueStatus } from '@/api/generated/model'
+import { QueueStatus } from '@/api/generated/model'
 import { getApiQueueGetActiveAndSettings } from '@/api/generated/queue/queue'
-import { sortByQueueType } from '@/shared/utils/queue'
+import { parsePositiveId } from '@/shared/obs/obsUrl'
+import { normalizeTimestampMs, sortByQueueType } from '@/shared/utils/queue'
 
 export function useQueueData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const queue = ref<ResponseQueueModel[]>([])
@@ -16,8 +17,7 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
 
   const activeItems = computed(() => {
     const waiting = queue.value.filter((item) => item?.status === QueueStatus.Waiting)
-    const hasManualOrder = waiting.some((item) => item.sortOrder !== null && item.sortOrder !== undefined)
-    const sorted = sortByQueueType(waiting, settings.value.sortType, settings.value.isReverse, {
+    return sortByQueueType(waiting, settings.value.sortType, settings.value.isReverse, {
       createAt: (q) => q.createAt,
       guardLevel: (q) => q.user?.guard_level,
       price: (q) => q.giftPrice,
@@ -26,8 +26,6 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
       priorityLevel: (q) => q.priorityLevel,
       sortOrder: (q) => q.sortOrder,
     })
-    if (hasManualOrder) return sorted
-    return sorted.toSorted((a, b) => (b.from === QueueFrom.Manual ? 1 : 0) - (a.from === QueueFrom.Manual ? 1 : 0))
   })
 
   const allowGuardTypes = computed(() => {
@@ -90,9 +88,8 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
 
   async function get() {
     try {
-      const rawId = toValue(currentId)
-      const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
-      const params = idStr ? { id: Number(idStr) } : {}
+      const validId = parsePositiveId(toValue(currentId))
+      const params = validId ? { id: Number(validId) } : {}
 
       const data = await getApiQueueGetActiveAndSettings(params)
 
@@ -115,7 +112,9 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
     const seq = ++requestSeq
     const result = await get()
     if (seq !== requestSeq) return
-    queue.value = (result.queue ?? []).toSorted((a, b) => b.createAt - a.createAt)
+    queue.value = (result.queue ?? []).toSorted(
+      (a, b) => normalizeTimestampMs(b.createAt) - normalizeTimestampMs(a.createAt),
+    )
     settings.value = result.setting ?? ({} as SettingQueue)
   }
 

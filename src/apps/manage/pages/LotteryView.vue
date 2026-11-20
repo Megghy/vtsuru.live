@@ -17,7 +17,7 @@ import Target24Regular from '@vicons/fluent/es/Target24Regular'
 import Trophy24Filled from '@vicons/fluent/es/Trophy24Filled'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import {
@@ -42,6 +42,7 @@ import {
   buildLotteryObsUrl,
   formatLotteryAvatar,
   getAvatarUrl,
+  getLiveLotteryUserKey,
   getRandomInt as getLiveRandomInt,
   isUserValid as isLiveUserValid,
   resolveLotteryIdentityCode,
@@ -133,8 +134,10 @@ function ensureCardState(userId: string): CardState {
 function syncCardStates(users: LiveLotteryUserInfo[], options: { reset?: boolean } = {}) {
   const nextStates: Record<string, CardState> = {}
   users.forEach((user) => {
-    const existing = cardStates.value[user.openId]
-    nextStates[user.openId] =
+    const key = getLiveLotteryUserKey(user)
+    if (!key) return
+    const existing = cardStates.value[key]
+    nextStates[key] =
       options.reset || !existing ? { flipped: false, isWinner: false, eliminated: false } : { ...existing }
   })
   cardStates.value = nextStates
@@ -166,12 +169,15 @@ function updateLiveUsers(force = false) {
 }
 
 function addLiveUser(user: LiveLotteryUserInfo, danmu?: any) {
-  if (originUsers.value.find((u) => u.openId == user.openId) || (!isStartLiveLottery.value && danmu)) return
+  const userKey = getLiveLotteryUserKey(user)
+  if (!userKey) return
+  if (originUsers.value.some((u) => getLiveLotteryUserKey(u) === userKey) || (!isStartLiveLottery.value && danmu))
+    return
   if (danmu && !isLiveUserValid(user, danmu, liveOption.value)) return
 
   originUsers.value.push(user)
   currentUsers.value.push(user)
-  ensureCardState(user.openId)
+  ensureCardState(userKey)
   syncCardStates(currentUsers.value)
   updateLiveUsers()
 }
@@ -198,9 +204,21 @@ function addManualLiveUser(payload: ManualUserFormModel) {
 }
 
 const pendingPointCharges = new Set<string>()
+let poolEpoch = 0
+let lastPointErrorAt = 0
+let isComponentActive = true
+let listenersAttached = false
+
+function notifyPointChargeError(errText: string) {
+  const now = Date.now()
+  if (now - lastPointErrorAt > 4000) {
+    lastPointErrorAt = now
+    message.error(errText)
+  }
+}
 
 async function onDanmaku(data: DanmakuInfo) {
-  if (liveOption.value.type !== 'danmaku') return
+  if (!isComponentActive || liveOption.value.type !== 'danmaku' || !isStartLiveLottery.value) return
   const candidate: LiveLotteryUserInfo = {
     uId: data.uid,
     openId: data.open_id,
@@ -211,14 +229,15 @@ async function onDanmaku(data: DanmakuInfo) {
     fans_medal_wearing_status: data.fans_medal_wearing_status,
     guard_level: data.guard_level,
   }
-  if (!isStartLiveLottery.value || originUsers.value.find((u) => u.openId == candidate.openId)) return
+  const userKey = getLiveLotteryUserKey(candidate)
+  if (!userKey || originUsers.value.some((u) => getLiveLotteryUserKey(u) === userKey)) return
   if (!isLiveUserValid(candidate, { cmd: 'LIVE_OPEN_PLATFORM_DM', data }, liveOption.value)) return
 
   const pointCost = Number(liveOption.value.pointCost ?? 0)
   if (pointCost > 0) {
-    const key = candidate.openId || String(candidate.uId)
-    if (pendingPointCharges.has(key)) return
-    pendingPointCharges.add(key)
+    if (pendingPointCharges.has(userKey)) return
+    const startedEpoch = poolEpoch
+    pendingPointCharges.add(userKey)
     try {
       const res = await postApiPointConsumeUserPoint({
         oId: data.open_id || undefined,
@@ -228,12 +247,21 @@ async function onDanmaku(data: DanmakuInfo) {
         reason: '参与弹幕抽奖',
       })
       if (res.code !== 200) {
+        if (isComponentActive) {
+          notifyPointChargeError(res.message || '参与抽奖扣分失败')
+        }
         return
       }
-    } catch {
+      if (startedEpoch !== poolEpoch || !isStartLiveLottery.value || !isComponentActive) {
+        return
+      }
+    } catch (err) {
+      if (isComponentActive) {
+        notifyPointChargeError(`参与抽奖扣分失败: ${err instanceof Error ? err.message : String(err)}`)
+      }
       return
     } finally {
-      pendingPointCharges.delete(key)
+      pendingPointCharges.delete(userKey)
     }
   }
 
@@ -241,7 +269,7 @@ async function onDanmaku(data: DanmakuInfo) {
 }
 
 function onGift(data: GiftInfo) {
-  if (liveOption.value.type !== 'gift') return
+  if (!isComponentActive || liveOption.value.type !== 'gift') return
   addLiveUser(
     {
       uId: data.uid,
@@ -258,6 +286,7 @@ function onGift(data: GiftInfo) {
 }
 
 function clearLiveUsers() {
+  poolEpoch++
   originUsers.value = []
   currentUsers.value = []
   liveResultUsers.value = []
@@ -275,6 +304,7 @@ async function startLiveLottery() {
     message.warning('当前奖池人数少于抽奖人数')
     return
   }
+  const drawEpoch = poolEpoch
   isLiveLottering.value = true
   isLiveLotteried.value = false
   liveResultUsers.value = []
@@ -288,19 +318,33 @@ async function startLiveLottery() {
   const target = liveOption.value.resultCount
 
   while (pool.length > target) {
+    if (!isComponentActive || drawEpoch !== poolEpoch) {
+      isLiveLottering.value = false
+      return
+    }
     const removed = pool.splice(getLiveRandomInt(pool.length), 1)[0]
     eliminatedUsers.value.push(removed)
-    const st = ensureCardState(removed.openId)
-    st.eliminated = true
+    const removedKey = getLiveLotteryUserKey(removed)
+    if (removedKey) {
+      const st = ensureCardState(removedKey)
+      st.eliminated = true
+    }
     liveProgress.value = Math.floor(
       ((currentUsers.value.length - pool.length) / (currentUsers.value.length - target)) * 100,
     )
     await new Promise((r) => setTimeout(r, Math.max(80, 500 - pool.length * 10)))
   }
 
+  if (!isComponentActive || drawEpoch !== poolEpoch) {
+    isLiveLottering.value = false
+    return
+  }
+
   liveResultUsers.value = pool
   pool.forEach((w) => {
-    const st = ensureCardState(w.openId)
+    const winnerKey = getLiveLotteryUserKey(w)
+    if (!winnerKey) return
+    const st = ensureCardState(winnerKey)
     st.isWinner = true
     st.flipped = true
   })
@@ -485,14 +529,40 @@ function exportWinnersCsv() {
   message.success('中奖名单已导出 CSV')
 }
 
-onMounted(() => {
+function attachClientListeners() {
+  if (listenersAttached) return
+  listenersAttached = true
   client.onEvent('danmaku', onDanmaku)
   client.onEvent('gift', onGift)
+}
+
+function detachClientListeners() {
+  if (!listenersAttached) return
+  listenersAttached = false
+  client.offEvent('danmaku', onDanmaku)
+  client.offEvent('gift', onGift)
+}
+
+onMounted(() => {
+  isComponentActive = true
+  attachClientListeners()
+})
+
+onActivated(() => {
+  isComponentActive = true
+  attachClientListeners()
+})
+
+onDeactivated(() => {
+  isComponentActive = false
+  isStartLiveLottery.value = false
+  detachClientListeners()
 })
 
 onUnmounted(() => {
-  client.offEvent('danmaku', onDanmaku)
-  client.offEvent('gift', onGift)
+  isComponentActive = false
+  isStartLiveLottery.value = false
+  detachClientListeners()
   turnstile.value?.remove?.()
 })
 </script>
@@ -680,12 +750,12 @@ onUnmounted(() => {
               >
                 <div
                   v-for="user in currentUsers"
-                  :key="user.openId"
+                  :key="getLiveLotteryUserKey(user)"
                   class="flex-col-center p-2 rounded-lg border border-border bg-card/60 transition-all text-center relative overflow-hidden"
                   :class="{
                     'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500':
-                      cardStates[user.openId]?.isWinner,
-                    'opacity-30 scale-95': cardStates[user.openId]?.eliminated,
+                      cardStates[getLiveLotteryUserKey(user)]?.isWinner,
+                    'opacity-30 scale-95': cardStates[getLiveLotteryUserKey(user)]?.eliminated,
                   }"
                 >
                   <Avatar class="h-9 w-9 mb-1.5 border border-border">
@@ -699,7 +769,7 @@ onUnmounted(() => {
                     {{ user.name }}
                   </span>
                   <Badge
-                    v-if="cardStates[user.openId]?.isWinner"
+                    v-if="cardStates[getLiveLotteryUserKey(user)]?.isWinner"
                     variant="warning"
                     class="text-[9px] px-1 py-0 h-3.5 mt-1"
                   >

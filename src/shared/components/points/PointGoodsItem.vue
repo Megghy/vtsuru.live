@@ -325,7 +325,12 @@ const scheduleBadgeText = computed(() => {
             <span class="price-current text-base font-bold font-mono tabular-nums text-rose-600 dark:text-rose-400">
               {{ priceRangeText }}
             </span>
-            <span class="text-[11px] text-rose-600/80 dark:text-rose-400/80 font-medium">积分</span>
+            <span
+              v-if="priceRangeText !== '免费'"
+              class="text-[11px] text-rose-600/80 dark:text-rose-400/80 font-medium"
+            >
+              积分
+            </span>
             <span class="price-original text-[11px] font-mono tabular-nums text-muted-foreground line-through">
               {{ originalPriceRangeText }}
             </span>

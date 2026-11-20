@@ -62,12 +62,15 @@ async function openCheckInRanking() {
   showCheckInRankingModal.value = true
   isLoadingRanking.value = true
   try {
-    const res = await getApiCheckinRanking({ vId: props.userInfo.id })
+    const res = await getApiCheckinRanking({ vId: props.userInfo.id, count: 50 })
     if (res.code === 200 && res.data) {
       checkInRankingList.value = res.data
+    } else {
+      toast.error(res.message || '获取签到排行榜失败')
     }
   } catch (err) {
     console.error(err)
+    toast.error(`获取签到排行榜失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
     isLoadingRanking.value = false
   }
@@ -192,13 +195,13 @@ function getTooltip(item: ResponsePointGoodModel): string {
     const available = (item.subItems ?? []).filter((s) => s.count == null || s.count > 0)
     if (!available.length) return '库存不足'
     const minPrice = Math.min(...available.map((s) => Number(s.price)))
-    if ((currentPoint.value ?? 0) < minPrice && !item.canFreeBuy)
+    if (minPrice > 0 && !item.canFreeBuy && (currentPoint.value ?? 0) < minPrice)
       return `积分不足(最低需要${minPrice}, 当前${currentPoint.value ?? 0})`
   } else {
     if ((item?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
     if (!item.isAllowRebuy && item.hasPurchased) return '该礼物不允许重复兑换'
     if (item.purchasedCount >= (item.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${item.maxBuyCount})`
-    if ((currentPoint.value ?? 0) < item.price && !item.canFreeBuy)
+    if (item.price > 0 && !item.canFreeBuy && (currentPoint.value ?? 0) < item.price)
       return `积分不足(需要${item.price}, 当前${currentPoint.value ?? 0})`
   }
 

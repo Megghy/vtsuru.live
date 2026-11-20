@@ -57,7 +57,7 @@ const emit = defineEmits<{
 
     <div
       data-slot="row-context"
-      class="flex items-center gap-1.5 min-w-0 flex-wrap md:flex-nowrap"
+      class="flex items-center gap-1.5 min-w-0 flex-wrap"
     >
       <slot name="context" />
     </div>

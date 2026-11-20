@@ -23,7 +23,7 @@ import type { ResponseLiveRequestStatsModel, ResponseSongModel } from '@/api/gen
 import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
-import { getGuardColor, getSCColor, sortByQueueType } from '@/shared/utils/queue'
+import { getGuardColor, getSCColor, normalizeTimestampMs, sortByQueueType } from '@/shared/utils/queue'
 
 export const useLiveRequest = defineStore('songRequest', () => {
   const accountInfo = useAccount()
@@ -123,9 +123,13 @@ export const useLiveRequest = defineStore('songRequest', () => {
   )
 
   const historySongs = computed(() => {
-    return songs.value.filter(
-      (song) => song.status === SongRequestStatus.Finish || song.status === SongRequestStatus.Cancel,
-    )
+    return sourceList.value
+      .filter((song) => song.status === SongRequestStatus.Finish || song.status === SongRequestStatus.Cancel)
+      .toSorted(
+        (a, b) =>
+          (normalizeTimestampMs(b.finishAt) || normalizeTimestampMs(b.createAt)) -
+          (normalizeTimestampMs(a.finishAt) || normalizeTimestampMs(a.createAt)),
+      )
   })
 
   const STATUS_MAP = {
@@ -135,21 +139,24 @@ export const useLiveRequest = defineStore('songRequest', () => {
     [SongRequestStatus.Cancel]: '已取消',
   }
 
-  async function getAllSong(): Promise<SongRequestInfo[]> {
+  async function getAllSong(): Promise<{ ok: boolean; data: SongRequestInfo[] }> {
     if (!isLoggedIn.value) {
-      return localActiveSongs.value
+      return { ok: true, data: localActiveSongs.value }
     }
     try {
       const data = await getApiLiveRequestGetAll()
       if (data.code === 200) {
-        return [...data.data].toSorted((a, b) => b.createAt - a.createAt)
+        return {
+          ok: true,
+          data: [...(data.data ?? [])].toSorted((a, b) => b.createAt - a.createAt),
+        }
       }
       window.$message.error(`无法获取点播数据: ${data.message}`)
     } catch (err) {
       console.error('[SONG-REQUEST] 无法获取数据', err)
       window.$message.error('无法获取点播数据')
     }
-    return []
+    return { ok: false, data: [] }
   }
 
   async function fetchStats() {
@@ -169,8 +176,10 @@ export const useLiveRequest = defineStore('songRequest', () => {
     return null
   }
 
-  async function initData() {
-    originSongs.value = await getAllSong()
+  async function initData(gen = lifecycleGen) {
+    const result = await getAllSong()
+    if (gen !== lifecycleGen || !result.ok) return
+    originSongs.value = result.data
   }
 
   function nextLocalId() {
@@ -190,31 +199,41 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
 
     if (isLoggedIn.value) {
-      const data = await (postApiLiveRequestTryAdd(danmaku as any) as Promise<unknown> as Promise<{
-        code: number
-        message: string
-        data: SongRequestInfo
-      }>)
-      if (data.code === 200) {
-        if (data.message !== 'EventFetcher') {
-          const idx = originSongs.value.findIndex((s) => s.id === data.data.id)
-          if (idx > -1) {
-            originSongs.value.splice(idx, 1, data.data)
-            window.$message.success(`[${danmaku.uname}] 使用积分插队: ${data.data.songName}`)
+      try {
+        const data = await (postApiLiveRequestTryAdd(danmaku as any) as Promise<unknown> as Promise<{
+          code: number
+          message: string
+          data: SongRequestInfo
+        }>)
+        if (data.code === 200) {
+          if (data.message !== 'EventFetcher') {
+            const idx = originSongs.value.findIndex((s) => s.id === data.data.id)
+            if (idx > -1) {
+              const prev = originSongs.value[idx]
+              originSongs.value.splice(idx, 1, data.data)
+              if ((data.data?.priorityLevel ?? 0) > (prev?.priorityLevel ?? 0)) {
+                window.$message.success(`[${danmaku.uname}] 使用积分插队: ${data.data.songName}`)
+              } else {
+                window.$message.success(`[${danmaku.uname}] 更新点播: ${data.data.songName}`)
+              }
+            } else {
+              originSongs.value.unshift(data.data)
+              window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
+            }
           } else {
-            originSongs.value.unshift(data.data)
             window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
           }
         } else {
-          window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
+          window.$notification.warning({
+            title: `${danmaku.uname} 点播失败`,
+            description: data.message,
+            duration: isWarnMessageAutoClose.value ? 3000 : 0,
+            meta: new Date().toLocaleTimeString(),
+          })
         }
-      } else {
-        window.$notification.warning({
-          title: `${danmaku.uname} 点播失败`,
-          description: data.message,
-          duration: isWarnMessageAutoClose.value ? 3000 : 0,
-          meta: new Date().toLocaleTimeString(),
-        })
+      } catch (err) {
+        console.error('[SONG-REQUEST] 添加点播失败', err)
+        window.$message.error(`[${danmaku.uname}] 点播请求发送失败`)
       }
     } else {
       const prefixLen = settings?.orderPrefix?.length || defaultPrefix.value.length
@@ -253,17 +272,22 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
 
     if (isLoggedIn.value) {
-      const data = await (postApiLiveRequestAdd({ name: trimmed }) as Promise<unknown> as Promise<{
-        code: number
-        message: string
-        data: SongRequestInfo
-      }>)
-      if (data.code === 200) {
-        window.$message.success(`已手动添加: ${data.data.songName}`)
-        originSongs.value.unshift(data.data)
-        newSongName.value = ''
-      } else {
-        window.$message.error(`手动添加失败: ${data.message}`)
+      try {
+        const data = await (postApiLiveRequestAdd({ name: trimmed }) as Promise<unknown> as Promise<{
+          code: number
+          message: string
+          data: SongRequestInfo
+        }>)
+        if (data.code === 200) {
+          window.$message.success(`已手动添加: ${data.data.songName}`)
+          originSongs.value.unshift(data.data)
+          newSongName.value = ''
+        } else {
+          window.$message.error(`手动添加失败: ${data.message}`)
+        }
+      } catch (err) {
+        console.error('[SONG-REQUEST] 手动添加失败', err)
+        window.$message.error('手动添加失败')
       }
     } else {
       const songData = {
@@ -340,8 +364,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       const now = Date.now()
       for (const s of localActiveSongs.value) {
         if (idSet.has(s.id)) {
-          s.status = status
-          if (status > SongRequestStatus.Singing) s.finishAt = now
+          applySongStatusUpdate(s, status, false, now)
         }
       }
       window.$message.success(`已批量更新 ${ids.length} 条记录`)
@@ -374,27 +397,40 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
   async function reorderSongs(orderedIds: number[]) {
     if (orderedIds.length === 0) return false
+    if (isLoggedIn.value && isBatchLoading.value) return false
+
     const orderMap = new Map(orderedIds.map((id, idx) => [id, idx]))
+    const snapshots: Array<{ item: SongRequestInfo; prevOrder: number | null | undefined }> = []
     for (const item of sourceList.value) {
       const idx = orderMap.get(item.id)
       if (idx !== undefined) {
+        snapshots.push({ item, prevOrder: item.sortOrder })
         item.sortOrder = idx
       }
     }
 
     if (!isLoggedIn.value) return true
 
+    isBatchLoading.value = true
     try {
       const res = await postApiLiveRequestReorder(orderedIds)
       if (res.code !== 200) {
+        for (const snapshot of snapshots) {
+          snapshot.item.sortOrder = snapshot.prevOrder
+        }
         window.$message.error(`保存排序失败: ${res.message}`)
         return false
       }
       return true
     } catch (err) {
+      for (const snapshot of snapshots) {
+        snapshot.item.sortOrder = snapshot.prevOrder
+      }
       console.error('[SONG-REQUEST] 调序失败', err)
       window.$message.error('保存排序失败')
       return false
+    } finally {
+      isBatchLoading.value = false
     }
   }
 
@@ -408,7 +444,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     const reordered = buildReordered(waiting, idx)
     if (!reordered) return false
     const singing = unfilteredActiveSongs.value.filter((s) => s.status === SongRequestStatus.Singing)
-    return reorderSongs([...singing.map((s) => s.id), ...reordered.map((s) => s.id)])
+    return reorderSongs([...reordered.map((s) => s.id), ...singing.map((s) => s.id)])
   }
 
   async function moveSong(song: SongRequestInfo, direction: 'up' | 'down') {
@@ -432,8 +468,11 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   async function resetOrder() {
+    if (isLoggedIn.value && isBatchLoading.value) return false
+    const snapshots: Array<{ item: SongRequestInfo; prevOrder: number | null | undefined }> = []
     for (const item of sourceList.value) {
       if (item.status <= SongRequestStatus.Singing) {
+        snapshots.push({ item, prevOrder: item.sortOrder })
         item.sortOrder = null
       }
     }
@@ -449,8 +488,14 @@ export const useLiveRequest = defineStore('songRequest', () => {
         window.$message.success('已恢复为规则排序')
         return true
       }
+      for (const snapshot of snapshots) {
+        snapshot.item.sortOrder = snapshot.prevOrder
+      }
       window.$message.error(`恢复排序失败: ${res.message}`)
     } catch (err) {
+      for (const snapshot of snapshots) {
+        snapshot.item.sortOrder = snapshot.prevOrder
+      }
       console.error('[SONG-REQUEST] 重置排序失败', err)
       window.$message.error('恢复排序失败')
     } finally {
@@ -459,13 +504,13 @@ export const useLiveRequest = defineStore('songRequest', () => {
     return false
   }
 
-  async function deleteSongs(values: SongRequestInfo[]) {
-    if (values.length === 0) return
+  async function deleteSongs(values: SongRequestInfo[]): Promise<boolean> {
+    if (values.length === 0) return false
     const idSet = new Set(values.map((s) => s.id))
     if (!isLoggedIn.value) {
       localActiveSongs.value = localActiveSongs.value.filter((s) => !idSet.has(s.id))
       window.$message.success('删除成功')
-      return
+      return true
     }
 
     isBatchLoading.value = true
@@ -474,15 +519,16 @@ export const useLiveRequest = defineStore('songRequest', () => {
       if (data.code === 200) {
         window.$message.success('删除成功')
         originSongs.value = originSongs.value.filter((s) => !idSet.has(s.id))
-      } else {
-        window.$message.error(`删除失败: ${data.message}`)
+        return true
       }
+      window.$message.error(`删除失败: ${data.message}`)
     } catch (err) {
       console.error('[SONG-REQUEST] 删除请求失败', err)
       window.$message.error('删除失败')
     } finally {
       isBatchLoading.value = false
     }
+    return false
   }
 
   async function deactiveAllSongs(refundPoint = false) {
@@ -519,13 +565,33 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
   }
 
+  let updateActiveTimer: ReturnType<typeof setInterval> | null = null
+  let lifecycleGen = 0
+  let inFlightInit: { gen: number; promise: Promise<void> } | null = null
+  let isPollingActive = false
+
   async function updateActive() {
-    if (!isLoggedIn.value) return
+    if (!isLoggedIn.value || isPollingActive || isBatchLoading.value) return
+    const gen = lifecycleGen
+    isPollingActive = true
+    let needsFullRefresh = false
 
     try {
       const data = await getApiLiveRequestGetActive({ id: accountInfo.value?.id })
+      if (gen !== lifecycleGen) return
       if (data.code === 200) {
-        for (const item of data.data) {
+        const activeList = data.data ?? []
+        const activeIdSet = new Set(activeList.map((item) => item.id))
+
+        needsFullRefresh = originSongs.value.some(
+          (song) =>
+            song.status <= SongRequestStatus.Singing &&
+            !operatingIds.value.includes(song.id) &&
+            !activeIdSet.has(song.id),
+        )
+
+        for (const item of activeList) {
+          if (operatingIds.value.includes(item.id)) continue
           const song = originSongs.value.find((s) => s.id === item.id)
           if (song) {
             if (song.status !== item.status) song.status = item.status
@@ -547,10 +613,17 @@ export const useLiveRequest = defineStore('songRequest', () => {
       }
     } catch (err) {
       console.error('[SONG-REQUEST] 更新活跃歌曲失败', err)
+    } finally {
+      isPollingActive = false
+    }
+
+    if (needsFullRefresh && gen === lifecycleGen && !isBatchLoading.value) {
+      await initData(gen)
     }
   }
 
   async function blockUser(item: SongRequestInfo) {
+    if (!configCanEdit.value) return
     if (
       item.from !== SongRequestFrom.Danmaku &&
       item.from !== SongRequestFrom.SC &&
@@ -559,8 +632,12 @@ export const useLiveRequest = defineStore('songRequest', () => {
       window.$message.error(`[${item.user?.name || '该记录'}] 不是来自直播间观众`)
       return
     }
-    if (!item.user) return
+    if (!item.user || (!item.user.uid && !item.user.oid)) {
+      window.$message.error(`用户 [${item.user?.name || '该记录'}] 没有有效的 UID 或 OpenID，无法拉黑`)
+      return
+    }
 
+    markOperating(item.id, true)
     try {
       const data = await AddBiliBlackList(GuidUtils.toOuid(item.user.uid, item.user.oid), item.user.name)
       if (data.code === 200) {
@@ -572,6 +649,8 @@ export const useLiveRequest = defineStore('songRequest', () => {
     } catch (err) {
       console.error('[SONG-REQUEST] 添加黑名单失败', err)
       window.$message.error('添加黑名单失败')
+    } finally {
+      markOperating(item.id, false)
     }
   }
 
@@ -604,9 +683,8 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
   }
 
-  let updateActiveTimer: ReturnType<typeof setInterval> | null = null
-
-  function startUpdateTimer() {
+  function startUpdateTimer(gen = lifecycleGen) {
+    if (gen !== lifecycleGen) return
     stopUpdateTimer()
     updateActiveTimer = setInterval(() => {
       void updateActive()
@@ -621,11 +699,29 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   async function init() {
-    await initData()
-    startUpdateTimer()
+    const gen = lifecycleGen
+    if (inFlightInit && inFlightInit.gen === gen) {
+      return inFlightInit.promise
+    }
+    const run = (async () => {
+      await initData(gen)
+      if (gen !== lifecycleGen) return
+      startUpdateTimer(gen)
+    })()
+    const tracker = { gen, promise: run }
+    inFlightInit = tracker
+    try {
+      await run
+    } finally {
+      if (inFlightInit === tracker) {
+        inFlightInit = null
+      }
+    }
   }
 
   function dispose() {
+    lifecycleGen++
+    inFlightInit = null
     stopUpdateTimer()
   }
 

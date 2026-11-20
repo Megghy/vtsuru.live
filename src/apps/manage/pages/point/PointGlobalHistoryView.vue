@@ -78,15 +78,21 @@ watch(searchKeyword, (v) => {
 })
 
 watch([fromFilter, debouncedKeyword, startDateInput, endDateInput, pageSize], () => {
-  page.value = 1
-  void loadHistories()
+  if (page.value !== 1) {
+    page.value = 1
+  } else {
+    void loadHistories()
+  }
 })
 
 watch(page, () => {
   void loadHistories()
 })
 
+let requestSeq = 0
+
 async function loadHistories() {
+  const seq = ++requestSeq
   isLoading.value = true
   try {
     const startMs = startDateInput.value ? new Date(`${startDateInput.value}T00:00:00`).getTime() : undefined
@@ -99,15 +105,20 @@ async function loadHistories() {
       startTime: startMs && Number.isFinite(startMs) ? startMs : undefined,
       endTime: endMs && Number.isFinite(endMs) ? endMs : undefined,
     })
+    if (seq !== requestSeq) return
     if (res.code === 200 && res.data) {
       result.value = res.data
     } else {
       toast.error(res.message || '加载积分流水失败')
     }
   } catch (err) {
-    toast.error(`加载积分流水失败: ${err instanceof Error ? err.message : String(err)}`)
+    if (seq === requestSeq) {
+      toast.error(`加载积分流水失败: ${err instanceof Error ? err.message : String(err)}`)
+    }
   } finally {
-    isLoading.value = false
+    if (seq === requestSeq) {
+      isLoading.value = false
+    }
   }
 }
 

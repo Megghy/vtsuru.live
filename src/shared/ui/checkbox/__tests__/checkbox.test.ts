@@ -159,4 +159,58 @@ describe('Checkbox and Switch compatibility', () => {
     expect(emitted).toBe(true)
     expect(active.value).toBe(true)
   })
+
+  it('clicking Switch emits update:modelValue and update:checked only once per click', async () => {
+    let modelValueCount = 0
+    let checkedCount = 0
+    const active = ref(false)
+    const wrapper = mount({
+      components: { Switch },
+      setup() {
+        return {
+          active,
+          onModelValue: (val: boolean) => {
+            modelValueCount++
+            active.value = val
+          },
+          onChecked: () => {
+            checkedCount++
+          },
+        }
+      },
+      template: '<Switch :model-value="active" @update:model-value="onModelValue" @update:checked="onChecked" />',
+    })
+
+    await wrapper.find('button').trigger('click')
+    expect(modelValueCount).toBe(1)
+    expect(checkedCount).toBe(1)
+    expect(active.value).toBe(true)
+  })
+
+  it('clicking Checkbox emits update:modelValue and update:checked only once per click', async () => {
+    let modelValueCount = 0
+    let checkedCount = 0
+    const checked = ref(false)
+    const wrapper = mount({
+      components: { Checkbox },
+      setup() {
+        return {
+          checked,
+          onModelValue: (val: boolean | 'indeterminate') => {
+            modelValueCount++
+            checked.value = val === true
+          },
+          onChecked: () => {
+            checkedCount++
+          },
+        }
+      },
+      template: '<Checkbox :model-value="checked" @update:model-value="onModelValue" @update:checked="onChecked" />',
+    })
+
+    await wrapper.find('button').trigger('click')
+    expect(modelValueCount).toBe(1)
+    expect(checkedCount).toBe(1)
+    expect(checked.value).toBe(true)
+  })
 })

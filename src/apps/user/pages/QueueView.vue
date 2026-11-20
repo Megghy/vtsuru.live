@@ -3,7 +3,7 @@ import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
 import ArrowTrending24Regular from '@vicons/fluent/es/ArrowTrending24Regular'
 import PeopleQueue24Regular from '@vicons/fluent/es/PeopleQueue24Regular'
 import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import type { ResponseQueueModel, ResponseUserInfo, SettingQueue } from '@/api/generated/model'
@@ -53,26 +53,32 @@ const waitingItems = computed(() => {
     settings.value.isReverse ?? false,
     {
       createAt: (item) => item.createAt,
-      guardLevel: (item) => item.user.guard_level,
+      guardLevel: (item) => item.user?.guard_level,
       price: (item) => item.giftPrice,
-      fansMedalLevel: (item) => item.user.fans_medal_level,
-      fansMedalWearing: (item) => item.user.fans_medal_wearing_status,
+      fansMedalLevel: (item) => item.user?.fans_medal_level,
+      fansMedalWearing: (item) => item.user?.fans_medal_wearing_status,
       priorityLevel: (item) => item.priorityLevel,
       sortOrder: (item) => item.sortOrder,
     },
   )
 })
 
-const myWaitingItems = computed(() => {
+function isCurrentViewerEntry(item: ResponseQueueModel) {
   const uid = biliAuth.biliAuth?.userId
-  if (!uid) return []
-  return waitingItems.value.filter((item) => item.user.uid === uid)
+  const openId = biliAuth.biliAuth?.openId
+  if (uid && item.user?.uid === uid) return true
+  if (openId && item.user?.oid === openId) return true
+  return false
+}
+
+const myWaitingItems = computed(() => {
+  if (!biliAuth.isAuthed) return []
+  return waitingItems.value.filter(isCurrentViewerEntry)
 })
 
 const hasJoined = computed(() => {
-  const uid = biliAuth.biliAuth?.userId
-  if (!uid) return false
-  return queueList.value.some((item) => item.user.uid === uid)
+  if (!biliAuth.isAuthed) return false
+  return queueList.value.some(isCurrentViewerEntry)
 })
 
 const basePointCost = computed(() =>
@@ -100,20 +106,28 @@ const eligibilityHints = computed(() => {
   return list
 })
 
+let pointsReqSeq = 0
+let queueReqSeq = 0
+
 async function refreshUserPoints() {
+  const seq = ++pointsReqSeq
   if (!props.userInfo?.id || !biliAuth.isAuthed) {
     userPoints.value = null
     return
   }
   const pts = await biliAuth.GetSpecificPoint(props.userInfo.id)
+  if (seq !== pointsReqSeq) return
   userPoints.value = typeof pts === 'number' ? pts : null
 }
 
 async function fetchQueueState() {
-  if (!props.userInfo?.id) return
+  const targetId = props.userInfo?.id
+  if (!targetId) return
+  const seq = ++queueReqSeq
   isLoading.value = true
   try {
-    const res = await getApiQueueGetActiveAndSettings({ id: props.userInfo.id })
+    const res = await getApiQueueGetActiveAndSettings({ id: targetId })
+    if (seq !== queueReqSeq) return
     if (res.code === 200 && res.data) {
       queueList.value = res.data.queue || []
       settings.value = res.data.setting || null
@@ -121,9 +135,12 @@ async function fetchQueueState() {
       message.error(`获取排队状态失败: ${res.message}`)
     }
   } catch (err) {
+    if (seq !== queueReqSeq) return
     message.error(`获取排队状态失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
-    isLoading.value = false
+    if (seq === queueReqSeq) {
+      isLoading.value = false
+    }
   }
 }
 
@@ -200,6 +217,11 @@ watch(
 )
 
 onMounted(() => {
+  void fetchQueueState()
+  void refreshUserPoints()
+})
+
+onActivated(() => {
   void fetchQueueState()
   void refreshUserPoints()
 })
@@ -359,8 +381,15 @@ onMounted(() => {
           <CardContent class="p-3.5 pt-0">
             <div class="flex-between gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5">
               <div class="flex items-center gap-2.5 min-w-0">
-                <Badge variant="success">进行中</Badge>
-                <span class="font-semibold text-sm text-foreground truncate">{{ progressingItem.user.name }}</span>
+                <Badge
+                  variant="success"
+                  class="shrink-0"
+                >
+                  进行中
+                </Badge>
+                <span class="font-semibold text-sm text-foreground truncate">{{
+                  progressingItem.user?.name || '未知用户'
+                }}</span>
                 <span
                   v-if="progressingItem.content"
                   class="text-xs text-muted-foreground truncate"
@@ -368,7 +397,12 @@ onMounted(() => {
                   {{ progressingItem.content }}
                 </span>
               </div>
-              <Badge variant="outline">{{ formatFromLabel(progressingItem.from) }}</Badge>
+              <Badge
+                variant="outline"
+                class="shrink-0"
+              >
+                {{ formatFromLabel(progressingItem.from) }}
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -394,7 +428,7 @@ onMounted(() => {
                   >
                     {{ idx + 1 }}
                   </span>
-                  <span class="font-medium text-foreground truncate">{{ item.user.name }}</span>
+                  <span class="font-medium text-foreground truncate">{{ item.user?.name || '未知用户' }}</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 min-w-0 flex-wrap sm:flex-nowrap">

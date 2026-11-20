@@ -46,6 +46,8 @@ const actionLoading = ref(false)
 const selectedItems = ref<number[]>([])
 const detail = ref<ResponsePointOrder2OwnerModel>()
 const showDetail = ref(false)
+const draftExpressCompany = ref('')
+const draftTrackingNumber = ref('')
 const serviceDetail = ref<ResponsePointOrder2OwnerModel>()
 const showServiceDetail = ref(false)
 const page = ref(1)
@@ -107,6 +109,30 @@ watch(
       selectedItems.value = pruned
       emit('selectedItem', pruned)
     }
+    if (detail.value) {
+      const updatedDetail = list.find((o) => o.id === detail.value!.id)
+      if (updatedDetail) {
+        detail.value = updatedDetail
+      }
+    }
+    if (serviceDetail.value) {
+      const updatedService = list.find((o) => o.id === serviceDetail.value!.id)
+      if (updatedService) {
+        serviceDetail.value = updatedService
+      }
+    }
+  },
+)
+
+function syncExpressDraft(row?: ResponsePointOrder2OwnerModel) {
+  draftExpressCompany.value = row?.expressCompany ?? ''
+  draftTrackingNumber.value = row?.trackingNumber ?? ''
+}
+
+watch(
+  () => detail.value?.id,
+  () => {
+    syncExpressDraft(detail.value)
   },
 )
 
@@ -123,7 +149,9 @@ function stepDetailOrder(delta: -1 | 1) {
   const target = props.order[nextIndex]
   if (!target) return
   if (target.type === GoodsTypes.Service) {
-    showDetail.value = false
+    if (!props.orgId) {
+      showDetail.value = false
+    }
     openDetail(target)
     return
   }
@@ -152,6 +180,7 @@ function openDetail(row: ResponsePointOrder2OwnerModel) {
     return
   }
   detail.value = row
+  syncExpressDraft(row)
   showDetail.value = true
 }
 
@@ -188,23 +217,28 @@ async function updateStatus(ids: number[], status: PointOrderStatus) {
 
 async function saveExpress(andMarkShipped = false) {
   if (!detail.value) return
+  const target = detail.value
+  const nextTracking = draftTrackingNumber.value.trim()
+  const nextCompany = draftExpressCompany.value.trim()
   actionLoading.value = true
   try {
     await updateOrderExpress(
       props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
-      detail.value.id,
-      detail.value.trackingNumber ?? '',
-      detail.value.expressCompany,
+      target.id,
+      nextTracking,
+      nextCompany,
     )
-    if (andMarkShipped && detail.value.status === PointOrderStatus.Pending) {
+    target.trackingNumber = nextTracking
+    target.expressCompany = nextCompany
+    if (andMarkShipped && target.status === PointOrderStatus.Pending) {
       await updateOrdersStatus(
         props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
-        [detail.value.id],
+        [target.id],
         PointOrderStatus.Shipped,
       )
-      detail.value.status = PointOrderStatus.Shipped
+      target.status = PointOrderStatus.Shipped
     }
-    detail.value.updateAt = Date.now()
+    target.updateAt = Date.now()
     toast.success(andMarkShipped ? '已保存物流单号并标记发货' : '物流信息已更新')
   } catch (error) {
     toast.error(error instanceof Error ? error.message : `更新物流信息失败: ${error}`)
@@ -580,11 +614,11 @@ function formatRelativeTime(time: number) {
                   <span class="text-[11px] font-medium text-muted-foreground block">物流发货信息</span>
                   <div class="flex flex-col gap-2 p-3 rounded-lg border border-border/60 bg-muted/20">
                     <Input
-                      v-model="detail.expressCompany"
+                      v-model="draftExpressCompany"
                       placeholder="快递公司 (如: 顺丰速运)"
                     />
                     <Input
-                      v-model="detail.trackingNumber"
+                      v-model="draftTrackingNumber"
                       placeholder="填写快递单号"
                       class="font-mono"
                     />

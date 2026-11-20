@@ -6,7 +6,7 @@ import MusicNote224Regular from '@vicons/fluent/es/MusicNote224Regular'
 import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
 import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { format, isSameDay } from 'date-fns'
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { AppStartData } from '@/api/generated/model'
@@ -79,7 +79,6 @@ const headerLinks = computed<LiveConsoleHeaderLink[]>(() => [
 ])
 
 const liveRequest = useLiveRequest()
-provide('activeSongs', liveRequest.activeSongs)
 
 const tabs = computed<LiveConsoleTabItem[]>(() => [
   {
@@ -90,14 +89,16 @@ const tabs = computed<LiveConsoleTabItem[]>(() => [
   },
   { value: 'history', label: '历史与统计', icon: History24Regular },
   { value: 'preview', label: 'OBS 舞台预览', icon: Desktop24Regular },
-  { value: 'settings', label: '规则设置', icon: Settings24Regular },
+  { value: 'settings', label: '规则设置', icon: Settings24Regular, keepMounted: true },
 ])
 
 const todayFinishedSongs = computed(() =>
   liveRequest.songs
     .filter((s) => s.status === SongRequestStatus.Finish && isSameDay(normalizeTimestampMs(s.finishAt), Date.now()))
     .toSorted(
-      (a, b) => normalizeTimestampMs(b.finishAt ?? b.createAt) - normalizeTimestampMs(a.finishAt ?? a.createAt),
+      (a, b) =>
+        (normalizeTimestampMs(b.finishAt) || normalizeTimestampMs(b.createAt)) -
+        (normalizeTimestampMs(a.finishAt) || normalizeTimestampMs(a.createAt)),
     ),
 )
 

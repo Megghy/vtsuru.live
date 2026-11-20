@@ -9,7 +9,7 @@ import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { computed, inject, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { SongRequestInfo } from '@/api/client-types'
 import { SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
@@ -30,6 +30,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { normalizeTimestampMs } from '@/shared/utils/queue'
 
 const props = defineProps<{
   song: SongRequestInfo
@@ -47,7 +48,6 @@ const emit = defineEmits<{
 }>()
 
 const songRequest = useLiveRequest()
-const activeSongs = inject<SongRequestInfo[]>('activeSongs', [])
 
 const showCancelDialog = ref(false)
 const showBlockDialog = ref(false)
@@ -62,10 +62,17 @@ const canRefundPoint = computed(() =>
   Boolean(props.song.pointCost && props.song.pointCost > 0 && !props.song.pointRefunded),
 )
 
+const canBlock = computed(
+  () =>
+    songRequest.configCanEdit &&
+    (props.song.from === SongRequestFrom.Danmaku ||
+      props.song.from === SongRequestFrom.SC ||
+      props.song.from === SongRequestFrom.Gift) &&
+    Boolean(props.song.user?.uid || props.song.user?.oid),
+)
+
 const hasOtherSingSong = computed(() => {
-  return (
-    activeSongs.findIndex((s: SongRequestInfo) => s.id !== props.song.id && s.status === SongRequestStatus.Singing) > -1
-  )
+  return songRequest.unfilteredActiveSongs.some((s) => s.id !== props.song.id && s.status === SongRequestStatus.Singing)
 })
 
 const indexBadgeClass = computed(() => {
@@ -109,7 +116,8 @@ async function confirmBlock() {
 
 function formatTimeRelative(time: number | string | Date) {
   try {
-    return formatDistanceToNow(new Date(time), { locale: zhCN, addSuffix: true })
+    const resolved = typeof time === 'number' ? normalizeTimestampMs(time) : time
+    return formatDistanceToNow(new Date(resolved), { locale: zhCN, addSuffix: true })
   } catch {
     return ''
   }
@@ -117,7 +125,8 @@ function formatTimeRelative(time: number | string | Date) {
 
 function formatTimeAbsolute(time: number | string | Date) {
   try {
-    return format(new Date(time), 'yyyy-MM-dd HH:mm:ss')
+    const resolved = typeof time === 'number' ? normalizeTimestampMs(time) : time
+    return format(new Date(resolved), 'yyyy-MM-dd HH:mm:ss')
   } catch {
     return ''
   }
@@ -157,17 +166,23 @@ function formatTimeAbsolute(time: number | string | Date) {
             <Badge
               variant="outline"
               size="xs"
-              class="border-sky-500/40 text-sky-600 bg-sky-500/10 cursor-help max-w-[140px] truncate"
+              class="border-sky-500/40 text-sky-600 bg-sky-500/10 cursor-help max-w-[140px]"
             >
-              {{ song.user?.name || '未知用户' }}
+              <span class="truncate">{{ song.user?.name || '未知用户' }}</span>
             </Badge>
           </TooltipTrigger>
-          <TooltipContent> UID: {{ song.user?.uid || '未知' }} </TooltipContent>
+          <TooltipContent>
+            {{ song.user?.uid ? `UID: ${song.user.uid}` : `OpenID: ${song.user?.oid || '未知'}` }}
+          </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
       <UserBadges
-        v-if="song.from === SongRequestFrom.Danmaku || song.from === SongRequestFrom.SC"
+        v-if="
+          song.from === SongRequestFrom.Danmaku ||
+          song.from === SongRequestFrom.SC ||
+          song.from === SongRequestFrom.Gift
+        "
         :user="song.user"
         size="tiny"
       />
@@ -350,7 +365,7 @@ function formatTimeAbsolute(time: number | string | Date) {
           <TooltipContent>取消点播</TooltipContent>
         </Tooltip>
 
-        <Tooltip v-if="song.from === SongRequestFrom.Danmaku && song.user?.uid">
+        <Tooltip v-if="canBlock">
           <TooltipTrigger as-child>
             <Button
               size="icon-xs"

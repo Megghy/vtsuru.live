@@ -3,7 +3,7 @@ import ArrowCounterclockwise24Regular from '@vicons/fluent/es/ArrowCounterclockw
 import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import Timeline24Regular from '@vicons/fluent/es/Timeline24Regular'
 import { format } from 'date-fns'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import type { SongRequestInfo } from '@/api/client-types'
 import { SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
@@ -20,6 +20,7 @@ import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { normalizeTimestampMs } from '@/shared/utils/queue'
 
 const songRequest = useLiveRequest()
 
@@ -42,7 +43,8 @@ const timelineEntries = computed(() =>
       title: s.songName,
       artist: s.song?.author?.join('/'),
       requester: s.from === SongRequestFrom.Manual ? undefined : s.user?.name,
-      timeMs: s.startSingAt || s.finishAt || s.createAt,
+      timeMs:
+        normalizeTimestampMs(s.startSingAt) || normalizeTimestampMs(s.finishAt) || normalizeTimestampMs(s.createAt),
     })),
 )
 
@@ -91,8 +93,31 @@ const filteredSongs = computed(() => {
     })
   }
 
-  return list
+  return list.toSorted(
+    (a, b) =>
+      (normalizeTimestampMs(b.finishAt) || normalizeTimestampMs(b.createAt)) -
+      (normalizeTimestampMs(a.finishAt) || normalizeTimestampMs(a.createAt)),
+  )
 })
+
+watch(
+  () => [filteredSongs.value.length, pageSize.value] as const,
+  ([total, size]) => {
+    const maxPage = Math.max(1, Math.ceil(total / size))
+    if (currentPage.value > maxPage) {
+      currentPage.value = maxPage
+    }
+  },
+)
+
+watch(
+  () => songRequest.songs.map((s) => s.id),
+  (ids) => {
+    if (selectedRowIds.value.length === 0) return
+    const valid = new Set(ids)
+    selectedRowIds.value = selectedRowIds.value.filter((id) => valid.has(id))
+  },
+)
 
 const paginatedSongs = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
@@ -126,13 +151,16 @@ async function handleBatchDelete() {
   const idSet = new Set(selectedRowIds.value)
   const items = songRequest.songs.filter((s) => idSet.has(s.id))
   if (items.length === 0) return
-  await songRequest.deleteSongs(items)
-  selectedRowIds.value = []
+  const ok = await songRequest.deleteSongs(items)
+  if (ok) {
+    selectedRowIds.value = []
+  }
 }
 
 function formatTime(time: number | string | Date) {
   try {
-    return format(new Date(time), 'yyyy-MM-dd HH:mm:ss')
+    const resolved = typeof time === 'number' ? normalizeTimestampMs(time) : time
+    return format(new Date(resolved), 'yyyy-MM-dd HH:mm:ss')
   } catch {
     return ''
   }
@@ -270,7 +298,15 @@ function getStatusBadge(status: SongRequestStatus) {
           "
         />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
-          <Checkbox v-model:checked="songRequest.filterSongNameContains" />
+          <Checkbox
+            :checked="songRequest.filterSongNameContains"
+            @update:checked="
+              (val) => {
+                songRequest.filterSongNameContains = Boolean(val)
+                currentPage = 1
+              }
+            "
+          />
           <span>模糊</span>
         </label>
       </div>
@@ -288,7 +324,15 @@ function getStatusBadge(status: SongRequestStatus) {
           "
         />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
-          <Checkbox v-model:checked="songRequest.filterNameContains" />
+          <Checkbox
+            :checked="songRequest.filterNameContains"
+            @update:checked="
+              (val) => {
+                songRequest.filterNameContains = Boolean(val)
+                currentPage = 1
+              }
+            "
+          />
           <span>模糊</span>
         </label>
       </div>

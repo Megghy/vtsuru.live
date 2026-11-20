@@ -58,6 +58,29 @@ describe('sortByQueueType', () => {
     const sorted = sortByQueueType(items, QueueSortType.TimeFirst, false, accessor)
     expect(sorted.map((i) => i.id)).toEqual(['manual-1-older', 'manual-1', 'manual-2', 'auto-priority', 'auto-normal'])
   })
+
+  it('开启倒序时保持手动 sortOrder 与插队优先级在前，仅反转常规规则排序', () => {
+    const items: MockQueueEntry[] = [
+      { id: 'auto-early', createAt: 100, priorityLevel: 0, sortOrder: null },
+      { id: 'auto-late', createAt: 300, priorityLevel: 0, sortOrder: null },
+      { id: 'auto-priority-high', createAt: 200, priorityLevel: 2, sortOrder: null },
+      { id: 'auto-priority-low-early', createAt: 150, priorityLevel: 1, sortOrder: null },
+      { id: 'auto-priority-low-late', createAt: 250, priorityLevel: 1, sortOrder: null },
+      { id: 'manual-1', createAt: 500, priorityLevel: 0, sortOrder: 1 },
+      { id: 'manual-2', createAt: 400, priorityLevel: 0, sortOrder: 2 },
+    ]
+
+    const sorted = sortByQueueType(items, QueueSortType.TimeFirst, true, accessor)
+    expect(sorted.map((i) => i.id)).toEqual([
+      'manual-1',
+      'manual-2',
+      'auto-priority-high',
+      'auto-priority-low-late',
+      'auto-priority-low-early',
+      'auto-late',
+      'auto-early',
+    ])
+  })
 })
 
 describe('getSCColor', () => {

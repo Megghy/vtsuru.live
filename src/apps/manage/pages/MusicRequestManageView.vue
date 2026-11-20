@@ -68,7 +68,7 @@ const tabs = computed<LiveConsoleTabItem[]>(() => [
   { value: 'songlist', label: '闲置曲库', icon: MusicNote224Regular },
   { value: 'history', label: '点歌历史', icon: History24Regular },
   { value: 'preview', label: 'OBS 预览', icon: Desktop24Regular },
-  { value: 'settings', label: '规则与屏蔽', icon: Settings24Regular },
+  { value: 'settings', label: '规则与屏蔽', icon: Settings24Regular, keepMounted: true },
 ])
 
 function copyWaitingList() {

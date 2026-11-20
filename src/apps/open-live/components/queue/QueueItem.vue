@@ -62,7 +62,7 @@ const canBlock = computed(
   () =>
     store.configCanEdit &&
     (props.queueData.from === QueueFrom.Danmaku || props.queueData.from === QueueFrom.Gift) &&
-    Boolean(props.queueData.user?.uid),
+    Boolean(props.queueData.user?.uid || props.queueData.user?.oid),
 )
 
 const indexBadgeClass = computed(() => {

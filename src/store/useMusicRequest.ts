@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, onScopeDispose, ref, watch } from 'vue'
 
 import { AddBiliBlackList, SaveSetting, useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
@@ -13,12 +13,12 @@ import {
 } from '@/api/generated/music-request/music-request'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils, message, showUndoToast } from '@/shared/utils'
-import { fetchNeteaseMergedLyric } from '@/shared/utils/lyric'
 import { useOBSNotification } from '@/store/useOBSNotification'
 
 export interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: ResponseSongModel
+  requestId?: string
 }
 
 /** 点歌历史记录项 (前端本地记录, 因后端不保存点歌机历史) */
@@ -72,6 +72,17 @@ export function createDefaultMusicRequestSettings(): MusicRequestSettings {
   }
 }
 
+export function createEmptyMusic(): Music {
+  return {
+    id: -1,
+    title: '',
+    artist: '',
+    src: '',
+    pic: '',
+    lrc: '',
+  }
+}
+
 export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const accountInfo = useAccount()
   const obsNotification = useOBSNotification()
@@ -87,22 +98,36 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
 
   const originMusics = ref<ResponseSongModel[]>([])
   const aplayerMusics = computed(() => originMusics.value.map((m) => songToMusic(m)))
-  const currentMusic = ref<Music>({
-    id: -1,
-    title: '',
-    artist: '',
-    src: '',
-    pic: '',
-    lrc: '',
-  })
+  const currentMusic = ref<Music>(createEmptyMusic())
   const currentOriginMusic = ref<WaitMusicInfo>()
   const isPlayingOrderMusic = ref(false)
   const aplayerRef = ref<any>()
-  const isSearchingSong = ref(false)
+  const searchInFlightCount = ref(0)
+  const isSearchingSong = computed(() => searchInFlightCount.value > 0)
 
   const isLoggedIn = computed(() => Boolean(accountInfo.value?.id && accountInfo.value.id > 0))
   const inFlightUsers = new Set<string>()
   let snapshotTimer: ReturnType<typeof setTimeout> | null = null
+  let snapshotSeq = 0
+  let waitRequestSeq = 0
+  let consecutiveErrorCount = 0
+
+  function ensureWaitRequestId(info: WaitMusicInfo): WaitMusicInfo {
+    if (!info.requestId) {
+      info.requestId = `req-${Date.now()}-${++waitRequestSeq}`
+    }
+    return info
+  }
+
+  function findWaitingIndex(info: WaitMusicInfo): number {
+    const refIdx = waitingMusics.value.indexOf(info)
+    if (refIdx > -1) return refIdx
+    if (info.requestId) {
+      const idIdx = waitingMusics.value.findIndex((w) => w.requestId === info.requestId)
+      if (idIdx > -1) return idIdx
+    }
+    return waitingMusics.value.findIndex((w) => w.music.id === info.music.id && w.from?.name === info.from?.name)
+  }
 
   function normalizeSettings(
     raw?: Partial<SettingMusicRequest> | Partial<MusicRequestSettings> | null,
@@ -138,6 +163,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   )
 
   async function saveSettings(next?: Partial<MusicRequestSettings>): Promise<boolean> {
+    const prevSettings = normalizeSettings(settings.value)
     const merged = normalizeSettings(next ? { ...settings.value, ...next } : settings.value)
     settings.value = merged
 
@@ -166,6 +192,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       message.success('点歌机设置已保存并同步到云端')
       return true
     } catch (err) {
+      settings.value = prevSettings
       message.error(`保存设置失败: ${err instanceof Error ? err.message : String(err)}`)
       return false
     }
@@ -175,17 +202,32 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   function scheduleSnapshotSync() {
     if (!isLoggedIn.value) return
     if (snapshotTimer) clearTimeout(snapshotTimer)
+    const seq = ++snapshotSeq
     snapshotTimer = setTimeout(() => {
+      snapshotTimer = null
       void postApiMusicRequestUpdateWaiting({
         playing: currentOriginMusic.value
           ? { from: currentOriginMusic.value.from, music: currentOriginMusic.value.music }
           : undefined,
         waiting: waitingMusics.value.map((w) => ({ from: w.from, music: w.music })),
-      }).catch((err) => {
-        console.warn('[MUSIC-REQUEST] 同步待播快照失败', err)
       })
+        .then((res) => {
+          if (seq === snapshotSeq && res && res.code !== 200) {
+            console.warn('[MUSIC-REQUEST] 同步待播快照返回异常状态', res.code, res.message)
+          }
+        })
+        .catch((err) => {
+          console.warn('[MUSIC-REQUEST] 同步待播快照失败', err)
+        })
     }, 250)
   }
+
+  onScopeDispose(() => {
+    if (snapshotTimer) {
+      clearTimeout(snapshotTimer)
+      snapshotTimer = null
+    }
+  })
 
   watch(
     [waitingMusics, currentOriginMusic],
@@ -224,26 +266,23 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
 
   /** 立即切播指定待播点歌 */
   function playWaitingItemNow(info: WaitMusicInfo) {
-    const index = waitingMusics.value.indexOf(info)
+    const index = findWaitingIndex(info)
     if (index > -1) {
       waitingMusics.value.splice(index, 1)
     }
-    currentOriginMusic.value = info
+    const target = ensureWaitRequestId(info)
+    currentOriginMusic.value = target
     isPlayingOrderMusic.value = true
-    playMusic(info.music)
-    pushHistory(info, 'played')
-    message.success(`正在切播 [${info.from?.name || '观众'}] 点的 ${info.music.name}`)
+    playMusic(target.music)
+    pushHistory(target, 'played')
+    message.success(`正在切播 [${target.from?.name || '观众'}] 点的 ${target.music.name}`)
   }
 
   /** 从等待队列取消一首 (并记入历史) */
   function cancelWaiting(info: WaitMusicInfo) {
-    const index = waitingMusics.value.indexOf(info)
+    const index = findWaitingIndex(info)
     if (index > -1) {
       waitingMusics.value.splice(index, 1)
-    } else {
-      waitingMusics.value = waitingMusics.value.filter(
-        (w) => !(w.music.id === info.music.id && w.from?.name === info.from?.name),
-      )
     }
     pushHistory(info, 'cancelled')
   }
@@ -279,10 +318,10 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   async function blockSongKeyword(info: WaitMusicInfo) {
     const keyword = info.music.name?.trim()
     if (!keyword) return
-    if (!settings.value.blacklist) settings.value.blacklist = []
-    if (!settings.value.blacklist.includes(keyword)) {
-      settings.value.blacklist.push(keyword)
-      await saveSettings()
+    const existingBlacklist = settings.value.blacklist ?? []
+    if (!existingBlacklist.includes(keyword)) {
+      const ok = await saveSettings({ blacklist: [...existingBlacklist, keyword] })
+      if (!ok) return
     }
     cancelWaiting(info)
     message.success(`已屏蔽歌曲关键词「${keyword}」并移出待播`)
@@ -330,19 +369,21 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   }
 
   function addWaitingMusic(info: WaitMusicInfo, options?: { queueOnly?: boolean }) {
+    const target = ensureWaitRequestId(info)
     const isIdle = aplayerRef.value?.audio?.paused !== false
     const shouldStartNow =
       !options?.queueOnly && !isPlayingOrderMusic.value && (settings.value.orderMusicFirst || isIdle)
+    const requesterName = target.from?.name || '观众'
     if (shouldStartNow) {
-      currentOriginMusic.value = info
+      currentOriginMusic.value = target
       isPlayingOrderMusic.value = true
-      playMusic(info.music)
-      pushHistory(info, 'played')
-      message.success(`正在播放 [${info.from.name}] 点的 ${info.music.name}`)
+      playMusic(target.music)
+      pushHistory(target, 'played')
+      message.success(`正在播放 [${requesterName}] 点的 ${target.music.name}`)
     } else {
-      waitingMusics.value.push(info)
+      waitingMusics.value.push(target)
       message.success(
-        options?.queueOnly ? `已加入待播: ${info.music.name}` : `[${info.from.name}] 点了一首 ${info.music.name}`,
+        options?.queueOnly ? `已加入待播: ${target.music.name}` : `[${requesterName}] 点了一首 ${target.music.name}`,
       )
     }
   }
@@ -352,7 +393,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     const normalized = keyword.trim()
     if (!normalized) return null
 
-    isSearchingSong.value = true
+    searchInFlightCount.value++
     try {
       const res =
         targetPlatform === 'kugou'
@@ -368,7 +409,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     } catch (err) {
       console.error('[MUSIC-REQUEST] 在线搜歌失败', err)
     } finally {
-      isSearchingSong.value = false
+      searchInFlightCount.value = Math.max(0, searchInFlightCount.value - 1)
     }
     return null
   }
@@ -382,15 +423,28 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     )
   }
 
+  function findBlacklistHit(text: string): string | undefined {
+    const normalized = text.trim().toLowerCase()
+    if (!normalized) return undefined
+    return (settings.value.blacklist ?? []).find((b) => {
+      const needle = b?.trim().toLowerCase()
+      return Boolean(needle && normalized.includes(needle))
+    })
+  }
+
   async function publishResult(success: boolean, userName: string, msgText: string) {
     if (!isLoggedIn.value) return
-    await obsNotification.publish({
-      Type: success ? 'success' : 'failed',
-      Title: '点歌机',
-      Source: 'music-request',
-      UserName: userName,
-      Message: msgText,
-    })
+    try {
+      await obsNotification.publish({
+        Type: success ? 'success' : 'failed',
+        Title: '点歌机',
+        Source: 'music-request',
+        UserName: userName,
+        Message: msgText,
+      })
+    } catch (err) {
+      console.warn('[MUSIC-REQUEST] 推送 OBS 通知失败', err)
+    }
   }
 
   /** 处理直播间弹幕触发的点歌请求 */
@@ -419,8 +473,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       }
 
       // 检查关键词黑名单
-      const lowerKw = songKeyword.toLowerCase()
-      const hitBlacklist = (settings.value.blacklist ?? []).find((b) => b && lowerKw.includes(b.toLowerCase()))
+      const hitBlacklist = findBlacklistHit(songKeyword)
       if (hitBlacklist) {
         message.warning(`[点歌机] 已拦截 [${danmaku.uname}] 点播黑名单关键词: ${hitBlacklist}`)
         await publishResult(false, danmaku.uname, `歌曲「${songKeyword}」包含违禁词，已被拦截`)
@@ -449,6 +502,14 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
         return
       }
 
+      // 二次复核解析后的真实歌名与歌手，避免别名搜索绕过黑名单
+      const resolvedHit = findBlacklistHit(`${matched.name} ${(matched.author ?? []).join(' ')}`)
+      if (resolvedHit) {
+        message.warning(`[点歌机] 已拦截 [${danmaku.uname}] 命中黑名单曲目《${matched.name}》: ${resolvedHit}`)
+        await publishResult(false, danmaku.uname, `歌曲《${matched.name}》包含违禁词，已被拦截`)
+        return
+      }
+
       const fromUser: DanmakuUserInfo = {
         name: danmaku.uname,
         uid: danmaku.uid,
@@ -468,53 +529,99 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     }
   }
 
-  function onMusicEnd() {
-    isPlayingOrderMusic.value = false
-    if (!playWaitingMusic()) {
-      if (currentOriginMusic.value) {
-        currentOriginMusic.value = undefined
+  function pickNextBackgroundSong(forceAdvance = false): ResponseSongModel | undefined {
+    const library = originMusics.value
+    if (library.length === 0) return undefined
+
+    const currentIdx = library.findIndex((m) => m.id === currentMusic.value.id)
+    if (!forceAdvance && settings.value.repeat === 'repeat-one' && currentIdx > -1) {
+      return library[currentIdx]
+    }
+    if (settings.value.shuffle) {
+      if (library.length === 1) return library[0]
+      let randomIdx = Math.floor(Math.random() * library.length)
+      if (randomIdx === currentIdx) {
+        randomIdx = (randomIdx + 1) % library.length
       }
-      setTimeout(() => {
-        if (!settings.value.playMusicWhenFree) {
-          message.info('根据配置，点歌播完后已暂停背景播放')
-          if (aplayerMusics.value[0]) {
-            currentMusic.value = aplayerMusics.value[0]
-          }
-          pauseMusic()
-        }
-      }, 10)
+      return library[randomIdx]
+    }
+    if (currentIdx === -1) {
+      return library[0]
+    }
+    if (!forceAdvance && settings.value.repeat === 'no-repeat' && currentIdx >= library.length - 1) {
+      return undefined
+    }
+    return library[(currentIdx + 1) % library.length]
+  }
+
+  function advanceAfterTrack(forceBackgroundAdvance: boolean) {
+    const wasOrderTrack = isPlayingOrderMusic.value
+    isPlayingOrderMusic.value = false
+
+    if (playWaitingMusic()) {
+      return
+    }
+
+    currentOriginMusic.value = undefined
+    if (originMusics.value.length === 0) {
+      pauseMusic()
+      currentMusic.value = createEmptyMusic()
+      return
+    }
+
+    if (!forceBackgroundAdvance && !settings.value.playMusicWhenFree) {
+      message.info('根据配置，点歌播完后已暂停背景播放')
+      currentMusic.value = songToMusic(originMusics.value[0])
+      pauseMusic()
+      return
+    }
+
+    const nextBg = pickNextBackgroundSong(forceBackgroundAdvance || wasOrderTrack)
+    if (nextBg) {
+      playMusic(nextBg)
+    } else {
+      pauseMusic()
     }
   }
 
-  function onMusicPlay() {}
+  function onMusicEnd() {
+    advanceAfterTrack(false)
+  }
+
+  function onMusicError() {
+    const failedName = currentMusic.value.title || currentOriginMusic.value?.music?.name || '当前曲目'
+    const maxRetries = Math.max(1, waitingMusics.value.length + originMusics.value.length)
+    consecutiveErrorCount++
+    if (consecutiveErrorCount > maxRetries) {
+      isPlayingOrderMusic.value = false
+      currentOriginMusic.value = undefined
+      pauseMusic()
+      message.error('连续多首歌曲播放失败，已停止自动切歌')
+      return
+    }
+    message.warning(`播放失败或资源不可用: ${failedName}，尝试切换下一首`)
+    advanceAfterTrack(true)
+  }
+
+  function onMusicPlay() {
+    consecutiveErrorCount = 0
+  }
 
   function playWaitingMusic() {
     const info = waitingMusics.value.shift()
     if (!info) return false
 
+    isPlayingOrderMusic.value = true
+    currentOriginMusic.value = info
+    playMusic(info.music)
+    pushHistory(info, 'played')
     message.success(`正在播放 [${info.from?.name || '观众'}] 点的 ${info.music.name}`)
-    setTimeout(() => {
-      isPlayingOrderMusic.value = true
-      currentOriginMusic.value = info
-      aplayerRef.value?.pause()
-      playMusic(info.music)
-      pushHistory(info, 'played')
-    }, 10)
     return true
   }
 
   function playMusic(music: ResponseSongModel) {
-    const built = songToMusic(music)
-    currentMusic.value = built
-    aplayerRef.value?.thenPlay()
-
-    if (music.from === SongPlatform.Netease && music.id) {
-      void fetchNeteaseMergedLyric(music.id).then((lrc) => {
-        if (lrc && currentMusic.value.id === music.id) {
-          currentMusic.value = { ...currentMusic.value, lrc }
-        }
-      })
-    }
+    currentMusic.value = songToMusic(music)
+    aplayerRef.value?.thenPlay?.()
   }
 
   function pauseMusic() {
@@ -547,12 +654,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   }
 
   function nextMusic() {
-    if (waitingMusics.value.length > 0) {
-      onMusicEnd()
-    } else {
-      isPlayingOrderMusic.value = false
-      aplayerRef.value?.onAudioEnded()
-    }
+    advanceAfterTrack(true)
   }
 
   return {
@@ -588,6 +690,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     searchOnlineSong,
     handleDanmaku,
     onMusicEnd,
+    onMusicError,
     onMusicPlay,
     pauseMusic,
     nextMusic,

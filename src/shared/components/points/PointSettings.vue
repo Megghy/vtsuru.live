@@ -205,12 +205,16 @@ async function saveAllSettings() {
     const emailChanged = receiveOrderEmailDraft.value !== savedObj.receiveOrderEmail
 
     if (pointChanged) {
-      accountInfo.value.settings.point = payload
       await SaveSetting('Point', payload)
+      accountInfo.value.settings.point = payload
     }
     if (emailChanged) {
-      accountInfo.value.settings.sendEmail.receiveOrder = receiveOrderEmailDraft.value
-      await SaveSetting('SendEmail', accountInfo.value.settings.sendEmail)
+      const nextSendEmail = {
+        ...accountInfo.value.settings.sendEmail,
+        receiveOrder: receiveOrderEmailDraft.value,
+      }
+      await SaveSetting('SendEmail', nextSendEmail)
+      accountInfo.value.settings.sendEmail = nextSendEmail
     }
     syncDraftFromSource(payload, receiveOrderEmailDraft.value)
     toast.success('积分规则已保存')
@@ -303,19 +307,27 @@ function handleAddGiftKeyDown(event: KeyboardEvent) {
 const isCheckInRankingPublic = computed(() =>
   Boolean(accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)),
 )
+const isSavingPublicRanking = ref(false)
 
 async function toggleCheckInRankingPublic(enabled: boolean) {
-  if (!accountInfo.value?.settings || props.orgId) return
+  if (!accountInfo.value?.settings || props.orgId || isSavingPublicRanking.value) return
+  isSavingPublicRanking.value = true
   try {
     const current = accountInfo.value.settings.enableFunctions ?? []
     const next = enabled
       ? Array.from(new Set([...current, FunctionTypes.CheckInRanking]))
       : current.filter((f) => f !== FunctionTypes.CheckInRanking)
+    const res = await SaveEnableFunctions(next)
+    if (res.code !== 200) {
+      toast.error(res.message || '切换失败')
+      return
+    }
     accountInfo.value.settings.enableFunctions = next
-    await SaveEnableFunctions(next)
     toast.success(enabled ? '已开启公开签到排行榜' : '已关闭公开签到排行榜')
   } catch (err) {
     toast.error(`切换失败: ${err instanceof Error ? err.message : String(err)}`)
+  } finally {
+    isSavingPublicRanking.value = false
   }
 }
 

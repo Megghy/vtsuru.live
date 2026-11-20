@@ -51,7 +51,9 @@ const todayFinishedQueues = computed(() =>
   store.historySongs
     .filter((q) => q.status === QueueStatus.Finish && isSameDay(normalizeTimestampMs(q.finishAt), Date.now()))
     .toSorted(
-      (a, b) => normalizeTimestampMs(b.finishAt ?? b.createAt) - normalizeTimestampMs(a.finishAt ?? a.createAt),
+      (a, b) =>
+        (normalizeTimestampMs(b.finishAt) || normalizeTimestampMs(b.createAt)) -
+        (normalizeTimestampMs(a.finishAt) || normalizeTimestampMs(a.createAt)),
     ),
 )
 
@@ -110,7 +112,7 @@ const tabs = computed<LiveConsoleTabItem[]>(() => [
   },
   { value: 'history', label: '历史与统计', icon: History24Regular },
   { value: 'preview', label: 'OBS 舞台预览', icon: Desktop24Regular },
-  { value: 'settings', label: '规则设置', icon: Settings24Regular },
+  { value: 'settings', label: '规则设置', icon: Settings24Regular, keepMounted: true },
 ])
 
 const sampleNames = ['小鱼干爱好者', '星尘远航者', '魔法少女喵', '橘子汽水', '秋风扫落叶', '可乐要加冰', '月下漫步']

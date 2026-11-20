@@ -276,7 +276,10 @@ async function givePoint() {
     message.success(`成功为 ${userName} ${action}了 ${Math.abs(delta)} 积分`)
 
     if (presetTargetUser.value) {
-      presetTargetUser.value.point = Number((presetTargetUser.value.point + delta).toFixed(1))
+      presetTargetUser.value.point =
+        typeof data.totalPoint === 'number'
+          ? Number(data.totalPoint.toFixed(1))
+          : Number((presetTargetUser.value.point + delta).toFixed(1))
       presetTargetUser.value.updateAt = Date.now()
     } else {
       void refresh()
@@ -312,6 +315,13 @@ function getPointUserKey(user: ResponsePointUserModel): string {
   if (user.info.id > 0) return `auth:${user.info.id}`
   if (user.info.userId > 0) return `uid:${user.info.userId}`
   return `oid:${user.info.openId}`
+}
+
+function handleDetailUserUpdated(payload: { point: number; updateAt: number }) {
+  if (!currentUser.value) return
+  const key = getPointUserKey(currentUser.value)
+  users.value = users.value.map((u) => (getPointUserKey(u) === key ? { ...u, ...payload } : u))
+  currentUser.value = { ...currentUser.value, ...payload }
 }
 
 const isAllPageSelected = computed(
@@ -825,8 +835,9 @@ onMounted(() => {
         <div class="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
           <PointUserDetailCard
             v-if="currentUser"
-            :key="currentUser.info.userId || currentUser.info.openId"
+            :key="getPointUserKey(currentUser)"
             :user="currentUser"
+            @user-updated="handleDetailUserUpdated"
           />
         </div>
       </SheetContent>

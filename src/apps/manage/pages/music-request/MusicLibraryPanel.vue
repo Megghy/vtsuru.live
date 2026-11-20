@@ -8,6 +8,7 @@ import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import {
   postApiMusicRequestAdd,
   postApiMusicRequestClear,
@@ -45,7 +46,7 @@ const filteredOriginMusics = computed(() => {
   const kw = songListFilter.value.trim().toLowerCase()
   if (!kw) return originMusics.value
   return originMusics.value.filter(
-    (m) => m.name.toLowerCase().includes(kw) || m.author.some((a) => a.toLowerCase().includes(kw)),
+    (m) => m.name.toLowerCase().includes(kw) || m.author?.some((a) => a.toLowerCase().includes(kw)),
   )
 })
 
@@ -138,14 +139,14 @@ const neteaseIdInput = ref('')
 const neteaseSongListId = computed(() => {
   const raw = neteaseIdInput.value.trim()
   const match = raw.match(/[?&]id=(\d+)/) || raw.match(/^(\d+)$/)
-  return match ? match[1] : raw
+  return match ? match[1] : ''
 })
 const isNeteaseLoading = ref(false)
 const neteaseSongs = ref<ResponseSongModel[]>([])
 const selectedNeteaseKeys = ref<string[]>([])
 
 async function loadNeteasePlaylist() {
-  if (!neteaseSongListId.value) {
+  if (!/^\d+$/.test(neteaseSongListId.value)) {
     message.warning('请输入有效的网易云歌单链接或 ID')
     return
   }
@@ -155,7 +156,7 @@ async function loadNeteasePlaylist() {
     if (res.code === 200 && res.data) {
       neteaseSongs.value = res.data as unknown as ResponseSongModel[]
       selectedNeteaseKeys.value = res.data
-        .filter((s) => !originMusics.value.some((exist) => exist.id === s.id))
+        .filter((s) => !originMusics.value.some((exist) => exist.from === SongPlatform.Netease && exist.id === s.id))
         .map((s) => s.key)
       message.success(`成功解析 ${res.data.length} 首歌曲`)
     } else {
@@ -311,7 +312,7 @@ async function confirmImportNetease() {
             >
               <span class="font-mono tabular-nums text-muted-foreground text-right">{{ idx + 1 }}</span>
               <span class="font-medium text-foreground truncate min-w-0">{{ song.name }}</span>
-              <span class="text-muted-foreground truncate min-w-0">{{ song.author.join('/') || '-' }}</span>
+              <span class="text-muted-foreground truncate min-w-0">{{ (song.author || []).join('/') || '-' }}</span>
 
               <div class="flex items-center justify-end gap-1.5 shrink-0">
                 <Button
@@ -437,7 +438,7 @@ async function confirmImportNetease() {
                     "
                   />
                   <span class="font-medium text-foreground truncate">{{ song.name }}</span>
-                  <span class="text-muted-foreground truncate">- {{ song.author.join('/') }}</span>
+                  <span class="text-muted-foreground truncate">- {{ (song.author || []).join('/') }}</span>
                 </label>
               </div>
             </ScrollArea>

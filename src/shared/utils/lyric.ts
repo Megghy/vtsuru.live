@@ -1,51 +1,135 @@
 import { getApiSongListGetNeteaseLyric } from '@/api/generated/song-list/song-list'
 
+const LRC_TIME_TAG_RE = /\[(\d{2,}):(\d{2})(?:\.(\d{1,3}))?\]/g
+const LRC_ONLY_TIME_TAGS_RE = /^(?:\[(\d{2,}):(\d{2})(?:\.(\d{1,3}))?\])+$/
+
+interface ParsedTimeTag {
+  rawTag: string
+  timeMs: number
+  centiMs: number
+}
+
+interface TranslatedEntry {
+  rawTag: string
+  timeMs: number
+  centiMs: number
+  text: string
+  used: boolean
+}
+
+function parseLrcTimeTags(line: string): ParsedTimeTag[] {
+  const tags: ParsedTimeTag[] = []
+  for (const match of line.matchAll(LRC_TIME_TAG_RE)) {
+    const minutes = Number(match[1])
+    const seconds = Number(match[2])
+    const msFrac = (match[3] ?? '0').padEnd(3, '0')
+    const timeMs = minutes * 60_000 + seconds * 1000 + Number(msFrac)
+    tags.push({
+      rawTag: match[0],
+      timeMs,
+      centiMs: Math.floor(timeMs / 10),
+    })
+  }
+  return tags
+}
+
 /**
- * 合并网易云原版歌词与翻译歌词（LRC 格式），按时间戳逐行对齐。
+ * 合并网易云原版歌词与翻译歌词（LRC 格式），按时间戳精确对齐并保持时间序。
  */
 export function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
-  const originalLines = originalLyrics?.split('\n') ?? []
-  const translatedLines = translatedLyrics?.split('\n') ?? []
+  const originalLines = originalLyrics?.split(/\r?\n/) ?? []
+  const translatedLines = translatedLyrics?.split(/\r?\n/) ?? []
 
-  let mergedLyrics = ''
+  const exactMap = new Map<number, TranslatedEntry[]>()
+  const centiMap = new Map<number, TranslatedEntry[]>()
+  const allTranslatedEntries: TranslatedEntry[] = []
+
+  for (const rawLine of translatedLines) {
+    const line = rawLine?.trim() ?? ''
+    if (!line) continue
+    const tags = parseLrcTimeTags(line)
+    if (tags.length === 0) continue
+
+    const text = line.replace(LRC_TIME_TAG_RE, '').trim()
+    if (!text) continue
+
+    for (const tag of tags) {
+      const entry: TranslatedEntry = { ...tag, text, used: false }
+      allTranslatedEntries.push(entry)
+      const exactBucket = exactMap.get(tag.timeMs) ?? []
+      exactBucket.push(entry)
+      exactMap.set(tag.timeMs, exactBucket)
+
+      const centiBucket = centiMap.get(tag.centiMs) ?? []
+      centiBucket.push(entry)
+      centiMap.set(tag.centiMs, centiBucket)
+    }
+  }
+
+  function takeMatchingTranslation(tags: ParsedTimeTag[]): string {
+    let matchedText = ''
+    for (const tag of tags) {
+      const exactCandidate = exactMap.get(tag.timeMs)?.find((entry) => !entry.used)
+      if (exactCandidate) {
+        exactCandidate.used = true
+        if (!matchedText) matchedText = exactCandidate.text
+        continue
+      }
+      const centiCandidate = centiMap.get(tag.centiMs)?.find((entry) => !entry.used)
+      if (centiCandidate) {
+        centiCandidate.used = true
+        if (!matchedText) matchedText = centiCandidate.text
+      }
+    }
+    return matchedText
+  }
+
+  const outputEntries: Array<{ timeMs: number | null; line: string }> = []
 
   for (const rawLine of originalLines) {
     const originalLine = rawLine?.trim() ?? ''
-    const originalTimeMatch = originalLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
+    if (!originalLine) continue
 
+    const tags = parseLrcTimeTags(originalLine)
     let mergedLine = originalLine
-
-    if (originalTimeMatch) {
-      const originalTime = originalTimeMatch[1]
-      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
-
-      if (translatedLineIndex !== -1) {
-        const translatedLine = translatedLines[translatedLineIndex]
-        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
-
-        if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
-          const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
-          if (translatedText) {
-            mergedLine += ` (${translatedText})`
-          }
-          translatedLines.splice(translatedLineIndex, 1)
-        }
+    if (tags.length > 0) {
+      const translatedText = takeMatchingTranslation(tags)
+      if (translatedText) {
+        mergedLine += ` (${translatedText})`
       }
     }
 
-    if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
-      mergedLyrics += `${mergedLine}\n`
+    if (!LRC_ONLY_TIME_TAGS_RE.test(mergedLine)) {
+      outputEntries.push({
+        timeMs: tags.length > 0 ? Math.min(...tags.map((t) => t.timeMs)) : null,
+        line: mergedLine,
+      })
     }
   }
 
-  for (const translatedLine of translatedLines) {
-    const translatedText = translatedLine.trim()
-    if (translatedText) {
-      mergedLyrics += `${translatedText}\n`
-    }
+  const unusedTranslated = allTranslatedEntries.filter((entry) => !entry.used).toSorted((a, b) => a.timeMs - b.timeMs)
+
+  if (unusedTranslated.length === 0) {
+    return outputEntries.map((entry) => entry.line).join('\n')
   }
 
-  return mergedLyrics.trim()
+  const resultLines: string[] = []
+  let unusedCursor = 0
+  for (const item of outputEntries) {
+    if (item.timeMs !== null) {
+      while (unusedCursor < unusedTranslated.length && unusedTranslated[unusedCursor].timeMs <= item.timeMs) {
+        const extra = unusedTranslated[unusedCursor++]
+        resultLines.push(`${extra.rawTag}${extra.text}`)
+      }
+    }
+    resultLines.push(item.line)
+  }
+  while (unusedCursor < unusedTranslated.length) {
+    const extra = unusedTranslated[unusedCursor++]
+    resultLines.push(`${extra.rawTag}${extra.text}`)
+  }
+
+  return resultLines.join('\n')
 }
 
 /**

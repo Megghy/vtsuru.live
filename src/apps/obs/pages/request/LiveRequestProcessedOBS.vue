@@ -15,7 +15,7 @@ import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
 import ObsTransparentPanel from '@/apps/obs/components/shared/ObsTransparentPanel.vue'
 import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
-import { sortByQueueType } from '@/shared/utils/queue'
+import { normalizeTimestampMs, sortByQueueType } from '@/shared/utils/queue'
 
 const props = withDefaults(
   defineProps<{
@@ -86,7 +86,11 @@ const countText = computed(() => `${songs.value.length} 首`)
 
 const latestSong = computed(() => {
   if (originSongs.value.length === 0) return undefined
-  return [...originSongs.value].toSorted((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt))[0]
+  return [...originSongs.value].toSorted((a, b) => {
+    const bTs = normalizeTimestampMs(b.finishAt) || normalizeTimestampMs(b.createAt)
+    const aTs = normalizeTimestampMs(a.finishAt) || normalizeTimestampMs(a.createAt)
+    return bTs - aTs
+  })[0]
 })
 
 const current = computed<ObsDisplayCurrent>(() => {
@@ -134,7 +138,8 @@ const footerTags = computed<ObsDisplayFooterTag[]>(() => [])
 
 async function get() {
   try {
-    const data = await getApiLiveRequestGetToday(currentId.value ? { id: Number(currentId.value) } : {})
+    const validId = parsePositiveId(currentId.value)
+    const data = await getApiLiveRequestGetToday(validId ? { id: Number(validId) } : {})
     if (data.code === 200) {
       return data.data
     }
@@ -144,10 +149,16 @@ async function get() {
   return { songs: [], setting: {} as SettingSongRequest }
 }
 
+let requestSeq = 0
+
 async function update() {
+  const seq = ++requestSeq
   const r = await get()
+  if (seq !== requestSeq) return
   if (r) {
-    originSongs.value = (r.songs ?? []).toSorted((a, b) => b.createAt - a.createAt)
+    originSongs.value = (r.songs ?? []).toSorted(
+      (a, b) => normalizeTimestampMs(b.createAt) - normalizeTimestampMs(a.createAt),
+    )
     settings.value = r.setting ?? ({} as SettingSongRequest)
   }
 }

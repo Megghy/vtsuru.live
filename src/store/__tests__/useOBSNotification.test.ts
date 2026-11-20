@@ -20,6 +20,9 @@ vi.mock('@/app/router', () => ({
   },
 }))
 
+const mockStopListener = vi.fn()
+const mockUnsubscribe = vi.fn()
+
 const mockRealtimeState = {
   subscribed: [] as string[],
   published: [] as Array<{ topic: string; event: string; payload: unknown }>,
@@ -32,11 +35,11 @@ vi.mock('@/shared/realtime', () => ({
       subscribe: vi.fn((topic: string) => {
         mockRealtimeState.subscribed.push(topic)
       }),
-      unsubscribe: vi.fn(),
+      unsubscribe: mockUnsubscribe,
     },
     on: vi.fn((topic: string, event: string, handler: (payload: unknown) => void) => {
       mockRealtimeState.handlers.set(`${topic}:${event}`, handler)
-      return () => {}
+      return mockStopListener
     }),
     publish: vi.fn(async (topic: string, event: string, payload: unknown) => {
       mockRealtimeState.published.push({ topic, event, payload })
@@ -50,11 +53,14 @@ describe('useOBSNotification (RealtimeBus Topic)', () => {
     mockRealtimeState.subscribed = []
     mockRealtimeState.published = []
     mockRealtimeState.handlers.clear()
+    mockStopListener.mockClear()
+    mockUnsubscribe.mockClear()
     window.$message = {
       success: vi.fn(),
       error: vi.fn(),
     } as any
     mockRoute.query = {}
+    mockAccount.value = { id: 10, token: 'token-10' }
   })
 
   afterEach(() => {
@@ -126,5 +132,16 @@ describe('useOBSNotification (RealtimeBus Topic)', () => {
         Source: 'test',
       }),
     })
+  })
+
+  it('detaches previous listener and unsubscribes when ownerId changes or target clears', async () => {
+    const store = useOBSNotification()
+    await store.init(['live-request'], 99)
+    expect(mockRealtimeState.subscribed).toContain('obs:notify:99')
+
+    await store.init(['live-request'], 123)
+    expect(mockStopListener).toHaveBeenCalledTimes(1)
+    expect(mockUnsubscribe).toHaveBeenCalledWith('obs:notify:99')
+    expect(mockRealtimeState.subscribed).toContain('obs:notify:123')
   })
 })

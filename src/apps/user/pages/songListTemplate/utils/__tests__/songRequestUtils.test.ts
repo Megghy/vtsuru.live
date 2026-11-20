@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { QueueGiftFilterType, QueueSortType, SongPlatform } from '@/api/generated/model'
 import type { ResponseSongModel, ResponseUserInfo, SettingSongRequest } from '@/api/generated/model'
@@ -82,6 +82,10 @@ function createSong(options?: Partial<NonNullable<ResponseSongModel['options']>>
 }
 
 describe('songRequestUtils', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('有大航海或粉丝牌要求的曲目：未绑定 B 站仅复制，已绑定 B 站可网页直点并展示要求', () => {
     const song = createSong({ needJianzhang: true, fanMedalMinLevel: 10 })
 
@@ -120,5 +124,48 @@ describe('songRequestUtils', () => {
     const anonBlocked = canRequestSong(song, streamer, baseSettings, false, false)
     expect(anonBlocked.canRequest).toBe(false)
     expect(anonBlocked.shouldCopyOnly).toBe(true)
+
+    const undefinedSettingsTooltip = getSongRequestTooltip(song, undefined, { isLoggedIn: true, isBiliAuthed: true })
+    expect(undefinedSettingsTooltip).toContain('不允许从网页点歌')
+  })
+
+  it('canRequestSong 兼容 Date / 字符串 / 数字时间戳格式的 nextRequestTime 冷却判定', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-20T12:00:00Z'))
+    const song = createSong()
+    const targetMs = Date.now() + 15_000
+
+    const byDate = canRequestSong(
+      song,
+      streamer,
+      { ...baseSettings, allowAnonymousFromWeb: true },
+      false,
+      false,
+      new Date(targetMs),
+    )
+    expect(byDate.canRequest).toBe(false)
+    expect(byDate.reason).toContain('15秒')
+
+    const byIso = canRequestSong(
+      song,
+      streamer,
+      { ...baseSettings, allowAnonymousFromWeb: true },
+      false,
+      false,
+      new Date(targetMs).toISOString(),
+    )
+    expect(byIso.canRequest).toBe(false)
+    expect(byIso.reason).toContain('15秒')
+
+    const bySeconds = canRequestSong(
+      song,
+      streamer,
+      { ...baseSettings, allowAnonymousFromWeb: true },
+      false,
+      false,
+      Math.floor(targetMs / 1000),
+    )
+    expect(bySeconds.canRequest).toBe(false)
+    expect(bySeconds.reason).toContain('15秒')
   })
 })

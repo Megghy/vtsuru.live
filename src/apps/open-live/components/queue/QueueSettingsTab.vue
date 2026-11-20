@@ -69,12 +69,13 @@ onMounted(() => {
 })
 
 watch(
-  () => accountInfo.value?.id,
+  [() => accountInfo.value?.id, () => store.settings],
   () => {
     if (!isDirty.value) {
       initDraft()
     }
   },
+  { deep: true },
 )
 
 function resetDraft() {

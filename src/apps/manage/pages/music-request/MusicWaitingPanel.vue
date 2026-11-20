@@ -191,7 +191,7 @@ function enqueueQuickResult(playNow: boolean) {
           >
             <MusicRequestItem
               v-for="{ info, originalIndex } in filteredWaiting"
-              :key="`${info.music.id}-${originalIndex}`"
+              :key="info.requestId || `${info.music.id}-${info.from?.name || ''}-${originalIndex}`"
               :music="info.music"
               :from-name="info.from?.name || ''"
               :index="originalIndex + 1"

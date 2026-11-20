@@ -9,7 +9,7 @@ import MusicNote224Filled from '@vicons/fluent/es/MusicNote224Filled'
 import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import { useElementSize } from '@vueuse/core'
 import { Pause } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 
@@ -29,7 +29,12 @@ const musicPlayerCardRef = ref<HTMLElement | null>(null)
 const { height: musicPlayerCardHeight } = useElementSize(musicPlayerCardRef)
 
 const isPlayerVisible = computed(
-  () => musicRquestStore.originMusics.length > 0 || musicRquestStore.waitingMusics.length > 0,
+  () =>
+    musicRquestStore.originMusics.length > 0 ||
+    musicRquestStore.waitingMusics.length > 0 ||
+    Boolean(musicRquestStore.currentOriginMusic) ||
+    Boolean(musicRquestStore.currentMusic.src) ||
+    musicRquestStore.isPlayingOrderMusic,
 )
 
 const isPlayerMinimized = usePersistedStorage('Settings.MusicPlayer.Minimized', false)
@@ -47,15 +52,24 @@ const sliderVolume = computed({
     if (val && val.length > 0) playerVolume.value = val[0] / 100
   },
 })
-watch(aplayer, () => {
-  musicRquestStore.aplayerRef = aplayer.value
+watch(aplayer, (instance) => {
+  musicRquestStore.aplayerRef = instance
+  if (instance && musicRquestStore.currentMusic.src) {
+    instance.thenPlay?.()
+  }
+})
+
+onUnmounted(() => {
+  if (musicRquestStore.aplayerRef === aplayer.value) {
+    musicRquestStore.aplayerRef = undefined
+  }
 })
 
 const currentPlayingInfo = computed(() => {
   if (musicRquestStore.currentOriginMusic && musicRquestStore.isPlayingOrderMusic) {
     return {
       type: 'request',
-      info: `正在播放 ${musicRquestStore.currentOriginMusic.from.name} 点的歌`,
+      info: `正在播放 ${musicRquestStore.currentOriginMusic.from?.name || '观众'} 点的歌`,
     } as const
   } else if (musicRquestStore.currentMusic && musicRquestStore.currentMusic.title) {
     return {
@@ -90,12 +104,11 @@ function onPreviousMusic() {
     aplayer.value.audio.currentTime = 0
     return
   }
-  const currentIndex = musicRquestStore.aplayerMusics.findIndex(
-    (music) => music.id === musicRquestStore.currentMusic.id,
-  )
+  const currentIndex = musicRquestStore.originMusics.findIndex((music) => music.id === musicRquestStore.currentMusic.id)
   if (currentIndex > 0) {
-    musicRquestStore.currentMusic = musicRquestStore.aplayerMusics[currentIndex - 1]
-    aplayer.value.thenPlay()
+    musicRquestStore.isPlayingOrderMusic = false
+    musicRquestStore.currentOriginMusic = undefined
+    musicRquestStore.playMusic(musicRquestStore.originMusics[currentIndex - 1])
   }
 }
 
@@ -161,7 +174,7 @@ function togglePlayerMinimize() {
             <Button
               size="icon-xs"
               variant="ghost"
-              :disabled="musicRquestStore.aplayerMusics.length === 0"
+              :disabled="!musicRquestStore.currentMusic.src"
               @click.stop="togglePlay"
             >
               <Pause
@@ -177,7 +190,11 @@ function togglePlayerMinimize() {
             <Button
               size="icon-xs"
               variant="ghost"
-              :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
+              :disabled="
+                !musicRquestStore.isPlayingOrderMusic &&
+                musicRquestStore.waitingMusics.length === 0 &&
+                musicRquestStore.aplayerMusics.length <= 1
+              "
               @click.stop="onNextMusic"
             >
               <ArrowNext20Filled class="size-3.5" />
@@ -219,6 +236,7 @@ function togglePlayerMinimize() {
             mutex
             list-folded
             @ended="musicRquestStore.onMusicEnd"
+            @error="musicRquestStore.onMusicError"
             @play="musicRquestStore.onMusicPlay"
           />
         </div>
@@ -242,7 +260,7 @@ function togglePlayerMinimize() {
                 size="icon-sm"
                 variant="default"
                 :aria-label="aplayer?.audio?.paused !== false ? '播放' : '暂停'"
-                :disabled="musicRquestStore.aplayerMusics.length === 0"
+                :disabled="!musicRquestStore.currentMusic.src"
                 @click="togglePlay"
               >
                 <Pause
@@ -259,7 +277,11 @@ function togglePlayerMinimize() {
                 size="icon-sm"
                 variant="outline"
                 aria-label="下一首"
-                :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
+                :disabled="
+                  !musicRquestStore.isPlayingOrderMusic &&
+                  musicRquestStore.waitingMusics.length === 0 &&
+                  musicRquestStore.aplayerMusics.length <= 1
+                "
                 @click="onNextMusic"
               >
                 <ArrowNext20Filled class="size-3.5" />

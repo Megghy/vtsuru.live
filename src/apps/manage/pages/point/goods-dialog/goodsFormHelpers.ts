@@ -128,16 +128,12 @@ export function initGoodsDraft(item?: ResponsePointGoodModel, duplicateMode = fa
 
   const coversMap: Record<number, UploadImageItem[]> = {}
   copied.subItems = rawSubItems.map((rawSub) => {
-    const {
-      count: legacyCount,
-      originalPrice,
-      ...sub
-    } = JSON.parse(JSON.stringify(rawSub)) as TempSubPointGoodsModel & {
+    const sub = JSON.parse(JSON.stringify(rawSub)) as TempSubPointGoodsModel & {
       count?: number | null
       originalPrice?: number
     }
     const id = duplicateMode ? nextTempSubItemId() : (sub.id ?? nextTempSubItemId())
-    const resolvedStock = sub.stock ?? legacyCount ?? undefined
+    const resolvedStock = sub.stock ?? sub.count ?? undefined
     const isInheritedCover = sub.cover?.id != null && item.cover?.id != null && sub.cover.id === item.cover.id
     let subCover = sub.cover
     if (subCover?.path && !isInheritedCover) {
@@ -146,15 +142,16 @@ export function initGoodsDraft(item?: ResponsePointGoodModel, duplicateMode = fa
       coversMap[id] = []
       subCover = undefined
     }
+    // 仅保留子项自身可编辑字段，剥离由服务端自动从主商品继承的字段，防止修改主商品后回传陈旧值
     return {
-      ...sub,
       id,
-      price: originalPrice ?? sub.price,
+      name: sub.name ?? '',
+      price: sub.originalPrice ?? sub.price,
       stock: resolvedStock,
+      description: sub.description ?? undefined,
       cover: subCover,
       isAllowRebuy: sub.isAllowRebuy ?? undefined,
       maxBuyCount: sub.maxBuyCount ?? undefined,
-      description: sub.description ?? undefined,
     }
   })
 
@@ -187,7 +184,7 @@ export function initGoodsDraft(item?: ResponsePointGoodModel, duplicateMode = fa
     },
     subItemCoverFiles: coversMap,
     privateAttachments: [...(item.privateAttachments ?? [])],
-    isAllowedPrivacyPolicy: true,
+    isAllowedPrivacyPolicy: !duplicateMode && item.type === GoodsTypes.Physical && item.collectUrl == null,
     defaultAccordionValues,
   }
 }
@@ -259,7 +256,8 @@ export function validateGoodsDraft(model: GoodsModel, isAllowedPrivacyPolicy: bo
         fieldId: `sub-stock-${sub.id}`,
       }
     }
-    if (sub.maxBuyCount !== undefined && sub.maxBuyCount !== null && sub.maxBuyCount <= 0) {
+    const subAllowRebuy = sub.isAllowRebuy ?? g.isAllowRebuy
+    if (subAllowRebuy && sub.maxBuyCount !== undefined && sub.maxBuyCount !== null && sub.maxBuyCount <= 0) {
       return {
         message: `款式「${sub.name}」的单人限购数必须大于 0`,
         accordion: 'subItems',
@@ -268,7 +266,7 @@ export function validateGoodsDraft(model: GoodsModel, isAllowedPrivacyPolicy: bo
     }
   }
 
-  if (g.maxBuyCount !== undefined && g.maxBuyCount !== null && g.maxBuyCount <= 0) {
+  if (g.isAllowRebuy && g.maxBuyCount !== undefined && g.maxBuyCount !== null && g.maxBuyCount <= 0) {
     return { message: '单人最大兑换数量必须大于 0', accordion: 'rules', fieldId: 'goods-max-buy-count' }
   }
   if (hasDuplicateMonths(g.setting?.guardFreeMonths)) {
@@ -354,9 +352,10 @@ export async function buildGoodsSubmitPayload(params: {
       const subId = sub.id
       const resolvedCover = subId != null ? subCoverResults.get(subId) : undefined
       return {
-        ...sub,
         id: subId != null && subId > 0 ? subId : undefined,
-        name: sub.name?.trim(),
+        name: sub.name?.trim() ?? '',
+        price: sub.price,
+        stock: sub.stock ?? undefined,
         description: sub.description?.trim() ? sub.description.trim() : undefined,
         cover: resolvedCover,
         isAllowRebuy: sub.isAllowRebuy === g.isAllowRebuy ? undefined : sub.isAllowRebuy,

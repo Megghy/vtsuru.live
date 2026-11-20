@@ -29,7 +29,7 @@ import {
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
 import { formatDanmakuPrice, getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
-import { matchKeyword, sortByQueueType } from '@/shared/utils/queue'
+import { matchKeyword, normalizeTimestampMs, sortByQueueType } from '@/shared/utils/queue'
 
 export function createDefaultQueueSetting(): SettingQueue {
   return {
@@ -208,7 +208,11 @@ export const useQueue = defineStore('queue', () => {
   const historySongs = computed(() => {
     return sourceList.value
       .filter((s) => s.status === QueueStatus.Finish || s.status === QueueStatus.Cancel)
-      .toSorted((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt))
+      .toSorted(
+        (a, b) =>
+          (normalizeTimestampMs(b.finishAt) || normalizeTimestampMs(b.createAt)) -
+          (normalizeTimestampMs(a.finishAt) || normalizeTimestampMs(a.createAt)),
+      )
   })
 
   function nextLocalId() {
@@ -262,21 +266,25 @@ export const useQueue = defineStore('queue', () => {
     return true
   }
 
-  async function getAll(): Promise<ResponseQueueModel[]> {
-    if (!isLoggedIn.value) return localQueues.value
-    try {
+  async function getAll(showLoading = true): Promise<{ ok: boolean; data: ResponseQueueModel[] }> {
+    if (!isLoggedIn.value) return { ok: true, data: localQueues.value }
+    if (showLoading) {
       isBatchLoading.value = true
+    }
+    try {
       const data = await getApiQueueGetAll()
       if (data.code === 200) {
-        return data.data ?? []
+        return { ok: true, data: data.data ?? [] }
       }
       window.$message.error(`无法获取队列数据: ${data.message}`)
     } catch (err: any) {
       window.$message.error(`获取队列数据失败: ${err.message || err}`)
     } finally {
-      isBatchLoading.value = false
+      if (showLoading) {
+        isBatchLoading.value = false
+      }
     }
-    return []
+    return { ok: false, data: [] }
   }
 
   async function fetchStats() {
@@ -493,26 +501,39 @@ export const useQueue = defineStore('queue', () => {
 
   async function reorderQueue(orderedIds: number[]) {
     if (orderedIds.length === 0) return false
+    if (isLoggedIn.value && isBatchLoading.value) return false
+
     const orderMap = new Map(orderedIds.map((id, idx) => [id, idx]))
+    const snapshots: Array<{ item: ResponseQueueModel; prevOrder: number | null | undefined }> = []
     for (const item of sourceList.value) {
       const idx = orderMap.get(item.id)
       if (idx !== undefined) {
+        snapshots.push({ item, prevOrder: item.sortOrder })
         item.sortOrder = idx
       }
     }
 
     if (!isLoggedIn.value) return true
 
+    isBatchLoading.value = true
     try {
       const res = await postApiQueueReorder(orderedIds)
       if (res.code !== 200) {
+        for (const snapshot of snapshots) {
+          snapshot.item.sortOrder = snapshot.prevOrder
+        }
         window.$message.error(`保存排序失败: ${res.message}`)
         return false
       }
       return true
     } catch (err: any) {
+      for (const snapshot of snapshots) {
+        snapshot.item.sortOrder = snapshot.prevOrder
+      }
       window.$message.error(`保存排序出错: ${err.message || err}`)
       return false
+    } finally {
+      isBatchLoading.value = false
     }
   }
 
@@ -526,7 +547,7 @@ export const useQueue = defineStore('queue', () => {
     const reordered = buildReordered(waiting, idx)
     if (!reordered) return false
     const progressing = unfilteredQueue.value.filter((q) => q.status === QueueStatus.Progressing)
-    return reorderQueue([...progressing.map((q) => q.id), ...reordered.map((q) => q.id)])
+    return reorderQueue([...reordered.map((q) => q.id), ...progressing.map((q) => q.id)])
   }
 
   async function moveQueue(item: ResponseQueueModel, direction: 'up' | 'down') {
@@ -550,8 +571,11 @@ export const useQueue = defineStore('queue', () => {
   }
 
   async function resetOrder() {
+    if (isLoggedIn.value && isBatchLoading.value) return false
+    const snapshots: Array<{ item: ResponseQueueModel; prevOrder: number | null | undefined }> = []
     for (const item of sourceList.value) {
       if (item.status <= QueueStatus.Progressing) {
+        snapshots.push({ item, prevOrder: item.sortOrder })
         item.sortOrder = null
       }
     }
@@ -567,8 +591,14 @@ export const useQueue = defineStore('queue', () => {
         window.$message.success('已恢复为规则排序')
         return true
       }
+      for (const snapshot of snapshots) {
+        snapshot.item.sortOrder = snapshot.prevOrder
+      }
       window.$message.error(`恢复排序失败: ${res.message}`)
     } catch (err: any) {
+      for (const snapshot of snapshots) {
+        snapshot.item.sortOrder = snapshot.prevOrder
+      }
       window.$message.error(`恢复排序失败: ${err.message || err}`)
     } finally {
       isBatchLoading.value = false
@@ -576,8 +606,8 @@ export const useQueue = defineStore('queue', () => {
     return false
   }
 
-  async function deleteQueue(values: ResponseQueueModel[]) {
-    if (!values || values.length === 0) return
+  async function deleteQueue(values: ResponseQueueModel[]): Promise<boolean> {
+    if (!values || values.length === 0) return false
     const idSet = new Set(values.map((s) => s.id))
     if (isLoggedIn.value) {
       isBatchLoading.value = true
@@ -586,18 +616,20 @@ export const useQueue = defineStore('queue', () => {
         if (data.code === 200) {
           window.$message.success(`成功删除 ${values.length} 条记录`)
           originQueue.value = originQueue.value.filter((s) => !idSet.has(s.id))
-        } else {
-          window.$message.error(`删除失败: ${data.message}`)
+          return true
         }
+        window.$message.error(`删除失败: ${data.message}`)
       } catch (err: any) {
         window.$message.error(`删除记录时出错: ${err.message || err}`)
       } finally {
         isBatchLoading.value = false
       }
-    } else {
-      localQueues.value = localQueues.value.filter((q) => !idSet.has(q.id))
-      window.$message.success(`成功删除 ${values.length} 条本地记录`)
+      return false
     }
+
+    localQueues.value = localQueues.value.filter((q) => !idSet.has(q.id))
+    window.$message.success(`成功删除 ${values.length} 条本地记录`)
+    return true
   }
 
   async function deactiveAllSongs(refundPoint = false) {
@@ -630,13 +662,29 @@ export const useQueue = defineStore('queue', () => {
     }
   }
 
+  let updateActiveTimer: ReturnType<typeof setInterval> | null = null
+  let lifecycleGen = 0
+  let inFlightInit: { gen: number; promise: Promise<void> } | null = null
+  let isPollingActive = false
+
   async function updateActive() {
-    if (!isLoggedIn.value) return
+    if (!isLoggedIn.value || isPollingActive || isBatchLoading.value) return
+    const gen = lifecycleGen
+    isPollingActive = true
+    let needsFullRefresh = false
+
     try {
       const data = await getApiQueueGetActive({ id: accountInfo.value?.id })
-      if (data.code !== 200) return
+      if (gen !== lifecycleGen || data.code !== 200) return
 
-      for (const item of data.data ?? []) {
+      const activeList = data.data ?? []
+      const activeIdSet = new Set(activeList.map((item) => item.id))
+      needsFullRefresh = originQueue.value.some(
+        (q) => q.status <= QueueStatus.Progressing && !operatingIds.value.includes(q.id) && !activeIdSet.has(q.id),
+      )
+
+      for (const item of activeList) {
+        if (operatingIds.value.includes(item.id)) continue
         const existing = originQueue.value.find((s) => s.id === item.id)
         if (existing) {
           if (existing.status !== item.status) existing.status = item.status
@@ -679,6 +727,15 @@ export const useQueue = defineStore('queue', () => {
       }
     } catch (err: any) {
       console.warn('[QUEUE] 更新活动队列失败:', err.message || err)
+    } finally {
+      isPollingActive = false
+    }
+
+    if (needsFullRefresh && gen === lifecycleGen && !isBatchLoading.value) {
+      const result = await getAll(false)
+      if (gen === lifecycleGen && result.ok) {
+        originQueue.value = result.data
+      }
     }
   }
 
@@ -737,6 +794,10 @@ export const useQueue = defineStore('queue', () => {
   }
 
   async function saveSettings(nextSetting?: SettingQueue) {
+    const prevSetting = {
+      ...settings.value,
+      giftNames: [...(settings.value.giftNames ?? [])],
+    }
     if (nextSetting) {
       settings.value = nextSetting
     }
@@ -751,8 +812,10 @@ export const useQueue = defineStore('queue', () => {
         window.$message.success('排队规则已保存')
         return true
       }
+      settings.value = prevSetting
       window.$message.error('排队规则保存失败')
     } catch (err: any) {
+      settings.value = prevSetting
       window.$message.error(`保存设置失败: ${err.message || err}`)
     } finally {
       isBatchLoading.value = false
@@ -767,19 +830,47 @@ export const useQueue = defineStore('queue', () => {
     void add(danmaku)
   }
 
-  let updateActiveTimer: ReturnType<typeof setInterval> | null = null
-
-  async function init() {
-    dispose()
-    if (isLoggedIn.value) {
-      originQueue.value = await getAll()
+  function startUpdateTimer(gen = lifecycleGen) {
+    if (gen !== lifecycleGen) return
+    if (updateActiveTimer) {
+      clearInterval(updateActiveTimer)
+      updateActiveTimer = null
     }
     updateActiveTimer = setInterval(() => {
       void updateActive()
     }, 4000)
   }
 
+  async function init() {
+    const gen = lifecycleGen
+    if (inFlightInit && inFlightInit.gen === gen) {
+      return inFlightInit.promise
+    }
+    const run = (async () => {
+      if (isLoggedIn.value) {
+        const result = await getAll()
+        if (gen !== lifecycleGen) return
+        if (result.ok) {
+          originQueue.value = result.data
+        }
+      }
+      if (gen !== lifecycleGen) return
+      startUpdateTimer(gen)
+    })()
+    const tracker = { gen, promise: run }
+    inFlightInit = tracker
+    try {
+      await run
+    } finally {
+      if (inFlightInit === tracker) {
+        inFlightInit = null
+      }
+    }
+  }
+
   function dispose() {
+    lifecycleGen++
+    inFlightInit = null
     if (updateActiveTimer) {
       clearInterval(updateActiveTimer)
       updateActiveTimer = null

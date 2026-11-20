@@ -2,7 +2,7 @@
 import ArrowCounterclockwise24Regular from '@vicons/fluent/es/ArrowCounterclockwise24Regular'
 import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import { format } from 'date-fns'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { QueueFrom, QueueStatus } from '@/api/generated/model'
 import { getQueueSourceText, STATUS_MAP, useQueue } from '@/composables/useQueue'
@@ -70,6 +70,25 @@ const filteredHistory = computed(() => {
   return list
 })
 
+watch(
+  () => [filteredHistory.value.length, pageSize.value] as const,
+  ([total, size]) => {
+    const maxPage = Math.max(1, Math.ceil(total / size))
+    if (currentPage.value > maxPage) {
+      currentPage.value = maxPage
+    }
+  },
+)
+
+watch(
+  () => store.historySongs.map((q) => q.id),
+  (ids) => {
+    if (selectedRowIds.value.length === 0) return
+    const valid = new Set(ids)
+    selectedRowIds.value = selectedRowIds.value.filter((id) => valid.has(id))
+  },
+)
+
 const paginatedHistory = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   return filteredHistory.value.slice(start, start + pageSize.value)
@@ -102,8 +121,10 @@ async function handleBatchDelete() {
   const idSet = new Set(selectedRowIds.value)
   const items = store.historySongs.filter((q) => idSet.has(q.id))
   if (items.length === 0) return
-  await store.deleteQueue(items)
-  selectedRowIds.value = []
+  const ok = await store.deleteQueue(items)
+  if (ok) {
+    selectedRowIds.value = []
+  }
 }
 
 function formatTime(timestamp?: number | null) {
@@ -203,7 +224,15 @@ function getFromBadgeVariant(from: QueueFrom) {
           "
         />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
-          <Checkbox v-model:checked="store.filterNameContains" />
+          <Checkbox
+            :checked="store.filterNameContains"
+            @update:checked="
+              (val) => {
+                store.filterNameContains = Boolean(val)
+                currentPage = 1
+              }
+            "
+          />
           <span>模糊</span>
         </label>
       </div>

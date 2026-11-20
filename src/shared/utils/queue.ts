@@ -62,9 +62,41 @@ export interface QueueSortAccessor<T> {
   sortOrder?: (item: T) => number | null | undefined
 }
 
+function compareByQueueRule<T>(
+  a: T,
+  b: T,
+  sortType: QueueSortType | undefined,
+  accessor: QueueSortAccessor<T>,
+): number {
+  switch (sortType) {
+    case QueueSortType.GuardFirst: {
+      const guardDiff = (accessor.guardLevel(a) || 4) - (accessor.guardLevel(b) || 4)
+      if (guardDiff !== 0) return guardDiff
+      break
+    }
+    case QueueSortType.PaymentFist: {
+      const priceDiff = (accessor.price(b) ?? 0) - (accessor.price(a) ?? 0)
+      if (priceDiff !== 0) return priceDiff
+      break
+    }
+    case QueueSortType.FansMedalFirst: {
+      const wearingDiff = (accessor.fansMedalWearing?.(b) ? 1 : 0) - (accessor.fansMedalWearing?.(a) ? 1 : 0)
+      if (wearingDiff !== 0) return wearingDiff
+      const medalDiff = (accessor.fansMedalLevel(b) ?? 0) - (accessor.fansMedalLevel(a) ?? 0)
+      if (medalDiff !== 0) return medalDiff
+      break
+    }
+    case QueueSortType.TimeFirst:
+    default:
+      break
+  }
+
+  return accessor.createAt(a) - accessor.createAt(b)
+}
+
 /**
  * 按队列排序策略对列表排序, 队列与点播共用。
- * 手动调序 (sortOrder) 优先级最高；其后是插队优先级；同级内按指定排序策略比较。
+ * 手动调序 (sortOrder) 优先级最高且不受倒序影响；其后是插队优先级（始终高优先级在前）；同级内再按规则与倒序设置比较。
  * 舰长等级原始值越小代表越高 (1 总督 > 2 提督 > 3 舰长 > 0 普通), 排序时把 0/空映射为 4 置后。
  */
 export function sortByQueueType<T>(
@@ -73,44 +105,26 @@ export function sortByQueueType<T>(
   isReverse: boolean,
   accessor: QueueSortAccessor<T>,
 ): T[] {
-  const result = [...items].toSorted((a, b) => {
+  return [...items].toSorted((a, b) => {
     const orderA = accessor.sortOrder?.(a)
     const orderB = accessor.sortOrder?.(b)
     const hasA = orderA !== null && orderA !== undefined
     const hasB = orderB !== null && orderB !== undefined
-    if (hasA && hasB && orderA !== orderB) return orderA - orderB
+    if (hasA && hasB) {
+      if (orderA !== orderB) return orderA - orderB
+      const manualPriorityDiff = (accessor.priorityLevel?.(b) ?? 0) - (accessor.priorityLevel?.(a) ?? 0)
+      if (manualPriorityDiff !== 0) return manualPriorityDiff
+      return compareByQueueRule(a, b, sortType, accessor)
+    }
     if (hasA !== hasB) return hasA ? -1 : 1
 
     const priorityDiff = (accessor.priorityLevel?.(b) ?? 0) - (accessor.priorityLevel?.(a) ?? 0)
     if (priorityDiff !== 0) return priorityDiff
 
-    switch (sortType) {
-      case QueueSortType.GuardFirst: {
-        const guardDiff = (accessor.guardLevel(a) || 4) - (accessor.guardLevel(b) || 4)
-        if (guardDiff !== 0) return guardDiff
-        break
-      }
-      case QueueSortType.PaymentFist: {
-        const priceDiff = (accessor.price(b) ?? 0) - (accessor.price(a) ?? 0)
-        if (priceDiff !== 0) return priceDiff
-        break
-      }
-      case QueueSortType.FansMedalFirst: {
-        const wearingDiff = (accessor.fansMedalWearing?.(b) ? 1 : 0) - (accessor.fansMedalWearing?.(a) ? 1 : 0)
-        if (wearingDiff !== 0) return wearingDiff
-        const medalDiff = (accessor.fansMedalLevel(b) ?? 0) - (accessor.fansMedalLevel(a) ?? 0)
-        if (medalDiff !== 0) return medalDiff
-        break
-      }
-      case QueueSortType.TimeFirst:
-      default:
-        break
-    }
-
-    return accessor.createAt(a) - accessor.createAt(b)
+    const ruleDiff = compareByQueueRule(a, b, sortType, accessor)
+    if (ruleDiff === 0) return 0
+    return isReverse ? -ruleDiff : ruleDiff
   })
-
-  return isReverse ? result.toReversed() : result
 }
 
 /** 关键词匹配, 弹幕队列/点播共用。Regex 模式用原始 keyword 构造正则 */

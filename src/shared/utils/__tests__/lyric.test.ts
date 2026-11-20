@@ -24,4 +24,25 @@ describe('mergeLyrics', () => {
       '[00:10.12]First line (第一句)\n[00:20.34]Second line\n[00:40.00]额外翻译',
     )
   })
+
+  it('支持两位/三位毫秒对齐、多时间戳展开去残留标签与未匹配译文按时间序插入', () => {
+    const original = ['[00:10.12]Line A', '[00:12.340]Chorus', '[00:20.00]Line B', '[01:45.67]Chorus Repeat'].join('\n')
+    const translated = [
+      '[00:05.00]开场提示',
+      '[00:10.120]第一行',
+      '[00:12.34][01:45.67]副歌',
+      '[00:15.50]间奏提示',
+    ].join('\n')
+
+    expect(mergeLyrics(original, translated)).toBe(
+      [
+        '[00:05.00]开场提示',
+        '[00:10.12]Line A (第一行)',
+        '[00:12.340]Chorus (副歌)',
+        '[00:15.50]间奏提示',
+        '[00:20.00]Line B',
+        '[01:45.67]Chorus Repeat (副歌)',
+      ].join('\n'),
+    )
+  })
 })

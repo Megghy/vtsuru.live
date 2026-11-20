@@ -2,7 +2,7 @@
 import { reactiveOmit } from '@vueuse/core'
 import { Check } from 'lucide-vue-next'
 import type { CheckboxRootEmits, CheckboxRootProps } from 'reka-ui'
-import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from 'reka-ui'
+import { CheckboxIndicator, CheckboxRoot, useForwardProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 import { computed } from 'vue'
 
@@ -33,7 +33,7 @@ const rootProps = computed(() => ({
   modelValue: resolvedModelValue.value,
 }))
 
-const forwarded = useForwardPropsEmits(rootProps, emits)
+const forwarded = useForwardProps(rootProps)
 
 function handleUpdateModelValue(val: boolean | 'indeterminate') {
   emits('update:modelValue', val)

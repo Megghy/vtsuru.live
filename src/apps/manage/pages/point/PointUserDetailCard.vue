@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AddSquare24Regular from '@vicons/fluent/es/AddSquare24Regular'
 import Info24Filled from '@vicons/fluent/es/Info24Filled'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/client-types'
 import type { ResponsePointOrder2OwnerModel, ResponsePointUserModel } from '@/api/generated/model'
@@ -29,6 +29,10 @@ import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   user: ResponsePointUserModel
+}>()
+
+const emit = defineEmits<{
+  userUpdated: [payload: { point: number; updateAt: number }]
 }>()
 
 const message = useMessage()
@@ -108,19 +112,33 @@ async function getPointHistory() {
   return []
 }
 
+let loadSeq = 0
+
 async function loadInitialData() {
+  const seq = ++loadSeq
   isLoading.value = true
   try {
     const [histories, userOrders] = await Promise.all([
       getPointHistory(),
       (props.user.info?.id ?? 0) > 0 ? getOrders() : Promise.resolve([]),
     ])
+    if (seq !== loadSeq) return
     pointHistory.value = histories
     orders.value = userOrders
   } finally {
-    isLoading.value = false
+    if (seq === loadSeq) {
+      isLoading.value = false
+    }
   }
 }
+
+watch(
+  () => `${props.user.info?.id ?? 0}:${props.user.info?.userId ?? 0}:${props.user.info?.openId ?? ''}`,
+  () => {
+    void loadInitialData()
+  },
+  { immediate: true },
+)
 
 async function givePoint() {
   if (addPointCount.value === 0) {
@@ -145,8 +163,11 @@ async function givePoint() {
     if (data.code === 200) {
       message.success('积分已更新')
       showAddPointModal.value = false
-      props.user.point = Number((props.user.point + addPointCount.value).toFixed(1))
-      props.user.updateAt = Date.now()
+      const totalPoint =
+        typeof data.data?.totalPoint === 'number'
+          ? Number(data.data.totalPoint.toFixed(1))
+          : Number((props.user.point + addPointCount.value).toFixed(1))
+      emit('userUpdated', { point: totalPoint, updateAt: Date.now() })
       addPointCount.value = 0
       addPointReason.value = ''
       pointHistory.value = await getPointHistory()
@@ -159,10 +180,6 @@ async function givePoint() {
     isGivingPoint.value = false
   }
 }
-
-onMounted(() => {
-  void loadInitialData()
-})
 </script>
 
 <template>

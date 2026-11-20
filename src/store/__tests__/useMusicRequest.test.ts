@@ -198,4 +198,113 @@ describe('useMusicRequestProvider', () => {
     await store.handleDanmaku(createDanmaku('点歌 七里香', { uname: '小鱼干', uid: 3002, open_id: '' }))
     expect(mockSearchNetease).not.toHaveBeenCalled()
   })
+
+  it('handleDanmaku 二次复核解析后的真实歌名与歌手，防止别名搜索绕过黑名单', async () => {
+    const store = useMusicRequestProvider()
+    store.settings.blacklist = ['某违禁歌手']
+    mockSearchNetease.mockResolvedValue({
+      code: 200,
+      data: {
+        id: 901,
+        key: '901',
+        name: '普通歌名',
+        author: ['某违禁歌手'],
+        from: SongPlatform.Netease,
+        url: 'https://example.com/901.mp3',
+        tags: [],
+      },
+    })
+
+    await store.handleDanmaku(createDanmaku('点歌 搜索别名', { uname: '观众B', uid: 3003 }))
+    expect(store.waitingMusics).toHaveLength(0)
+    expect(store.currentOriginMusic).toBeUndefined()
+    expect(mockObsPublish).toHaveBeenCalledWith(expect.objectContaining({ Type: 'failed' }))
+  })
+
+  it('saveSettings 失败时回滚配置，blockSongKeyword 同步中止且保留待播项', async () => {
+    const store = useMusicRequestProvider()
+    store.settings.blacklist = ['已有词']
+    const item = createWaitItem(11, '敏感曲目')
+    store.waitingMusics = [item]
+    mockSaveSetting.mockRejectedValueOnce(new Error('network error'))
+
+    const ok = await store.saveSettings({ orderPrefix: '改前缀' })
+    expect(ok).toBe(false)
+    expect(store.settings.orderPrefix).toBe('点歌')
+
+    mockSaveSetting.mockRejectedValueOnce(new Error('network error'))
+    await store.blockSongKeyword(item)
+    expect(store.settings.blacklist).toEqual(['已有词'])
+    expect(store.waitingMusics).toHaveLength(1)
+  })
+
+  it('nextMusic 与 onMusicEnd 按同步状态机切歌并遵循 playMusicWhenFree', () => {
+    const store = useMusicRequestProvider()
+    const thenPlay = vi.fn()
+    const pause = vi.fn()
+    store.aplayerRef = { audio: { paused: false }, thenPlay, pause }
+    store.originMusics = [createWaitItem(100, '背景1').music, createWaitItem(101, '背景2').music]
+    store.settings.shuffle = false
+    store.settings.playMusicWhenFree = true
+
+    const req1 = createWaitItem(1, '点播1')
+    const req2 = createWaitItem(2, '点播2')
+    store.waitingMusics = [req1, req2]
+
+    // 从点播1切入点播2
+    store.playWaitingMusic()
+    expect(store.currentOriginMusic?.music.name).toBe('点播1')
+    store.nextMusic()
+    expect(store.isPlayingOrderMusic).toBe(true)
+    expect(store.currentOriginMusic?.music.name).toBe('点播2')
+
+    // 点播2自然结束且允许自由播放背景乐
+    store.onMusicEnd()
+    expect(store.isPlayingOrderMusic).toBe(false)
+    expect(store.currentOriginMusic).toBeUndefined()
+    expect(store.currentMusic.title).toBe('背景1')
+
+    // 若关闭空闲续播，点播结束应暂停背景播放
+    store.settings.playMusicWhenFree = false
+    store.waitingMusics = [createWaitItem(3, '点播3')]
+    store.playWaitingMusic()
+    store.onMusicEnd()
+    expect(pause).toHaveBeenCalled()
+    expect(store.isPlayingOrderMusic).toBe(false)
+  })
+
+  it('onMusicError 在连续失败达到上限后停止自动切歌，onMusicPlay 重置计数', () => {
+    const store = useMusicRequestProvider()
+    const pause = vi.fn()
+    store.aplayerRef = { audio: { paused: false }, thenPlay: vi.fn(), pause }
+    store.originMusics = [createWaitItem(201, '曲目A').music]
+    store.settings.shuffle = false
+    store.playMusic(store.originMusics[0])
+
+    // 曲库长度 1 -> maxRetries=1，第一次失败切歌，第二次超限停止
+    store.onMusicError()
+    expect(pause).not.toHaveBeenCalled()
+    store.onMusicError()
+    expect(pause).toHaveBeenCalled()
+    expect(mockMessage.error).toHaveBeenCalledWith(expect.stringContaining('已停止自动切歌'))
+
+    // 成功播放后应重置错误计数
+    pause.mockClear()
+    mockMessage.error.mockClear()
+    store.onMusicPlay()
+    store.onMusicError()
+    expect(pause).not.toHaveBeenCalled()
+    expect(mockMessage.error).not.toHaveBeenCalled()
+  })
+
+  it('同歌同人的两条待播项可按不同实体精确取消其中一条', () => {
+    const store = useMusicRequestProvider()
+    const a = createWaitItem(55, '同曲', '观众A', 1001)
+    const b = createWaitItem(55, '同曲', '观众A', 1001)
+    store.waitingMusics = [a, b]
+
+    store.cancelWaiting(b)
+    expect(store.waitingMusics).toHaveLength(1)
+    expect(store.waitingMusics[0]).toStrictEqual(a)
+  })
 })

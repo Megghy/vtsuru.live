@@ -8,7 +8,7 @@ import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
 import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { isSameDay } from 'date-fns'
-import { computed, provide, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
@@ -59,8 +59,6 @@ async function handleAddSongManual() {
     isAddingManual.value = false
   }
 }
-
-provide('activeSongs', songRequest.activeSongs)
 
 const todayFinishedCount = computed(() => {
   return songRequest.songs.filter(
@@ -117,21 +115,62 @@ const sortOptions = [
   { label: '粉丝牌', value: QueueSortType.FansMedalFirst },
 ]
 
-async function updateSettings() {
+async function updateSettings(): Promise<boolean> {
   if (accountInfo.value?.id) {
     songRequest.isLoading = true
     try {
       await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
       toast.success('排序规则已保存')
+      return true
     } catch (err) {
       toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
+      return false
     } finally {
       songRequest.isLoading = false
     }
   } else {
     toast.success('排序已切换')
+    return true
   }
 }
+
+async function handleSortTypeChange(val: unknown) {
+  const settings = accountInfo.value?.settings?.songRequest
+  if (!val || !settings || songRequest.isLoading) return
+  const nextType = Number(val) as QueueSortType
+  const prevType = settings.sortType
+  if (prevType === nextType) return
+  settings.sortType = nextType
+  const ok = await updateSettings()
+  if (!ok) {
+    settings.sortType = prevType
+  }
+}
+
+async function handleReverseChange(value: boolean) {
+  if (songRequest.configCanEdit) {
+    const settings = accountInfo.value?.settings?.songRequest
+    if (!settings || songRequest.isLoading) return
+    const prevReverse = settings.isReverse
+    settings.isReverse = value
+    const ok = await updateSettings()
+    if (!ok) {
+      settings.isReverse = prevReverse
+    }
+  } else {
+    songRequest.isReverse = value
+    toast.success('排序已切换')
+  }
+}
+
+watch(
+  () => songRequest.unfilteredActiveSongs.map((s) => s.id),
+  (ids) => {
+    if (selectedIds.value.length === 0) return
+    const valid = new Set(ids)
+    selectedIds.value = selectedIds.value.filter((id) => valid.has(id))
+  },
+)
 
 function toggleSelectionMode() {
   selectionMode.value = !selectionMode.value
@@ -189,6 +228,7 @@ async function confirmCancelAll() {
   await songRequest.deactiveAllSongs(hasRefundableActive.value && refundPointOnCancelAll.value)
   showCancelAllDialog.value = false
   selectedIds.value = []
+  selectionMode.value = false
 }
 
 async function copyWaitingQueue() {
@@ -269,7 +309,7 @@ async function copyWaitingQueue() {
 
             <Button
               :variant="selectionMode ? 'default' : 'outline'"
-              :disabled="songRequest.unfilteredActiveSongs.length === 0"
+              :disabled="!selectionMode && songRequest.unfilteredActiveSongs.length === 0"
               @click="toggleSelectionMode"
             >
               {{ selectionMode ? '退出批量' : '批量管理' }}
@@ -313,15 +353,8 @@ async function copyWaitingQueue() {
               type="single"
               size="xs"
               :model-value="String(sortType)"
-              :disabled="!songRequest.configCanEdit"
-              @update:model-value="
-                (val) => {
-                  if (val) {
-                    sortType = Number(val) as QueueSortType
-                    updateSettings()
-                  }
-                }
-              "
+              :disabled="!songRequest.configCanEdit || songRequest.isLoading"
+              @update:model-value="handleSortTypeChange"
             >
               <ToggleGroupItem
                 v-for="opt in sortOptions"
@@ -335,18 +368,8 @@ async function copyWaitingQueue() {
             <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
               <Checkbox
                 :checked="currentIsReverse"
-                @update:checked="
-                  (value) => {
-                    if (songRequest.configCanEdit) {
-                      const songRequestSettings = accountInfo?.settings?.songRequest
-                      if (!songRequestSettings) return
-                      songRequestSettings.isReverse = value
-                      updateSettings()
-                    } else {
-                      songRequest.isReverse = value
-                    }
-                  }
-                "
+                :disabled="songRequest.isLoading"
+                @update:checked="handleReverseChange"
               />
               <span>倒序</span>
             </label>

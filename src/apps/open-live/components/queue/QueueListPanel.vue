@@ -7,7 +7,7 @@ import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
 import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
 import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { isSameDay } from 'date-fns'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { QueueFrom, QueueSortType, QueueStatus } from '@/api/generated/model'
@@ -83,13 +83,44 @@ async function handleAddManual() {
   }
 }
 
-async function updateSortSetting() {
+async function handleSortTypeChange(val: unknown) {
+  if (!val || store.isLoading) return
+  const nextType = Number(val) as QueueSortType
+  const prevType = store.settings.sortType
+  if (prevType === nextType) return
+  store.settings.sortType = nextType
   if (store.configCanEdit) {
-    await store.saveSettings()
+    const ok = await store.saveSettings()
+    if (!ok) {
+      store.settings.sortType = prevType
+    }
   } else {
     toast.success('本地排序规则已切换')
   }
 }
+
+async function handleReverseChange(val: boolean) {
+  if (store.configCanEdit) {
+    if (store.isLoading) return
+    const prevReverse = store.settings.isReverse
+    store.settings.isReverse = Boolean(val)
+    const ok = await store.saveSettings()
+    if (!ok) {
+      store.settings.isReverse = prevReverse
+    }
+  } else {
+    store.localIsReverse = Boolean(val)
+  }
+}
+
+watch(
+  () => store.unfilteredQueue.map((q) => q.id),
+  (ids) => {
+    if (selectedIds.value.length === 0) return
+    const valid = new Set(ids)
+    selectedIds.value = selectedIds.value.filter((id) => valid.has(id))
+  },
+)
 
 function toggleSelectionMode() {
   selectionMode.value = !selectionMode.value
@@ -145,6 +176,7 @@ async function confirmCancelAll() {
   await store.deactiveAllSongs(hasRefundableActive.value && refundOnCancelAll.value)
   showCancelAllDialog.value = false
   selectedIds.value = []
+  selectionMode.value = false
 }
 
 async function copyQueueList() {
@@ -216,7 +248,7 @@ async function copyQueueList() {
 
             <Button
               :variant="selectionMode ? 'default' : 'outline'"
-              :disabled="store.unfilteredQueue.length === 0"
+              :disabled="!selectionMode && store.unfilteredQueue.length === 0"
               @click="toggleSelectionMode"
             >
               {{ selectionMode ? '退出批量' : '批量管理' }}
@@ -260,14 +292,8 @@ async function copyQueueList() {
               type="single"
               size="xs"
               :model-value="String(store.settings.sortType ?? QueueSortType.TimeFirst)"
-              @update:model-value="
-                (val) => {
-                  if (val) {
-                    store.settings.sortType = Number(val) as QueueSortType
-                    void updateSortSetting()
-                  }
-                }
-              "
+              :disabled="store.isLoading"
+              @update:model-value="handleSortTypeChange"
             >
               <ToggleGroupItem
                 v-for="opt in sortOptions"
@@ -281,16 +307,8 @@ async function copyQueueList() {
             <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
               <Checkbox
                 :checked="store.configCanEdit ? Boolean(store.settings.isReverse) : store.localIsReverse"
-                @update:checked="
-                  (val) => {
-                    if (store.configCanEdit) {
-                      store.settings.isReverse = Boolean(val)
-                      void updateSortSetting()
-                    } else {
-                      store.localIsReverse = Boolean(val)
-                    }
-                  }
-                "
+                :disabled="store.isLoading"
+                @update:checked="handleReverseChange"
               />
               <span>倒序</span>
             </label>

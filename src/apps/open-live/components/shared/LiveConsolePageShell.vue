@@ -13,6 +13,7 @@ export interface LiveConsoleTabItem {
   label: string
   icon?: Component
   badge?: string | number | null
+  keepMounted?: boolean
 }
 </script>
 
@@ -83,7 +84,8 @@ const slots = useSlots()
         v-for="tab in tabs"
         :key="tab.value"
         :value="tab.value"
-        class="mt-3"
+        :force-mount="tab.keepMounted"
+        class="mt-3 data-[state=inactive]:hidden"
       >
         <slot :name="tab.value" />
       </TabsContent>

@@ -3,7 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
-import { GoodsTypes, type VirtualAttachmentModel } from '@/api/generated/model'
+import { GoodsTypes, type VirtualAttachmentModel, VirtualKeySelectionMode } from '@/api/generated/model'
 import { postApiPointUpdateGoods } from '@/api/generated/point/point'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
@@ -103,12 +103,23 @@ function removeTag(tag: string) {
 function onGoodsTypeChange(raw: string | undefined) {
   if (raw === undefined) return
   const type = Number(raw) as GoodsTypes
+  if (type === currentGoodsModel.value.goods.type) return
+
   currentGoodsModel.value.goods.type = type
-  if (type === GoodsTypes.Service) {
-    currentGoodsModel.value.goods.serviceConfig ??= { fields: [], rules: '', paused: false }
-    currentGoodsModel.value.goods.content = undefined
+  isAllowedPrivacyPolicy.value = false
+
+  if (type !== GoodsTypes.Physical) {
     currentGoodsModel.value.goods.collectUrl = undefined
     currentGoodsModel.value.goods.embedCollectUrl = undefined
+  }
+  if (type !== GoodsTypes.Virtual) {
+    currentGoodsModel.value.goods.content = undefined
+    currentGoodsModel.value.goods.virtualKeys = []
+    currentGoodsModel.value.goods.keySelectionMode = VirtualKeySelectionMode.None
+    privateAttachments.value = []
+  }
+  if (type === GoodsTypes.Service) {
+    currentGoodsModel.value.goods.serviceConfig ??= { fields: [], rules: '', paused: false }
   } else {
     currentGoodsModel.value.goods.serviceConfig = undefined
   }

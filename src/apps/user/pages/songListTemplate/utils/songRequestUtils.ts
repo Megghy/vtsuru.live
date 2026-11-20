@@ -1,4 +1,5 @@
 import type { ResponseSongModel, ResponseUserInfo, SettingSongRequest, SongRequestOption } from '@/api/generated/model'
+import { normalizeTimestampMs } from '@/shared/utils/queue'
 
 interface SongRequestAuthState {
   isLoggedIn: boolean
@@ -87,7 +88,7 @@ export function getSongRequestTooltip(
   if (hasScRequirement(song.options)) {
     return `点歌 | 需直播间 SC ≥ ¥${song.options?.scMinPrice}, 点击后将复制点歌内容到剪切板`
   }
-  if (liveRequestSettings?.allowFromWeb === false) return TOOLTIP_REASONS.webDisabled
+  if (!liveRequestSettings?.allowFromWeb) return TOOLTIP_REASONS.webDisabled
   if (hasGuardOrMedalRequirement(song.options) && !authState.isBiliAuthed) {
     return TOOLTIP_REASONS.biliAuthRequired
   }
@@ -115,6 +116,23 @@ export function getSongRequestButtonType(
   return getCopyOnlyReason(song, liveRequestSettings, authState) ? 'warning' : 'info'
 }
 
+function resolveNextRequestTimeMs(value?: Date | number | string): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  if (value instanceof Date) {
+    const ms = value.getTime()
+    return Number.isNaN(ms) ? undefined : ms
+  }
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? normalizeTimestampMs(value) : undefined
+  }
+  const asNum = Number(value)
+  if (Number.isFinite(asNum) && value.trim() !== '') {
+    return normalizeTimestampMs(asNum)
+  }
+  const parsed = Date.parse(value)
+  return Number.isNaN(parsed) ? undefined : parsed
+}
+
 /**
  * 判断用户是否可以点歌
  */
@@ -124,7 +142,7 @@ export function canRequestSong(
   liveRequestSettings: SettingSongRequest | undefined,
   isLoggedIn: boolean,
   isBiliAuthed: boolean,
-  nextRequestTime?: Date,
+  nextRequestTime?: Date | number | string,
 ): SongRequestCheckResult {
   const reason = getCopyOnlyReason(song, liveRequestSettings, { isLoggedIn, isBiliAuthed })
   if (reason) {
@@ -135,8 +153,10 @@ export function canRequestSong(
     return { canRequest: false, reason: '无法获取主播信息，无法完成点歌' }
   }
 
-  if (!isLoggedIn && nextRequestTime && nextRequestTime > new Date()) {
-    const remainingSeconds = Math.ceil((nextRequestTime.getTime() - new Date().getTime()) / 1000)
+  const nextMs = resolveNextRequestTimeMs(nextRequestTime)
+  const nowMs = Date.now()
+  if (!isLoggedIn && nextMs !== undefined && nextMs > nowMs) {
+    const remainingSeconds = Math.ceil((nextMs - nowMs) / 1000)
     return {
       canRequest: false,
       reason: `距离点歌冷却还有${remainingSeconds}秒`,

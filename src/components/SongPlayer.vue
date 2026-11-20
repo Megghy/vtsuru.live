@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 
@@ -14,6 +14,7 @@ const props = defineProps<{
 }>()
 const emits = defineEmits(['update:isLrcLoading', 'update:close', 'update:volume'])
 
+const aplayerRef = ref<any>()
 const aplayerMusic = ref({
   title: '',
   artist: '',
@@ -21,44 +22,79 @@ const aplayerMusic = ref({
   pic: '',
   lrc: '',
 })
-const temp = computed(() => {
-  if (props.song) OnPlayMusic(props.song)
-  return props.song
-})
+let lyricSeq = 0
 
-watch(temp, (newV) => {
-  if (newV) console.log(`开始播放: ${newV.name}`)
-})
-
-function OnPlayMusic(song: ResponseSongModel) {
-  if (song.from === SongPlatform.Netease) {
-    void GetLyric(song)
-  } else {
-    aplayerMusic.value = {
-      title: song.name,
-      artist: song.author?.join('/') ?? '',
-      src: song.url,
-      pic: '',
-      lrc: '',
-    }
+function resolveSongUrl(song: ResponseSongModel): string {
+  if (song.url) return song.url
+  if (song.from === SongPlatform.Netease && song.id) {
+    return `https://music.163.com/song/media/outer/url?id=${song.id}.mp3`
   }
+  return ''
 }
 
-async function GetLyric(song: ResponseSongModel) {
+function triggerPlay(seq: number) {
+  void nextTick(() => {
+    if (seq !== lyricSeq) return
+    aplayerRef.value?.thenPlay?.()
+  })
+}
+
+async function onPlayMusic(song: ResponseSongModel, seq: number) {
+  const src = resolveSongUrl(song)
+  if (song.from === SongPlatform.Netease) {
+    await loadNeteaseLyric(song, src, seq)
+    return
+  }
+  emits('update:isLrcLoading', undefined)
+  aplayerMusic.value = {
+    title: song.name,
+    artist: song.author?.join('/') ?? '',
+    src,
+    pic: '',
+    lrc: '',
+  }
+  triggerPlay(seq)
+}
+
+async function loadNeteaseLyric(song: ResponseSongModel, src: string, seq: number) {
   emits('update:isLrcLoading', song.key)
   try {
     const lrc = await fetchNeteaseMergedLyric(song.id)
+    if (seq !== lyricSeq) return
     aplayerMusic.value = {
       title: song.name,
       artist: song.author?.join('/') ?? '',
-      src: song.url,
+      src,
       pic: '',
       lrc,
     }
+    triggerPlay(seq)
   } finally {
-    emits('update:isLrcLoading', undefined)
+    if (seq === lyricSeq) {
+      emits('update:isLrcLoading', undefined)
+    }
   }
 }
+
+watch(
+  () => props.song,
+  (newSong) => {
+    const seq = ++lyricSeq
+    if (!newSong) {
+      aplayerMusic.value = { title: '', artist: '', src: '', pic: '', lrc: '' }
+      emits('update:isLrcLoading', undefined)
+      return
+    }
+    void onPlayMusic(newSong, seq)
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  lyricSeq++
+  emits('update:isLrcLoading', undefined)
+  aplayerRef.value?.pause?.()
+})
 </script>
 
 <template>
@@ -69,8 +105,9 @@ async function GetLyric(song: ResponseSongModel) {
   />
   <APlayer
     v-else
+    ref="aplayerRef"
     :music="aplayerMusic"
     autoplay
-    :show-lrc="aplayerMusic?.lrc && aplayerMusic.lrc.length > 0"
+    :show-lrc="Boolean(aplayerMusic.lrc)"
   />
 </template>

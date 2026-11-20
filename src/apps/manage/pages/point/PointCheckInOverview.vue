@@ -97,15 +97,19 @@ async function loadRecords() {
 }
 
 async function togglePublicRanking(enabled: boolean) {
-  if (!accountInfo.value?.settings) return
+  if (!accountInfo.value?.settings || isSavingPublic.value) return
   isSavingPublic.value = true
   try {
     const current = accountInfo.value.settings.enableFunctions ?? []
     const next = enabled
       ? Array.from(new Set([...current, FunctionTypes.CheckInRanking]))
       : current.filter((f) => f !== FunctionTypes.CheckInRanking)
+    const res = await SaveEnableFunctions(next)
+    if (res.code !== 200) {
+      toast.error(res.message || '更新失败')
+      return
+    }
     accountInfo.value.settings.enableFunctions = next
-    await SaveEnableFunctions(next)
     toast.success(enabled ? '已开启公开签到排行榜' : '已关闭公开签到排行榜')
   } catch (err) {
     toast.error(`更新失败: ${err instanceof Error ? err.message : String(err)}`)

@@ -6,10 +6,12 @@ import type { DanmakuUserInfo, ResponseSongModel } from '@/api/generated/model'
 import { getApiMusicRequestGetWaiting } from '@/api/generated/music-request/music-request'
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
 import { AVATAR_URL } from '@/shared/config'
+import { parsePositiveId } from '@/shared/obs/obsUrl'
 
 interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: ResponseSongModel
+  requestId?: string
 }
 
 /**
@@ -21,7 +23,12 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
   const playing = ref<WaitMusicInfo>()
   const waiting = ref<WaitMusicInfo[]>([])
 
-  const title = computed(() => account.value?.settings?.musicRequest?.obsTitle?.trim() || '点歌机')
+  const title = computed(() => {
+    const validId = parsePositiveId(toValue(currentId))
+    const selfId = account.value?.id && account.value.id > 0 ? String(account.value.id) : ''
+    const isSelfContext = !validId || (selfId !== '' && validId === selfId)
+    return (isSelfContext ? account.value?.settings?.musicRequest?.obsTitle?.trim() : '') || '点歌机'
+  })
   const countText = computed(() => `已有 ${waiting.value.length ?? 0} 首`)
 
   const current = computed<ObsDisplayCurrent>(() => {
@@ -41,7 +48,7 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
 
   const items = computed<ObsDisplayItem[]>(() => {
     return waiting.value.map((item, index) => ({
-      id: item.music.id ?? index,
+      id: item.requestId || (item.music.id ? `${item.music.id}-${index}` : `wait-${index}`),
       primary: item.music.name,
       badges: [{ text: item.from ? item.from.name : '主播添加', tone: 'default' as const }],
     }))
@@ -58,10 +65,9 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
 
   async function update() {
     const seq = ++requestSeq
-    const rawId = toValue(currentId)
-    const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
+    const validId = parsePositiveId(toValue(currentId))
     try {
-      const data = await getApiMusicRequestGetWaiting(idStr ? { id: Number(idStr) } : {})
+      const data = await getApiMusicRequestGetWaiting(validId ? { id: Number(validId) } : {})
       if (seq !== requestSeq) return
       if (data.code === 200) applySnapshot(data.data)
     } catch (err) {

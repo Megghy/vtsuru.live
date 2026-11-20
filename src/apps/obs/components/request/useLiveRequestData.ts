@@ -4,7 +4,8 @@ import type { SongRequestInfo } from '@/api/client-types'
 import { getApiLiveRequestGetActiveAndSettings } from '@/api/generated/live-request/live-request'
 import type { SettingSongRequest } from '@/api/generated/model'
 import { SongRequestStatus } from '@/api/generated/model'
-import { sortByQueueType } from '@/shared/utils/queue'
+import { parsePositiveId } from '@/shared/obs/obsUrl'
+import { normalizeTimestampMs, sortByQueueType } from '@/shared/utils/queue'
 
 export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const originSongs = ref<SongRequestInfo[]>([])
@@ -49,9 +50,8 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
   // 数据获取方法
   async function get() {
     try {
-      const rawId = toValue(currentId)
-      const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
-      const params = idStr ? { id: Number(idStr) } : {}
+      const validId = parsePositiveId(toValue(currentId))
+      const params = validId ? { id: Number(validId) } : {}
 
       const data = await getApiLiveRequestGetActiveAndSettings(params)
       if (data.code == 200) {
@@ -75,7 +75,7 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
     if (r) {
       const isCountChange = originSongs.value.length != (r.songs?.length ?? 0)
       originSongs.value = (r.songs ?? []).toSorted((a, b) => {
-        return b.createAt - a.createAt
+        return normalizeTimestampMs(b.createAt) - normalizeTimestampMs(a.createAt)
       })
       settings.value = r.setting ?? ({} as SettingSongRequest)
       if (isCountChange) {
