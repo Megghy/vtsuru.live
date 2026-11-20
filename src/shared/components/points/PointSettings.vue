@@ -106,15 +106,21 @@ const isDirty = computed(() => {
   return buildSnapshot(draft.value, receiveOrderEmailDraft.value) !== savedSnapshot.value
 })
 
-useUnsavedChangesGuard(() => !props.orgId && isDirty.value, '积分规则有未保存的更改，离开后将会丢失，确定要离开吗？')
+useUnsavedChangesGuard(() => isDirty.value, '积分规则有未保存的更改，离开后将会丢失，确定要离开吗？')
 
 const canEdit = computed(() => {
   if (props.orgId) return Boolean(props.streamerId)
   return Boolean(accountInfo.value?.settings)
 })
 
+let orgLoadSeq = 0
+
 async function loadOrgSetting() {
-  if (!props.orgId || !props.streamerId) return
+  const seq = ++orgLoadSeq
+  if (!props.orgId || !props.streamerId) {
+    isInitialLoading.value = false
+    return
+  }
   isInitialLoading.value = true
   try {
     const detail = unwrapOk(
@@ -123,11 +129,16 @@ async function loadOrgSetting() {
       })) as any,
       '加载积分规则失败',
     ) as SettingPoint
+    if (seq !== orgLoadSeq) return
     syncDraftFromSource(detail, false)
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : `加载失败: ${err}`)
+    if (seq === orgLoadSeq) {
+      toast.error(err instanceof Error ? err.message : `加载失败: ${err}`)
+    }
   } finally {
-    isInitialLoading.value = false
+    if (seq === orgLoadSeq) {
+      isInitialLoading.value = false
+    }
   }
 }
 
@@ -351,6 +362,8 @@ const nextSeasonDateInput = computed({
     draft.value.nextResetAt = v ? new Date(`${v}T00:00:00`).getTime() : null
   },
 })
+
+defineExpose({ isDirty })
 </script>
 
 <template>

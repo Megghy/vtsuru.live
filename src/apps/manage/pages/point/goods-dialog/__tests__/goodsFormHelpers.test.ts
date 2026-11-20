@@ -138,4 +138,61 @@ describe('goodsFormHelpers', () => {
     draft.model.goods.isAllowRebuy = true
     expect(validateGoodsDraft(draft.model, false)?.fieldId).toBe('goods-max-buy-count')
   })
+
+  it('buildGoodsSubmitPayload 按当前类型剥离跨类型交付字段且不修改原草稿', async () => {
+    const base = initGoodsDraft(makeResponseGoods({ type: GoodsTypes.Virtual }), false)
+    base.model.goods.collectUrl = 'https://external.example/form'
+    base.model.goods.embedCollectUrl = true
+    base.model.goods.content = '虚拟激活码 {key}'
+    base.model.goods.keySelectionMode = VirtualKeySelectionMode.Random
+    base.model.goods.virtualKeys = ['K1', 'K2']
+    base.model.goods.serviceConfig = { fields: [], rules: '规则', paused: false }
+    base.privateAttachments = [{ id: 88, name: 'guide.pdf', size: 1024 }]
+
+    base.model.goods.type = GoodsTypes.Physical
+    const physicalPayload = await buildGoodsSubmitPayload({
+      model: base.model,
+      subItemCoverFiles: base.subItemCoverFiles,
+      privateAttachments: base.privateAttachments,
+      shouldWatermarkCover: false,
+    })
+    expect(physicalPayload.collectUrl).toBe('https://external.example/form')
+    expect(physicalPayload.embedCollectUrl).toBe(true)
+    expect(physicalPayload.content).toBeUndefined()
+    expect(physicalPayload.virtualKeys).toEqual([])
+    expect(physicalPayload.keySelectionMode).toBe(VirtualKeySelectionMode.None)
+    expect(physicalPayload.setting.privateFileIds).toEqual([])
+    expect(physicalPayload.serviceConfig).toBeUndefined()
+
+    // 切回虚拟类型时原有草稿应完好保留并正常序列化
+    base.model.goods.type = GoodsTypes.Virtual
+    const virtualPayload = await buildGoodsSubmitPayload({
+      model: base.model,
+      subItemCoverFiles: base.subItemCoverFiles,
+      privateAttachments: base.privateAttachments,
+      shouldWatermarkCover: false,
+    })
+    expect(virtualPayload.content).toBe('虚拟激活码 {key}')
+    expect(virtualPayload.virtualKeys).toEqual(['K1', 'K2'])
+    expect(virtualPayload.keySelectionMode).toBe(VirtualKeySelectionMode.Random)
+    expect(virtualPayload.setting.privateFileIds).toEqual([88])
+    expect(virtualPayload.collectUrl).toBeUndefined()
+    expect(virtualPayload.embedCollectUrl).toBeUndefined()
+    expect(virtualPayload.serviceConfig).toBeUndefined()
+
+    base.model.goods.type = GoodsTypes.Service
+    const servicePayload = await buildGoodsSubmitPayload({
+      model: base.model,
+      subItemCoverFiles: base.subItemCoverFiles,
+      privateAttachments: base.privateAttachments,
+      shouldWatermarkCover: false,
+    })
+    expect(servicePayload.serviceConfig).toEqual({ fields: [], rules: '规则', paused: false })
+    expect(servicePayload.collectUrl).toBeUndefined()
+    expect(servicePayload.content).toBeUndefined()
+    expect(servicePayload.setting.privateFileIds).toEqual([])
+    // 原草稿对象不应被序列化逻辑污染
+    expect(base.model.goods.content).toBe('虚拟激活码 {key}')
+    expect(base.privateAttachments).toHaveLength(1)
+  })
 })

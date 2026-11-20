@@ -333,15 +333,31 @@ export async function buildGoodsSubmitPayload(params: {
   const g = JSON.parse(JSON.stringify(model.goods)) as UploadPointGoodsModel
   g.name = g.name?.trim()
   g.description = g.description?.trim() ? g.description.trim() : undefined
-  if (g.type === GoodsTypes.Physical) {
-    g.collectUrl = g.collectUrl?.trim() ? g.collectUrl.trim() : undefined
-  }
   g.cover = coverFile
   g.maxSubItemSelections = g.maxSubItemSelections || undefined
 
-  if (g.keySelectionMode === VirtualKeySelectionMode.None) {
-    g.virtualKeys = []
+  // 仅保留当前商品类型生效的交付字段，避免切换类型时提前破坏未提交草稿
+  if (g.type === GoodsTypes.Physical) {
+    g.collectUrl = g.collectUrl?.trim() ? g.collectUrl.trim() : undefined
+  } else {
+    g.collectUrl = undefined
+    g.embedCollectUrl = undefined
   }
+
+  if (g.type === GoodsTypes.Virtual) {
+    if (g.keySelectionMode === VirtualKeySelectionMode.None) {
+      g.virtualKeys = []
+    }
+  } else {
+    g.content = undefined
+    g.virtualKeys = []
+    g.keySelectionMode = VirtualKeySelectionMode.None
+  }
+
+  if (g.type !== GoodsTypes.Service) {
+    g.serviceConfig = undefined
+  }
+
   if (g.setting) {
     g.setting.privateFileIds =
       g.type === GoodsTypes.Virtual && privateAttachments.length > 0 ? privateAttachments.map((f) => f.id) : []
