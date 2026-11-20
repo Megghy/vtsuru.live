@@ -10,6 +10,7 @@ import {
   buildLotteryObsUrl,
   formatLotteryAvatar,
   getAvatarUrl,
+  getLiveLotteryUserKey,
   getRandomInt,
   isUserValid,
   resolveLotteryIdentityCode,
@@ -294,5 +295,21 @@ describe('buildLiveLotterySyncBody', () => {
     expect(buildLiveLotterySyncBody({ users, resultUsers, drawing: true, finished: true }).type).toBe(
       LiveLotteryTypes.Result,
     )
+  })
+})
+
+describe('getLiveLotteryUserKey', () => {
+  it('prefers trimmed openId with oid prefix', () => {
+    expect(getLiveLotteryUserKey({ openId: ' abc ', uId: 123 })).toBe('oid:abc')
+  })
+
+  it('ignores non-positive sentinel uIds like -1 and 0 when openId is missing', () => {
+    expect(getLiveLotteryUserKey({ openId: '', uId: -1 })).toBe('')
+    expect(getLiveLotteryUserKey({ openId: '   ', uId: 0 })).toBe('')
+  })
+
+  it('falls back to positive uId with uid prefix and separates oid vs uid namespaces', () => {
+    expect(getLiveLotteryUserKey({ openId: '', uId: 42 })).toBe('uid:42')
+    expect(getLiveLotteryUserKey({ openId: '42', uId: 0 })).toBe('oid:42')
   })
 })

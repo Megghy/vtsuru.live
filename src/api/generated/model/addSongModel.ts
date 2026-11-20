@@ -42,4 +42,6 @@ export interface AddSongModel {
   options?: SongRequestOption
   /** @nullable */
   cover?: string | null
+  /** @nullable */
+  sortOrder?: number | null
 }

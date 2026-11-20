@@ -1,7 +1,6 @@
-import { formatRgb } from '@/shared/config/theme/culori'
-
 import { resolveFileUrl } from '@/shared/config/api'
 import { resolveReadableForeground } from '@/shared/config/theme/contrast'
+import { formatRgb } from '@/shared/config/theme/culori'
 import { getShadcnCssVars } from '@/shared/config/theme/shadcn'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { hexToRgba } from '@/shared/utils'
@@ -190,6 +189,8 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--foreground': surfaceText,
     '--card': surfaceColor,
     '--card-foreground': surfaceText,
+    '--control': controlBg,
+    '--inset': controlBg,
     '--popover': popoverColor,
     '--popover-foreground': surfaceText,
     '--primary': pagePrimary,

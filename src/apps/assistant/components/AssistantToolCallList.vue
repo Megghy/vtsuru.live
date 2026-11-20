@@ -42,7 +42,7 @@ function formatDuration(ms?: number): string {
     <div
       v-for="tool in visibleTools"
       :key="tool.id"
-      class="min-w-0 rounded-[7px] bg-muted/60"
+      class="min-w-0 rounded-[7px] bg-inset/70 border border-border/80"
       :class="`tool-line--${tool.status}`"
     >
       <Button

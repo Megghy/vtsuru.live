@@ -303,6 +303,8 @@ export default defineConfig({
       'popover-foreground': 'color-mix(in srgb, var(--popover-foreground) calc(<alpha-value> * 100%), transparent)',
       card: 'color-mix(in srgb, var(--card) calc(<alpha-value> * 100%), transparent)',
       'card-foreground': 'color-mix(in srgb, var(--card-foreground) calc(<alpha-value> * 100%), transparent)',
+      control: 'color-mix(in srgb, var(--control) calc(<alpha-value> * 100%), transparent)',
+      inset: 'color-mix(in srgb, var(--inset) calc(<alpha-value> * 100%), transparent)',
       brand: 'color-mix(in srgb, var(--brand) calc(<alpha-value> * 100%), transparent)',
       'brand-foreground': 'color-mix(in srgb, var(--brand-foreground) calc(<alpha-value> * 100%), transparent)',
       'brand-soft': 'color-mix(in srgb, var(--brand-soft) calc(<alpha-value> * 100%), transparent)',

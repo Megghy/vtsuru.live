@@ -2,10 +2,12 @@ import { refDebounced } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 
+import { useAccount } from '@/api/account'
 import type { ResponseSongModel } from '@/api/generated/model'
 import {
   postApiSongListDelete,
   postApiSongListDeleteBatch,
+  postApiSongListReorder,
   postApiSongListUpdate,
   postApiSongListUpdateBatch,
   postApiSongListUpdateBatchAuthor,
@@ -18,11 +20,11 @@ import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { toast } from '@/shared/utils'
 
 export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean }) {
+  const accountInfo = useAccount()
   const songsInternal = ref<ResponseSongModel[]>([...props.songs])
   const isLoading = ref(false)
   const playingSong = ref<ResponseSongModel>()
   const isLrcLoading = ref<string>()
-  // 后端暂无排序字段：用本机持久化 key 顺序；CRUD 后仍写回服务端歌曲本体
   const songOrderKeys = usePersistedStorage<string[]>('vtsuru:settings:song-list:order-keys', [])
   const orderReady = persistLoaded(songOrderKeys)
 
@@ -113,24 +115,33 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
     return merged
   }
 
-  // 1. 外部 props.songs 变更时，按当前已知顺序同步到 songsInternal
+  // 1. 外部 props.songs 变更时同步排序：访客端或已保存云端 SortOrder 时直接采信服务端顺序
   watch(
     () => props.songs,
     (songs) => {
+      const hasServerOrder = songs.some((s) => s.sortOrder != null)
+      if (!props.isSelf || hasServerOrder) {
+        songsInternal.value = [...songs]
+        if (props.isSelf && hasServerOrder) {
+          songOrderKeys.value = songs.map((s) => s.key)
+        }
+        return
+      }
       const ordered = applySongOrder([...songs], songOrderKeys.value ?? [])
       songsInternal.value = ordered
       if (orderReady.value && songs.length > 0) {
         syncOrderKeys(ordered)
       }
     },
-    { deep: true, immediate: true },
+    { immediate: true },
   )
 
-  // 2. 持久化顺序从存储就绪或变更时，基于当前 songsInternal 重新应用排序（避免用可能陈旧的 props.songs 覆盖本地删改）
+  // 2. 仅本人管理端在尚无云端 SortOrder 时回退本机顺序迁移
   watch(
     [() => songOrderKeys.value, orderReady],
     ([keys, ready]) => {
-      if (!ready || songsInternal.value.length === 0) return
+      if (!props.isSelf || !ready || songsInternal.value.length === 0) return
+      if (songsInternal.value.some((s) => s.sortOrder != null)) return
       const ordered = applySongOrder([...songsInternal.value], keys ?? [])
       songsInternal.value = ordered
       syncOrderKeys(ordered)
@@ -138,17 +149,47 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
     { deep: true },
   )
 
-  function moveSong(key: string, direction: -1 | 1) {
+  async function persistSongOrder(nextOrder: string[]): Promise<boolean> {
+    const prevOrderKeys = [...(songOrderKeys.value ?? [])]
+    const prevSongs = [...songsInternal.value]
+    songOrderKeys.value = [...nextOrder]
+    const reordered = applySongOrder(songsInternal.value, nextOrder).map((s, idx) => ({
+      ...s,
+      sortOrder: idx,
+    }))
+    songsInternal.value = reordered
+
+    if (!props.isSelf || !(accountInfo.value?.id && accountInfo.value.id > 0)) {
+      toast.success('已调整顺序')
+      return true
+    }
+
+    try {
+      const res = await postApiSongListReorder(nextOrder)
+      if (res.code === 200) {
+        toast.success('已保存歌单排序')
+        return true
+      }
+      songOrderKeys.value = prevOrderKeys
+      songsInternal.value = prevSongs
+      toast.error(`保存歌单排序失败: ${res.message}`)
+      return false
+    } catch (err) {
+      songOrderKeys.value = prevOrderKeys
+      songsInternal.value = prevSongs
+      toast.error(`保存歌单排序失败: ${err instanceof Error ? err.message : String(err)}`)
+      return false
+    }
+  }
+
+  async function moveSong(key: string, direction: -1 | 1) {
     const order = songsInternal.value.map((s) => s.key)
     const nextOrder = moveSongInOrder(order, key, direction)
     if (nextOrder === order || nextOrder.join('|') === order.join('|')) return false
-    songOrderKeys.value = nextOrder
-    songsInternal.value = applySongOrder(songsInternal.value, nextOrder)
-    toast.success('已调整顺序（本机保存；服务端暂无排序字段）')
-    return true
+    return persistSongOrder(nextOrder)
   }
 
-  function applyPageReorder(reorderedPageKeys: string[]) {
+  async function applyPageReorder(reorderedPageKeys: string[]) {
     if (reorderedPageKeys.length <= 1) return false
     const fullOrder = songsInternal.value.map((s) => s.key)
     const pageKeySet = new Set(reorderedPageKeys)
@@ -162,10 +203,7 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
       nextOrder[slotIdx] = reorderedPageKeys[i]
     })
     if (nextOrder.join('|') === fullOrder.join('|')) return false
-    songOrderKeys.value = nextOrder
-    songsInternal.value = applySongOrder(songsInternal.value, nextOrder)
-    toast.success('已调整顺序（本机保存；服务端暂无排序字段）')
-    return true
+    return persistSongOrder(nextOrder)
   }
 
   // CRUD 操作
@@ -192,6 +230,9 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
       }
       toast.error(`未能更新: ${err}`)
       return false
+    } catch (err) {
+      toast.error(`未能更新: ${err instanceof Error ? err.message : String(err)}`)
+      return false
     } finally {
       isLoading.value = false
     }
@@ -214,6 +255,9 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
       }
       toast.error(`批量更新失败: ${err}`)
       return false
+    } catch (err) {
+      toast.error(`批量更新失败: ${err instanceof Error ? err.message : String(err)}`)
+      return false
     } finally {
       isLoading.value = false
     }
@@ -232,61 +276,75 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
       }
       toast.error(`未能删除: ${err}`)
       return false
+    } catch (err) {
+      toast.error(`未能删除: ${err instanceof Error ? err.message : String(err)}`)
+      return false
     } finally {
       isLoading.value = false
     }
   }
 
   async function deleteBatch() {
-    if (selectedKeys.value.length === 0) {
+    const targetKeys = [...selectedKeys.value]
+    if (targetKeys.length === 0) {
       toast.warning('请先选择歌曲')
       return false
     }
     isLoading.value = true
     try {
-      const { code, message: err } = await postApiSongListDeleteBatch(selectedKeys.value as any)
+      const { code, message: err } = await postApiSongListDeleteBatch(targetKeys as any)
       if (code === 200) {
-        const ids = new Set(selectedKeys.value)
+        const ids = new Set(targetKeys)
         songsInternal.value = songsInternal.value.filter((s) => !ids.has(s.key))
         toast.success(`已删除 ${ids.size} 首歌曲`)
         if (playingSong.value && ids.has(playingSong.value.key)) playingSong.value = undefined
-        selectedKeys.value = []
+        selectedKeys.value = selectedKeys.value.filter((k) => !ids.has(k))
         return true
       }
       toast.error(`批量删除失败: ${err}`)
+      return false
+    } catch (err) {
+      toast.error(`批量删除失败: ${err instanceof Error ? err.message : String(err)}`)
       return false
     } finally {
       isLoading.value = false
     }
   }
 
+  const batchEndpointMap = {
+    'update-batch-author': postApiSongListUpdateBatchAuthor,
+    'update-batch-tag': postApiSongListUpdateBatchTag,
+    'update-batch-language': postApiSongListUpdateBatchLanguage,
+    'update-batch-option': postApiSongListUpdateBatchOption,
+  } as const
+
   async function batchUpdate(endpoint: string, field: keyof ResponseSongModel, data: unknown, label: string) {
-    if (selectedKeys.value.length === 0) {
+    const targetKeys = [...selectedKeys.value]
+    if (targetKeys.length === 0) {
       toast.warning('请先选择歌曲')
+      return false
+    }
+    const fn = batchEndpointMap[endpoint as keyof typeof batchEndpointMap]
+    if (!fn) {
+      toast.error(`未知批量更新操作: ${endpoint}`)
       return false
     }
     isLoading.value = true
     try {
-      const payload = { ids: selectedKeys.value, data }
-      const fn =
-        endpoint === 'update-batch-author'
-          ? postApiSongListUpdateBatchAuthor
-          : endpoint === 'update-batch-tag'
-            ? postApiSongListUpdateBatchTag
-            : endpoint === 'update-batch-language'
-              ? postApiSongListUpdateBatchLanguage
-              : endpoint === 'update-batch-option'
-                ? postApiSongListUpdateBatchOption
-                : postApiSongListUpdateBatch
+      const payload = { ids: targetKeys, data }
       const { code, message: err } = await fn(payload as any)
       if (code === 200) {
-        toast.success(`已为 ${selectedKeys.value.length} 首歌曲更新${label}`)
+        const targetSet = new Set(targetKeys)
+        toast.success(`已为 ${targetKeys.length} 首歌曲更新${label}`)
         songsInternal.value = songsInternal.value.map((song) =>
-          selectedKeys.value.includes(song.key) ? { ...song, [field]: data } : song,
+          targetSet.has(song.key) ? { ...song, [field]: data } : song,
         )
         return true
       }
       toast.error(`更新失败: ${err}`)
+      return false
+    } catch (err) {
+      toast.error(`更新失败: ${err instanceof Error ? err.message : String(err)}`)
       return false
     } finally {
       isLoading.value = false

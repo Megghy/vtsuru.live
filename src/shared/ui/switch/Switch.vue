@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core'
 import type { SwitchRootEmits, SwitchRootProps } from 'reka-ui'
-import { SwitchRoot, SwitchThumb, useForwardPropsEmits } from 'reka-ui'
+import { SwitchRoot, SwitchThumb, useForwardProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 import { computed } from 'vue'
 
@@ -35,7 +35,7 @@ const rootProps = computed(() => ({
   modelValue: resolvedModelValue.value,
 }))
 
-const forwarded = useForwardPropsEmits(rootProps, emits)
+const forwarded = useForwardProps(rootProps)
 
 function handleUpdateModelValue(val: boolean) {
   emits('update:modelValue', val)

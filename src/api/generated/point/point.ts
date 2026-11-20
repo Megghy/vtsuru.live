@@ -13,6 +13,7 @@ import type {
   GetApiPointGetUserHistoriesParams,
   GetApiPointGetUserOrdersParams,
   GetApiPointGetUsersParams,
+  GetApiPointHistoriesParams,
   GetApiPointScanDuplicateGuardsParams,
   GetApiPointServiceOrderOwnerParams,
   GetApiPointServiceOrderUserParams,
@@ -24,15 +25,20 @@ import type {
   PostApiPointGivePointParams,
   PostApiPointUserDeleteAddressParams,
   RequestApplyPointGuardDuplicateFixModel,
+  RequestBatchUpdateExpressModel,
   RequestBatchUpdateOrderStatusModel,
   RequestBuyBatchModel,
   RequestBuyPointGoodsModel,
+  RequestConsumeUserPointModel,
   RequestPointGoodsModel,
+  RequestSeasonResetModel,
   RequestSetOrderStatusModel,
   RequestTestPointModel,
+  RequestToggleGoodsPinModel,
   RequestUpdateGoodsStatusModel,
   RequestUpdateOrderExpressModel,
   ResponseResult,
+  ResponseResultOfBoolean,
   ResponseResultOfDecimal,
   ResponseResultOfGivePointResult,
   ResponseResultOfInt32,
@@ -41,8 +47,11 @@ import type {
   ResponseResultOfListOfResponsePointHistoryModel,
   ResponseResultOfListOfResponsePointOrder2UserModel,
   ResponseResultOfListOfResponsePointUserModel,
+  ResponseResultOfPointConsumeResult,
   ResponseResultOfPointGuardDuplicateApplyResult,
   ResponseResultOfResponseAllPointsModelArray,
+  ResponseResultOfResponseBatchUpdateExpressResult,
+  ResponseResultOfResponseGlobalPointHistoriesResult,
   ResponseResultOfResponsePointGoodsEligibilityModel,
   ResponseResultOfResponsePointGoodsModel,
   ResponseResultOfResponsePointGuardDuplicateDetailModel,
@@ -52,6 +61,7 @@ import type {
   ResponseResultOfResponsePointOrder2OwnerModelArray,
   ResponseResultOfResponsePointOrder2UserModel,
   ResponseResultOfResponsePointOrder2UserModelArray,
+  ResponseResultOfResponseSeasonResetResult,
   ResponseResultOfResponseTestPointModel,
   ResponseResultOfShippingAddressInfo,
   ResponseResultOfString,
@@ -119,6 +129,36 @@ export const postApiPointBatchDeleteUser = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(tempRequestDelUserModel),
+  })
+}
+
+export const getPostApiPointBatchUpdateExpressUrl = () => {
+  return `/api/point/batch-update-express`
+}
+
+export const postApiPointBatchUpdateExpress = async (
+  requestBatchUpdateExpressModel?: RequestBatchUpdateExpressModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseBatchUpdateExpressResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseBatchUpdateExpressResult>(getPostApiPointBatchUpdateExpressUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestBatchUpdateExpressModel),
   })
 }
 
@@ -238,6 +278,36 @@ export const getApiPointCheckEligibility = async (
   return vtsuruMutator<ResponseResultOfResponsePointGoodsEligibilityModel>(getGetApiPointCheckEligibilityUrl(params), {
     ...options,
     method: 'GET',
+  })
+}
+
+export const getPostApiPointConsumeUserPointUrl = () => {
+  return `/api/point/consume-user-point`
+}
+
+export const postApiPointConsumeUserPoint = async (
+  requestConsumeUserPointModel?: RequestConsumeUserPointModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfPointConsumeResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfPointConsumeResult>(getPostApiPointConsumeUserPointUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestConsumeUserPointModel),
   })
 }
 
@@ -509,6 +579,30 @@ export const postApiPointGivePoint = async (
   })
 }
 
+export const getGetApiPointHistoriesUrl = (params?: GetApiPointHistoriesParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/point/histories?${stringifiedParams}` : `/api/point/histories`
+}
+
+export const getApiPointHistories = async (
+  params?: GetApiPointHistoriesParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseGlobalPointHistoriesResult> => {
+  return vtsuruMutator<ResponseResultOfResponseGlobalPointHistoriesResult>(getGetApiPointHistoriesUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
 export const getPostApiPointResetTestAccountUrl = () => {
   return `/api/point/reset-test-account`
 }
@@ -560,6 +654,36 @@ export const getApiPointScanDuplicateGuards = async (
       method: 'GET',
     },
   )
+}
+
+export const getPostApiPointSeasonResetUrl = () => {
+  return `/api/point/season-reset`
+}
+
+export const postApiPointSeasonReset = async (
+  requestSeasonResetModel?: RequestSeasonResetModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseSeasonResetResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseSeasonResetResult>(getPostApiPointSeasonResetUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestSeasonResetModel),
+  })
 }
 
 export const getGetApiPointServiceOrderOwnerUrl = (params?: GetApiPointServiceOrderOwnerParams) => {
@@ -701,6 +825,36 @@ export const postApiPointTestPoint = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestTestPointModel),
+  })
+}
+
+export const getPostApiPointToggleGoodsPinUrl = () => {
+  return `/api/point/toggle-goods-pin`
+}
+
+export const postApiPointToggleGoodsPin = async (
+  requestToggleGoodsPinModel?: RequestToggleGoodsPinModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfBoolean> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfBoolean>(getPostApiPointToggleGoodsPinUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestToggleGoodsPinModel),
   })
 }
 

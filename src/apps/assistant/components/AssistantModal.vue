@@ -94,7 +94,7 @@ function onClose() {
           <Badge
             variant="secondary"
             size="xs"
-            class="h-5 text-muted-foreground bg-muted"
+            class="h-5 text-muted-foreground"
           >
             {{ ctx.title || '管理后台' }}
           </Badge>
@@ -116,7 +116,7 @@ function onClose() {
       </DialogHeader>
 
       <div class="assistant-modal__layout flex flex-1 min-h-0 overflow-hidden p-4 gap-3">
-        <aside class="max-[720px]:hidden w-52 shrink-0 border-r border-border/60 pr-3 overflow-hidden flex flex-col">
+        <aside class="max-[720px]:hidden w-52 shrink-0 border-r border-border pr-3 overflow-hidden flex flex-col">
           <AssistantConversationList />
         </aside>
 

@@ -16,8 +16,8 @@ export interface ObsNotificationPayload {
 }
 
 const sourceLabelMap: Record<string, string> = {
-  'live-request': '点歌',
-  'music-request': '点歌',
+  'live-request': '点播',
+  'music-request': '点歌机',
   queue: '排队',
 }
 
@@ -26,6 +26,7 @@ export const useOBSNotification = defineStore('obs-notification', () => {
   const account = useAccount()
   const listeners = new Map<string, (payload: ObsNotificationPayload) => void>()
   let currentSubscribedTopic = ''
+  let stopBusListener: (() => void) | undefined
   let explicitOwnerId: number | undefined
   let watchInitialized = false
 
@@ -35,19 +36,32 @@ export const useOBSNotification = defineStore('obs-notification', () => {
     }
   }
 
+  function clearSubscription() {
+    stopBusListener?.()
+    stopBusListener = undefined
+    if (currentSubscribedTopic) {
+      void realtimeBus.bus.unsubscribe(currentSubscribedTopic)
+      currentSubscribedTopic = ''
+    }
+  }
+
   function syncSubscription() {
-    const targetId = explicitOwnerId ?? parsePositiveId(router.currentRoute.value.query.id) ?? account.value.id
-    if (!targetId) return
+    const targetId =
+      parsePositiveId(explicitOwnerId) ||
+      parsePositiveId(router.currentRoute.value.query.id) ||
+      (account.value?.id && account.value.id > 0 ? String(account.value.id) : '')
+    if (!targetId) {
+      clearSubscription()
+      return
+    }
 
     const topic = `obs:notify:${targetId}`
     if (currentSubscribedTopic === topic) return
 
-    if (currentSubscribedTopic) {
-      void realtimeBus.bus.unsubscribe(currentSubscribedTopic)
-    }
+    clearSubscription()
     currentSubscribedTopic = topic
     void realtimeBus.bus.subscribe(topic)
-    realtimeBus.on(topic, 'ObsNotification', (payload) => {
+    stopBusListener = realtimeBus.on(topic, 'ObsNotification', (payload) => {
       if (payload) {
         dispatchNotification(payload as ObsNotificationPayload)
       }

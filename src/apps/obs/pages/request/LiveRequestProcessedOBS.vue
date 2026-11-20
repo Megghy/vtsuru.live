@@ -1,25 +1,29 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
-import { List } from 'linqts'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Vue3Marquee } from 'vue3-marquee'
 
 import { useAccount } from '@/api/account'
 import type { SongRequestInfo } from '@/api/client-types'
 import { getApiLiveRequestGetToday } from '@/api/generated/live-request/live-request'
 import type { SettingSongRequest } from '@/api/generated/model'
-import { QueueSortType, SongRequestFrom } from '@/api/generated/model'
+import { SongRequestFrom } from '@/api/generated/model'
+import ObsClassicPanel from '@/apps/obs/components/shared/ObsClassicPanel.vue'
+import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
+import ObsFreshPanel from '@/apps/obs/components/shared/ObsFreshPanel.vue'
+import ObsGlassPanel from '@/apps/obs/components/shared/ObsGlassPanel.vue'
+import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
+import ObsTransparentPanel from '@/apps/obs/components/shared/ObsTransparentPanel.vue'
 import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
-import { Empty } from '@/shared/ui/empty'
-import { Separator } from '@/shared/ui/separator'
+import { normalizeTimestampMs, sortByQueueType } from '@/shared/utils/queue'
 
 const props = withDefaults(
   defineProps<{
     id?: number
     active?: boolean
     visible?: boolean
+    speedMultiplier?: number
+    style?: 'classic' | 'fresh' | 'minimal' | 'glass' | 'transparent'
   }>(),
   { active: true, visible: true },
 )
@@ -30,75 +34,132 @@ const currentId = computed<string>(() => {
   const v = props.id ?? (Array.isArray(route.query.id) ? route.query.id[0] : route.query.id)
   return v === undefined || v === null ? '' : String(v)
 })
-const targetUserId = computed(() => parsePositiveId(currentId.value) || (account.value.id > 0 ? String(account.value.id) : ''))
+const targetUserId = computed(
+  () => parsePositiveId(currentId.value) || (account.value.id > 0 ? String(account.value.id) : ''),
+)
 
-const cardRef = ref()
-const listContainerRef = ref()
-const { height, width } = useElementSize(listContainerRef)
-const itemHeight = 40
+const speedMultiplier = computed(() => {
+  if (props.speedMultiplier !== undefined && props.speedMultiplier > 0) {
+    return props.speedMultiplier
+  }
+  const speedParam = route.query.speed
+  const speed = Number.parseFloat(speedParam?.toString() ?? '1')
+  return Number.isNaN(speed) || speed <= 0 ? 1 : speed
+})
 
-const key = ref(Date.now())
+const styleType = computed(() => {
+  const queryStyle = route.query.style
+  return props.style || (typeof queryStyle === 'string' ? queryStyle : 'classic')
+})
+
+const panelComponent = computed(() => {
+  switch (styleType.value) {
+    case 'glass':
+      return ObsGlassPanel
+    case 'transparent':
+      return ObsTransparentPanel
+    case 'fresh':
+      return ObsFreshPanel
+    case 'minimal':
+      return ObsMinimalPanel
+    default:
+      return ObsClassicPanel
+  }
+})
 
 const originSongs = ref<SongRequestInfo[]>([])
-const songs = computed(() => {
-  let result = new List(originSongs.value)
-  switch (settings.value.sortType) {
-    case QueueSortType.TimeFirst: {
-      result = result.ThenBy((q) => q.createAt)
-      break
-    }
-    case QueueSortType.GuardFirst: {
-      result = result
-        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-        .ThenBy((q) => q.createAt)
-      break
-    }
-    case QueueSortType.PaymentFist: {
-      result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
-      break
-    }
-    case QueueSortType.FansMedalFirst: {
-      result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
-      break
-    }
-  }
-  if (settings.value.isReverse) {
-    return result.Reverse().ToArray()
-  } else {
-    return result.ToArray()
-  }
-})
-
-const isMoreThanContainer = computed(() => {
-  return songs.value.length * itemHeight > height.value
-})
-
 const settings = ref<SettingSongRequest>({} as SettingSongRequest)
+
+const songs = computed(() =>
+  sortByQueueType(originSongs.value, settings.value.sortType, Boolean(settings.value.isReverse), {
+    createAt: (q) => q.createAt,
+    guardLevel: (q) => q.user?.guard_level,
+    price: (q) => q.price,
+    fansMedalLevel: (q) => q.user?.fans_medal_level,
+    fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
+    priorityLevel: (q) => q.priorityLevel,
+  }),
+)
+
+const title = computed(() => settings.value.obsTitleToday?.trim() || '今日已唱')
+const countText = computed(() => `${songs.value.length} 首`)
+
+const latestSong = computed(() => {
+  if (originSongs.value.length === 0) return undefined
+  return [...originSongs.value].toSorted((a, b) => {
+    const bTs = normalizeTimestampMs(b.finishAt) || normalizeTimestampMs(b.createAt)
+    const aTs = normalizeTimestampMs(a.finishAt) || normalizeTimestampMs(a.createAt)
+    return bTs - aTs
+  })[0]
+})
+
+const current = computed<ObsDisplayCurrent>(() => {
+  if (!latestSong.value) {
+    return {
+      active: false,
+      emptyText: '今日暂无已唱曲目',
+    }
+  }
+  return {
+    active: true,
+    title: latestSong.value.songName || '未知歌曲',
+    subtitle:
+      latestSong.value.from === SongRequestFrom.Manual
+        ? '主播添加 · 最新完成'
+        : `${latestSong.value.user?.name || '未知用户'} · 最新完成`,
+    avatarUrl: latestSong.value.user?.face,
+    hideAvatar: latestSong.value.from === SongRequestFrom.Manual,
+    emptyText: '今日暂无已唱曲目',
+  }
+})
+
+const items = computed<ObsDisplayItem[]>(() => {
+  return songs.value.map((song) => ({
+    id: song.id,
+    primary: song.songName || '未知歌曲',
+    badges: [
+      settings.value.showUserName
+        ? {
+            text: song.from === SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户',
+            tone: song.from === SongRequestFrom.Manual ? 'accent' : 'muted',
+          }
+        : null,
+      settings.value.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0
+        ? {
+            text: `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}`.trim(),
+            tone: 'muted',
+          }
+        : null,
+    ].filter(Boolean) as NonNullable<ObsDisplayItem['badges']>,
+  }))
+})
+
+const footerTags = computed<ObsDisplayFooterTag[]>(() => [])
 
 async function get() {
   try {
-    const data = await getApiLiveRequestGetToday(
-      currentId.value ? { id: Number(currentId.value) } : {},
-    )
+    const validId = parsePositiveId(currentId.value)
+    const data = await getApiLiveRequestGetToday(validId ? { id: Number(validId) } : {})
     if (data.code === 200) {
       return data.data
     }
   } catch (err) {
     console.error(err)
   }
-  return {} as { songs: SongRequestInfo[]; setting: SettingSongRequest }
+  return { songs: [], setting: {} as SettingSongRequest }
 }
+
+let requestSeq = 0
+
 async function update() {
+  const seq = ++requestSeq
   const r = await get()
+  if (seq !== requestSeq) return
   if (r) {
-    const isCountChange = originSongs.value.length !== r.songs.length
-    originSongs.value = r.songs.toSorted((a, b) => {
-      return b.createAt - a.createAt
-    })
-    settings.value = r.setting
-    if (isCountChange) {
-      key.value = Date.now()
-    }
+    originSongs.value = (r.songs ?? []).toSorted(
+      (a, b) => normalizeTimestampMs(b.createAt) - normalizeTimestampMs(a.createAt),
+    )
+    settings.value = r.setting ?? ({} as SettingSongRequest)
   }
 }
 
@@ -114,274 +175,15 @@ on('Changed', () => {
 </script>
 
 <template>
-  <div
-    ref="cardRef"
-    class="live-request-background"
+  <component
+    :is="panelComponent"
+    :title="title"
+    :count-text="countText"
+    :current="current"
+    :items="items"
+    :footer-tags="footerTags"
+    :speed-multiplier="speedMultiplier"
+    empty-text="今日暂无"
     v-bind="$attrs"
-  >
-    <p class="live-request-header">
-      {{ settings.obsTitleToday ?? '今日已唱' }}
-    </p>
-    <div class="live-request-divider flex-center">
-      <div class="flex-1 h-px bg-white/20" />
-      <p class="live-request-header-count px-3">{{ songs.length ?? 0 }} 条</p>
-      <div class="flex-1 h-px bg-white/20" />
-    </div>
-    <div
-      ref="listContainerRef"
-      class="live-request-content"
-    >
-      <template v-if="songs.length > 0">
-        <Vue3Marquee
-          :key="key"
-          class="live-request-list"
-          vertical
-          :duration="20"
-          :pause="!isMoreThanContainer"
-          :style="`height: ${height}px;width: ${width}px;`"
-        >
-          <div
-            v-for="(song, index) in songs"
-            :key="song.id"
-            class="live-request-list-item"
-            :from="song.from as number"
-            :status="song.status as number"
-            :style="`height: ${itemHeight}px`"
-          >
-            <div
-              class="live-request-list-item-index"
-              :index="index + 1"
-            >
-              {{ index + 1 }}
-            </div>
-            <div class="live-request-list-item-song-name">
-              {{ song.songName }}
-            </div>
-            <p
-              v-if="settings.showUserName"
-              class="live-request-list-item-name"
-            >
-              {{ song.from === SongRequestFrom.Manual ? '主播添加' : song.user?.name }}
-            </p>
-            <div
-              v-if="settings.showFanMadelInfo"
-              class="live-request-list-item-level"
-              :has-level="(song.user?.fans_medal_level ?? 0) > 0"
-            >
-              {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
-            </div>
-          </div>
-          <Separator
-            v-if="isMoreThanContainer"
-            class="live-request-footer-divider"
-            style="margin: 10px 0 10px 0"
-          />
-        </Vue3Marquee>
-      </template>
-      <div
-        v-else
-        style="position: relative; top: 20%"
-      >
-        <Empty
-          class="live-request-empty"
-          description="今日暂无"
-        />
-      </div>
-    </div>
-  </div>
+  />
 </template>
-
-<style scoped>
-.live-request-background {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  min-height: 100px;
-  min-width: 100px;
-  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
-  border-radius: 10px;
-  color: white;
-}
-
-.live-request-header {
-  margin: 0;
-  padding-top: 4px;
-  color: #fff;
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-  line-height: 1.2;
-  text-shadow:
-    0 0 10px #ca7b7b6e,
-    0 0 20px #ffffff8e,
-    0 0 30px #61606086,
-    0 0 40px rgba(64, 156, 179, 0.555);
-}
-
-.live-request-header-count {
-  color: #ffffffbd;
-  text-align: center;
-  font-size: 14px;
-}
-
-.live-request-divider {
-  margin: 2px auto 6px;
-  width: 90%;
-}
-
-@keyframes rotate {
-  0% {
-    transform: rotate(0);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.live-request-content {
-  background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));
-  margin: 10px;
-  padding: 10px;
-  height: 100%;
-  border-radius: 10px;
-  overflow-x: hidden;
-}
-
-.marquee {
-  justify-items: left;
-}
-
-.live-request-list-item {
-  display: flex;
-  width: 100%;
-  align-self: flex-start;
-  position: relative;
-  align-items: center;
-  justify-content: left;
-  gap: 10px;
-}
-
-.live-request-list-item-song-name {
-  font-size: 18px;
-  font-weight: bold;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 80%;
-}
-
-/* 手动添加 */
-.live-request-list-item[from='0'] .live-request-list-item-name {
-  font-style: italic;
-  font-weight: bold;
-  color: #d2d8d6;
-  font-size: 12px;
-}
-
-.live-request-list-item[from='0'] .live-request-list-item-avatar {
-  display: none;
-}
-
-/* 弹幕点歌 */
-.live-request-list-item[from='1'] {
-}
-
-.live-request-list-item-name {
-  font-style: italic;
-  font-size: 12px;
-  color: rgba(204, 204, 204, 0.993);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  margin-left: auto;
-}
-
-.live-request-list-item-index {
-  text-align: center;
-  height: 18px;
-  padding: 2px;
-  min-width: 15px;
-  border-radius: 5px;
-  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
-  color: rgba(204, 204, 204, 0.993);
-  font-size: 12px;
-}
-
-.live-request-list-item-level {
-  text-align: center;
-  height: 18px;
-  padding: 2px;
-  min-width: 15px;
-  border-radius: 5px;
-  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
-  color: rgba(204, 204, 204, 0.993);
-  font-size: 12px;
-}
-
-.live-request-list-item-level[has-level='false'] {
-  display: none;
-}
-
-.live-request-footer {
-  margin: 0 5px 5px 5px;
-  height: 60px;
-  border-radius: 5px;
-  background-color: var(--obs-classic-footer-bg, rgba(0, 0, 0, 0.16));
-  display: flex;
-  align-items: center;
-}
-
-.live-request-tag {
-  display: flex;
-  margin: 5px 0 5px 5px;
-  height: 40px;
-  border-radius: 3px;
-  background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));
-  padding: 4px;
-  padding-right: 6px;
-  display: flex;
-  flex-direction: column;
-  justify-content: left;
-}
-
-.live-request-tag-key {
-  font-style: italic;
-  color: rgb(211, 211, 211);
-  font-size: 12px;
-}
-
-.live-request-tag-value {
-  font-size: 14px;
-}
-
-.live-request-list-item-index[index='1'] {
-  background-color: #ebc34c;
-  color: white;
-  font-weight: bold;
-  text-shadow: 0 0 6px #ebc34c;
-}
-
-.live-request-list-item-index[index='2'] {
-  background-color: #c0c0c0;
-  color: white;
-  font-weight: bold;
-}
-
-.live-request-list-item-index[index='3'] {
-  background-color: #b87333;
-  color: white;
-  font-weight: bold;
-}
-
-@keyframes animated-border {
-  0% {
-    box-shadow: 0 0 0px #589580;
-  }
-
-  100% {
-    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
-  }
-}
-</style>

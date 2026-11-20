@@ -3,6 +3,7 @@ import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import Mail24Filled from '@vicons/fluent/es/Mail24Filled'
 import PersonFeedback24Filled from '@vicons/fluent/es/PersonFeedback24Filled'
 import { computed, onErrorCaptured, onUnmounted, ref, watch, watchEffect } from 'vue'
+import type { RouteLocationNormalizedLoadedGeneric } from 'vue-router'
 import { RouterView, useRoute } from 'vue-router'
 
 import { logoutAccount } from '@/api/account'
@@ -30,16 +31,42 @@ const canResendEmail = ref(false)
 const countdownSeconds = ref(0)
 const routeError = ref<string | null>(null)
 const renderEpoch = ref(0)
+const keepAliveNameSet = new Set<string>()
+const keepAliveNames = ref<string[]>([])
 let timer: ReturnType<typeof setInterval> | null = null
+
+function syncKeepAliveComponents() {
+  let changed = false
+  for (const record of route.matched) {
+    if (!record.meta?.keepAlive) continue
+    const comp = record.components?.default as { name?: string; __name?: string } | undefined
+    const name = comp?.name || comp?.__name
+    if (name && !keepAliveNameSet.has(name)) {
+      keepAliveNameSet.add(name)
+      changed = true
+    }
+  }
+  if (changed) {
+    keepAliveNames.value = Array.from(keepAliveNameSet)
+  }
+}
+
+function resolveRouteComponentKey(viewRoute: RouteLocationNormalizedLoadedGeneric) {
+  const baseKey = viewRoute.meta.keepAlive ? String(viewRoute.name ?? viewRoute.path) : viewRoute.fullPath.split('#')[0]
+  return `${baseKey}:${renderEpoch.value}`
+}
 
 watch(
   () => route.fullPath,
   () => {
     routeError.value = null
+    syncKeepAliveComponents()
   },
+  { immediate: true },
 )
 
-onErrorCaptured((err) => {
+onErrorCaptured((err, _instance, info) => {
+  console.error('[ManageContentGate] Route render error:', info, err)
   routeError.value = err instanceof Error ? err.message : String(err)
   return false
 })
@@ -71,8 +98,16 @@ function updateCountdown() {
   canResendEmail.value = remain <= 0
 }
 
+function clearCountdownTimer() {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+}
+
 watchEffect(() => {
   if (isEmailWaitPreview.value) {
+    clearCountdownTimer()
     canResendEmail.value = true
     return
   }
@@ -83,11 +118,12 @@ watchEffect(() => {
     }
     return
   }
+  clearCountdownTimer()
   canResendEmail.value = false
 })
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer)
+  clearCountdownTimer()
 })
 
 async function resendEmail() {
@@ -142,30 +178,22 @@ async function resendEmail() {
             </div>
           </AlertDescription>
         </Alert>
-        <Transition
-          v-else
-          name="page-fade"
-          mode="out-in"
-        >
-          <Suspense>
-            <KeepAlive v-if="viewRoute.meta.keepAlive">
+        <div class="manage-page__view flex-1 min-w-0 flex flex-col">
+          <KeepAlive :include="keepAliveNames">
+            <Suspense>
               <component
                 :is="Component"
-                :key="`${String(viewRoute.name ?? viewRoute.path)}:${renderEpoch}`"
+                v-if="Component && !routeError"
+                :key="resolveRouteComponentKey(viewRoute)"
               />
-            </KeepAlive>
-            <component
-              :is="Component"
-              v-else
-              :key="`${viewRoute.fullPath.split('#')[0]}:${renderEpoch}`"
-            />
-            <template #fallback>
-              <div class="flex-center min-h-[40vh] w-full">
-                <Spin size="large" />
-              </div>
-            </template>
-          </Suspense>
-        </Transition>
+              <template #fallback>
+                <div class="flex-center min-h-[40vh] w-full">
+                  <Spin size="large" />
+                </div>
+              </template>
+            </Suspense>
+          </KeepAlive>
+        </div>
       </div>
     </RouterView>
 

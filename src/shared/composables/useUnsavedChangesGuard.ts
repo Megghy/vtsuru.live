@@ -1,4 +1,4 @@
-import { toValue, type MaybeRefOrGetter, onBeforeUnmount, onMounted } from 'vue'
+import { toValue, type MaybeRefOrGetter, onActivated, onBeforeUnmount, onDeactivated, onMounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
 import { dialog } from '@/shared/utils'
@@ -34,11 +34,22 @@ export function useUnsavedChangesGuard(
     })
   })
 
-  onMounted(() => {
-    window.addEventListener('beforeunload', onBeforeUnload)
-  })
+  let isListenerAttached = false
 
-  onBeforeUnmount(() => {
+  function attachBeforeUnload() {
+    if (isListenerAttached) return
+    window.addEventListener('beforeunload', onBeforeUnload)
+    isListenerAttached = true
+  }
+
+  function detachBeforeUnload() {
+    if (!isListenerAttached) return
     window.removeEventListener('beforeunload', onBeforeUnload)
-  })
+    isListenerAttached = false
+  }
+
+  onMounted(attachBeforeUnload)
+  onActivated(attachBeforeUnload)
+  onDeactivated(detachBeforeUnload)
+  onBeforeUnmount(detachBeforeUnload)
 }

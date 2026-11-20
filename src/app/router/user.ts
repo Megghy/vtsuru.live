@@ -63,6 +63,16 @@ export default [
     },
   },
   {
+    path: 'queue',
+    name: 'user-queue',
+    component: async () => import('@/apps/user/pages/QueueView.vue'),
+    meta: {
+      title: '排队',
+      keepAlive: true,
+      pageWidth: 'lg',
+    },
+  },
+  {
     path: 'video-collect',
     name: 'user-video-collect',
     component: async () => import('@/apps/user/pages/VideoCollectView.vue'),

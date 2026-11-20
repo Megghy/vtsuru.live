@@ -184,7 +184,16 @@ export async function SaveEnableFunctions(functions: FunctionTypes[]) {
   return postApiAccountUpdateEnableFunctions(functions)
 }
 export async function SaveSetting(
-  name: 'Queue' | 'Point' | 'Index' | 'General' | 'QuestionDisplay' | 'SongRequest' | 'QuestionBox' | 'SendEmail',
+  name:
+    | 'Queue'
+    | 'Point'
+    | 'Index'
+    | 'General'
+    | 'QuestionDisplay'
+    | 'SongRequest'
+    | 'MusicRequest'
+    | 'QuestionBox'
+    | 'SendEmail',
   setting: unknown,
 ): Promise<boolean> {
   const result = await postApiAccountUpdateSingleSetting(setting, { name })

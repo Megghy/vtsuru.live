@@ -531,13 +531,13 @@ async function onRemoveBgConfirm(blob: Blob) {
         </div>
       </div>
     </div>
+    <RemoveBgDialog
+      :show="showRemoveBg"
+      :source-url="removeBgSourceUrl"
+      @confirm="onRemoveBgConfirm"
+      @cancel="showRemoveBg = false"
+    />
   </div>
-  <RemoveBgDialog
-    :show="showRemoveBg"
-    :source-url="removeBgSourceUrl"
-    @confirm="onRemoveBgConfirm"
-    @cancel="showRemoveBg = false"
-  />
 </template>
 
 <style scoped>

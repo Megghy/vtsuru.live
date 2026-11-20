@@ -8,6 +8,7 @@
 import type { FunctionTypes } from './functionTypes'
 import type { GeneralSettings } from './generalSettings'
 import type { SettingIndex } from './settingIndex'
+import type { SettingMusicRequest } from './settingMusicRequest'
 import type { SettingPoint } from './settingPoint'
 import type { SettingQuestionBox } from './settingQuestionBox'
 import type { SettingQuestionDisplay } from './settingQuestionDisplay'
@@ -20,6 +21,7 @@ export interface UserSetting {
   questionBox: SettingQuestionBox
   songRequest: SettingSongRequest
   queue: SettingQueue
+  musicRequest: SettingMusicRequest
   point: SettingPoint
   questionDisplay: SettingQuestionDisplay
   general: GeneralSettings

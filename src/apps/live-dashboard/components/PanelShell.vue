@@ -5,7 +5,7 @@ defineSlots<{ actions?: () => unknown; default: () => unknown }>()
 
 <template>
   <section
-    class="flex flex-col h-full min-w-0 min-h-0 bg-background"
+    class="flex flex-col h-full min-w-0 min-h-0 bg-card"
     :class="{ 'blur-[6px] grayscale-[0.6] opacity-50 pointer-events-none': blurred }"
   >
     <header

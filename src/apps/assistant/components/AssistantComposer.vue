@@ -235,7 +235,7 @@ onBeforeUnmount(() => recognition?.abort())
           rows="1"
           placeholder="描述你想做的事, 或粘贴/上传日程截图让我识别"
           :disabled="loading"
-          class="flex-1 min-w-0 min-h-[38px] max-h-32 resize-none py-2"
+          class="flex-1 min-w-0 min-h-[38px] max-h-32 resize-none py-2 bg-inset/70"
           @keydown="onKeydown"
           @paste="onPaste"
         />

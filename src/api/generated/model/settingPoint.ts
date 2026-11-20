@@ -38,4 +38,10 @@ export interface SettingPoint {
   dailyFirstGiftPercent: number
   dailyFirstOnlyOnStreaming: boolean
   checkInOnlyOnStreaming: boolean
+  /** @nullable */
+  seasonName?: string | null
+  /** @nullable */
+  nextResetAt?: number | null
+  /** @nullable */
+  defaultCarryOverRate?: number | null
 }

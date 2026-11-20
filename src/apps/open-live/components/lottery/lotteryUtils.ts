@@ -53,6 +53,12 @@ export function resolveLotteryIdentityCode(propCode?: string, biliAuthCode?: str
   return propCode?.trim() || biliAuthCode?.trim() || ''
 }
 
+export function getLiveLotteryUserKey(user: Pick<LiveLotteryUserInfo, 'openId' | 'uId'>): string {
+  const oid = user.openId?.trim()
+  if (oid) return `oid:${oid}`
+  return user.uId && user.uId > 0 ? `uid:${user.uId}` : ''
+}
+
 export function formatLotteryAvatar(avatar?: string, size = 48): string {
   if (!avatar || typeof avatar !== 'string') {
     return DEFAULT_LOTTERY_AVATAR

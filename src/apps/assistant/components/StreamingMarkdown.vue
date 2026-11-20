@@ -208,7 +208,7 @@ onBeforeUnmount(endParser)
 .streaming-markdown :deep(code) {
   border: 1px solid var(--border, rgba(128, 128, 128, 0.18));
   border-radius: 4px;
-  background: var(--popover, rgba(128, 128, 128, 0.08));
+  background: var(--inset, var(--muted, rgba(128, 128, 128, 0.08)));
   color: inherit;
   font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
   font-size: 0.92em;
@@ -225,7 +225,7 @@ onBeforeUnmount(endParser)
   padding: 10px 12px;
   border: 1px solid var(--border, rgba(128, 128, 128, 0.18));
   border-radius: 8px;
-  background: var(--popover, rgba(128, 128, 128, 0.08));
+  background: var(--inset, var(--muted, rgba(128, 128, 128, 0.08)));
   color: inherit;
   font-size: 13px;
   line-height: 1.55;

@@ -28,4 +28,6 @@ export interface ResponseSongModel {
   options?: SongRequestOption
   /** @nullable */
   cover?: string | null
+  /** @nullable */
+  sortOrder?: number | null
 }

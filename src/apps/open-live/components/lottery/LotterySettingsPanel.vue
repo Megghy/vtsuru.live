@@ -117,6 +117,18 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   <ToggleGroupItem value="regex">正则</ToggleGroupItem>
                 </ToggleGroup>
               </div>
+
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-muted-foreground w-16 shrink-0">扣除积分</span>
+                <NumberField
+                  :model-value="option.pointCost ?? 0"
+                  :disabled="isStartLottery"
+                  :min="0"
+                  placeholder="0 表示不扣积分"
+                  class="flex-1"
+                  @update:model-value="option.pointCost = $event ?? 0"
+                />
+              </div>
             </template>
 
             <!-- 礼物规则 -->

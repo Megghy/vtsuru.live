@@ -34,6 +34,20 @@ const auditLogs = ref<
   { id: number; action: string; detail: string; createdAt: number; userId: number; userName?: string }[]
 >([])
 const selectedStreamerId = ref<number | null>(null)
+const pointSettingsRef = ref<InstanceType<typeof PointSettings> | null>(null)
+
+function handleStreamerChange(val: string) {
+  const nextId = val === 'all' ? null : Number(val)
+  if (nextId === selectedStreamerId.value) return
+  if (
+    pointSettingsRef.value?.isDirty &&
+    !window.confirm('当前主播积分规则有未保存的更改，切换主播后将会丢失，确定要切换吗？')
+  ) {
+    return
+  }
+  selectedStreamerId.value = nextId
+  void loadData()
+}
 
 const statItems = computed(() => {
   const s = pointStats.value
@@ -90,7 +104,7 @@ onMounted(async () => {
       <CardContent class="p-3">
         <Select
           :model-value="selectedStreamerId ? String(selectedStreamerId) : 'all'"
-          @update:model-value="((selectedStreamerId = $event === 'all' ? null : Number($event)), loadData())"
+          @update:model-value="handleStreamerChange(String($event))"
         >
           <SelectTrigger class="w-full sm:w-80">
             <SelectValue placeholder="选择主播后，可单独查看/修改积分规则与筛选统计" />
@@ -238,6 +252,7 @@ onMounted(async () => {
         </Alert>
         <PointSettings
           v-else
+          ref="pointSettingsRef"
           :org-id="orgId"
           :streamer-id="selectedStreamerId"
         />

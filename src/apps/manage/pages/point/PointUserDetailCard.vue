@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import AddSquare24Regular from '@vicons/fluent/es/AddSquare24Regular'
 import Info24Filled from '@vicons/fluent/es/Info24Filled'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import type { ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/client-types'
+import type { ResponsePointHisrotyModel } from '@/api/client-types'
 import type { ResponsePointOrder2OwnerModel, ResponsePointUserModel } from '@/api/generated/model'
 import {
   getApiPointGetUserHistories,
@@ -14,34 +14,37 @@ import { formatTime } from '@/apps/manage/composables/formatters'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
-import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   user: ResponsePointUserModel
-  goods: ResponsePointGoodModel[]
+}>()
+
+const emit = defineEmits<{
+  userUpdated: [payload: { point: number; updateAt: number }]
 }>()
 
 const message = useMessage()
 
 const isLoading = ref(false)
+const isGivingPoint = ref(false)
 const orders = ref<ResponsePointOrder2OwnerModel[]>([])
 const pointHistory = ref<ResponsePointHisrotyModel[]>([])
 
 const showAddPointModal = ref(false)
 const addPointCount = ref(0)
-const addPointReason = ref<string>('')
+const addPointReason = ref('')
 
 const emptyOpenId = '00000000-0000-0000-0000-000000000000'
 
@@ -86,52 +89,56 @@ function getGivePointParams(target: PointTarget) {
 async function getOrders() {
   const info = props.user.info
   if (!info || info.id <= 0) return []
-
   try {
-    isLoading.value = true
-    const data = await getApiPointGetUserOrders({
-      authId: info.id,
-    })
-
-    if (data.code === 200) {
-      return data.data
-    } else {
-      message.error(`获取订单失败: ${data.message}`)
-      console.error(data)
-    }
+    const data = await getApiPointGetUserOrders({ authId: info.id })
+    if (data.code === 200) return data.data
+    message.error(`获取订单失败: ${data.message}`)
   } catch (err) {
     message.error(`获取订单失败: ${err}`)
-    console.error(err)
-  } finally {
-    isLoading.value = false
   }
-
   return []
 }
 
 async function getPointHistory() {
+  const target = pointTarget.value
+  if (!target) return []
   try {
-    isLoading.value = true
-    const target = pointTarget.value
-    if (!target) return []
-
     const data = await getApiPointGetUserHistories(getHistoryParams(target) as any)
-
-    if (data.code === 200) {
-      return data.data
-    } else {
-      message.error(`获取积分历史失败: ${data.message}`)
-      console.error(data)
-    }
+    if (data.code === 200) return data.data
+    message.error(`获取积分历史失败: ${data.message}`)
   } catch (err) {
     message.error(`获取积分历史失败: ${err}`)
-    console.error(err)
-  } finally {
-    isLoading.value = false
   }
-
   return []
 }
+
+let loadSeq = 0
+
+async function loadInitialData() {
+  const seq = ++loadSeq
+  isLoading.value = true
+  try {
+    const [histories, userOrders] = await Promise.all([
+      getPointHistory(),
+      (props.user.info?.id ?? 0) > 0 ? getOrders() : Promise.resolve([]),
+    ])
+    if (seq !== loadSeq) return
+    pointHistory.value = histories
+    orders.value = userOrders
+  } finally {
+    if (seq === loadSeq) {
+      isLoading.value = false
+    }
+  }
+}
+
+watch(
+  () => `${props.user.info?.id ?? 0}:${props.user.info?.userId ?? 0}:${props.user.info?.openId ?? ''}`,
+  () => {
+    void loadInitialData()
+  },
+  { immediate: true },
+)
 
 async function givePoint() {
   if (addPointCount.value === 0) {
@@ -139,14 +146,14 @@ async function givePoint() {
     return
   }
 
-  isLoading.value = true
-  try {
-    const target = pointTarget.value
-    if (!target) {
-      message.error('无法识别积分目标用户')
-      return
-    }
+  const target = pointTarget.value
+  if (!target) {
+    message.error('无法识别积分目标用户')
+    return
+  }
 
+  isGivingPoint.value = true
+  try {
     const data = await postApiPointGivePoint({
       ...getGivePointParams(target),
       count: addPointCount.value,
@@ -154,63 +161,52 @@ async function givePoint() {
     } as any)
 
     if (data.code === 200) {
-      message.success('添加成功')
+      message.success('积分已更新')
       showAddPointModal.value = false
-      props.user.point = Number((props.user.point + addPointCount.value).toFixed(1))
-
-      setTimeout(async () => {
-        pointHistory.value = await getPointHistory()
-      }, 1500)
-
+      const totalPoint =
+        typeof data.data?.totalPoint === 'number'
+          ? Number(data.data.totalPoint.toFixed(1))
+          : Number((props.user.point + addPointCount.value).toFixed(1))
+      emit('userUpdated', { point: totalPoint, updateAt: Date.now() })
       addPointCount.value = 0
       addPointReason.value = ''
+      pointHistory.value = await getPointHistory()
     } else {
-      message.error(`添加积分失败: ${data.message}`)
-      console.error(data)
+      message.error(`调整积分失败: ${data.message}`)
     }
   } catch (err) {
-    message.error(`添加积分失败: ${err}`)
-    console.error(err)
+    message.error(`调整积分失败: ${err}`)
   } finally {
-    isLoading.value = false
+    isGivingPoint.value = false
   }
 }
-
-onMounted(async () => {
-  pointHistory.value = await getPointHistory()
-  if ((props.user.info?.id ?? 0) > 0) {
-    orders.value = await getOrders()
-  }
-})
 </script>
 
 <template>
   <div class="space-y-4 p-4">
     <!-- 用户基本信息 -->
     <Card>
-      <CardContent class="p-5 space-y-4">
-        <div class="flex items-start justify-between">
-          <div class="flex items-center gap-4">
-            <Avatar class="size-14 border border-border">
+      <CardContent class="p-4 space-y-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <Avatar class="size-12 border border-border shrink-0">
               <AvatarImage
                 :src="user.info.avatar"
                 fallback-src="/img/no-face.png"
               />
               <AvatarFallback>{{ user.info.name?.slice(0, 2) || '用户' }}</AvatarFallback>
             </Avatar>
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="text-base font-semibold text-foreground">{{ user.info.name || '未知用户' }}</span>
-                <Tag
-                  :type="user.isAuthed ? 'success' : 'warning'"
-                  size="small"
-                  round
-                  :bordered="false"
+            <div class="space-y-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-semibold text-foreground truncate">{{ user.info.name || '未知用户' }}</span>
+                <Badge
+                  :variant="user.isAuthed ? 'success' : 'secondary'"
+                  size="xs"
                 >
                   {{ user.isAuthed ? '已认证' : '未认证' }}
-                </Tag>
+                </Badge>
               </div>
-              <div class="text-xs text-muted-foreground flex flex-col gap-0.5">
+              <div class="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 font-mono">
                 <span v-if="user.info.userId > 0">UID: {{ user.info.userId }}</span>
                 <span v-if="user.info.openId && user.info.openId !== emptyOpenId">OpenId: {{ user.info.openId }}</span>
               </div>
@@ -219,7 +215,7 @@ onMounted(async () => {
 
           <Button
             variant="outline"
-            class="gap-1.5"
+            class="gap-1.5 shrink-0"
             :disabled="!canAdjustPoint"
             @click="showAddPointModal = true"
           >
@@ -230,7 +226,7 @@ onMounted(async () => {
 
         <Separator />
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="grid grid-cols-3 gap-3">
           <div>
             <span class="text-xs text-muted-foreground block">当前积分</span>
             <span class="text-lg font-bold font-mono text-foreground mt-0.5 block">
@@ -259,8 +255,8 @@ onMounted(async () => {
       class="w-full"
     >
       <TabsList>
-        <TabsTrigger value="orders">订单记录</TabsTrigger>
-        <TabsTrigger value="history">积分流水</TabsTrigger>
+        <TabsTrigger value="orders">订单记录 ({{ orders.length }})</TabsTrigger>
+        <TabsTrigger value="history">积分流水 ({{ pointHistory.length }})</TabsTrigger>
       </TabsList>
 
       <TabsContent
@@ -277,7 +273,6 @@ onMounted(async () => {
             v-else
             :order="orders"
             type="owner"
-            :goods="goods"
           />
         </Spin>
       </TabsContent>
@@ -304,7 +299,7 @@ onMounted(async () => {
     <Dialog v-model:open="showAddPointModal">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-sm">给予 / 扣除积分</DialogTitle>
+          <DialogTitle class="text-sm">给予 / 扣除积分 · {{ user.info.name || '未知用户' }}</DialogTitle>
         </DialogHeader>
 
         <div class="space-y-3 py-2">
@@ -342,7 +337,8 @@ onMounted(async () => {
 
         <DialogFooter>
           <Button
-            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0 || isLoading"
+            :loading="isGivingPoint"
+            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0"
             @click="givePoint"
           >
             {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '确认给予' : '确认扣除' }}

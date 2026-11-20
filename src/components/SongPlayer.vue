@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
-import { getApiSongListGetNeteaseLyric } from '@/api/generated/song-list/song-list'
 import { Empty } from '@/shared/ui/empty'
+import { fetchNeteaseMergedLyric } from '@/shared/utils/lyric'
 
 const props = defineProps<{
   song: ResponseSongModel | undefined
@@ -14,6 +14,7 @@ const props = defineProps<{
 }>()
 const emits = defineEmits(['update:isLrcLoading', 'update:close', 'update:volume'])
 
+const aplayerRef = ref<any>()
 const aplayerMusic = ref({
   title: '',
   artist: '',
@@ -21,99 +22,79 @@ const aplayerMusic = ref({
   pic: '',
   lrc: '',
 })
-const temp = computed(() => {
-  if (props.song) OnPlayMusic(props.song)
-  return props.song
-})
+let lyricSeq = 0
 
-watch(temp, (newV) => {
-  if (newV) console.log(`开始播放: ${newV.name}`)
-})
+function resolveSongUrl(song: ResponseSongModel): string {
+  if (song.url) return song.url
+  if (song.from === SongPlatform.Netease && song.id) {
+    return `https://music.163.com/song/media/outer/url?id=${song.id}.mp3`
+  }
+  return ''
+}
 
-function OnPlayMusic(song: ResponseSongModel) {
+function triggerPlay(seq: number) {
+  void nextTick(() => {
+    if (seq !== lyricSeq) return
+    aplayerRef.value?.thenPlay?.()
+  })
+}
+
+async function onPlayMusic(song: ResponseSongModel, seq: number) {
+  const src = resolveSongUrl(song)
   if (song.from === SongPlatform.Netease) {
-    GetLyric(song)
-  } else {
+    await loadNeteaseLyric(song, src, seq)
+    return
+  }
+  emits('update:isLrcLoading', undefined)
+  aplayerMusic.value = {
+    title: song.name,
+    artist: song.author?.join('/') ?? '',
+    src,
+    pic: '',
+    lrc: '',
+  }
+  triggerPlay(seq)
+}
+
+async function loadNeteaseLyric(song: ResponseSongModel, src: string, seq: number) {
+  emits('update:isLrcLoading', song.key)
+  try {
+    const lrc = await fetchNeteaseMergedLyric(song.id)
+    if (seq !== lyricSeq) return
     aplayerMusic.value = {
       title: song.name,
       artist: song.author?.join('/') ?? '',
-      src: song.url,
+      src,
       pic: '',
-      lrc: '',
+      lrc,
     }
-  }
-}
-
-async function GetLyric(song: ResponseSongModel) {
-  emits('update:isLrcLoading', song.key)
-  getApiSongListGetNeteaseLyric({ id: song.id })
-    .then((data) => {
-      if (data.code === 200) {
-        aplayerMusic.value = {
-          title: song.name,
-          artist: song.author?.join('/') ?? '',
-          src: song.url,
-          pic: '',
-          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric ?? '', data.data.tlyric) : (data.data.lyric ?? ''),
-        }
-      } else {
-        aplayerMusic.value = {
-          title: song.name,
-          artist: song.author?.join('/') ?? '',
-          src: song.url,
-          pic: '',
-          lrc: '',
-        }
-      }
-    })
-    .finally(() => {
+    triggerPlay(seq)
+  } finally {
+    if (seq === lyricSeq) {
       emits('update:isLrcLoading', undefined)
-    })
-}
-
-function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
-  const originalLines = originalLyrics?.split('\n') ?? []
-  const translatedLines = translatedLyrics?.split('\n') ?? []
-
-  let mergedLyrics = ''
-
-  for (let i = 0; i < originalLines.length; i++) {
-    const originalLine = originalLines[i]?.trim()
-    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
-
-    let mergedLine = originalLine
-
-    if (originalTimeMatch) {
-      const originalTime = originalTimeMatch[1]
-      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
-
-      if (translatedLineIndex !== -1) {
-        const translatedLine = translatedLines[translatedLineIndex]
-        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
-
-        if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
-          const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
-          if (translatedText) {
-            mergedLine += ` (${translatedText})`
-          }
-          translatedLines.splice(translatedLineIndex, 1)
-        }
-      }
-    }
-    if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
-      mergedLyrics += `${mergedLine}\n`
     }
   }
-
-  for (const translatedLine of translatedLines) {
-    const translatedText = translatedLine.trim()
-    if (translatedText) {
-      mergedLyrics += `${translatedText}\n`
-    }
-  }
-
-  return mergedLyrics.trim()
 }
+
+watch(
+  () => props.song,
+  (newSong) => {
+    const seq = ++lyricSeq
+    if (!newSong) {
+      aplayerMusic.value = { title: '', artist: '', src: '', pic: '', lrc: '' }
+      emits('update:isLrcLoading', undefined)
+      return
+    }
+    void onPlayMusic(newSong, seq)
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  lyricSeq++
+  emits('update:isLrcLoading', undefined)
+  aplayerRef.value?.pause?.()
+})
 </script>
 
 <template>
@@ -124,8 +105,9 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
   />
   <APlayer
     v-else
+    ref="aplayerRef"
     :music="aplayerMusic"
     autoplay
-    :show-lrc="aplayerMusic?.lrc && aplayerMusic.lrc.length > 0"
+    :show-lrc="Boolean(aplayerMusic.lrc)"
   />
 </template>

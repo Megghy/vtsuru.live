@@ -17,7 +17,11 @@ export interface ResponseQueueModel {
   giftPrice?: number | null
   /** @nullable */
   pointCost?: number | null
+  pointRefunded: boolean
   priorityLevel: number
+  /** @nullable */
+  sortOrder?: number | null
+  isPinned: boolean
   /** @nullable */
   mysteryBoxName?: string | null
   /** @nullable */

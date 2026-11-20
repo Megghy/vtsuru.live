@@ -4885,7 +4885,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int64"
             }
           }
         ],
@@ -5016,6 +5016,58 @@
         ]
       }
     },
+    "/api/live-request/batch-status": {
+      "post": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "postApiLiveRequestBatchStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchLiveRequestStatusModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchLiveRequestStatusModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchLiveRequestStatusModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt64Array"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt64Array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt64Array"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/live-request/cancel": {
       "post": {
         "tags": [
@@ -5028,7 +5080,15 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int64"
+            }
+          },
+          {
+            "name": "refundPoint",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -5065,6 +5125,16 @@
           "LiveRequest"
         ],
         "operationId": "postApiLiveRequestDeactivate",
+        "parameters": [
+          {
+            "name": "refundPoint",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -5411,6 +5481,34 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SongRequestStatus"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SongRequestFrom"
+            }
           }
         ],
         "responses": {
@@ -5430,6 +5528,58 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PaginationResponseOfListOfResponseSongRequestModel"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/live-request/pin": {
+      "post": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "postApiLiveRequestPin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
                 }
               }
             }
@@ -5488,6 +5638,103 @@
         }
       }
     },
+    "/api/live-request/reorder": {
+      "post": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "postApiLiveRequestReorder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/live-request/reset-order": {
+      "post": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "postApiLiveRequestResetOrder",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/live-request/singing": {
       "post": {
         "tags": [
@@ -5521,6 +5768,39 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/live-request/stats": {
+      "get": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "getApiLiveRequestStats",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseLiveRequestStatsModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseLiveRequestStatsModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseLiveRequestStatsModel"
                 }
               }
             }
@@ -9251,6 +9531,58 @@
         ]
       }
     },
+    "/api/point/batch-update-express": {
+      "post": {
+        "tags": [
+          "Point"
+        ],
+        "operationId": "postApiPointBatchUpdateExpress",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchUpdateExpressModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchUpdateExpressModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchUpdateExpressModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchUpdateExpressResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchUpdateExpressResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchUpdateExpressResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/point/batch-update-order-status": {
       "post": {
         "tags": [
@@ -9474,6 +9806,58 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseResultOfResponsePointGoodsEligibilityModel"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/point/consume-user-point": {
+      "post": {
+        "tags": [
+          "Point"
+        ],
+        "operationId": "postApiPointConsumeUserPoint",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestConsumeUserPointModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestConsumeUserPointModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestConsumeUserPointModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfPointConsumeResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfPointConsumeResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfPointConsumeResult"
                 }
               }
             }
@@ -10099,6 +10483,89 @@
         ]
       }
     },
+    "/api/point/histories": {
+      "get": {
+        "tags": [
+          "Point"
+        ],
+        "operationId": "getApiPointHistories",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PointFrom"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseGlobalPointHistoriesResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseGlobalPointHistoriesResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseGlobalPointHistoriesResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/point/reset-test-account": {
       "post": {
         "tags": [
@@ -10236,6 +10703,58 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseResultOfResponsePointGuardDuplicateScanModel"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/point/season-reset": {
+      "post": {
+        "tags": [
+          "Point"
+        ],
+        "operationId": "postApiPointSeasonReset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSeasonResetModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSeasonResetModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSeasonResetModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseSeasonResetResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseSeasonResetResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseSeasonResetResult"
                 }
               }
             }
@@ -10478,6 +10997,58 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseResultOfResponseTestPointModel"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/point/toggle-goods-pin": {
+      "post": {
+        "tags": [
+          "Point"
+        ],
+        "operationId": "postApiPointToggleGoodsPin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestToggleGoodsPinModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestToggleGoodsPinModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestToggleGoodsPinModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
                 }
               }
             }
@@ -12164,12 +12735,74 @@
         ]
       }
     },
+    "/api/queue/batch-status": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "postApiQueueBatchStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchQueueStatusModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchQueueStatusModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchQueueStatusModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt64Array"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt64Array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt64Array"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/queue/deactivate": {
       "post": {
         "tags": [
           "Queue"
         ],
         "operationId": "postApiQueueDeactivate",
+        "parameters": [
+          {
+            "name": "refundPoint",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -12374,6 +13007,338 @@
         ]
       }
     },
+    "/api/queue/get": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "getApiQueueGet",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QueueStatus"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QueueFrom"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseQueueModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseQueueModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseQueueModel"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/queue/join-from-web": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "postApiQueueJoinFromWeb",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "usePriority",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/queue/pin": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "postApiQueuePin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleQueuePinModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleQueuePinModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleQueuePinModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/queue/priority-from-web": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "postApiQueuePriorityFromWeb",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/queue/reorder": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "postApiQueueReorder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/queue/reset-order": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "postApiQueueResetOrder",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/queue/set-status": {
       "post": {
         "tags": [
@@ -12395,6 +13360,14 @@
             "schema": {
               "$ref": "#/components/schemas/QueueStatus"
             }
+          },
+          {
+            "name": "refundPoint",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -12414,6 +13387,39 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/queue/stats": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "getApiQueueStats",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueStatsModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueStatsModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQueueStatsModel"
                 }
               }
             }
@@ -13382,6 +14388,70 @@
             }
           }
         }
+      }
+    },
+    "/api/song-list/reorder": {
+      "post": {
+        "tags": [
+          "SongList"
+        ],
+        "operationId": "postApiSongListReorder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfInt32"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/api/song-list/update-batch-author": {
@@ -17129,6 +18199,11 @@
           "cover": {
             "type": "string",
             "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -18297,6 +19372,54 @@
         },
         "additionalProperties": false
       },
+      "BatchLiveRequestStatusModel": {
+        "required": [
+          "ids",
+          "status",
+          "refundPoint"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/SongRequestStatus"
+          },
+          "refundPoint": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BatchQueueStatusModel": {
+        "required": [
+          "ids",
+          "status",
+          "refundPoint"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/QueueStatus"
+          },
+          "refundPoint": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "BatchUpdate": {
         "required": [
           "ids",
@@ -19256,6 +20379,20 @@
           }
         },
         "additionalProperties": false
+      },
+      "GoodsSalePhase": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Active",
+          "NotStarted",
+          "Ended"
+        ]
       },
       "GoodsStatus": {
         "enum": [
@@ -20507,6 +21644,51 @@
         "additionalProperties": false,
         "description": "分页响应信封：code / message / data / pn / ps / total / more"
       },
+      "PaginationResponseOfListOfResponseQueueModel": {
+        "required": [
+          "code",
+          "data",
+          "more",
+          "pn",
+          "ps",
+          "total",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "ps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseQueueModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "分页响应信封：code / message / data / pn / ps / total / more"
+      },
       "PaginationResponseOfListOfResponseSongRequestModel": {
         "required": [
           "code",
@@ -20551,6 +21733,27 @@
         },
         "additionalProperties": false,
         "description": "分页响应信封：code / message / data / pn / ps / total / more"
+      },
+      "PointConsumeResult": {
+        "required": [
+          "success",
+          "errorMsg",
+          "pointLeft"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "errorMsg": {
+            "type": "string"
+          },
+          "pointLeft": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
       },
       "PointFrom": {
         "enum": [
@@ -20980,6 +22183,23 @@
           "And"
         ]
       },
+      "QueueRankItem": {
+        "required": [
+          "name",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "QueueSortType": {
         "enum": [
           0,
@@ -21226,6 +22446,46 @@
         },
         "additionalProperties": false
       },
+      "RequestBatchExpressItem": {
+        "required": [
+          "orderId",
+          "expressCompany",
+          "trackingNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expressCompany": {
+            "type": "string"
+          },
+          "trackingNumber": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestBatchUpdateExpressModel": {
+        "required": [
+          "items",
+          "markShipped"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestBatchExpressItem"
+            }
+          },
+          "markShipped": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "RequestBatchUpdateOrderStatusModel": {
         "required": [
           "orderIds",
@@ -21360,6 +22620,37 @@
           "quantity": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestConsumeUserPointModel": {
+        "required": [
+          "cost",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "oId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "uId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "cost": {
+            "type": "number",
+            "format": "double"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -21626,6 +22917,31 @@
             "format": "int32",
             "nullable": true
           },
+          "saleStartTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "saleEndTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "discountPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "discountStartTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "discountEndTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
           "setting": {
             "$ref": "#/components/schemas/TempRequestGoodsSetting"
           },
@@ -21784,6 +23100,44 @@
         },
         "additionalProperties": false
       },
+      "RequestRankItem": {
+        "required": [
+          "name",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestSeasonResetModel": {
+        "required": [
+          "carryOverRate",
+          "updateSeasonSetting"
+        ],
+        "type": "object",
+        "properties": {
+          "carryOverRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "seasonName": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateSeasonSetting": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "RequestSetOrderStatusModel": {
         "required": [
           "ids",
@@ -21902,6 +23256,23 @@
           "guardLevel": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestToggleGoodsPinModel": {
+        "required": [
+          "id",
+          "isPinned"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPinned": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -22286,8 +23657,10 @@
         "required": [
           "id",
           "name",
-          "description",
           "price",
+          "originalPrice",
+          "isOnDiscount",
+          "salePhase",
           "tags",
           "images",
           "status",
@@ -22314,7 +23687,8 @@
             "type": "string"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "count": {
             "type": "integer",
@@ -22324,6 +23698,41 @@
           "price": {
             "type": "number",
             "format": "double"
+          },
+          "originalPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "saleStartTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "saleEndTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "discountPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "discountStartTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "discountEndTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "isOnDiscount": {
+            "type": "boolean"
+          },
+          "salePhase": {
+            "$ref": "#/components/schemas/GoodsSalePhase"
           },
           "tags": {
             "type": "array",
@@ -22403,6 +23812,34 @@
         },
         "additionalProperties": false,
         "description": "基础礼物模型, 发送给用户"
+      },
+      "ResponseBatchUpdateExpressResult": {
+        "required": [
+          "updatedCount",
+          "updatedOrderIds",
+          "errors"
+        ],
+        "type": "object",
+        "properties": {
+          "updatedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedOrderIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
       },
       "ResponseBiliAuthBasicModel": {
         "required": [
@@ -23072,6 +24509,51 @@
         },
         "additionalProperties": false
       },
+      "ResponseGlobalPointHistoriesResult": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "totalEarned",
+          "totalSpent",
+          "netChange"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponsePointHistoryItemModel"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalEarned": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalSpent": {
+            "type": "number",
+            "format": "double"
+          },
+          "netChange": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "ResponseHistoryModel": {
         "required": [
           "time",
@@ -23216,6 +24698,58 @@
           "totalPaid": {
             "type": "number",
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseLiveRequestStatsModel": {
+        "required": [
+          "totalCount",
+          "waitingCount",
+          "todayRequestCount",
+          "todayFinishedCount",
+          "totalScPrice",
+          "totalPointCost",
+          "topSongs",
+          "topRequesters"
+        ],
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "waitingCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "todayRequestCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "todayFinishedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalScPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalPointCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "topSongs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestRankItem"
+            }
+          },
+          "topRequesters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestRankItem"
+            }
           }
         },
         "additionalProperties": false
@@ -23684,16 +25218,15 @@
       },
       "ResponsePointGoodsModel": {
         "required": [
-          "content",
-          "collectUrl",
           "embedCollectUrl",
           "setting",
-          "virtualKeys",
           "keySelectionMode",
           "id",
           "name",
-          "description",
           "price",
+          "originalPrice",
+          "isOnDiscount",
+          "salePhase",
           "tags",
           "images",
           "status",
@@ -23713,10 +25246,12 @@
         "type": "object",
         "properties": {
           "content": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "collectUrl": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "embedCollectUrl": {
             "type": "boolean"
@@ -23731,7 +25266,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "nullable": true
           },
           "keySelectionMode": {
             "$ref": "#/components/schemas/VirtualKeySelectionMode"
@@ -23751,7 +25287,8 @@
             "type": "string"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "count": {
             "type": "integer",
@@ -23761,6 +25298,41 @@
           "price": {
             "type": "number",
             "format": "double"
+          },
+          "originalPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "saleStartTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "saleEndTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "discountPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "discountStartTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "discountEndTime": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "isOnDiscount": {
+            "type": "boolean"
+          },
+          "salePhase": {
+            "$ref": "#/components/schemas/GoodsSalePhase"
           },
           "tags": {
             "type": "array",
@@ -24128,6 +25700,57 @@
           "lastEventAt": {
             "type": "integer",
             "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsePointHistoryItemModel": {
+        "required": [
+          "id",
+          "point",
+          "userName",
+          "from",
+          "createAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "point": {
+            "type": "number",
+            "format": "double"
+          },
+          "ouId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EventDataTypes"
+          },
+          "from": {
+            "$ref": "#/components/schemas/PointFrom"
+          },
+          "createAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "goodsName": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24572,7 +26195,9 @@
           "id",
           "status",
           "from",
+          "pointRefunded",
           "priorityLevel",
+          "isPinned",
           "createAt",
           "requestBy"
         ],
@@ -24598,9 +26223,20 @@
             "format": "double",
             "nullable": true
           },
+          "pointRefunded": {
+            "type": "boolean"
+          },
           "priorityLevel": {
             "type": "integer",
             "format": "int32"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isPinned": {
+            "type": "boolean"
           },
           "mysteryBoxName": {
             "type": "string",
@@ -24648,6 +26284,51 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ResponseQueueModel"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseQueueStatsModel": {
+        "required": [
+          "totalCount",
+          "waitingCount",
+          "todayJoinCount",
+          "todayFinishedCount",
+          "totalGiftPrice",
+          "totalPointCost",
+          "topUsers"
+        ],
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "waitingCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "todayJoinCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "todayFinishedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalGiftPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalPointCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "topUsers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueueRankItem"
             }
           }
         },
@@ -26354,6 +28035,28 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfPointConsumeResult": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PointConsumeResult"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfPointGuardDuplicateApplyResult": {
         "required": [
           "code",
@@ -26507,6 +28210,28 @@
               "$ref": "#/components/schemas/ResponseAllPointsModel"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfResponseBatchUpdateExpressResult": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseBatchUpdateExpressResult"
           }
         },
         "additionalProperties": false,
@@ -26820,6 +28545,28 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfResponseGlobalPointHistoriesResult": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseGlobalPointHistoriesResult"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfResponseLiveDetailModel": {
         "required": [
           "code",
@@ -26837,6 +28584,28 @@
           },
           "data": {
             "$ref": "#/components/schemas/ResponseLiveDetailModel"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfResponseLiveRequestStatsModel": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseLiveRequestStatsModel"
           }
         },
         "additionalProperties": false,
@@ -27272,6 +29041,28 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfResponseQueueStatsModel": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseQueueStatsModel"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfResponseScheduleModel": {
         "required": [
           "code",
@@ -27289,6 +29080,28 @@
           },
           "data": {
             "$ref": "#/components/schemas/ResponseScheduleModel"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfResponseSeasonResetResult": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseSeasonResetResult"
           }
         },
         "additionalProperties": false,
@@ -27914,6 +29727,34 @@
         },
         "additionalProperties": false
       },
+      "ResponseSeasonResetResult": {
+        "required": [
+          "affectedUsers",
+          "totalBefore",
+          "totalAfter",
+          "totalCleared"
+        ],
+        "type": "object",
+        "properties": {
+          "affectedUsers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalBefore": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAfter": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalCleared": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "ResponseSelectedSubItemOrderInfo": {
         "required": [
           "subItemId",
@@ -28024,6 +29865,11 @@
           "cover": {
             "type": "string",
             "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -28034,7 +29880,9 @@
           "songName",
           "status",
           "from",
+          "pointRefunded",
           "priorityLevel",
+          "isPinned",
           "createAt"
         ],
         "type": "object",
@@ -28065,9 +29913,20 @@
             "format": "double",
             "nullable": true
           },
+          "pointRefunded": {
+            "type": "boolean"
+          },
           "priorityLevel": {
             "type": "integer",
             "format": "int32"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isPinned": {
+            "type": "boolean"
           },
           "user": {
             "$ref": "#/components/schemas/DanmakuUserInfo"
@@ -28187,6 +30046,7 @@
           "id",
           "name",
           "price",
+          "originalPrice",
           "tags",
           "type",
           "embedCollectUrl",
@@ -28215,6 +30075,10 @@
             "nullable": true
           },
           "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "originalPrice": {
             "type": "number",
             "format": "double"
           },
@@ -29072,6 +30936,59 @@
         },
         "additionalProperties": false
       },
+      "Setting_MusicRequest": {
+        "required": [
+          "orderPrefix",
+          "platform",
+          "orderCooldown",
+          "orderMusicFirst",
+          "playMusicWhenFree",
+          "repeat",
+          "shuffle",
+          "volume",
+          "blacklist"
+        ],
+        "type": "object",
+        "properties": {
+          "orderPrefix": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "orderCooldown": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderMusicFirst": {
+            "type": "boolean"
+          },
+          "playMusicWhenFree": {
+            "type": "boolean"
+          },
+          "repeat": {
+            "type": "string"
+          },
+          "shuffle": {
+            "type": "boolean"
+          },
+          "volume": {
+            "type": "number",
+            "format": "double"
+          },
+          "blacklist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "obsTitle": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Setting_Point": {
         "required": [
           "allowType",
@@ -29198,6 +31115,20 @@
           },
           "checkInOnlyOnStreaming": {
             "type": "boolean"
+          },
+          "seasonName": {
+            "type": "string",
+            "nullable": true
+          },
+          "nextResetAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "defaultCarryOverRate": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -30677,6 +32608,40 @@
         },
         "additionalProperties": false
       },
+      "ToggleLiveRequestPinModel": {
+        "required": [
+          "id",
+          "isPinned"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isPinned": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ToggleQueuePinModel": {
+        "required": [
+          "id",
+          "isPinned"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isPinned": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "TransferOrgOwnerModel": {
         "required": [
           "targetUserId"
@@ -30972,6 +32937,7 @@
           "questionBox",
           "songRequest",
           "queue",
+          "musicRequest",
           "point",
           "questionDisplay",
           "general",
@@ -30992,6 +32958,9 @@
           },
           "queue": {
             "$ref": "#/components/schemas/Setting_Queue"
+          },
+          "musicRequest": {
+            "$ref": "#/components/schemas/Setting_MusicRequest"
           },
           "point": {
             "$ref": "#/components/schemas/Setting_Point"
@@ -31486,7 +33455,8 @@
       "WaitingMusicModel": {
         "required": [
           "from",
-          "music"
+          "music",
+          "isPinned"
         ],
         "type": "object",
         "properties": {
@@ -31495,6 +33465,9 @@
           },
           "music": {
             "$ref": "#/components/schemas/ResponseSongModel"
+          },
+          "isPinned": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

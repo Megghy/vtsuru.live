@@ -12,6 +12,7 @@ export interface LotteryOption {
   fanCardLevel?: number
   giftMinPrice?: number
   giftName?: string
+  pointCost?: number
   animationSpeed: number
 }
 

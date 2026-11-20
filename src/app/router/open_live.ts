@@ -28,7 +28,7 @@ export default {
       name: 'open-live-live-request',
       component: async () => import('@/apps/manage/pages/LiveRequestManageView.vue'),
       meta: {
-        title: '点歌',
+        title: '弹幕点播',
         pageWidth: 'xl',
       },
     },
