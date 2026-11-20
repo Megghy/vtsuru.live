@@ -1,5 +1,10 @@
 import { KeywordMatchType, QueueSortType } from '@/api/generated/model'
 
+export function normalizeTimestampMs(ts?: number | null): number {
+  if (!ts) return 0
+  return ts < 1e12 ? ts * 1000 : ts
+}
+
 /** 舰长等级对应主题色 (1 总督 / 2 提督 / 3 舰长), 其它返回次要文本色 */
 export function getGuardColor(level: number | null | undefined): string {
   switch (level) {
@@ -12,6 +17,17 @@ export function getGuardColor(level: number | null | undefined): string {
     default:
       return 'var(--muted-foreground)'
   }
+}
+
+/** SC 金额对应标准色阶，供点播管理与历史共用 */
+export function getSCColor(price: number | null | undefined): string {
+  if (!price) return 'var(--muted-foreground)'
+  if (price >= 2000) return '#AB1A32'
+  if (price >= 1000) return '#E54D4D'
+  if (price >= 500) return '#E09443'
+  if (price >= 100) return '#E2B52B'
+  if (price >= 50) return '#427D9E'
+  return '#2A60B2'
 }
 
 /**
@@ -42,11 +58,13 @@ export interface QueueSortAccessor<T> {
   fansMedalWearing?: (item: T) => boolean | null | undefined
   /** 积分插队优先级（降序，数值越大越靠前） */
   priorityLevel?: (item: T) => number | null | undefined
+  /** 手动排序权重（升序，存在非空值的记录优先于规则排序） */
+  sortOrder?: (item: T) => number | null | undefined
 }
 
 /**
  * 按队列排序策略对列表排序, 队列与点播共用。
- * 插队优先级永远优先；同优先级内再按指定排序策略比较。
+ * 手动调序 (sortOrder) 优先级最高；其后是插队优先级；同级内按指定排序策略比较。
  * 舰长等级原始值越小代表越高 (1 总督 > 2 提督 > 3 舰长 > 0 普通), 排序时把 0/空映射为 4 置后。
  */
 export function sortByQueueType<T>(
@@ -56,6 +74,13 @@ export function sortByQueueType<T>(
   accessor: QueueSortAccessor<T>,
 ): T[] {
   const result = [...items].toSorted((a, b) => {
+    const orderA = accessor.sortOrder?.(a)
+    const orderB = accessor.sortOrder?.(b)
+    const hasA = orderA !== null && orderA !== undefined
+    const hasB = orderB !== null && orderB !== undefined
+    if (hasA && hasB && orderA !== orderB) return orderA - orderB
+    if (hasA !== hasB) return hasA ? -1 : 1
+
     const priorityDiff = (accessor.priorityLevel?.(b) ?? 0) - (accessor.priorityLevel?.(a) ?? 0)
     if (priorityDiff !== 0) return priorityDiff
 

@@ -8,4 +8,5 @@
 
 export type PostApiLiveRequestCancelParams = {
   id?: number
+  refundPoint?: boolean
 }

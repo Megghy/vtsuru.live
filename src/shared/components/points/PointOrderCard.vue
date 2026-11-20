@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
 import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import ChevronLeft24Regular from '@vicons/fluent/es/ChevronLeft24Regular'
+import ChevronRight24Regular from '@vicons/fluent/es/ChevronRight24Regular'
 import DismissCircle24Regular from '@vicons/fluent/es/DismissCircle24Regular'
 import Prohibited24Regular from '@vicons/fluent/es/Prohibited24Regular'
 import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
@@ -17,13 +19,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { toast } from '@/shared/utils'
 
@@ -39,6 +41,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ selectedItem: [items: number[]] }>()
+
 const actionLoading = ref(false)
 const selectedItems = ref<number[]>([])
 const detail = ref<ResponsePointOrder2OwnerModel>()
@@ -46,7 +49,7 @@ const showDetail = ref(false)
 const serviceDetail = ref<ResponsePointOrder2OwnerModel>()
 const showServiceDetail = ref(false)
 const page = ref(1)
-const pageSize = 10
+const pageSize = 15
 
 const statusMeta: Record<
   PointOrderStatus,
@@ -90,13 +93,42 @@ const statusMeta: Record<
   },
 }
 
-const loading = computed(() => !!props.loading || actionLoading.value)
+const loading = computed(() => Boolean(props.loading) || actionLoading.value)
 const pagedOrders = computed(() => props.order.slice((page.value - 1) * pageSize, page.value * pageSize))
 
 watch(
   () => props.order,
-  () => (page.value = 1),
+  (list) => {
+    const maxPage = Math.max(1, Math.ceil(list.length / pageSize))
+    if (page.value > maxPage) page.value = 1
+    const existingIds = new Set(list.map((o) => o.id))
+    const pruned = selectedItems.value.filter((id) => existingIds.has(id))
+    if (pruned.length !== selectedItems.value.length) {
+      selectedItems.value = pruned
+      emit('selectedItem', pruned)
+    }
+  },
 )
+
+const detailOrderIndex = computed(() => {
+  if (!detail.value) return -1
+  return props.order.findIndex((o) => o.id === detail.value!.id)
+})
+
+const canPrevDetail = computed(() => detailOrderIndex.value > 0)
+const canNextDetail = computed(() => detailOrderIndex.value >= 0 && detailOrderIndex.value < props.order.length - 1)
+
+function stepDetailOrder(delta: -1 | 1) {
+  const nextIndex = detailOrderIndex.value + delta
+  const target = props.order[nextIndex]
+  if (!target) return
+  if (target.type === GoodsTypes.Service) {
+    showDetail.value = false
+    openDetail(target)
+    return
+  }
+  detail.value = target
+}
 
 function getStatusLabel(row: ResponsePointOrder2OwnerModel) {
   if (row.type === GoodsTypes.Service && row.status === PointOrderStatus.Pending) return '待接单'
@@ -154,7 +186,7 @@ async function updateStatus(ids: number[], status: PointOrderStatus) {
   }
 }
 
-async function saveExpress() {
+async function saveExpress(andMarkShipped = false) {
   if (!detail.value) return
   actionLoading.value = true
   try {
@@ -164,8 +196,16 @@ async function saveExpress() {
       detail.value.trackingNumber ?? '',
       detail.value.expressCompany,
     )
+    if (andMarkShipped && detail.value.status === PointOrderStatus.Pending) {
+      await updateOrdersStatus(
+        props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
+        [detail.value.id],
+        PointOrderStatus.Shipped,
+      )
+      detail.value.status = PointOrderStatus.Shipped
+    }
     detail.value.updateAt = Date.now()
-    toast.success('物流信息已更新')
+    toast.success(andMarkShipped ? '已保存物流单号并标记发货' : '物流信息已更新')
   } catch (error) {
     toast.error(error instanceof Error ? error.message : `更新物流信息失败: ${error}`)
   } finally {
@@ -184,18 +224,13 @@ function toggleSelection(id: number, checked: boolean) {
   updateSelection([...new Set(next)])
 }
 
+const selectableOrders = computed(() => props.order.filter((o) => o.type !== GoodsTypes.Service))
 const isAllSelected = computed(
-  () =>
-    props.order.length > 0 &&
-    props.order.filter((o) => o.type !== GoodsTypes.Service).every((o) => selectedItems.value.includes(o.id)),
+  () => selectableOrders.value.length > 0 && selectableOrders.value.every((o) => selectedItems.value.includes(o.id)),
 )
 
 function toggleAll(checked: boolean) {
-  if (checked) {
-    updateSelection(props.order.filter((o) => o.type !== GoodsTypes.Service).map((o) => o.id))
-  } else {
-    updateSelection([])
-  }
+  updateSelection(checked ? selectableOrders.value.map((o) => o.id) : [])
 }
 
 function formatRelativeTime(time: number) {
@@ -211,7 +246,7 @@ function formatRelativeTime(time: number) {
   <div class="point-order-card w-full min-w-0">
     <Empty
       v-if="order.length === 0"
-      description="暂无订单"
+      description="暂无匹配订单"
       class="py-12"
     />
 
@@ -233,20 +268,24 @@ function formatRelativeTime(time: number) {
               <TableHead class="w-16 py-2.5">数量</TableHead>
               <TableHead class="w-28 py-2.5">时间</TableHead>
               <TableHead class="w-20 py-2.5">积分</TableHead>
-              <TableHead class="w-32 py-2.5">状态</TableHead>
+              <TableHead class="w-36 py-2.5">状态</TableHead>
               <TableHead class="w-20 py-2.5">类型</TableHead>
               <TableHead class="w-28 py-2.5">备注</TableHead>
               <TableHead class="min-w-36 py-2.5">物流</TableHead>
-              <TableHead class="w-16 py-2.5 text-right pr-3">操作</TableHead>
+              <TableHead class="w-20 py-2.5 text-right pr-3">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow
               v-for="row in pagedOrders"
               :key="row.id"
-              class="hover:bg-muted/30"
+              class="hover:bg-muted/30 cursor-pointer"
+              @click="openDetail(row)"
             >
-              <TableCell class="py-2.5 px-3">
+              <TableCell
+                class="py-2.5 px-3"
+                @click.stop
+              >
                 <Checkbox
                   :checked="selectedItems.includes(row.id)"
                   :disabled="row.type === GoodsTypes.Service"
@@ -254,7 +293,10 @@ function formatRelativeTime(time: number) {
                 />
               </TableCell>
               <TableCell class="py-2.5 font-mono text-muted-foreground">#{{ row.id }}</TableCell>
-              <TableCell class="py-2.5">
+              <TableCell
+                class="py-2.5"
+                @click.stop
+              >
                 <a
                   :href="`https://space.bilibili.com/${row.customer?.userId || ''}`"
                   target="_blank"
@@ -307,18 +349,21 @@ function formatRelativeTime(time: number) {
                 class="py-2.5 text-muted-foreground truncate max-w-28"
                 :title="row.remark"
               >
-                {{ row.remark || '无' }}
+                {{ row.remark || '—' }}
               </TableCell>
               <TableCell class="py-2.5 font-mono text-[11px] text-muted-foreground truncate max-w-36">
                 {{ row.trackingNumber || (row.type === GoodsTypes.Virtual ? '无需发货' : '暂无物流') }}
               </TableCell>
-              <TableCell class="py-2.5 text-right pr-3">
+              <TableCell
+                class="py-2.5 text-right pr-3"
+                @click.stop
+              >
                 <Button
                   variant="outline"
-                  class="px-2"
+                  size="xs"
                   @click="openDetail(row)"
                 >
-                  详情
+                  {{ row.status === PointOrderStatus.Pending ? '处理' : '详情' }}
                 </Button>
               </TableCell>
             </TableRow>
@@ -384,44 +429,79 @@ function formatRelativeTime(time: number) {
       </div>
     </template>
 
-    <!-- 订单详情弹窗 -->
-    <Dialog
+    <!-- 订单履约抽屉 -->
+    <Sheet
       v-if="detail"
       v-model:open="showDetail"
     >
-      <DialogContent class="sm:max-w-lg max-h-[85vh] flex flex-col p-4 gap-3">
-        <DialogHeader class="pb-2 border-b border-border/60">
-          <DialogTitle class="text-sm">订单详情</DialogTitle>
-        </DialogHeader>
+      <SheetContent
+        side="right"
+        class="w-full sm:max-w-lg flex flex-col p-0 gap-0"
+      >
+        <SheetHeader
+          class="px-5 py-3.5 pr-12 border-b border-border/70 flex-row items-center justify-between space-y-0"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <SheetTitle class="text-sm font-semibold font-mono truncate"> 订单 #{{ detail.id }} </SheetTitle>
+            <Badge
+              :variant="getStatusVariant(detail)"
+              size="xs"
+              class="flex items-center gap-1 shrink-0"
+            >
+              <component
+                :is="statusMeta[detail.status].icon"
+                class="size-3"
+              />
+              <span>{{ getStatusLabel(detail) }}</span>
+            </Badge>
+          </div>
 
-        <ScrollArea class="flex-1 min-h-0 pr-2">
-          <div class="space-y-3.5 text-xs">
-            <div class="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/60">
+          <div class="flex items-center gap-1 shrink-0">
+            <Button
+              variant="outline"
+              size="icon-xs"
+              title="上一单"
+              :disabled="!canPrevDetail"
+              @click="stepDetailOrder(-1)"
+            >
+              <ChevronLeft24Regular class="size-3.5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-xs"
+              title="下一单"
+              :disabled="!canNextDetail"
+              @click="stepDetailOrder(1)"
+            >
+              <ChevronRight24Regular class="size-3.5" />
+            </Button>
+          </div>
+        </SheetHeader>
+
+        <ScrollArea class="flex-1 min-h-0 px-5 py-4">
+          <div class="space-y-4 text-xs">
+            <div class="grid grid-cols-2 gap-2.5 p-3 rounded-lg bg-muted/30 border border-border/60">
               <div>
-                <span class="text-muted-foreground block text-[11px]">订单号</span>
-                <strong class="font-mono text-foreground">#{{ detail.id }}</strong>
+                <span class="text-muted-foreground block text-[11px]">下单用户</span>
+                <a
+                  :href="`https://space.bilibili.com/${detail.customer?.userId || ''}`"
+                  target="_blank"
+                  class="font-semibold text-primary hover:underline"
+                >
+                  {{ detail.customer?.name || '未知用户' }}
+                </a>
               </div>
               <div>
-                <span class="text-muted-foreground block text-[11px]">用户</span>
-                <strong class="text-foreground">{{ detail.customer?.name || '未知用户' }}</strong>
-              </div>
-              <div>
-                <span class="text-muted-foreground block text-[11px]">使用积分</span>
+                <span class="text-muted-foreground block text-[11px]">消耗积分</span>
                 <strong class="font-mono text-foreground">{{ Number(detail.point.toFixed(1)) }}</strong>
               </div>
               <div>
-                <span class="text-muted-foreground block text-[11px]">当前状态</span>
-                <Badge
-                  :variant="getStatusVariant(detail)"
-                  size="xs"
-                  class="flex items-center gap-1 w-fit mt-0.5"
-                >
-                  <component
-                    :is="statusMeta[detail.status].icon"
-                    class="size-3"
-                  />
-                  <span>{{ getStatusLabel(detail) }}</span>
-                </Badge>
+                <span class="text-muted-foreground block text-[11px]">兑换数量</span>
+                <strong class="font-mono text-foreground">{{ detail.count }} 件</strong>
+              </div>
+              <div>
+                <span class="text-muted-foreground block text-[11px]">下单时间</span>
+                <span class="text-foreground">{{ formatRelativeTime(detail.createAt) }}</span>
               </div>
             </div>
 
@@ -440,7 +520,7 @@ function formatRelativeTime(time: number) {
                   <div
                     v-for="item in detail.selectedSubItems"
                     :key="item.subItemId"
-                    class="flex-between p-1.5 rounded bg-muted/40 text-xs"
+                    class="flex-between p-2 rounded bg-muted/40 text-xs"
                   >
                     <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
                     <div class="flex items-center gap-2">
@@ -459,8 +539,8 @@ function formatRelativeTime(time: number) {
             </template>
 
             <Alert
-              size="sm"
               v-if="detail.remark"
+              size="sm"
             >
               <AlertTitle>订单备注</AlertTitle>
               <AlertDescription class="text-muted-foreground">{{ detail.remark }}</AlertDescription>
@@ -493,36 +573,45 @@ function formatRelativeTime(time: number) {
                   />
                 </div>
               </div>
-            </template>
 
-            <template v-if="detail.type === GoodsTypes.Physical && detail.status === PointOrderStatus.Shipped">
-              <Separator />
-              <div class="space-y-2">
-                <span class="text-[11px] font-medium text-muted-foreground block">物流信息</span>
-                <div class="flex flex-col gap-2 p-2.5 rounded-lg border border-border/60 bg-muted/20">
-                  <Input
-                    v-model="detail.expressCompany"
-                    placeholder="快递公司 (如: 顺丰速运)"
-                  />
-                  <Input
-                    v-model="detail.trackingNumber"
-                    placeholder="填写快递单号"
-                    class="font-mono"
-                  />
-                  <Button
-                    class="self-end"
-                    :disabled="actionLoading"
-                    @click="saveExpress"
-                  >
-                    更新物流信息
-                  </Button>
+              <template v-if="detail.status === PointOrderStatus.Pending || detail.status === PointOrderStatus.Shipped">
+                <Separator />
+                <div class="space-y-2">
+                  <span class="text-[11px] font-medium text-muted-foreground block">物流发货信息</span>
+                  <div class="flex flex-col gap-2 p-3 rounded-lg border border-border/60 bg-muted/20">
+                    <Input
+                      v-model="detail.expressCompany"
+                      placeholder="快递公司 (如: 顺丰速运)"
+                    />
+                    <Input
+                      v-model="detail.trackingNumber"
+                      placeholder="填写快递单号"
+                      class="font-mono"
+                    />
+                    <div class="flex items-center justify-end gap-2 pt-1">
+                      <Button
+                        variant="outline"
+                        :loading="loading"
+                        @click="saveExpress(false)"
+                      >
+                        仅保存单号
+                      </Button>
+                      <Button
+                        v-if="detail.status === PointOrderStatus.Pending"
+                        :loading="loading"
+                        @click="saveExpress(true)"
+                      >
+                        保存单号并发货
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </template>
             </template>
           </div>
         </ScrollArea>
 
-        <DialogFooter class="pt-2 border-t border-border/60">
+        <SheetFooter class="px-5 py-3 border-t border-border/70 bg-muted/20">
           <Popconfirm
             v-if="previousStatus(detail) !== null"
             :title="`确认将订单 #${detail.id} 从「${statusMeta[detail.status].label}」改为「${statusMeta[previousStatus(detail)!].label}」？`"
@@ -549,7 +638,7 @@ function formatRelativeTime(time: number) {
             @positive-click="updateStatus([detail.id], nextStatus(detail)!)"
           >
             <template #trigger>
-              <Button>
+              <Button :loading="loading">
                 {{
                   detail.type === GoodsTypes.Virtual
                     ? '完成订单'
@@ -561,9 +650,9 @@ function formatRelativeTime(time: number) {
             </template>
             确认更新订单状态为「{{ statusMeta[nextStatus(detail)!].label }}」？
           </Popconfirm>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
 
     <ServiceOrderPanel
       v-if="serviceDetail"

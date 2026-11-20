@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import ChevronDown from '@vicons/ionicons5/es/ChevronDown'
-import ChevronUp from '@vicons/ionicons5/es/ChevronUp'
-import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
-import Pause from '@vicons/ionicons5/es/Pause'
-import Play from '@vicons/ionicons5/es/Play'
-import PlayBack from '@vicons/ionicons5/es/PlayBack'
-import PlayForward from '@vicons/ionicons5/es/PlayForward'
-import TrashBin from '@vicons/ionicons5/es/TrashBin'
-import VolumeHigh from '@vicons/ionicons5/es/VolumeHigh'
+import ArrowNext20Filled from '@vicons/fluent/es/ArrowNext20Filled'
+import ArrowPrevious20Filled from '@vicons/fluent/es/ArrowPrevious20Filled'
+import ChevronDown24Regular from '@vicons/fluent/es/ChevronDown24Regular'
+import ChevronUp24Regular from '@vicons/fluent/es/ChevronUp24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import DesktopSpeaker24Filled from '@vicons/fluent/es/DesktopSpeaker24Filled'
+import MusicNote224Filled from '@vicons/fluent/es/MusicNote224Filled'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import { useElementSize } from '@vueuse/core'
+import { Pause } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
@@ -17,7 +17,6 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Slider } from '@/shared/ui/slider'
-import { showUndoToast } from '@/shared/utils'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
 const emit = defineEmits<{
@@ -101,12 +100,7 @@ function onPreviousMusic() {
 }
 
 function clearWaitingQueue() {
-  if (musicRquestStore.waitingMusics.length === 0) return
-  const snapshot = [...musicRquestStore.waitingMusics]
-  musicRquestStore.waitingMusics.splice(0)
-  showUndoToast(`已清空 ${snapshot.length} 首待播点歌`, () => {
-    musicRquestStore.waitingMusics.unshift(...snapshot)
-  })
+  musicRquestStore.clearWaitingWithUndo()
 }
 
 function togglePlayerMinimize() {
@@ -126,15 +120,12 @@ function togglePlayerMinimize() {
       <!-- 顶部状态栏 -->
       <div class="flex-between gap-2 pb-1.5 border-b border-border/50 text-xs">
         <div class="flex items-center gap-2 min-w-0">
-          <component
-            :is="MusicalNote"
-            class="h-4 w-4 text-brand shrink-0"
-          />
+          <MusicNote224Filled class="size-4 text-primary shrink-0" />
           <span class="font-semibold text-foreground shrink-0">音乐播放器</span>
 
           <Badge
             v-if="currentPlayingInfo && !isPlayerMinimized"
-            :variant="currentPlayingInfo.type === 'request' ? 'brand' : 'secondary'"
+            :variant="currentPlayingInfo.type === 'request' ? 'default' : 'secondary'"
             size="sm"
             class="truncate"
           >
@@ -162,7 +153,7 @@ function togglePlayerMinimize() {
             <Badge
               v-if="musicRquestStore.waitingMusics.length > 0"
               variant="destructive"
-              class="text-[10px] px-1.5 py-0 h-4"
+              size="xs"
             >
               {{ musicRquestStore.waitingMusics.length }}
             </Badge>
@@ -173,9 +164,13 @@ function togglePlayerMinimize() {
               :disabled="musicRquestStore.aplayerMusics.length === 0"
               @click.stop="togglePlay"
             >
-              <component
-                :is="aplayer?.audio?.paused !== false ? Play : Pause"
-                class="h-3.5 w-3.5"
+              <Pause
+                v-if="aplayer?.audio?.paused === false"
+                class="size-3.5"
+              />
+              <Play24Filled
+                v-else
+                class="size-3.5"
               />
             </Button>
 
@@ -185,10 +180,7 @@ function togglePlayerMinimize() {
               :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
               @click.stop="onNextMusic"
             >
-              <component
-                :is="PlayForward"
-                class="h-3.5 w-3.5"
-              />
+              <ArrowNext20Filled class="size-3.5" />
             </Button>
           </template>
 
@@ -198,9 +190,13 @@ function togglePlayerMinimize() {
             :aria-label="isPlayerMinimized ? '展开播放器' : '收起播放器'"
             @click="togglePlayerMinimize"
           >
-            <component
-              :is="isPlayerMinimized ? ChevronUp : ChevronDown"
-              class="h-4 w-4"
+            <ChevronUp24Regular
+              v-if="isPlayerMinimized"
+              class="size-4"
+            />
+            <ChevronDown24Regular
+              v-else
+              class="size-4"
             />
           </Button>
         </div>
@@ -230,7 +226,7 @@ function togglePlayerMinimize() {
         <div class="music-control-panel flex items-center gap-6 shrink-0 flex-wrap">
           <!-- 播放控制 -->
           <div class="flex flex-col items-center gap-1.5">
-            <span class="text-[11px] font-medium text-muted-foreground">播放控制</span>
+            <span class="text-xs font-medium text-muted-foreground">播放控制</span>
             <div class="flex items-center gap-1">
               <Button
                 size="icon-sm"
@@ -239,22 +235,23 @@ function togglePlayerMinimize() {
                 :disabled="musicRquestStore.aplayerMusics.length === 0"
                 @click="onPreviousMusic"
               >
-                <component
-                  :is="PlayBack"
-                  class="h-3.5 w-3.5"
-                />
+                <ArrowPrevious20Filled class="size-3.5" />
               </Button>
 
               <Button
                 size="icon-sm"
-                variant="brand"
+                variant="default"
                 :aria-label="aplayer?.audio?.paused !== false ? '播放' : '暂停'"
                 :disabled="musicRquestStore.aplayerMusics.length === 0"
                 @click="togglePlay"
               >
-                <component
-                  :is="aplayer?.audio?.paused !== false ? Play : Pause"
-                  class="h-3.5 w-3.5"
+                <Pause
+                  v-if="aplayer?.audio?.paused === false"
+                  class="size-3.5"
+                />
+                <Play24Filled
+                  v-else
+                  class="size-3.5"
                 />
               </Button>
 
@@ -265,17 +262,14 @@ function togglePlayerMinimize() {
                 :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
                 @click="onNextMusic"
               >
-                <component
-                  :is="PlayForward"
-                  class="h-3.5 w-3.5"
-                />
+                <ArrowNext20Filled class="size-3.5" />
               </Button>
             </div>
           </div>
 
           <!-- 队列管理 -->
           <div class="flex flex-col items-center gap-1">
-            <span class="text-[11px] font-medium text-muted-foreground">队列管理</span>
+            <span class="text-xs font-medium text-muted-foreground">队列管理</span>
             <div class="flex items-center gap-1.5">
               <Badge
                 variant="secondary"
@@ -293,14 +287,10 @@ function togglePlayerMinimize() {
                 v-if="musicRquestStore.waitingMusics.length > 0"
                 size="xs"
                 variant="destructive"
-                class="h-5 px-1.5 text-[10px]"
                 title="清空所有等待中的点歌"
                 @click="clearWaitingQueue"
               >
-                <component
-                  :is="TrashBin"
-                  class="h-3 w-3 mr-0.5"
-                />
+                <Delete24Regular class="size-3 mr-0.5" />
                 清空
               </Button>
             </div>
@@ -308,11 +298,8 @@ function togglePlayerMinimize() {
 
           <!-- 音量控制 -->
           <div class="flex flex-col items-center gap-1.5 min-w-[90px]">
-            <div class="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <component
-                :is="VolumeHigh"
-                class="h-3.5 w-3.5"
-              />
+            <div class="flex items-center gap-1 text-xs text-muted-foreground">
+              <DesktopSpeaker24Filled class="size-3.5" />
               <span>音量 {{ Math.round(playerVolume * 100) }}%</span>
             </div>
             <Slider

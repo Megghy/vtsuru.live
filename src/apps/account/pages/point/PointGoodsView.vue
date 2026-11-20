@@ -4,11 +4,18 @@ import Cart24Regular from '@vicons/fluent/es/Cart24Regular'
 import Filter24Regular from '@vicons/fluent/es/Filter24Regular'
 import Person24Regular from '@vicons/fluent/es/Person24Regular'
 import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Trophy24Regular from '@vicons/fluent/es/Trophy24Regular'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
-import type { ResponsePointOrder2UserModel, ResponseUserInfo } from '@/api/generated/model'
+import { getApiCheckinRanking } from '@/api/generated/check-in/check-in'
+import {
+  FunctionTypes,
+  type ResponsePointOrder2UserModel,
+  type ResponseUserCheckInModel,
+  type ResponseUserInfo,
+} from '@/api/generated/model'
 import PointCartSheet from '@/shared/components/points/PointCartSheet.vue'
 import PointGoodsExchangeDialog from '@/shared/components/points/PointGoodsExchangeDialog.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
@@ -18,6 +25,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -43,6 +51,28 @@ const showBuyModal = ref(false)
 const showCart = ref(false)
 const successOrders = ref<ResponsePointOrder2UserModel[]>([])
 const showSuccess = ref(false)
+const showCheckInRankingModal = ref(false)
+const isLoadingRanking = ref(false)
+const checkInRankingList = ref<ResponseUserCheckInModel[]>([])
+const isCheckInRankingEnabled = computed(() =>
+  Boolean(props.userInfo.extra?.enableFunctions?.includes(FunctionTypes.CheckInRanking)),
+)
+
+async function openCheckInRanking() {
+  showCheckInRankingModal.value = true
+  isLoadingRanking.value = true
+  try {
+    const res = await getApiCheckinRanking({ vId: props.userInfo.id })
+    if (res.code === 200 && res.data) {
+      checkInRankingList.value = res.data
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    isLoadingRanking.value = false
+  }
+}
+
 const { count: cartCount } = usePointCart(props.userInfo.id)
 
 // 筛选相关状态
@@ -381,6 +411,18 @@ onMounted(async () => {
 
             <div class="toolbar-actions flex items-center gap-2">
               <Button
+                v-if="isCheckInRankingEnabled"
+                variant="outline"
+                class="flex items-center gap-1"
+                @click="openCheckInRanking"
+              >
+                <component
+                  :is="Trophy24Regular"
+                  class="size-3.5 text-amber-500"
+                />
+                签到榜
+              </Button>
+              <Button
                 variant="outline"
                 class="relative flex items-center gap-1"
                 @click="showCart = true"
@@ -399,7 +441,9 @@ onMounted(async () => {
                 </Badge>
               </Button>
               <Button
-                v-if="selectedTag || searchKeyword || onlyCanBuy || onlyGuardFree || ignoreGuard || sortOrder !== 'default'"
+                v-if="
+                  selectedTag || searchKeyword || onlyCanBuy || onlyGuardFree || ignoreGuard || sortOrder !== 'default'
+                "
                 variant="ghost"
                 class="flex items-center gap-1 text-muted-foreground"
                 @click="clearFilters"
@@ -443,7 +487,7 @@ onMounted(async () => {
 
     <div
       v-else
-      class="goods-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+      class="goods-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
     >
       <div
         v-for="item in selectedItems"
@@ -511,5 +555,56 @@ onMounted(async () => {
       v-model:show="showSuccess"
       :orders="successOrders"
     />
+
+    <!-- 公开签到排行榜弹窗 -->
+    <Dialog v-model:open="showCheckInRankingModal">
+      <DialogContent class="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold flex items-center gap-1.5">
+            <component
+              :is="Trophy24Regular"
+              class="size-4 text-amber-500"
+            />
+            <span>直播间签到榜</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div
+          v-if="isLoadingRanking"
+          class="py-10 flex-center"
+        >
+          <Spin />
+        </div>
+        <Empty
+          v-else-if="checkInRankingList.length === 0"
+          description="暂无签到排行数据"
+          class="py-8"
+        />
+        <div
+          v-else
+          class="max-h-96 overflow-y-auto divide-y divide-border/60 scrollbar-thin text-xs"
+        >
+          <div
+            v-for="(item, idx) in checkInRankingList.slice(0, 50)"
+            :key="`${item.ouId ?? item.name}-${idx}`"
+            class="flex-between py-2 px-1"
+          >
+            <div class="flex items-center gap-2.5 min-w-0">
+              <Badge
+                :variant="idx < 3 ? 'warning' : 'outline'"
+                size="xs"
+                class="w-7 justify-center font-mono shrink-0"
+              >
+                {{ idx + 1 }}
+              </Badge>
+              <span class="font-medium text-foreground truncate">{{ item.name }}</span>
+            </div>
+            <div class="flex items-center gap-3 shrink-0 font-mono text-muted-foreground">
+              <span class="text-primary font-semibold">连签 {{ item.consecutiveDays }} 天</span>
+              <span>累计 {{ item.totalCheckInCount }} 次</span>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

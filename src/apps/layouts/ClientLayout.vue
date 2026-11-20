@@ -218,7 +218,7 @@ onMounted(() => {
     <!-- 登录视图 -->
     <div
       v-if="!isLoggedIn"
-      class="flex-1 min-h-0 flex-center bg-card"
+      class="flex-1 min-h-0 flex-center bg-background"
     >
       <Card
         v-if="!isLoadingAccount"

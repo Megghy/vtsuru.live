@@ -58,6 +58,16 @@ export interface RequestPointGoodsModel {
   maxBuyCount: number
   /** @nullable */
   maxSubItemSelections?: number | null
+  /** @nullable */
+  saleStartTime?: number | null
+  /** @nullable */
+  saleEndTime?: number | null
+  /** @nullable */
+  discountPrice?: number | null
+  /** @nullable */
+  discountStartTime?: number | null
+  /** @nullable */
+  discountEndTime?: number | null
   setting: TempRequestGoodsSetting
   serviceConfig?: ServiceConfigData
   /** @nullable */

@@ -16,6 +16,7 @@ export interface ThemeTokens {
   canvas: string
   surface: string
   surfaceHover: string
+  muted: string
   inset: string
   elevated: string
 
@@ -63,6 +64,7 @@ interface SurfacePalette {
   canvas: string
   surface: string
   surfaceHover: string
+  muted: string
   inset: string
   elevated: string
   cardBorderColor: string
@@ -157,16 +159,18 @@ export function buildSiteTokens(isDark: boolean): ThemeTokens {
       ? {
           canvas: neutral[950],
           surface: neutral[900],
-          surfaceHover: neutral[800],
+          surfaceHover: neutral[750],
+          muted: neutral[800],
           inset: neutral[950],
-          elevated: neutral[800],
+          elevated: neutral[850],
           cardBorderColor: neutral[800],
         }
       : {
-          canvas: '#ffffff',
+          canvas: neutral[50],
           surface: '#ffffff',
-          surfaceHover: neutral[100],
-          inset: neutral[50],
+          surfaceHover: neutral[200],
+          muted: neutral[100],
+          inset: neutral[100],
           elevated: '#ffffff',
           cardBorderColor: neutral[300],
         },
@@ -181,15 +185,17 @@ export function buildManageTokens(isDark: boolean): ThemeTokens {
           canvas: neutral[900],
           surface: neutral[800],
           surfaceHover: neutral[700],
+          muted: neutral[750],
           inset: neutral[950],
-          elevated: neutral[700],
+          elevated: neutral[850],
           cardBorderColor: neutral[700],
         }
       : {
           canvas: neutral[100],
           surface: '#ffffff',
           surfaceHover: neutral[200],
-          inset: neutral[200],
+          muted: neutral[200],
+          inset: neutral[100],
           elevated: '#ffffff',
           cardBorderColor: neutral[300],
         },

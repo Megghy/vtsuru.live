@@ -222,7 +222,7 @@ function onPickSuggestion(text: string) {
             :key="d.kind + d.text"
             variant="outline"
             size="xs"
-            class="h-auto py-2 px-3 justify-start gap-2 bg-muted text-left font-normal"
+            class="h-auto py-2 px-3 justify-start gap-2 bg-muted/60 border-border text-left font-normal"
             :disabled="store.sending"
             @click="onPickSuggestion(d.prompt)"
           >
@@ -239,7 +239,7 @@ function onPickSuggestion(text: string) {
             :key="s"
             variant="outline"
             size="xs"
-            class="rounded-full bg-muted font-normal"
+            class="rounded-full bg-muted/60 border-border font-normal"
             :disabled="store.sending"
             @click="onPickSuggestion(s)"
           >
@@ -248,7 +248,7 @@ function onPickSuggestion(text: string) {
           <Button
             variant="outline"
             size="xs"
-            class="rounded-full bg-muted gap-1 text-muted-foreground"
+            class="rounded-full bg-muted/60 border-border gap-1 text-muted-foreground"
             :disabled="store.sending"
             aria-label="换一批"
             @click="rollSuggestions"

@@ -16,8 +16,8 @@ export interface ObsNotificationPayload {
 }
 
 const sourceLabelMap: Record<string, string> = {
-  'live-request': '点歌',
-  'music-request': '点歌',
+  'live-request': '点播',
+  'music-request': '点歌机',
   queue: '排队',
 }
 

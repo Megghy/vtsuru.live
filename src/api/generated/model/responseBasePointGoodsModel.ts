@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { APIFileModel } from './aPIFileModel'
+import type { GoodsSalePhase } from './goodsSalePhase'
 import type { GoodsStatus } from './goodsStatus'
 import type { GoodsTypes } from './goodsTypes'
 import type { GuardLevel } from './guardLevel'
@@ -17,10 +18,24 @@ import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel'
 export interface ResponseBasePointGoodsModel {
   id: number
   name: string
-  description: string
+  /** @nullable */
+  description?: string | null
   /** @nullable */
   count?: number | null
   price: number
+  originalPrice: number
+  /** @nullable */
+  saleStartTime?: number | null
+  /** @nullable */
+  saleEndTime?: number | null
+  /** @nullable */
+  discountPrice?: number | null
+  /** @nullable */
+  discountStartTime?: number | null
+  /** @nullable */
+  discountEndTime?: number | null
+  isOnDiscount: boolean
+  salePhase: GoodsSalePhase
   tags: string[]
   images: number[]
   status: GoodsStatus

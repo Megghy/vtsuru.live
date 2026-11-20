@@ -19,6 +19,7 @@ export interface ResponseSubPointGoodsModel {
   /** @nullable */
   count?: number | null
   price: number
+  originalPrice: number
   tags: string[]
   type: GoodsTypes
   /** @nullable */

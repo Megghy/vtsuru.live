@@ -1,560 +1,503 @@
 <script setup lang="ts">
-import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import { computed, onMounted, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
+import { useAccount } from '@/api/account'
 import type { SettingQueue } from '@/api/generated/model'
-import { KeywordMatchType, QueueGiftFilterType } from '@/api/generated/model'
-import { usePersistedStorage } from '@/shared/storage/persist'
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
-import { Button } from '@/shared/ui/button'
+import { KeywordMatchType, QueueGiftFilterType, QueueSortType } from '@/api/generated/model'
+import StickyDraftSaveBar from '@/apps/open-live/components/shared/StickyDraftSaveBar.vue'
+import { createDefaultQueueSetting, useQueue } from '@/composables/useQueue'
+import { useUnsavedChangesGuard } from '@/shared/composables/useUnsavedChangesGuard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
-import { Separator } from '@/shared/ui/separator'
-import { Spin } from '@/shared/ui/spin'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
-defineProps<{
-  isLoading: boolean
-  settings: SettingQueue
-}>()
+const store = useQueue()
+const accountInfo = useAccount()
 
-const emit = defineEmits<{
-  (e: 'change'): void
-}>()
-
-const isWarnMessageAutoClose = usePersistedStorage('Queue.Settings.WarnMessageAutoClose', false)
-
-function onChange() {
-  emit('change')
+function normalizeQueueSetting(raw?: Partial<SettingQueue> | null): SettingQueue {
+  const base = createDefaultQueueSetting()
+  return {
+    ...base,
+    ...raw,
+    giftNames: [...(raw?.giftNames ?? base.giftNames ?? [])],
+  }
 }
+
+const draft = ref<SettingQueue>(createDefaultQueueSetting())
+const savedSnapshot = ref('')
+const giftNamesInput = ref('')
+
+const canEdit = computed(() => store.configCanEdit)
+
+function syncDraftFromSource(raw?: Partial<SettingQueue> | null) {
+  const normalized = normalizeQueueSetting(raw)
+  draft.value = normalized
+  giftNamesInput.value = (normalized.giftNames ?? []).join(', ')
+  savedSnapshot.value = JSON.stringify(normalized)
+}
+
+watch(giftNamesInput, (val) => {
+  draft.value.giftNames = val
+    .split(/[,，\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+})
+
+const isDirty = computed(() => {
+  if (!canEdit.value || !savedSnapshot.value) return false
+  return JSON.stringify(draft.value) !== savedSnapshot.value
+})
+
+useUnsavedChangesGuard(() => isDirty.value, '排队规则存在未保存的更改，离开后将会丢失，确定要离开吗？')
+
+function initDraft() {
+  if (canEdit.value && accountInfo.value?.settings?.queue) {
+    syncDraftFromSource(accountInfo.value.settings.queue)
+  } else {
+    syncDraftFromSource(store.settings)
+  }
+}
+
+onMounted(() => {
+  initDraft()
+})
+
+watch(
+  () => accountInfo.value?.id,
+  () => {
+    if (!isDirty.value) {
+      initDraft()
+    }
+  },
+)
+
+function resetDraft() {
+  if (!savedSnapshot.value) return
+  syncDraftFromSource(JSON.parse(savedSnapshot.value) as SettingQueue)
+  toast.info('已还原未保存的更改')
+}
+
+async function saveAllSettings() {
+  const payload = normalizeQueueSetting(draft.value)
+  const ok = await store.saveSettings(payload)
+  if (ok) {
+    syncDraftFromSource(payload)
+  }
+}
+
+const sortOptions = [
+  { label: '按时间', value: String(QueueSortType.TimeFirst) },
+  { label: '按付费', value: String(QueueSortType.PaymentFist) },
+  { label: '按舰长', value: String(QueueSortType.GuardFirst) },
+  { label: '按粉丝牌', value: String(QueueSortType.FansMedalFirst) },
+]
 </script>
 
 <template>
-  <Spin :show="isLoading">
-    <div class="flex flex-col gap-3">
-      <Alert
-        size="sm"
-        class="bg-muted/50 border-muted"
-      >
-        <AlertTitle>提示</AlertTitle>
-        <AlertDescription> 修改后会自动保存并实时生效（部分配置可能需要重新开启功能后生效）。 </AlertDescription>
-      </Alert>
+  <div class="flex flex-col gap-3.5">
+    <StickyDraftSaveBar
+      v-if="canEdit"
+      :is-dirty="isDirty"
+      :is-saving="store.isLoading"
+      :can-edit="canEdit"
+      dirty-title="排队规则存在未保存的更改"
+      dirty-hint="修改关键词、礼物规则、排序或冷却后，点击「保存设置」统一生效"
+      clean-hint="所有排队配置均统一在顶部确认保存，不会误触弹窗轰炸。"
+      @reset="resetDraft"
+      @save="saveAllSettings"
+    />
 
-      <Card>
-        <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs">加入规则</CardTitle>
-        </CardHeader>
-        <CardContent class="p-4 flex flex-col gap-3">
+    <!-- 加入规则与权限 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">加入关键词、资格与默认排序</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <FormField label="弹幕触发关键词（留空禁用弹幕加入）">
+            <Input
+              v-model="draft.keyword"
+              placeholder="例如：排队"
+              :disabled="!canEdit"
+            />
+          </FormField>
+
+          <FormField label="匹配方式">
+            <ToggleGroup
+              type="single"
+              :model-value="String(draft.matchType)"
+              :disabled="!canEdit"
+              @update:model-value="(val) => val && (draft.matchType = Number(val) as KeywordMatchType)"
+            >
+              <ToggleGroupItem :value="String(KeywordMatchType.Full)">完全匹配</ToggleGroupItem>
+              <ToggleGroupItem :value="String(KeywordMatchType.Contains)">包含</ToggleGroupItem>
+              <ToggleGroupItem :value="String(KeywordMatchType.Regex)">正则</ToggleGroupItem>
+            </ToggleGroup>
+          </FormField>
+
+          <FormField label="最大队列长度 (0 为不限)">
+            <NumberField
+              v-model="draft.queueMaxSize"
+              :min="0"
+              :max="1000"
+              :disabled="!canEdit"
+            />
+          </FormField>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <SettingRow
+            v-model="draft.enableOnStreaming"
+            type="switch"
+            variant="card"
+            title="仅在直播时允许加入"
+            description="未开播时拒绝新增排队请求"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.allowFromWeb"
+            type="switch"
+            variant="card"
+            title="允许观众从公开排队页自助加入"
+            description="开放个人主页 /@ID/queue 页面，支持观众登录 B 站网页排队与插队"
+            :disabled="!canEdit"
+          />
+        </div>
+
+        <!-- 默认排序策略 -->
+        <div class="rounded-lg border border-border/70 bg-muted/20 p-3 flex-between gap-3 flex-wrap text-xs">
           <div class="flex items-center gap-2 flex-wrap">
-            <div class="flex items-center gap-2 text-xs">
-              <span class="text-muted-foreground shrink-0">弹幕关键词</span>
-              <Input
-                v-model="settings.keyword"
-                placeholder="留空则禁用弹幕加入"
-                class="w-56"
-                @change="onChange"
-              />
-            </div>
-            <div class="flex items-center border rounded-md p-0.5 gap-0.5 bg-muted/30">
-              <Button
-                type="button"
-                class="px-2.5"
-                :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'"
-                @click="((settings.matchType = KeywordMatchType.Full), onChange())"
+            <span class="font-medium text-foreground">默认排序规则:</span>
+            <ToggleGroup
+              type="single"
+              size="xs"
+              :model-value="String(draft.sortType)"
+              :disabled="!canEdit"
+              @update:model-value="(val) => val && (draft.sortType = Number(val) as QueueSortType)"
+            >
+              <ToggleGroupItem
+                v-for="opt in sortOptions"
+                :key="opt.value"
+                :value="opt.value"
               >
-                完全
-              </Button>
-              <Button
-                type="button"
-                class="px-2.5"
-                :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'"
-                @click="((settings.matchType = KeywordMatchType.Contains), onChange())"
-              >
-                包含
-              </Button>
-              <Button
-                type="button"
-                class="px-2.5"
-                :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'"
-                @click="((settings.matchType = KeywordMatchType.Regex), onChange())"
-              >
-                正则
-              </Button>
-            </div>
+                {{ opt.label }}
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
-          <div class="flex items-center justify-between max-w-[280px] text-xs">
-            <span class="text-muted-foreground">最大队列长度</span>
-            <div class="flex items-center gap-1.5">
-              <NumberField
-                v-model="settings.queueMaxSize"
-                :min="0"
-                :max="1000"
-                placeholder="0为不限制"
-                class="w-28"
-                @update:model-value="onChange"
-              />
-              <span class="text-muted-foreground">人</span>
-            </div>
-          </div>
-
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
+          <label class="flex items-center gap-1.5 cursor-pointer select-none">
             <Checkbox
-              :checked="settings.enableOnStreaming"
-              @update:checked="
-                (val: boolean) => {
-                  settings.enableOnStreaming = val
-                  onChange()
-                }
-              "
+              v-model:checked="draft.isReverse"
+              :disabled="!canEdit"
             />
-            <span>仅在直播时允许加入</span>
+            <span>队列倒序展示</span>
           </label>
+        </div>
 
-          <div class="flex items-center gap-2 my-1">
-            <span class="text-xs font-semibold text-muted-foreground">用户限制</span>
-            <Separator class="flex-1" />
-          </div>
+        <SettingRow
+          v-model="draft.allowAllDanmaku"
+          type="switch"
+          variant="card"
+          title="允许所有用户通过弹幕加入"
+          description="关闭后需佩戴主播粉丝牌，并可叠加最低等级或大航海要求"
+          :disabled="!canEdit"
+        />
 
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.allowAllDanmaku"
-              @update:checked="
-                (val: boolean) => {
-                  settings.allowAllDanmaku = val
-                  onChange()
-                }
-              "
-            />
-            <span>允许所有用户通过弹幕加入 (无视下方限制)</span>
-          </label>
-
-          <div
-            v-if="!settings.allowAllDanmaku"
-            class="flex flex-col gap-2.5 ml-5"
-          >
-            <div class="flex items-center justify-between max-w-[280px] text-xs">
-              <span class="text-muted-foreground">最低粉丝牌等级</span>
-              <div class="flex items-center gap-1.5">
-                <NumberField
-                  v-model="settings.fanMedalMinLevel"
-                  :min="0"
-                  class="w-24"
-                  @update:model-value="onChange"
-                />
-                <span class="text-muted-foreground">级</span>
-              </div>
-            </div>
-            <label class="flex items-center gap-2 cursor-pointer text-xs">
+        <div
+          v-if="!draft.allowAllDanmaku"
+          class="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3 text-xs"
+        >
+          <div class="flex items-center gap-4 flex-wrap">
+            <label class="flex items-center gap-1.5 cursor-pointer">
               <Checkbox
-                :checked="settings.needJianzhang"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.needJianzhang = val
-                    onChange()
-                  }
-                "
+                v-model:checked="draft.needJianzhang"
+                :disabled="!canEdit"
               />
               <span>需要舰长</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <label class="flex items-center gap-1.5 cursor-pointer">
               <Checkbox
-                :checked="settings.needTidu"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.needTidu = val
-                    onChange()
-                  }
-                "
+                v-model:checked="draft.needTidu"
+                :disabled="!canEdit"
               />
               <span>需要提督</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <label class="flex items-center gap-1.5 cursor-pointer">
               <Checkbox
-                :checked="settings.needZongdu"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.needZongdu = val
-                    onChange()
-                  }
-                "
+                v-model:checked="draft.needZongdu"
+                :disabled="!canEdit"
               />
               <span>需要总督</span>
             </label>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs">礼物规则</CardTitle>
-        </CardHeader>
-        <CardContent class="p-4 flex flex-col gap-3">
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.allowGift"
-              @update:checked="
-                (val: boolean) => {
-                  settings.allowGift = val
-                  onChange()
-                }
-              "
-            />
-            <span>允许通过发送指定礼物直接加入队列</span>
-          </label>
-
-          <div
-            v-if="settings.allowGift"
-            class="flex flex-col gap-2.5 ml-5"
+          <FormField
+            label="最低粉丝牌等级 (需佩戴粉丝牌)"
+            class="max-w-xs"
           >
-            <div class="flex items-center justify-between max-w-[280px] text-xs">
-              <span class="text-muted-foreground">最低礼物价值</span>
-              <div class="flex items-center gap-1.5">
-                <NumberField
-                  v-model="settings.minGiftPrice"
-                  :min="0.1"
-                  :step="0.1"
-                  class="w-24"
-                  @update:model-value="onChange"
-                />
-                <span class="text-muted-foreground">元</span>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 text-xs">
-              <span class="text-muted-foreground shrink-0">指定礼物名称</span>
-              <Input
-                :model-value="(settings.giftNames || []).join(',')"
-                placeholder="多个礼物名以英文逗号分隔，留空不限"
-                class="w-[320px]"
-                @update:model-value="
-                  (val: string | number) => {
-                    settings.giftNames = String(val)
-                      .split(',')
-                      .map((s: string) => s.trim())
-                      .filter(Boolean)
-                    onChange()
-                  }
-                "
-              />
-            </div>
-
-            <div class="flex items-center border rounded-md p-0.5 gap-0.5 bg-muted/30 w-fit">
-              <Button
-                type="button"
-                class="px-2.5"
-                :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'"
-                @click="((settings.giftFilterType = QueueGiftFilterType.And), onChange())"
-              >
-                需同时满足名称和价值
-              </Button>
-              <Button
-                type="button"
-                class="px-2.5"
-                :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'"
-                @click="((settings.giftFilterType = QueueGiftFilterType.Or), onChange())"
-              >
-                满足名称或价值之一
-              </Button>
-            </div>
-
-            <label class="flex items-center gap-2 cursor-pointer text-xs">
-              <Checkbox
-                :checked="settings.sendGiftDirectJoin"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.sendGiftDirectJoin = val
-                    onChange()
-                  }
-                "
-              />
-              <span>赠送符合条件的礼物后自动加入队列</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Info24Filled class="size-3.5 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p class="text-xs">如果不勾选，用户送礼后仍需发送排队弹幕才能加入。</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </label>
-
-            <label class="flex items-center gap-2 cursor-pointer text-xs">
-              <Checkbox
-                :checked="settings.sendGiftIgnoreLimit"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.sendGiftIgnoreLimit = val
-                    onChange()
-                  }
-                "
-              />
-              <span>赠送符合条件的礼物后无视上述用户限制 (粉丝牌/舰长等)</span>
-            </label>
-          </div>
-
-          <Separator class="my-1" />
-
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.allowIncreasePaymentBySendGift"
-              @update:checked="
-                (val: boolean) => {
-                  settings.allowIncreasePaymentBySendGift = val
-                  onChange()
-                }
-              "
-            />
-            <span>允许通过送礼累计队列中的付费金额 (影响付费排序)</span>
-          </label>
-
-          <div
-            v-if="settings.allowIncreasePaymentBySendGift"
-            class="ml-5"
-          >
-            <label class="flex items-center gap-2 cursor-pointer text-xs">
-              <Checkbox
-                :checked="settings.allowIncreaseByAnyPayment"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.allowIncreaseByAnyPayment = val
-                    onChange()
-                  }
-                "
-              />
-              <span>允许发送任意礼物叠加金额 (否则仅限上方指定的礼物)</span>
-            </label>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs">冷却时间 (CD)</CardTitle>
-        </CardHeader>
-        <CardContent class="p-4 flex flex-col gap-3">
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.enableCooldown"
-              @update:checked="
-                (val: boolean) => {
-                  settings.enableCooldown = val
-                  onChange()
-                }
-              "
-            />
-            <span>启用排队冷却 (用户完成后需等待一段时间才能再次加入)</span>
-          </label>
-
-          <div
-            v-if="settings.enableCooldown"
-            class="flex flex-col gap-2 ml-5 mt-1 max-w-[300px]"
-          >
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted-foreground">普通用户 CD</span>
-              <div class="flex items-center gap-1.5">
-                <NumberField
-                  v-model="settings.cooldownSecond"
-                  :min="0"
-                  class="w-24"
-                  @update:model-value="onChange"
-                />
-                <span class="text-muted-foreground">秒</span>
-              </div>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted-foreground">舰长 CD</span>
-              <div class="flex items-center gap-1.5">
-                <NumberField
-                  v-model="settings.jianzhangCooldownSecond"
-                  :min="0"
-                  class="w-24"
-                  @update:model-value="onChange"
-                />
-                <span class="text-muted-foreground">秒</span>
-              </div>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted-foreground">提督 CD</span>
-              <div class="flex items-center gap-1.5">
-                <NumberField
-                  v-model="settings.tiduCooldownSecond"
-                  :min="0"
-                  class="w-24"
-                  @update:model-value="onChange"
-                />
-                <span class="text-muted-foreground">秒</span>
-              </div>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted-foreground">总督 CD</span>
-              <div class="flex items-center gap-1.5">
-                <NumberField
-                  v-model="settings.zongduCooldownSecond"
-                  :min="0"
-                  class="w-24"
-                  @update:model-value="onChange"
-                />
-                <span class="text-muted-foreground">秒</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs">显示与界面</CardTitle>
-        </CardHeader>
-        <CardContent class="p-4 flex flex-col gap-3">
-          <div class="flex items-center gap-2 my-1">
-            <span class="text-xs font-semibold text-muted-foreground">OBS 组件显示</span>
-            <Separator class="flex-1" />
-          </div>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.showRequireInfo"
-              @update:checked="
-                (val: boolean) => {
-                  settings.showRequireInfo = val
-                  onChange()
-                }
-              "
-            />
-            <span>在 OBS 组件底部显示加入要求信息</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.showPayment"
-              @update:checked="
-                (val: boolean) => {
-                  settings.showPayment = val
-                  onChange()
-                }
-              "
-            />
-            <span>在 OBS 组件和列表项中显示付费金额</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.showFanMadelInfo"
-              @update:checked="
-                (val: boolean) => {
-                  settings.showFanMadelInfo = val
-                  onChange()
-                }
-              "
-            />
-            <span>在 OBS 组件和列表项中显示用户粉丝牌</span>
-          </label>
-
-          <div class="flex items-center gap-2 my-1">
-            <span class="text-xs font-semibold text-muted-foreground">其他界面设置</span>
-            <Separator class="flex-1" />
-          </div>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="isWarnMessageAutoClose"
-              @update:checked="(val: boolean) => (isWarnMessageAutoClose = val)"
-            />
-            <span>自动关闭"加入队列失败"的通知消息 (默认3秒)</span>
-          </label>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs">积分消费与插队</CardTitle>
-        </CardHeader>
-        <CardContent class="p-4 flex flex-col gap-3">
-          <div class="flex flex-wrap items-center gap-4">
-            <label class="flex items-center gap-2 cursor-pointer text-xs">
-              <Checkbox
-                :checked="settings.enablePointJoin"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.enablePointJoin = val
-                    onChange()
-                  }
-                "
-              />
-              <span>启用积分排队（发送排队弹幕时扣除积分）</span>
-            </label>
-            <label
-              v-if="settings.enablePointJoin"
-              class="flex items-center gap-2 cursor-pointer text-xs"
-            >
-              <Checkbox
-                :checked="settings.pointIgnoreLimit"
-                @update:checked="
-                  (val: boolean) => {
-                    settings.pointIgnoreLimit = val
-                    onChange()
-                  }
-                "
-              />
-              <span>积分排队忽略粉丝牌/舰长与冷却限制</span>
-            </label>
-          </div>
-
-          <div
-            v-if="settings.enablePointJoin"
-            class="flex items-center gap-2 text-xs"
-          >
-            <span class="text-muted-foreground shrink-0">每次排队消耗</span>
             <NumberField
-              v-model="settings.pointJoinCost"
+              v-model="draft.fanMedalMinLevel"
               :min="0"
-              class="w-28"
-              @update:model-value="onChange"
+              :max="40"
+              :disabled="!canEdit"
+              @update:model-value="(v) => (draft.fanMedalMinLevel = v ?? 0)"
             />
-            <span class="text-muted-foreground">积分</span>
+          </FormField>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- 礼物加入与付费累加 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">礼物排队与付费叠加规则</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <SettingRow
+          v-model="draft.allowGift"
+          type="switch"
+          variant="card"
+          title="允许通过发送指定礼物加入队列"
+          description="支持指定礼物名称、最低价值及赠送后自动/指令加入"
+          :disabled="!canEdit"
+        />
+
+        <div
+          v-if="draft.allowGift"
+          class="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <FormField label="最低礼物价值 (元)">
+              <NumberField
+                v-model="draft.minGiftPrice"
+                :min="0"
+                :step="0.1"
+                :disabled="!canEdit"
+              />
+            </FormField>
+
+            <FormField label="指定礼物名称 (逗号分隔，留空不限)">
+              <Input
+                v-model="giftNamesInput"
+                placeholder="例如：小心心, 小花花"
+                :disabled="!canEdit"
+              />
+            </FormField>
           </div>
 
-          <Separator />
+          <FormField label="条件匹配关系">
+            <ToggleGroup
+              type="single"
+              :model-value="String(draft.giftFilterType)"
+              :disabled="!canEdit"
+              @update:model-value="(val) => val && (draft.giftFilterType = Number(val) as QueueGiftFilterType)"
+            >
+              <ToggleGroupItem :value="String(QueueGiftFilterType.Or)">满足名称或价值之一</ToggleGroupItem>
+              <ToggleGroupItem :value="String(QueueGiftFilterType.And)">同时满足名称与价值</ToggleGroupItem>
+            </ToggleGroup>
+          </FormField>
 
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :checked="settings.allowPointPriority"
-              @update:checked="
-                (val: boolean) => {
-                  settings.allowPointPriority = val
-                  onChange()
-                }
-              "
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <SettingRow
+              v-model="draft.sendGiftDirectJoin"
+              type="switch"
+              variant="card"
+              title="送礼后直接自动入队"
+              description="关闭后用户送礼后还需发送排队关键词才会入队"
+              :disabled="!canEdit"
             />
-            <span>允许观众使用积分插队</span>
-          </label>
+            <SettingRow
+              v-model="draft.sendGiftIgnoreLimit"
+              type="switch"
+              variant="card"
+              title="礼物排队忽略门槛限制"
+              description="无视粉丝牌、大航海限制（仍遵守冷却与队列上限）"
+              :disabled="!canEdit"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <SettingRow
+            v-model="draft.allowIncreasePaymentBySendGift"
+            type="switch"
+            variant="card"
+            title="允许送礼累计队列付费金额"
+            description="在队列中的观众继续送礼时自动累加金额，用于「按付费排序」"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-if="draft.allowIncreasePaymentBySendGift"
+            v-model="draft.allowIncreaseByAnyPayment"
+            type="switch"
+            variant="card"
+            title="任意付费礼物均可累加金额"
+            description="关闭时仅符合上述条件清单的礼物才计入累计金额"
+            :disabled="!canEdit"
+          />
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- 冷却时间 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">冷却时间（秒）</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <SettingRow
+          v-model="draft.enableCooldown"
+          type="switch"
+          variant="card"
+          title="启用排队冷却限制"
+          description="同一观众在冷却窗口期内无法重复加入队列"
+          :disabled="!canEdit"
+        />
+
+        <div
+          v-if="draft.enableCooldown"
+          class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1"
+        >
+          <FormField label="普通观众 (秒)">
+            <NumberField
+              v-model="draft.cooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+          <FormField label="舰长 (秒)">
+            <NumberField
+              v-model="draft.jianzhangCooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+          <FormField label="提督 (秒)">
+            <NumberField
+              v-model="draft.tiduCooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+          <FormField label="总督 (秒)">
+            <NumberField
+              v-model="draft.zongduCooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- OBS 展示与积分联动 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">OBS 展示与积分排队/插队</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <SettingRow
+            v-model="draft.showRequireInfo"
+            type="switch"
+            variant="card"
+            title="OBS 显示底部排队条件"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.showPayment"
+            type="switch"
+            variant="card"
+            title="显示付费/礼物金额"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.showFanMadelInfo"
+            type="switch"
+            variant="card"
+            title="显示观众粉丝牌"
+            :disabled="!canEdit"
+          />
+        </div>
+
+        <div class="pt-2 border-t border-border/60 space-y-2.5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <SettingRow
+              v-model="draft.enablePointJoin"
+              type="switch"
+              variant="card"
+              title="启用积分排队（弹幕与网页生效）"
+              description="开启后观众排队将扣除指定积分"
+              :disabled="!canEdit"
+            />
+            <SettingRow
+              v-if="draft.enablePointJoin"
+              v-model="draft.pointIgnoreLimit"
+              type="switch"
+              variant="card"
+              title="积分排队忽略门槛与冷却"
+              :disabled="!canEdit"
+            />
+          </div>
+
+          <FormField
+            v-if="draft.enablePointJoin"
+            label="每次排队消耗积分"
+            class="max-w-xs"
+          >
+            <NumberField
+              v-model="draft.pointJoinCost"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+
+          <SettingRow
+            v-model="draft.allowPointPriority"
+            type="switch"
+            variant="card"
+            title="允许观众使用积分插队"
+            description="观众在队列中发送插队关键词或在公开排队页点击插队即可提升顺位"
+            :disabled="!canEdit"
+          />
 
           <div
-            v-if="settings.allowPointPriority"
-            class="flex flex-wrap items-center gap-4 text-xs"
+            v-if="draft.allowPointPriority"
+            class="grid grid-cols-1 md:grid-cols-2 gap-3"
           >
-            <div class="flex items-center gap-2">
-              <span class="text-muted-foreground shrink-0">弹幕插队关键词</span>
+            <FormField label="弹幕插队触发关键词">
               <Input
-                v-model="settings.pointPriorityKeyword"
+                v-model="draft.pointPriorityKeyword"
                 placeholder="例如：插队"
-                class="w-36"
-                @change="onChange"
+                :disabled="!canEdit"
               />
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-muted-foreground shrink-0">每次插队消耗</span>
+            </FormField>
+            <FormField label="每次插队消耗积分">
               <NumberField
-                v-model="settings.pointPriorityCost"
+                v-model="draft.pointPriorityCost"
                 :min="0"
-                class="w-28"
-                @update:model-value="onChange"
+                :disabled="!canEdit"
               />
-              <span class="text-muted-foreground">积分</span>
-            </div>
+            </FormField>
           </div>
-        </CardContent>
-      </Card>
-    </div>
-  </Spin>
+        </div>
+
+        <div class="pt-2 border-t border-border/60">
+          <div class="flex-between rounded-lg border border-border/70 bg-muted/20 p-2.5 text-xs">
+            <div>
+              <div class="font-medium text-foreground">自动关闭排队失败提醒通知</div>
+              <div class="text-muted-foreground">仅保存在当前浏览器本地，3 秒后自动收起</div>
+            </div>
+            <Switch v-model:checked="store.isWarnMessageAutoClose" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
 </template>

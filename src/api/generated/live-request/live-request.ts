@@ -7,6 +7,7 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
+  BatchLiveRequestStatusModel,
   EventModel,
   GetApiLiveRequestGetActiveAndSettingsParams,
   GetApiLiveRequestGetActiveParams,
@@ -17,12 +18,15 @@ import type {
   PostApiLiveRequestAddFromWebParams,
   PostApiLiveRequestAddParams,
   PostApiLiveRequestCancelParams,
+  PostApiLiveRequestDeactivateParams,
   PostApiLiveRequestFinishParams,
   PostApiLiveRequestPriorityFromWebParams,
   PostApiLiveRequestSingingParams,
   ResponseResult,
+  ResponseResultOfInt32,
   ResponseResultOfInt64Array,
   ResponseResultOfListOfResponseSongRequestModel,
+  ResponseResultOfResponseLiveRequestStatsModel,
   ResponseResultOfResponseSongRequestModel,
   ResponseResultOfResponseSongrequestResponseAndSettings,
   ResponseResultOfString,
@@ -120,6 +124,36 @@ export const postApiLiveRequestAdd = async (
   })
 }
 
+export const getPostApiLiveRequestBatchStatusUrl = () => {
+  return `/api/live-request/batch-status`
+}
+
+export const postApiLiveRequestBatchStatus = async (
+  batchLiveRequestStatusModel?: BatchLiveRequestStatusModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfInt64Array> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestBatchStatusUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(batchLiveRequestStatusModel),
+  })
+}
+
 export const getPostApiLiveRequestCancelUrl = (params?: PostApiLiveRequestCancelParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -144,14 +178,27 @@ export const postApiLiveRequestCancel = async (
   })
 }
 
-export const getPostApiLiveRequestDeactivateUrl = () => {
-  return `/api/live-request/deactivate`
+export const getPostApiLiveRequestDeactivateUrl = (params?: PostApiLiveRequestDeactivateParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/live-request/deactivate?${stringifiedParams}`
+    : `/api/live-request/deactivate`
 }
 
 export const postApiLiveRequestDeactivate = async (
+  params?: PostApiLiveRequestDeactivateParams,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfInt64Array> => {
-  return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestDeactivateUrl(), {
+  return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestDeactivateUrl(params), {
     ...options,
     method: 'POST',
   })
@@ -371,6 +418,49 @@ export const postApiLiveRequestPriorityFromWeb = async (
   })
 }
 
+export const getPostApiLiveRequestReorderUrl = () => {
+  return `/api/live-request/reorder`
+}
+
+export const postApiLiveRequestReorder = async (
+  postApiLiveRequestReorderBody?: number[],
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfInt32> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiLiveRequestReorderUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(postApiLiveRequestReorderBody),
+  })
+}
+
+export const getPostApiLiveRequestResetOrderUrl = () => {
+  return `/api/live-request/reset-order`
+}
+
+export const postApiLiveRequestResetOrder = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfInt32> => {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiLiveRequestResetOrderUrl(), {
+    ...options,
+    method: 'POST',
+  })
+}
+
 export const getPostApiLiveRequestSingingUrl = (params?: PostApiLiveRequestSingingParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -392,6 +482,19 @@ export const postApiLiveRequestSinging = async (
   return vtsuruMutator<ResponseResult>(getPostApiLiveRequestSingingUrl(params), {
     ...options,
     method: 'POST',
+  })
+}
+
+export const getGetApiLiveRequestStatsUrl = () => {
+  return `/api/live-request/stats`
+}
+
+export const getApiLiveRequestStats = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseLiveRequestStatsModel> => {
+  return vtsuruMutator<ResponseResultOfResponseLiveRequestStatsModel>(getGetApiLiveRequestStatsUrl(), {
+    ...options,
+    method: 'GET',
   })
 }
 

@@ -1,9 +1,9 @@
-import { List } from 'linqts'
+import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import type { EventModel, ResponseQueueModel } from '@/api/client-types'
-import type { DanmakuUserInfo, SettingQueue } from '@/api/generated/model'
+import type { DanmakuUserInfo, ResponseQueueStatsModel, SettingQueue } from '@/api/generated/model'
 import {
   EventDataTypes,
   FunctionTypes,
@@ -16,9 +16,13 @@ import {
 import {
   getApiQueueGetActive,
   getApiQueueGetAll,
+  getApiQueueStats,
   postApiQueueAdd,
+  postApiQueueBatchStatus,
   postApiQueueDeactivate,
   postApiQueueDelete,
+  postApiQueueReorder,
+  postApiQueueResetOrder,
   postApiQueueSetStatus,
   postApiQueueTryAdd,
 } from '@/api/generated/queue/queue'
@@ -26,43 +30,45 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
 import { formatDanmakuPrice, getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 import { matchKeyword, sortByQueueType } from '@/shared/utils/queue'
-const defaultSettings = {
-  keyword: '排队',
-  enableOnStreaming: false,
-  queueMaxSize: 10,
-  allowAllDanmaku: true,
-  allowFromWeb: true,
-  needWearFanMedal: false,
-  needJianzhang: false,
-  needTidu: false,
-  needZongdu: false,
-  allowGift: true,
-  giftNames: [],
-  minGiftPrice: 0.1,
-  allowIncreaseByAnyPayment: true,
-  allowIncreasePaymentBySendGift: true,
-  fanMedalMinLevel: 0,
-  enableCooldown: false,
-  cooldownSecond: 86400,
-  zongduCooldownSecond: 10800,
-  tiduCooldownSecond: 21600,
-  jianzhangCooldownSecond: 43200,
-  matchType: KeywordMatchType.Contains,
-  sortType: QueueSortType.TimeFirst,
-  giftFilterType: QueueGiftFilterType.Or,
-  showRequireInfo: true,
-  isReverse: false,
-  showFanMadelInfo: true,
-  showPayment: true,
-  sendGiftDirectJoin: true,
-  sendGiftIgnoreLimit: false,
-  enablePointJoin: false,
-  pointJoinCost: 0,
-  pointIgnoreLimit: false,
-  allowPointPriority: false,
-  pointPriorityKeyword: '插队',
-  pointPriorityCost: 100,
-} as SettingQueue
+
+export function createDefaultQueueSetting(): SettingQueue {
+  return {
+    keyword: '排队',
+    matchType: KeywordMatchType.Contains,
+    sortType: QueueSortType.TimeFirst,
+    queueMaxSize: 10,
+    enableOnStreaming: false,
+    allowAllDanmaku: true,
+    allowFromWeb: true,
+    needJianzhang: false,
+    needTidu: false,
+    needZongdu: false,
+    fanMedalMinLevel: 0,
+    sendGiftDirectJoin: true,
+    sendGiftIgnoreLimit: false,
+    allowGift: true,
+    giftNames: [],
+    minGiftPrice: 0.1,
+    giftFilterType: QueueGiftFilterType.Or,
+    allowIncreasePaymentBySendGift: true,
+    allowIncreaseByAnyPayment: true,
+    enableCooldown: false,
+    cooldownSecond: 86400,
+    zongduCooldownSecond: 10800,
+    tiduCooldownSecond: 21600,
+    jianzhangCooldownSecond: 43200,
+    showRequireInfo: true,
+    showPayment: true,
+    showFanMadelInfo: true,
+    isReverse: false,
+    enablePointJoin: false,
+    pointJoinCost: 0,
+    pointIgnoreLimit: false,
+    allowPointPriority: false,
+    pointPriorityKeyword: '插队',
+    pointPriorityCost: 100,
+  }
+}
 
 export const STATUS_MAP = {
   [QueueStatus.Waiting]: '等待中',
@@ -99,7 +105,7 @@ export function getQueueSourceText(data: ResponseQueueModel) {
     case QueueFrom.Gift:
       return meta.hasPaidGift || meta.hasMysteryBoxPayment ? `礼物 | ${meta.shortText}` : '礼物'
     case QueueFrom.Web:
-      return '网页添加'
+      return '网页排队'
     case QueueFrom.Manual:
       return '手动添加'
     default:
@@ -114,55 +120,99 @@ export const useQueue = defineStore('queue', () => {
   const isWarnMessageAutoClose = usePersistedStorage('Queue.Settings.WarnMessageAutoClose', false)
   const localIsReverse = usePersistedStorage('Queue.Settings.Reverse', false)
   const defaultKeyword = usePersistedStorage('Settings.Queue.DefaultKeyword', '排队')
+  const defaultSettings = ref<SettingQueue>(createDefaultQueueSetting())
 
-  const isLoading = ref(false)
+  const isBatchLoading = ref(false)
+  const operatingIds = ref<number[]>([])
+  const isLoading = computed({
+    get: () => isBatchLoading.value || operatingIds.value.length > 0,
+    set: (val: boolean) => {
+      isBatchLoading.value = val
+    },
+  })
+
   const originQueue = ref<ResponseQueueModel[]>([])
   const newQueueName = ref('')
   const filterName = ref('')
-  const filterNameContains = ref(false)
+  const filterNameContains = ref(true)
   const activeFilterName = ref('')
-  const updateKey = ref(0)
-  const queueDataBeingManaged = ref<number | null>(null)
+  const stats = ref<ResponseQueueStatsModel | null>(null)
+  const isStatsLoading = ref(false)
 
-  const isLoggedIn = computed(() => accountInfo.value != null && accountInfo.value.id != null)
-  const configCanEdit = computed(() => accountInfo.value != null)
+  const isLoggedIn = computed(() => Boolean(accountInfo.value?.id && accountInfo.value.id > 0))
+  const configCanEdit = computed(() => isLoggedIn.value)
+
+  function isQueueOperating(id: number) {
+    return operatingIds.value.includes(id)
+  }
+
+  function markOperating(id: number, active: boolean) {
+    if (active) {
+      if (!operatingIds.value.includes(id)) {
+        operatingIds.value = [...operatingIds.value, id]
+      }
+    } else {
+      operatingIds.value = operatingIds.value.filter((item) => item !== id)
+    }
+  }
 
   const settings = computed<SettingQueue>({
-    get: () => (accountInfo.value.id ? accountInfo.value.settings.queue : defaultSettings),
+    get: () => (isLoggedIn.value ? accountInfo.value.settings.queue : defaultSettings.value),
     set: (value) => {
-      if (accountInfo.value.id) accountInfo.value.settings.queue = value
+      if (isLoggedIn.value) {
+        accountInfo.value.settings.queue = value
+      } else {
+        defaultSettings.value = value
+      }
     },
   })
 
   const enabled = computed(() => accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.Queue) ?? false)
 
-  const queue = computed(() => {
-    const source = isLoggedIn.value ? originQueue.value : localQueues.value
-    const keyword = activeFilterName.value.trim().toLowerCase()
-    const filtered = source
-      .filter((q) => !keyword || q?.user?.name?.toLowerCase().includes(keyword) === true)
-      .filter((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
+  const sourceList = computed(() => (isLoggedIn.value ? originQueue.value : localQueues.value))
 
-    const reverse = configCanEdit.value ? settings.value.isReverse : localIsReverse.value
-    const sorted = sortByQueueType(filtered, settings.value.sortType, reverse, {
+  /** 未过滤的当前活跃队列（正在处理排最前） */
+  const unfilteredQueue = computed(() => {
+    const active = sourceList.value.filter((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
+    const reverse = configCanEdit.value ? Boolean(settings.value.isReverse) : localIsReverse.value
+
+    const sorted = sortByQueueType(active, settings.value.sortType, reverse, {
       createAt: (q) => q.createAt,
       guardLevel: (q) => q.user?.guard_level,
       price: (q) => q.giftPrice,
       fansMedalLevel: (q) => q.user?.fans_medal_level,
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
       priorityLevel: (q) => q.priorityLevel,
+      sortOrder: (q) => q.sortOrder,
     })
-    return new List(sorted).OrderByDescending((q) => (q.status === QueueStatus.Progressing ? 1 : 0)).ToArray()
+
+    return sorted.toSorted((a, b) => {
+      if (a.status === QueueStatus.Progressing && b.status !== QueueStatus.Progressing) return -1
+      if (b.status === QueueStatus.Progressing && a.status !== QueueStatus.Progressing) return 1
+      return 0
+    })
   })
 
+  const queue = computed(() => {
+    const keyword = activeFilterName.value.trim().toLowerCase()
+    if (!keyword) return unfilteredQueue.value
+    return unfilteredQueue.value.filter(
+      (q) => q?.user?.name?.toLowerCase().includes(keyword) || q?.content?.toLowerCase().includes(keyword),
+    )
+  })
+
+  const hasCustomOrder = computed(() =>
+    unfilteredQueue.value.some((q) => q.sortOrder !== null && q.sortOrder !== undefined),
+  )
+
   const historySongs = computed(() => {
-    return (isLoggedIn.value ? originQueue.value : localQueues.value)
+    return sourceList.value
       .filter((s) => s.status === QueueStatus.Finish || s.status === QueueStatus.Cancel)
       .toSorted((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt))
   })
 
   function nextLocalId() {
-    return localQueues.value.length === 0 ? 1 : (new List(localQueues.value).Max((s) => s.id) ?? 0) + 1
+    return localQueues.value.length === 0 ? 1 : Math.max(...localQueues.value.map((s) => s.id)) + 1
   }
 
   function checkMatch(word: string) {
@@ -215,25 +265,41 @@ export const useQueue = defineStore('queue', () => {
   async function getAll(): Promise<ResponseQueueModel[]> {
     if (!isLoggedIn.value) return localQueues.value
     try {
-      isLoading.value = true
+      isBatchLoading.value = true
       const data = await getApiQueueGetAll()
       if (data.code === 200) {
         return data.data ?? []
       }
       window.$message.error(`无法获取队列数据: ${data.message}`)
-      return []
     } catch (err: any) {
       window.$message.error(`获取队列数据失败: ${err.message || err}`)
-      return []
     } finally {
-      isLoading.value = false
+      isBatchLoading.value = false
     }
+    return []
+  }
+
+  async function fetchStats() {
+    if (!isLoggedIn.value) return null
+    isStatsLoading.value = true
+    try {
+      const res = await getApiQueueStats()
+      if (res.code === 200) {
+        stats.value = res.data
+        return res.data
+      }
+    } catch (err) {
+      console.error('[QUEUE] 获取统计失败', err)
+    } finally {
+      isStatsLoading.value = false
+    }
+    return null
   }
 
   async function add(danmaku: EventModel) {
     if (!checkMessage(danmaku)) return
     if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming !== true) {
-      window.$message.info('当前未在直播中, 无法添加排队请求. 或者关闭设置中的仅允许直播时加入')
+      window.$message.info('当前未在直播中，无法添加排队请求；或关闭设置中的「仅在直播时允许加入」。')
       return
     }
 
@@ -269,19 +335,18 @@ export const useQueue = defineStore('queue', () => {
             window.$message.success(`[${danmaku.uname}] 添加至队列`)
           }
         } else {
-          const time = Date.now()
           window.$notification.warning({
             title: `${danmaku.uname} 排队失败`,
             description: data.message,
             duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: new Date(time).toLocaleTimeString(),
+            meta: new Date().toLocaleTimeString(),
           })
         }
       } catch (err: any) {
         window.$message.error(`[${danmaku.uname}] 添加队列时出错: ${err.message || err}`)
       }
     } else {
-      const songData = {
+      const entry = {
         status: QueueStatus.Waiting,
         from: danmaku.type === EventDataTypes.Message ? QueueFrom.Danmaku : QueueFrom.Gift,
         giftPrice: danmaku.type === EventDataTypes.Gift ? danmaku.price : undefined,
@@ -303,127 +368,261 @@ export const useQueue = defineStore('queue', () => {
         isInLocal: true,
         id: nextLocalId(),
       } as ResponseQueueModel
-      localQueues.value.unshift(songData)
+      localQueues.value.unshift(entry)
       window.$message.success(`[${danmaku.uname}] 添加至本地队列`)
     }
   }
 
-  async function addManual() {
-    if (!newQueueName.value) {
+  async function addManual(overrideName?: string) {
+    const targetName = (overrideName ?? newQueueName.value).trim()
+    if (!targetName) {
       window.$message.error('请输入用户名')
-      return
+      return null
     }
     if (isLoggedIn.value) {
       try {
-        const data = await postApiQueueAdd({
-          name: newQueueName.value,
-        })
+        const data = await postApiQueueAdd({ name: targetName })
         if (data.code === 200) {
           window.$message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
           originQueue.value.unshift(data.data)
-          newQueueName.value = ''
-        } else {
-          window.$message.error(`手动添加失败: ${data.message}`)
+          if (!overrideName) newQueueName.value = ''
+          return data.data
         }
+        window.$message.error(`手动添加失败: ${data.message}`)
       } catch (err: any) {
         window.$message.error(`手动添加时出错: ${err.message || err}`)
       }
-    } else {
-      const songData = {
-        status: QueueStatus.Waiting,
-        from: QueueFrom.Manual,
-        user: { name: newQueueName.value } as DanmakuUserInfo,
-        createAt: Date.now(),
-        priorityLevel: 0,
-        requestBy: '',
-        isInLocal: true,
-        id: nextLocalId(),
-      } as ResponseQueueModel
-      localQueues.value.unshift(songData)
-      window.$message.success(`已手动添加用户至队列: ${newQueueName.value}`)
-      newQueueName.value = ''
+      return null
+    }
+
+    const entry = {
+      status: QueueStatus.Waiting,
+      from: QueueFrom.Manual,
+      user: { name: targetName } as DanmakuUserInfo,
+      createAt: Date.now(),
+      priorityLevel: 0,
+      requestBy: '',
+      isInLocal: true,
+      id: nextLocalId(),
+    } as ResponseQueueModel
+    localQueues.value.unshift(entry)
+    window.$message.success(`已手动添加用户至队列: ${targetName}`)
+    if (!overrideName) newQueueName.value = ''
+    return entry
+  }
+
+  function applyQueueStatusUpdate(item: ResponseQueueModel, status: QueueStatus, refundPoint: boolean, now: number) {
+    item.status = status
+    if (status > QueueStatus.Progressing) {
+      item.finishAt = now
+    }
+    if (status === QueueStatus.Cancel && refundPoint && item.pointCost && item.pointCost > 0) {
+      item.pointRefunded = true
     }
   }
 
-  async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) {
-    if (!configCanEdit.value) {
+  async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus, refundPoint = false) {
+    if (!isLoggedIn.value) {
       const localItem = localQueues.value.find((q) => q.id === queueData.id)
       if (localItem) {
-        localItem.status = status
-        if (status > QueueStatus.Progressing) localItem.finishAt = Date.now()
+        applyQueueStatusUpdate(localItem, status, false, Date.now())
         window.$message.success(`已更新本地 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
       }
       return
     }
-    isLoading.value = true
+
+    markOperating(queueData.id, true)
     try {
-      const data = await postApiQueueSetStatus({ id: queueData.id, status: status as any })
+      const data = await postApiQueueSetStatus({ id: queueData.id, status, refundPoint })
       if (data.code === 200) {
         const item = originQueue.value.find((q) => q.id === queueData.id)
         if (item) {
-          item.status = status
-          if (status > QueueStatus.Progressing) item.finishAt = Date.now()
+          applyQueueStatusUpdate(item, status, refundPoint, Date.now())
         }
-        window.$message.success(`已更新 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
+        window.$message.success(
+          status === QueueStatus.Cancel && refundPoint && queueData.pointCost
+            ? `已取消 [${queueData.user?.name}] 排队并退回积分`
+            : `已更新 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`,
+        )
       } else {
         window.$message.error(`更新队列状态失败: ${data.message}`)
       }
     } catch (err: any) {
       window.$message.error(`更新队列状态时出错: ${err.message || err}`)
     } finally {
-      isLoading.value = false
-      queueDataBeingManaged.value = null
+      markOperating(queueData.id, false)
     }
+  }
+
+  async function batchUpdateStatus(ids: number[], status: QueueStatus, refundPoint = false) {
+    if (ids.length === 0) return false
+    if (!isLoggedIn.value) {
+      const idSet = new Set(ids)
+      const now = Date.now()
+      for (const q of localQueues.value) {
+        if (idSet.has(q.id)) {
+          applyQueueStatusUpdate(q, status, false, now)
+        }
+      }
+      window.$message.success(`已批量更新 ${ids.length} 条记录`)
+      return true
+    }
+
+    isBatchLoading.value = true
+    try {
+      const res = await postApiQueueBatchStatus({ ids, status, refundPoint })
+      if (res.code === 200) {
+        const updatedSet = new Set(res.data)
+        const now = Date.now()
+        for (const q of originQueue.value) {
+          if (updatedSet.has(q.id)) {
+            applyQueueStatusUpdate(q, status, refundPoint, now)
+          }
+        }
+        window.$message.success(`已批量更新 ${res.data.length} 条排队状态为「${STATUS_MAP[status]}」`)
+        return true
+      }
+      window.$message.error(`批量更新失败: ${res.message}`)
+    } catch (err: any) {
+      window.$message.error(`批量更新出错: ${err.message || err}`)
+    } finally {
+      isBatchLoading.value = false
+    }
+    return false
+  }
+
+  async function reorderQueue(orderedIds: number[]) {
+    if (orderedIds.length === 0) return false
+    const orderMap = new Map(orderedIds.map((id, idx) => [id, idx]))
+    for (const item of sourceList.value) {
+      const idx = orderMap.get(item.id)
+      if (idx !== undefined) {
+        item.sortOrder = idx
+      }
+    }
+
+    if (!isLoggedIn.value) return true
+
+    try {
+      const res = await postApiQueueReorder(orderedIds)
+      if (res.code !== 200) {
+        window.$message.error(`保存排序失败: ${res.message}`)
+        return false
+      }
+      return true
+    } catch (err: any) {
+      window.$message.error(`保存排序出错: ${err.message || err}`)
+      return false
+    }
+  }
+
+  async function reorderWaitingQueue(
+    targetId: number,
+    buildReordered: (waiting: ResponseQueueModel[], idx: number) => ResponseQueueModel[] | null,
+  ) {
+    const waiting = unfilteredQueue.value.filter((q) => q.status === QueueStatus.Waiting)
+    const idx = waiting.findIndex((q) => q.id === targetId)
+    if (idx === -1) return false
+    const reordered = buildReordered(waiting, idx)
+    if (!reordered) return false
+    const progressing = unfilteredQueue.value.filter((q) => q.status === QueueStatus.Progressing)
+    return reorderQueue([...progressing.map((q) => q.id), ...reordered.map((q) => q.id)])
+  }
+
+  async function moveQueue(item: ResponseQueueModel, direction: 'up' | 'down') {
+    await reorderWaitingQueue(item.id, (waiting, idx) => {
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (targetIdx < 0 || targetIdx >= waiting.length) return null
+      const reordered = [...waiting]
+      const [moved] = reordered.splice(idx, 1)
+      reordered.splice(targetIdx, 0, moved)
+      return reordered
+    })
+  }
+
+  async function pinQueue(item: ResponseQueueModel) {
+    const ok = await reorderWaitingQueue(item.id, (waiting, idx) =>
+      idx <= 0 ? null : [item, ...waiting.filter((q) => q.id !== item.id)],
+    )
+    if (ok) {
+      window.$message.success(`已将「${item.user?.name || '该观众'}」置顶`)
+    }
+  }
+
+  async function resetOrder() {
+    for (const item of sourceList.value) {
+      if (item.status <= QueueStatus.Progressing) {
+        item.sortOrder = null
+      }
+    }
+    if (!isLoggedIn.value) {
+      window.$message.success('已恢复为规则排序')
+      return true
+    }
+
+    isBatchLoading.value = true
+    try {
+      const res = await postApiQueueResetOrder()
+      if (res.code === 200) {
+        window.$message.success('已恢复为规则排序')
+        return true
+      }
+      window.$message.error(`恢复排序失败: ${res.message}`)
+    } catch (err: any) {
+      window.$message.error(`恢复排序失败: ${err.message || err}`)
+    } finally {
+      isBatchLoading.value = false
+    }
+    return false
   }
 
   async function deleteQueue(values: ResponseQueueModel[]) {
     if (!values || values.length === 0) return
+    const idSet = new Set(values.map((s) => s.id))
     if (isLoggedIn.value) {
-      isLoading.value = true
+      isBatchLoading.value = true
       try {
-        const ids = values.map((s) => s.id)
-        const data = await postApiQueueDelete(ids)
+        const data = await postApiQueueDelete(values.map((s) => s.id))
         if (data.code === 200) {
           window.$message.success(`成功删除 ${values.length} 条记录`)
-          originQueue.value = originQueue.value.filter((s) => !ids.includes(s.id))
+          originQueue.value = originQueue.value.filter((s) => !idSet.has(s.id))
         } else {
           window.$message.error(`删除失败: ${data.message}`)
         }
       } catch (err: any) {
         window.$message.error(`删除记录时出错: ${err.message || err}`)
       } finally {
-        isLoading.value = false
+        isBatchLoading.value = false
       }
     } else {
-      const ids = new Set(values.map((v) => v.id))
-      localQueues.value = localQueues.value.filter((q) => !ids.has(q.id))
+      localQueues.value = localQueues.value.filter((q) => !idSet.has(q.id))
       window.$message.success(`成功删除 ${values.length} 条本地记录`)
     }
   }
 
-  async function deactiveAllSongs() {
+  async function deactiveAllSongs(refundPoint = false) {
     const cancelLocal = (list: ResponseQueueModel[]) => {
-      list.forEach((s) => {
+      const now = Date.now()
+      for (const s of list) {
         if (s.status <= QueueStatus.Progressing) {
-          s.status = QueueStatus.Cancel
-          s.finishAt = Date.now()
+          applyQueueStatusUpdate(s, QueueStatus.Cancel, refundPoint, now)
         }
-      })
+      }
     }
     if (isLoggedIn.value) {
-      isLoading.value = true
+      isBatchLoading.value = true
       try {
-        const data = await postApiQueueDeactivate()
+        const data = await postApiQueueDeactivate({ refundPoint })
         if (data.code === 200) {
-          window.$message.success('已全部取消')
           cancelLocal(originQueue.value)
+          window.$message.success(refundPoint ? '已全部取消并退回已消费积分' : '已全部取消当前排队')
         } else {
           window.$message.error(`全部取消失败: ${data.message}`)
         }
       } catch (err: any) {
         window.$message.error(`全部取消时出错: ${err.message || err}`)
       } finally {
-        isLoading.value = false
+        isBatchLoading.value = false
       }
     } else {
       cancelLocal(localQueues.value)
@@ -435,16 +634,16 @@ export const useQueue = defineStore('queue', () => {
     if (!isLoggedIn.value) return
     try {
       const data = await getApiQueueGetActive({ id: accountInfo.value?.id })
-      if (data.code !== 200) {
-        console.warn(`[QUEUE] 无法获取活动队列: ${data.message}`)
-        return
-      }
-      ;(data.data ?? []).forEach((item) => {
+      if (data.code !== 200) return
+
+      for (const item of data.data ?? []) {
         const existing = originQueue.value.find((s) => s.id === item.id)
         if (existing) {
           if (existing.status !== item.status) existing.status = item.status
           if (existing.priorityLevel !== item.priorityLevel) existing.priorityLevel = item.priorityLevel
           if (existing.pointCost !== item.pointCost) existing.pointCost = item.pointCost
+          if (existing.pointRefunded !== item.pointRefunded) existing.pointRefunded = item.pointRefunded
+          if (existing.sortOrder !== item.sortOrder) existing.sortOrder = item.sortOrder
           const paymentChanged =
             existing.giftPrice !== item.giftPrice ||
             existing.mysteryBoxName !== item.mysteryBoxName ||
@@ -477,7 +676,7 @@ export const useQueue = defineStore('queue', () => {
             window.$message.success(`[${item.user?.name}] 通过礼物加入队列`)
           }
         }
-      })
+      }
     } catch (err: any) {
       console.warn('[QUEUE] 更新活动队列失败:', err.message || err)
     }
@@ -492,8 +691,7 @@ export const useQueue = defineStore('queue', () => {
       window.$message.error(`用户 [${item.user?.name}] 没有有效的 UID，无法拉黑`)
       return
     }
-    isLoading.value = true
-    queueDataBeingManaged.value = item.id
+    markOperating(item.id, true)
     try {
       const data = await AddBiliBlackList(GuidUtils.toOuid(item.user.uid, item.user.oid), item.user.name)
       if (data.code === 200) {
@@ -505,13 +703,12 @@ export const useQueue = defineStore('queue', () => {
     } catch (err: any) {
       window.$message.error(`拉黑时发生错误: ${err.message || err}`)
     } finally {
-      isLoading.value = false
-      queueDataBeingManaged.value = null
+      markOperating(item.id, false)
     }
   }
 
   async function toggleFunction() {
-    if (!accountInfo.value.id) return
+    if (!isLoggedIn.value) return
     const isEnabling = !enabled.value
     const old = [...accountInfo.value.settings.enableFunctions]
 
@@ -539,66 +736,70 @@ export const useQueue = defineStore('queue', () => {
     }
   }
 
-  async function saveSettings() {
-    if (!accountInfo.value.id) {
-      window.$message.success('本地设置已更新 (未登录)')
-      return
+  async function saveSettings(nextSetting?: SettingQueue) {
+    if (nextSetting) {
+      settings.value = nextSetting
     }
-    isLoading.value = true
+    if (!isLoggedIn.value) {
+      window.$message.success('本地设置已更新 (未登录)')
+      return true
+    }
+    isBatchLoading.value = true
     try {
       const success = await SaveSetting('Queue', settings.value)
-      if (success) window.$message.success('设置已保存')
-      else window.$message.error('设置保存失败')
+      if (success) {
+        window.$message.success('排队规则已保存')
+        return true
+      }
+      window.$message.error('排队规则保存失败')
     } catch (err: any) {
       window.$message.error(`保存设置失败: ${err.message || err}`)
     } finally {
-      isLoading.value = false
+      isBatchLoading.value = false
     }
+    return false
   }
 
   function onGetDanmaku(danmaku: EventModel) {
-    add(danmaku)
+    void add(danmaku)
   }
   function onGetGift(danmaku: EventModel) {
-    add(danmaku)
+    void add(danmaku)
   }
 
-  let timer: any = null
-  let updateActiveTimer: any = null
+  let updateActiveTimer: ReturnType<typeof setInterval> | null = null
 
   async function init() {
     dispose()
     if (isLoggedIn.value) {
       originQueue.value = await getAll()
     }
-    timer = setInterval(() => {
-      updateKey.value++
-    }, 1000)
     updateActiveTimer = setInterval(() => {
-      updateActive()
-    }, 5000)
+      void updateActive()
+    }, 4000)
   }
 
   function dispose() {
-    clearInterval(timer)
-    clearInterval(updateActiveTimer)
-    timer = null
-    updateActiveTimer = null
+    if (updateActiveTimer) {
+      clearInterval(updateActiveTimer)
+      updateActiveTimer = null
+    }
   }
 
   return {
     isLoading,
+    isBatchLoading,
     originQueue,
     localQueues,
     newQueueName,
     filterName,
     filterNameContains,
     activeFilterName,
-    updateKey,
-    queueDataBeingManaged,
     isWarnMessageAutoClose,
     localIsReverse,
     defaultKeyword,
+    stats,
+    isStatsLoading,
     STATUS_MAP,
 
     isLoggedIn,
@@ -606,13 +807,22 @@ export const useQueue = defineStore('queue', () => {
     enabled,
     settings,
     queue,
+    unfilteredQueue,
+    hasCustomOrder,
     historySongs,
+    isQueueOperating,
 
     init,
     dispose,
+    fetchStats,
     add,
     addManual,
     updateStatus,
+    batchUpdateStatus,
+    reorderQueue,
+    moveQueue,
+    pinQueue,
+    resetOrder,
     deleteQueue,
     deactiveAllSongs,
     updateActive,

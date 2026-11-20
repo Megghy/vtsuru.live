@@ -147,7 +147,7 @@ function formatTokens(value?: number): string {
           :class="
             msg.role === 'user'
               ? 'bg-primary/10 border-primary/20 text-foreground'
-              : 'bg-muted/40 border-border text-foreground w-full'
+              : 'bg-muted/55 border-border text-foreground w-full'
           "
         >
           <!-- 答复前的工作过程: 思考与只读工具调用按时序交错, 共享一条时间轴 -->
@@ -182,7 +182,7 @@ function formatTokens(value?: number): string {
                 <!-- 思考片段: 随折叠头展开/收起 -->
                 <div
                   v-if="block.type === 'reasoning' && isThinkingOpen(msg)"
-                  class="msg-think__body p-2 rounded-lg bg-muted/60 border border-border/60 text-muted-foreground whitespace-pre-wrap leading-relaxed text-[11px]"
+                  class="msg-think__body p-2 rounded-lg bg-inset/70 border border-border text-muted-foreground whitespace-pre-wrap leading-relaxed text-[11px]"
                 >
                   {{ block.text }}
                 </div>

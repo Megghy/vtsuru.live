@@ -20,7 +20,10 @@ export interface ResponseSongRequestModel {
   price?: number | null
   /** @nullable */
   pointCost?: number | null
+  pointRefunded: boolean
   priorityLevel: number
+  /** @nullable */
+  sortOrder?: number | null
   user?: DanmakuUserInfo
   createAt: number
   /** @nullable */

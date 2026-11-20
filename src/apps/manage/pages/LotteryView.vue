@@ -26,6 +26,7 @@ import {
   postApiLotteryLiveUpdateUsers,
 } from '@/api/generated/lottery/lottery'
 import type { LiveLotteryUserInfo, LotteryUserInfo } from '@/api/generated/model'
+import { postApiPointConsumeUserPoint } from '@/api/generated/point/point'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import LotteryAddUserModal from '@/apps/open-live/components/lottery/LotteryAddUserModal.vue'
 import LotteryHistoryModal from '@/apps/open-live/components/lottery/LotteryHistoryModal.vue'
@@ -92,6 +93,7 @@ const liveDefaultOption: LiveLotteryOption = {
   needWearFanMedal: false,
   needGuard: false,
   fanCardLevel: 1,
+  pointCost: 0,
   animationSpeed: 1000,
 }
 const liveOption = usePersistedStorage('Settings.OpenLive.LotteryOption', liveDefaultOption)
@@ -195,21 +197,47 @@ function addManualLiveUser(payload: ManualUserFormModel) {
   showLiveAddUserModal.value = false
 }
 
-function onDanmaku(data: DanmakuInfo) {
+const pendingPointCharges = new Set<string>()
+
+async function onDanmaku(data: DanmakuInfo) {
   if (liveOption.value.type !== 'danmaku') return
-  addLiveUser(
-    {
-      uId: data.uid,
-      openId: data.open_id,
-      name: data.uname,
-      avatar: data.uface,
-      fans_medal_level: data.fans_medal_level,
-      fans_medal_name: data.fans_medal_name,
-      fans_medal_wearing_status: data.fans_medal_wearing_status,
-      guard_level: data.guard_level,
-    },
-    data,
-  )
+  const candidate: LiveLotteryUserInfo = {
+    uId: data.uid,
+    openId: data.open_id,
+    name: data.uname,
+    avatar: data.uface,
+    fans_medal_level: data.fans_medal_level,
+    fans_medal_name: data.fans_medal_name,
+    fans_medal_wearing_status: data.fans_medal_wearing_status,
+    guard_level: data.guard_level,
+  }
+  if (!isStartLiveLottery.value || originUsers.value.find((u) => u.openId == candidate.openId)) return
+  if (!isLiveUserValid(candidate, { cmd: 'LIVE_OPEN_PLATFORM_DM', data }, liveOption.value)) return
+
+  const pointCost = Number(liveOption.value.pointCost ?? 0)
+  if (pointCost > 0) {
+    const key = candidate.openId || String(candidate.uId)
+    if (pendingPointCharges.has(key)) return
+    pendingPointCharges.add(key)
+    try {
+      const res = await postApiPointConsumeUserPoint({
+        oId: data.open_id || undefined,
+        uId: data.uid > 0 ? data.uid : undefined,
+        userName: data.uname,
+        cost: pointCost,
+        reason: '参与弹幕抽奖',
+      })
+      if (res.code !== 200) {
+        return
+      }
+    } catch {
+      return
+    } finally {
+      pendingPointCharges.delete(key)
+    }
+  }
+
+  addLiveUser(candidate, data)
 }
 
 function onGift(data: GiftInfo) {

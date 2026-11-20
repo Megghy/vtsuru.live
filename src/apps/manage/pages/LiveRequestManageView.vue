@@ -1,35 +1,36 @@
 <script setup lang="ts">
-import Color24Regular from '@vicons/fluent/es/Color24Regular'
-import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
 import Desktop24Regular from '@vicons/fluent/es/Desktop24Regular'
-import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import MusicNote224Regular from '@vicons/fluent/es/MusicNote224Regular'
 import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
-import ShieldCheckmark24Regular from '@vicons/fluent/es/ShieldCheckmark24Regular'
 import Video24Regular from '@vicons/fluent/es/Video24Regular'
+import { format, isSameDay } from 'date-fns'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { AppStartData } from '@/api/generated/model'
-import { FunctionTypes } from '@/api/generated/model'
-import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { FunctionTypes, SongRequestStatus } from '@/api/generated/model'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
+import LiveRequestProcessedOBS from '@/apps/obs/pages/request/LiveRequestProcessedOBS.vue'
 import SongRequestHistory from '@/apps/open-live/components/request/SongRequestHistory.vue'
 import SongRequestList from '@/apps/open-live/components/request/SongRequestList.vue'
 import SongRequestSettings from '@/apps/open-live/components/request/SongRequestSettings.vue'
+import LiveConsoleCockpit from '@/apps/open-live/components/shared/LiveConsoleCockpit.vue'
+import LiveConsolePageShell, {
+  type LiveConsoleHeaderLink,
+  type LiveConsoleTabItem,
+} from '@/apps/open-live/components/shared/LiveConsolePageShell.vue'
+import LiveSideCard from '@/apps/open-live/components/shared/LiveSideCard.vue'
+import ObsStagePreview from '@/apps/open-live/components/shared/ObsStagePreview.vue'
 import SongPlayer from '@/components/SongPlayer.vue'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Input } from '@/shared/ui/input'
-import { NumberField } from '@/shared/ui/number-field'
-import { Separator } from '@/shared/ui/separator'
-import { SettingRow } from '@/shared/ui/setting-row'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Badge } from '@/shared/ui/badge'
+import { Card, CardContent } from '@/shared/ui/card'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
-import { useMessage } from '@/shared/utils'
-import { copyToClipboard } from '@/shared/utils'
+import { normalizeTimestampMs } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 defineProps<{
@@ -39,52 +40,77 @@ defineProps<{
 }>()
 
 const accountInfo = useAccount()
-const message = useMessage()
 const client = await useDanmakuClient().initOpenlive()
 
-// 主 Tab
-const activeMainTab = ref<'requests' | 'preview' | 'settings'>('requests')
+const activeMainTab = ref<'requests' | 'history' | 'preview' | 'settings'>('requests')
+const obsPreviewMode = ref<'live-request' | 'live-request-today'>('live-request')
 
-// OBS 调试与样式
-const obsStyleType = ref<'glass' | 'transparent' | 'classic' | 'fresh' | 'minimal'>('glass')
-const obsScrollSpeed = ref(1.0)
-const previewBg = ref<'checker' | 'dark' | 'light' | 'game'>('checker')
-
-// 计算 OBS 链接
-const obsUrl = computed(() => {
-  const params: Record<string, string> = {
-    style: obsStyleType.value,
-  }
-  if (obsScrollSpeed.value !== 1.0) {
-    params.speed = obsScrollSpeed.value.toString()
-  }
-  return buildObsSourceUrl({
+const obsUrl = computed(() =>
+  buildObsSourceUrl({
     path: 'obs/live-request',
     host: CURRENT_HOST,
     credential: 'public-id',
     userId: accountInfo.value?.id,
-    params,
-  })
-})
+    params: { style: 'glass' },
+  }),
+)
+
+const todayObsUrl = computed(() =>
+  buildObsSourceUrl({
+    path: 'obs/live-request-today',
+    host: CURRENT_HOST,
+    credential: 'public-id',
+    userId: accountInfo.value?.id,
+    params: { style: 'glass' },
+  }),
+)
+
+const headerLinks = computed<LiveConsoleHeaderLink[]>(() => [
+  {
+    label: '当前待唱 OBS 源',
+    value: obsUrl.value,
+    description: '在 OBS 中添加为浏览器源，展示正在演唱与等待队列',
+  },
+  {
+    label: '今日已唱 OBS 源',
+    value: todayObsUrl.value,
+    description: '在 OBS 中展示今日已完成点播的曲目列表',
+  },
+])
 
 const liveRequest = useLiveRequest()
 provide('activeSongs', liveRequest.activeSongs)
 
-async function copyObsLink() {
-  if (!obsUrl.value) {
-    message.warning('尚未登录或未生成有效链接')
-    return
-  }
-  await copyToClipboard(obsUrl.value, '点播 OBS 源链接已复制 (已携带当前样式参数)')
-}
+const tabs = computed<LiveConsoleTabItem[]>(() => [
+  {
+    value: 'requests',
+    label: '当前点播',
+    icon: Video24Regular,
+    badge: liveRequest.unfilteredActiveSongs.length,
+  },
+  { value: 'history', label: '历史与统计', icon: History24Regular },
+  { value: 'preview', label: 'OBS 舞台预览', icon: Desktop24Regular },
+  { value: 'settings', label: '规则设置', icon: Settings24Regular },
+])
+
+const todayFinishedSongs = computed(() =>
+  liveRequest.songs
+    .filter((s) => s.status === SongRequestStatus.Finish && isSameDay(normalizeTimestampMs(s.finishAt), Date.now()))
+    .toSorted(
+      (a, b) => normalizeTimestampMs(b.finishAt ?? b.createAt) - normalizeTimestampMs(a.finishAt ?? a.createAt),
+    ),
+)
+
+const ruleSummary = computed(() => accountInfo.value?.settings?.songRequest)
 
 onMounted(() => {
   client.onEvent('danmaku', liveRequest.onGetDanmaku)
   client.onEvent('sc', liveRequest.onGetSC)
+  void liveRequest.init()
 })
 
 onActivated(() => {
-  liveRequest.init()
+  void liveRequest.init()
 })
 
 onDeactivated(() => {
@@ -99,232 +125,149 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="space-y-4 w-full">
-    <ManagePageHeader
-      title="弹幕点播系统"
-      subtitle="观众通过发送弹幕指令（如 点播 BV号）或醒目留言触发点歌/点播，支持自动拉取信息、播放控制与 OBS 动态呈现"
-      :function-type="FunctionTypes.SongRequest"
-      :links="[
-        {
-          label: 'OBS 浏览器源地址',
-          value: obsUrl,
-          description: '将此链接作为 OBS 浏览器源添加，建议分辨率 400x600 或按需调整',
-        },
-      ]"
-    />
+  <LiveConsolePageShell
+    v-model="activeMainTab"
+    title="弹幕点播"
+    subtitle="观众发送点播弹幕、醒目留言或从公开歌单页点播，支持主播手动调序、积分退回、OBS 实时队列与今日已唱展示"
+    :function-type="FunctionTypes.SongRequest"
+    :links="headerLinks"
+    :tabs="tabs"
+  >
+    <template #requests>
+      <LiveConsoleCockpit>
+        <template #main>
+          <SongRequestList />
+        </template>
 
-    <Tabs
-      v-model="activeMainTab"
-      class="w-full"
-    >
-      <TabsList class="grid w-full grid-cols-3 max-w-md">
-        <TabsTrigger value="requests">
-          <component
-            :is="Video24Regular"
-            class="h-3.5 w-3.5"
-          />
-          当前点播与控制
-        </TabsTrigger>
-        <TabsTrigger value="preview">
-          <component
-            :is="Desktop24Regular"
-            class="h-3.5 w-3.5"
-          />
-          OBS 舞台预览
-        </TabsTrigger>
-        <TabsTrigger value="settings">
-          <component
-            :is="Settings24Regular"
-            class="h-3.5 w-3.5"
-          />
-          规则与历史
-        </TabsTrigger>
-      </TabsList>
-
-      <!-- Tab 1: 当前点播与控制 -->
-      <TabsContent
-        value="requests"
-        class="mt-3 space-y-3"
-      >
-        <!-- 内嵌播放器 -->
-        <Transition>
-          <div
+        <template #aside>
+          <SongPlayer
             v-if="liveRequest.selectedSong"
-            class="space-y-3"
-          >
-            <SongPlayer
-              v-model:is-lrc-loading="liveRequest.isLrcLoading"
-              :song="liveRequest.selectedSong"
-            />
-            <Separator />
-          </div>
-        </Transition>
-
-        <!-- 点播清单 -->
-        <SongRequestList />
-      </TabsContent>
-
-      <!-- Tab 2: OBS 舞台预览 -->
-      <TabsContent
-        value="preview"
-        class="mt-3"
-      >
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <!-- 舞台视口 (8 列) -->
-          <Card class="lg:col-span-8 flex flex-col">
-            <CardHeader class="p-3.5">
-              <div class="flex-between gap-3 flex-wrap">
-                <div class="flex items-center gap-2">
-                  <component
-                    :is="Eye24Regular"
-                    class="h-4 w-4 text-muted-foreground"
-                  />
-                  <CardTitle class="text-xs"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
-                </div>
-
-                <ToggleGroup
-                  v-model="previewBg"
-                  type="single"
-                  size="xs"
-                >
-                  <ToggleGroupItem
-                    v-for="bg in [
-                      { key: 'checker', label: '网格' },
-                      { key: 'dark', label: '纯黑' },
-                      { key: 'light', label: '浅色' },
-                      { key: 'game', label: '模拟游戏' },
-                    ]"
-                    :key="bg.key"
-                    :value="bg.key"
-                  >
-                    {{ bg.label }}
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-            </CardHeader>
-
-            <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
-              <div
-                class="rounded-lg border border-border p-6 flex-center min-h-[460px] transition-colors"
-                :class="{
-                  'bg-[#121214]': previewBg === 'dark',
-                  'bg-[#f4f4f5]': previewBg === 'light',
-                  'bg-[#0b132b]': previewBg === 'game',
-                  'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]':
-                    previewBg === 'checker',
-                }"
-              >
-                <div class="w-[380px] max-w-full">
-                  <LiveRequestOBS
-                    :id="accountInfo?.id"
-                    :key="`${accountInfo?.id}-${obsStyleType}-${obsScrollSpeed}`"
-                    :style="obsStyleType"
-                    :speed-multiplier="obsScrollSpeed"
-                  />
-                </div>
-              </div>
-
-              <div class="flex-between gap-3 flex-wrap pt-2 border-t border-border/60">
-                <span class="text-xs text-muted-foreground"
-                  >推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。</span
-                >
-                <Button
-                  variant="default"
-                  @click="copyObsLink"
-                >
-                  <component
-                    :is="Copy24Regular"
-                    class="h-3.5 w-3.5 mr-1"
-                  />
-                  复制当前样式 OBS 链接
-                </Button>
-              </div>
+            v-model:is-lrc-loading="liveRequest.isLrcLoading"
+            :song="liveRequest.selectedSong"
+          />
+          <Card v-else>
+            <CardContent class="p-3.5 flex items-center gap-2.5 text-xs text-muted-foreground">
+              <MusicNote224Regular class="size-4 shrink-0 text-primary" />
+              <span>点击列表中的「试听」图标即可在此播放伴奏与双语歌词。</span>
             </CardContent>
           </Card>
 
-          <!-- 视觉预设 (4 列) -->
-          <div class="lg:col-span-4 space-y-4">
-            <Card>
-              <CardHeader class="p-3.5">
-                <div class="flex items-center gap-2">
-                  <component
-                    :is="Color24Regular"
-                    class="h-4 w-4 text-muted-foreground"
-                  />
-                  <CardTitle class="text-xs uppercase tracking-wide"> OBS 视觉预设 </CardTitle>
+          <LiveSideCard
+            title="今日已唱"
+            :icon="CheckmarkCircle24Regular"
+            icon-class="text-emerald-600"
+            :badge="todayFinishedSongs.length"
+            action-label="历史统计"
+            @action="activeMainTab = 'history'"
+          >
+            <div
+              v-if="todayFinishedSongs.length > 0"
+              class="divide-y divide-border"
+            >
+              <div
+                v-for="item in todayFinishedSongs.slice(0, 8)"
+                :key="item.id"
+                class="flex-between gap-2 py-1.5 text-xs"
+              >
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="font-medium text-foreground truncate">{{ item.songName }}</span>
+                  <span class="text-muted-foreground truncate shrink-0"> · {{ item.user?.name || '主播添加' }} </span>
                 </div>
-              </CardHeader>
+                <span class="font-mono tabular-nums text-muted-foreground shrink-0">
+                  {{ item.finishAt ? format(normalizeTimestampMs(item.finishAt), 'HH:mm') : '' }}
+                </span>
+              </div>
+            </div>
+            <div
+              v-else
+              class="py-4 text-center text-xs text-muted-foreground"
+            >
+              今日暂未完成演唱曲目
+            </div>
+          </LiveSideCard>
 
-              <CardContent class="space-y-3.5">
-                <div class="grid grid-cols-1 gap-1.5">
-                  <Button
-                    v-for="st in [
-                      { key: 'glass', label: '毛玻璃质感 (Modern Glass)' },
-                      { key: 'transparent', label: '纯透明无底壳 (Transparent)' },
-                      { key: 'minimal', label: '极简通透流 (Minimal Text)' },
-                      { key: 'classic', label: '经典卡片 (Classic Dark)' },
-                      { key: 'fresh', label: '清新自然 (Fresh Light)' },
-                    ]"
-                    :key="st.key"
-                    :variant="obsStyleType === st.key ? 'default' : 'outline'"
-                    class="w-full justify-start font-normal"
-                    @click="obsStyleType = st.key as any"
-                  >
-                    {{ st.label }}
-                  </Button>
-                </div>
+          <LiveSideCard
+            title="点播规则概况"
+            action-label="调整规则"
+            @action="activeMainTab = 'settings'"
+          >
+            <div class="space-y-2 text-xs">
+              <div class="flex-between">
+                <span class="text-muted-foreground">触发前缀 / 范围</span>
+                <Badge
+                  variant="outline"
+                  size="xs"
+                >
+                  {{ ruleSummary?.orderPrefix || '点歌' }} ·
+                  {{ ruleSummary?.onlyAllowSongList ? '仅限歌单' : '不限曲目' }}
+                </Badge>
+              </div>
+              <div class="flex-between">
+                <span class="text-muted-foreground">网页歌单点播</span>
+                <Badge
+                  :variant="ruleSummary?.allowFromWeb ? 'success' : 'secondary'"
+                  size="xs"
+                >
+                  {{ ruleSummary?.allowFromWeb ? '允许' : '已关闭' }}
+                </Badge>
+              </div>
+              <div class="flex-between">
+                <span class="text-muted-foreground">积分点歌 / 插队</span>
+                <span class="font-mono text-foreground">
+                  {{ ruleSummary?.enablePointRequest ? `${ruleSummary.pointRequestCost ?? 0} 积分` : '免费' }}
+                  /
+                  {{ ruleSummary?.allowPointPriority ? `${ruleSummary.pointPriorityCost ?? 0} 积分插队` : '未开启' }}
+                </span>
+              </div>
+            </div>
+          </LiveSideCard>
+        </template>
+      </LiveConsoleCockpit>
+    </template>
 
-                <Separator />
+    <template #history>
+      <SongRequestHistory />
+    </template>
 
-                <SettingRow
-                  type="number"
-                  variant="none"
-                  title="滚动轮播速度"
-                  :min="0.5"
-                  :max="3"
-                  :step="0.2"
-                  control-class="w-20 font-mono"
-                  v-model="obsScrollSpeed"
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </TabsContent>
-
-      <!-- Tab 3: 规则设置与历史 -->
-      <TabsContent
-        value="settings"
-        class="mt-3"
+    <template #preview>
+      <ObsStagePreview
+        :obs-path="obsPreviewMode === 'live-request' ? 'obs/live-request' : 'obs/live-request-today'"
+        :user-id="accountInfo?.id"
+        :title="obsPreviewMode === 'live-request' ? '当前点播 OBS 预览' : '今日已唱 OBS 预览'"
+        recommended-size="推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。"
       >
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <!-- 历史 (7 列) -->
-          <div class="lg:col-span-7">
-            <SongRequestHistory />
-          </div>
+        <template #toolbar>
+          <ToggleGroup
+            v-model="obsPreviewMode"
+            type="single"
+            size="xs"
+          >
+            <ToggleGroupItem value="live-request">待唱队列</ToggleGroupItem>
+            <ToggleGroupItem value="live-request-today">今日已唱</ToggleGroupItem>
+          </ToggleGroup>
+        </template>
 
-          <!-- 规则 (5 列) -->
-          <div class="lg:col-span-5">
-            <Card>
-              <CardHeader class="p-3.5">
-                <div class="flex items-center gap-2">
-                  <component
-                    :is="ShieldCheckmark24Regular"
-                    class="h-4 w-4 text-muted-foreground"
-                  />
-                  <CardTitle class="text-xs uppercase tracking-wide"> 点播指令与权限设置 </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <SongRequestSettings
-                  :is-loading="liveRequest.isLoading"
-                  :is-logged-in="!!accountInfo.id"
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </TabsContent>
-    </Tabs>
-  </div>
+        <template #default="{ styleType, speedMultiplier }">
+          <LiveRequestOBS
+            v-if="obsPreviewMode === 'live-request'"
+            :id="accountInfo?.id"
+            :key="`lr-${accountInfo?.id}-${styleType}-${speedMultiplier}`"
+            :style="styleType"
+            :speed-multiplier="speedMultiplier"
+          />
+          <LiveRequestProcessedOBS
+            v-else
+            :id="accountInfo?.id"
+            :key="`lr-today-${accountInfo?.id}-${styleType}-${speedMultiplier}`"
+            :style="styleType"
+            :speed-multiplier="speedMultiplier"
+          />
+        </template>
+      </ObsStagePreview>
+    </template>
+
+    <template #settings>
+      <SongRequestSettings />
+    </template>
+  </LiveConsolePageShell>
 </template>

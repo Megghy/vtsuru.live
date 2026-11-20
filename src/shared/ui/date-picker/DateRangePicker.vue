@@ -36,7 +36,7 @@ const containerHeights: Record<string, string> = {
   <div
     :class="
       cn(
-        'inline-flex items-center gap-1.5 rounded-md border border-input bg-background text-foreground transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ring-offset-background',
+        'inline-flex items-center gap-1.5 rounded-md border border-input bg-control text-foreground transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ring-offset-background',
         containerHeights[props.size] || containerHeights.sm,
         disabled && 'opacity-50 pointer-events-none',
         props.class,

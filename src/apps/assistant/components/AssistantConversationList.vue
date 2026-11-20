@@ -93,7 +93,7 @@ function onScroll(e: Event) {
         size="xs"
         v-model="keyword"
         placeholder="搜索会话"
-        class="pl-8"
+        class="pl-8 bg-inset/70"
       />
     </div>
 
@@ -121,7 +121,7 @@ function onScroll(e: Event) {
         :class="
           conv.id === store.currentConversationId
             ? 'bg-primary/10 text-primary font-medium'
-            : 'text-foreground hover:bg-muted/60'
+            : 'text-foreground hover:bg-accent/70'
         "
         @click="store.switchConversation(conv.id)"
       >

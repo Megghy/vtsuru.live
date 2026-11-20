@@ -5,8 +5,8 @@ import APlayer from 'vue3-aplayer'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
-import { getApiSongListGetNeteaseLyric } from '@/api/generated/song-list/song-list'
 import { Empty } from '@/shared/ui/empty'
+import { fetchNeteaseMergedLyric } from '@/shared/utils/lyric'
 
 const props = defineProps<{
   song: ResponseSongModel | undefined
@@ -32,7 +32,7 @@ watch(temp, (newV) => {
 
 function OnPlayMusic(song: ResponseSongModel) {
   if (song.from === SongPlatform.Netease) {
-    GetLyric(song)
+    void GetLyric(song)
   } else {
     aplayerMusic.value = {
       title: song.name,
@@ -46,73 +46,18 @@ function OnPlayMusic(song: ResponseSongModel) {
 
 async function GetLyric(song: ResponseSongModel) {
   emits('update:isLrcLoading', song.key)
-  getApiSongListGetNeteaseLyric({ id: song.id })
-    .then((data) => {
-      if (data.code === 200) {
-        aplayerMusic.value = {
-          title: song.name,
-          artist: song.author?.join('/') ?? '',
-          src: song.url,
-          pic: '',
-          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric ?? '', data.data.tlyric) : (data.data.lyric ?? ''),
-        }
-      } else {
-        aplayerMusic.value = {
-          title: song.name,
-          artist: song.author?.join('/') ?? '',
-          src: song.url,
-          pic: '',
-          lrc: '',
-        }
-      }
-    })
-    .finally(() => {
-      emits('update:isLrcLoading', undefined)
-    })
-}
-
-function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
-  const originalLines = originalLyrics?.split('\n') ?? []
-  const translatedLines = translatedLyrics?.split('\n') ?? []
-
-  let mergedLyrics = ''
-
-  for (let i = 0; i < originalLines.length; i++) {
-    const originalLine = originalLines[i]?.trim()
-    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
-
-    let mergedLine = originalLine
-
-    if (originalTimeMatch) {
-      const originalTime = originalTimeMatch[1]
-      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
-
-      if (translatedLineIndex !== -1) {
-        const translatedLine = translatedLines[translatedLineIndex]
-        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/)
-
-        if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
-          const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
-          if (translatedText) {
-            mergedLine += ` (${translatedText})`
-          }
-          translatedLines.splice(translatedLineIndex, 1)
-        }
-      }
+  try {
+    const lrc = await fetchNeteaseMergedLyric(song.id)
+    aplayerMusic.value = {
+      title: song.name,
+      artist: song.author?.join('/') ?? '',
+      src: song.url,
+      pic: '',
+      lrc,
     }
-    if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
-      mergedLyrics += `${mergedLine}\n`
-    }
+  } finally {
+    emits('update:isLrcLoading', undefined)
   }
-
-  for (const translatedLine of translatedLines) {
-    const translatedText = translatedLine.trim()
-    if (translatedText) {
-      mergedLyrics += `${translatedText}\n`
-    }
-  }
-
-  return mergedLyrics.trim()
 }
 </script>
 

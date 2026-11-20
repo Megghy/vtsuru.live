@@ -1,4 +1,3 @@
-import { List } from 'linqts'
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { ResponseQueueModel } from '@/api/client-types'
@@ -17,6 +16,7 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
 
   const activeItems = computed(() => {
     const waiting = queue.value.filter((item) => item?.status === QueueStatus.Waiting)
+    const hasManualOrder = waiting.some((item) => item.sortOrder !== null && item.sortOrder !== undefined)
     const sorted = sortByQueueType(waiting, settings.value.sortType, settings.value.isReverse, {
       createAt: (q) => q.createAt,
       guardLevel: (q) => q.user?.guard_level,
@@ -24,8 +24,10 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
       fansMedalLevel: (q) => q.user?.fans_medal_level,
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
       priorityLevel: (q) => q.priorityLevel,
+      sortOrder: (q) => q.sortOrder,
     })
-    return new List(sorted).OrderByDescending((item) => (item.from === QueueFrom.Manual ? 1 : 0)).ToArray()
+    if (hasManualOrder) return sorted
+    return sorted.toSorted((a, b) => (b.from === QueueFrom.Manual ? 1 : 0) - (a.from === QueueFrom.Manual ? 1 : 0))
   })
 
   const allowGuardTypes = computed(() => {

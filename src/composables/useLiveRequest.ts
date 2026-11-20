@@ -1,4 +1,4 @@
-import { List } from 'linqts'
+import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, useAccount } from '@/api/account'
@@ -6,20 +6,24 @@ import type { EventModel, SongRequestInfo } from '@/api/client-types'
 import {
   getApiLiveRequestGetActive,
   getApiLiveRequestGetAll,
+  getApiLiveRequestStats,
   postApiLiveRequestActive,
   postApiLiveRequestAdd,
+  postApiLiveRequestBatchStatus,
   postApiLiveRequestCancel,
   postApiLiveRequestDeactivate,
   postApiLiveRequestDelete,
   postApiLiveRequestFinish,
+  postApiLiveRequestReorder,
+  postApiLiveRequestResetOrder,
   postApiLiveRequestSinging,
   postApiLiveRequestTryAdd,
 } from '@/api/generated/live-request/live-request'
-import type { ResponseSongModel } from '@/api/generated/model'
+import type { ResponseLiveRequestStatsModel, ResponseSongModel } from '@/api/generated/model'
 import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
-import { sortByQueueType } from '@/shared/utils/queue'
+import { getGuardColor, getSCColor, sortByQueueType } from '@/shared/utils/queue'
 
 export const useLiveRequest = defineStore('songRequest', () => {
   const accountInfo = useAccount()
@@ -29,164 +33,197 @@ export const useLiveRequest = defineStore('songRequest', () => {
   const isReverse = usePersistedStorage('SongRequest.Settings.Reverse', false)
   const defaultPrefix = usePersistedStorage('Settings.SongRequest.DefaultPrefix', '点播')
 
-  const isLoading = ref(false)
+  const isBatchLoading = ref(false)
+  const operatingIds = ref<number[]>([])
+  const isLoading = computed({
+    get: () => isBatchLoading.value || operatingIds.value.length > 0,
+    set: (val: boolean) => {
+      isBatchLoading.value = val
+    },
+  })
+
   const originSongs = ref<SongRequestInfo[]>([])
-  const updateKey = ref(0)
+
+  // 历史检索（独立于当前队列，避免在历史 Tab 搜索后导致当前队列静默空屏）
   const filterSongName = ref('')
-  const filterSongNameContains = ref(false)
+  const filterSongNameContains = ref(true)
   const filterName = ref('')
-  const filterNameContains = ref(false)
+  const filterNameContains = ref(true)
+
+  // 当前队列检索
+  const activeFilterKeyword = ref('')
+
   const newSongName = ref('')
   const selectedSong = ref<ResponseSongModel>()
   const isLrcLoading = ref('')
 
-  const configCanEdit = computed(() => {
-    return isLoggedIn.value
-  })
+  const stats = ref<ResponseLiveRequestStatsModel | null>(null)
+  const isStatsLoading = ref(false)
 
   const isLoggedIn = computed(() => {
-    return accountInfo.value != null && accountInfo.value.id !== undefined
+    return accountInfo.value != null && accountInfo.value.id !== undefined && accountInfo.value.id > 0
   })
 
-  const songs = computed<SongRequestInfo[]>(() => {
-    const filtered = new List(originSongs.value)
-      .Where((s) => {
-        if (filterName.value) {
-          if (filterNameContains.value) {
-            if (!s?.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
-              return false
-            }
-          } else if (s?.user?.name.toLowerCase() !== filterName.value.toLowerCase()) {
-            return false
-          }
-        } else if (filterSongName.value) {
-          if (filterSongNameContains.value) {
-            if (!s?.songName.toLowerCase().includes(filterSongName.value.toLowerCase())) {
-              return false
-            }
-          } else if (s?.songName.toLowerCase() !== filterSongName.value.toLowerCase()) {
-            return false
-          }
-        }
-        return true
-      })
-      .ToArray()
+  const configCanEdit = computed(() => isLoggedIn.value)
 
+  function isSongOperating(id: number) {
+    return operatingIds.value.includes(id)
+  }
+
+  function markOperating(id: number, active: boolean) {
+    if (active) {
+      if (!operatingIds.value.includes(id)) {
+        operatingIds.value = [...operatingIds.value, id]
+      }
+    } else {
+      operatingIds.value = operatingIds.value.filter((item) => item !== id)
+    }
+  }
+
+  const sourceList = computed(() => (isLoggedIn.value ? originSongs.value : localActiveSongs.value))
+
+  /** 当前全部点播数据按规则排序后的全量视图（不应用历史搜索条件） */
+  const songs = computed<SongRequestInfo[]>(() => {
     const settings = accountInfo.value?.settings?.songRequest
     const reverse = configCanEdit.value ? Boolean(settings?.isReverse) : isReverse.value
 
-    return sortByQueueType(filtered, settings?.sortType, reverse, {
+    return sortByQueueType(sourceList.value, settings?.sortType, reverse, {
       createAt: (q) => q.createAt,
       guardLevel: (q) => q.user?.guard_level,
       price: (q) => q.price,
       fansMedalLevel: (q) => q.user?.fans_medal_level,
+      fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
       priorityLevel: (q) => q.priorityLevel,
+      sortOrder: (q) => q.sortOrder,
     })
   })
 
-  const activeSongs = computed(() => {
-    return (isLoggedIn.value ? songs.value : localActiveSongs.value)
-      .toSorted((a, b) => b.status - a.status)
-      .filter((song) => {
-        return song.status == SongRequestStatus.Waiting || song.status == SongRequestStatus.Singing
+  /** 未过滤的当前活跃队列（正在演唱排在最前） */
+  const unfilteredActiveSongs = computed(() => {
+    return songs.value
+      .filter((song) => song.status === SongRequestStatus.Waiting || song.status === SongRequestStatus.Singing)
+      .toSorted((a, b) => {
+        if (a.status === SongRequestStatus.Singing && b.status !== SongRequestStatus.Singing) return -1
+        if (b.status === SongRequestStatus.Singing && a.status !== SongRequestStatus.Singing) return 1
+        return 0
       })
   })
 
+  /** 经过当前队列搜索关键词过滤的活跃队列 */
+  const activeSongs = computed(() => {
+    const kw = activeFilterKeyword.value.trim().toLowerCase()
+    if (!kw) return unfilteredActiveSongs.value
+    return unfilteredActiveSongs.value.filter(
+      (song) => song.songName?.toLowerCase().includes(kw) || song.user?.name?.toLowerCase().includes(kw),
+    )
+  })
+
+  const hasCustomOrder = computed(() =>
+    unfilteredActiveSongs.value.some((s) => s.sortOrder !== null && s.sortOrder !== undefined),
+  )
+
   const historySongs = computed(() => {
-    return (isLoggedIn.value ? songs.value : localActiveSongs.value)
-      .toSorted((a, b) => a.status - b.status)
-      .filter((song) => {
-        return song.status == SongRequestStatus.Finish || song.status == SongRequestStatus.Cancel
-      })
+    return songs.value.filter(
+      (song) => song.status === SongRequestStatus.Finish || song.status === SongRequestStatus.Cancel,
+    )
   })
 
   const STATUS_MAP = {
     [SongRequestStatus.Waiting]: '等待中',
-    [SongRequestStatus.Singing]: '处理中',
-    [SongRequestStatus.Finish]: '已处理',
+    [SongRequestStatus.Singing]: '正在演唱',
+    [SongRequestStatus.Finish]: '已完成',
     [SongRequestStatus.Cancel]: '已取消',
   }
 
-  async function getAllSong() {
-    if (isLoggedIn.value) {
-      try {
-        const data = await getApiLiveRequestGetAll()
-        if (data.code == 200) {
-          console.log('[SONG-REQUEST] 已获取所有数据')
-          return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
-        } else {
-          window.$message.error(`无法获取数据: ${data.message}`)
-          return []
-        }
-      } catch (_err) {
-        console.error('[SONG-REQUEST] 无法获取数据', _err)
-        window.$message.error('无法获取数据')
-      }
-      return []
-    } else {
+  async function getAllSong(): Promise<SongRequestInfo[]> {
+    if (!isLoggedIn.value) {
       return localActiveSongs.value
     }
+    try {
+      const data = await getApiLiveRequestGetAll()
+      if (data.code === 200) {
+        return [...data.data].toSorted((a, b) => b.createAt - a.createAt)
+      }
+      window.$message.error(`无法获取点播数据: ${data.message}`)
+    } catch (err) {
+      console.error('[SONG-REQUEST] 无法获取数据', err)
+      window.$message.error('无法获取点播数据')
+    }
+    return []
+  }
+
+  async function fetchStats() {
+    if (!isLoggedIn.value) return null
+    isStatsLoading.value = true
+    try {
+      const res = await getApiLiveRequestStats()
+      if (res.code === 200) {
+        stats.value = res.data
+        return res.data
+      }
+    } catch (err) {
+      console.error('[SONG-REQUEST] 获取统计失败', err)
+    } finally {
+      isStatsLoading.value = false
+    }
+    return null
   }
 
   async function initData() {
     originSongs.value = await getAllSong()
   }
 
-  async function addSong(danmaku: EventModel) {
-    console.log(
-      `[SONG-REQUEST] 收到 [${danmaku.uname}] 的点播${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
-    )
+  function nextLocalId() {
+    return sourceList.value.length === 0 ? 1 : Math.max(...sourceList.value.map((s) => s.id)) + 1
+  }
 
+  async function addSong(danmaku: EventModel) {
     const settings = accountInfo.value?.settings?.songRequest
 
-    if (settings?.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
+    if (settings?.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming !== true) {
       window.$notification.info({
         title: `${danmaku.uname} 点播失败`,
-        description: '当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入',
+        description: '当前未在直播中，无法添加点播请求；或关闭设置中的「仅在直播时允许加入」。',
         meta: new Date().toLocaleTimeString(),
       })
       return
     }
 
     if (isLoggedIn.value) {
-      await (
-        postApiLiveRequestTryAdd(danmaku as any) as Promise<unknown> as Promise<{
-          code: number
-          message: string
-          data: SongRequestInfo
-        }>
-      ).then((data) => {
-        if (data.code == 200) {
-          if (data.message != 'EventFetcher') {
-            const idx = originSongs.value.findIndex((s) => s.id === data.data.id)
-            if (idx > -1) {
-              originSongs.value.splice(idx, 1, data.data)
-              window.$message.success(`[${danmaku.uname}] 使用积分插队: ${data.data.songName}`)
-            } else {
-              originSongs.value.unshift(data.data)
-              window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
-            }
+      const data = await (postApiLiveRequestTryAdd(danmaku as any) as Promise<unknown> as Promise<{
+        code: number
+        message: string
+        data: SongRequestInfo
+      }>)
+      if (data.code === 200) {
+        if (data.message !== 'EventFetcher') {
+          const idx = originSongs.value.findIndex((s) => s.id === data.data.id)
+          if (idx > -1) {
+            originSongs.value.splice(idx, 1, data.data)
+            window.$message.success(`[${danmaku.uname}] 使用积分插队: ${data.data.songName}`)
           } else {
+            originSongs.value.unshift(data.data)
             window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
           }
         } else {
-          const time = Date.now()
-          window.$notification.warning({
-            title: `${danmaku.uname} 点播失败`,
-            description: data.message,
-            duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: new Date(time).toLocaleTimeString(),
-          })
-          console.log(`[SONG-REQUEST] [${danmaku.uname}] 添加曲目失败: ${data.message}`)
+          window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
         }
-      })
+      } else {
+        window.$notification.warning({
+          title: `${danmaku.uname} 点播失败`,
+          description: data.message,
+          duration: isWarnMessageAutoClose.value ? 3000 : 0,
+          meta: new Date().toLocaleTimeString(),
+        })
+      }
     } else {
+      const prefixLen = settings?.orderPrefix?.length || defaultPrefix.value.length
       const songData = {
-        songName: danmaku.msg.trim().substring(settings.orderPrefix?.length || defaultPrefix.value.length),
+        songName: danmaku.msg.trim().substring(prefixLen).trim() || danmaku.msg.trim(),
         song: undefined,
         status: SongRequestStatus.Waiting,
-        from: danmaku.type == EventDataTypes.Message ? SongRequestFrom.Danmaku : SongRequestFrom.SC,
-        scPrice: danmaku.type == EventDataTypes.SC ? danmaku.price : 0,
+        from: danmaku.type === EventDataTypes.Message ? SongRequestFrom.Danmaku : SongRequestFrom.SC,
+        price: danmaku.type === EventDataTypes.SC ? danmaku.price : 0,
         user: {
           name: danmaku.uname,
           uid: danmaku.uid,
@@ -200,7 +237,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
         createAt: Date.now(),
         priorityLevel: 0,
         isInLocal: true,
-        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max((s) => s.id) ?? 0) + 1,
+        id: nextLocalId(),
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
@@ -209,42 +246,37 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   async function addSongManual() {
-    if (!newSongName.value) {
-      window.$message.error('请输入名称')
+    const trimmed = newSongName.value.trim()
+    if (!trimmed) {
+      window.$message.error('请输入歌曲名称')
       return
     }
 
     if (isLoggedIn.value) {
-      await (
-        postApiLiveRequestAdd({
-          name: newSongName.value,
-        }) as Promise<unknown> as Promise<{
-          code: number
-          message: string
-          data: SongRequestInfo
-        }>
-      ).then((data) => {
-        if (data.code == 200) {
-          window.$message.success(`已手动添加: ${data.data.songName}`)
-          originSongs.value.unshift(data.data)
-          newSongName.value = ''
-          console.log(`[SONG-REQUEST] 已手动添加: ${data.data.songName}`)
-        } else {
-          window.$message.error(`手动添加失败: ${data.message}`)
-        }
-      })
+      const data = await (postApiLiveRequestAdd({ name: trimmed }) as Promise<unknown> as Promise<{
+        code: number
+        message: string
+        data: SongRequestInfo
+      }>)
+      if (data.code === 200) {
+        window.$message.success(`已手动添加: ${data.data.songName}`)
+        originSongs.value.unshift(data.data)
+        newSongName.value = ''
+      } else {
+        window.$message.error(`手动添加失败: ${data.message}`)
+      }
     } else {
       const songData = {
-        songName: newSongName.value,
+        songName: trimmed,
         song: undefined,
         status: SongRequestStatus.Waiting,
         from: SongRequestFrom.Manual,
-        scPrice: undefined,
+        price: undefined,
         user: undefined,
         createAt: Date.now(),
         priorityLevel: 0,
         isInLocal: true,
-        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max((s) => s.id) ?? 0) + 1,
+        id: nextLocalId(),
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
@@ -253,111 +285,237 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
   }
 
-  async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus) {
-    if (!configCanEdit.value) {
-      song.status = status
+  function applySongStatusUpdate(song: SongRequestInfo, status: SongRequestStatus, refundPoint: boolean, now: number) {
+    song.status = status
+    if (status === SongRequestStatus.Singing) {
+      song.startSingAt = now
+    } else if (status > SongRequestStatus.Singing) {
+      song.finishAt = now
+    }
+    if (status === SongRequestStatus.Cancel && refundPoint && song.pointCost && song.pointCost > 0) {
+      song.pointRefunded = true
+    }
+  }
+
+  async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus, refundPoint = false) {
+    if (!isLoggedIn.value) {
+      applySongStatusUpdate(song, status, false, Date.now())
+      window.$message.success(`已更新状态为: ${STATUS_MAP[status]}`)
       return
     }
 
-    isLoading.value = true
-    let statusString = ''
-    let statusString2 = ''
+    markOperating(song.id, true)
+    try {
+      const res =
+        status === SongRequestStatus.Waiting
+          ? await postApiLiveRequestActive({ id: song.id })
+          : status === SongRequestStatus.Cancel
+            ? await postApiLiveRequestCancel({ id: song.id, refundPoint })
+            : status === SongRequestStatus.Finish
+              ? await postApiLiveRequestFinish({ id: song.id })
+              : await postApiLiveRequestSinging({ id: song.id })
 
-    switch (status) {
-      case SongRequestStatus.Waiting:
-        statusString = 'active'
-        statusString2 = '等待中'
-        break
-      case SongRequestStatus.Cancel:
-        statusString = 'cancel'
-        statusString2 = '已取消'
-        break
-      case SongRequestStatus.Finish:
-        statusString = 'finish'
-        statusString2 = '已完成'
-        break
-      case SongRequestStatus.Singing:
-        statusString = 'singing'
-        statusString2 = '处理中'
-        break
+      if (res.code === 200) {
+        applySongStatusUpdate(song, status, refundPoint, Date.now())
+        window.$message.success(
+          status === SongRequestStatus.Cancel && refundPoint && song.pointCost
+            ? '已取消点播并退回积分'
+            : `已更新状态为: ${STATUS_MAP[status]}`,
+        )
+      } else {
+        window.$message.error(`更新状态失败: ${res.message}`)
+      }
+    } catch (err) {
+      console.error('[SONG-REQUEST] 更新状态失败', err)
+      window.$message.error('更新状态失败')
+    } finally {
+      markOperating(song.id, false)
+    }
+  }
+
+  async function batchUpdateStatus(ids: number[], status: SongRequestStatus, refundPoint = false) {
+    if (ids.length === 0) return false
+    if (!isLoggedIn.value) {
+      const idSet = new Set(ids)
+      const now = Date.now()
+      for (const s of localActiveSongs.value) {
+        if (idSet.has(s.id)) {
+          s.status = status
+          if (status > SongRequestStatus.Singing) s.finishAt = now
+        }
+      }
+      window.$message.success(`已批量更新 ${ids.length} 条记录`)
+      return true
     }
 
-    const postFn =
-      statusString === 'active'
-        ? postApiLiveRequestActive
-        : statusString === 'cancel'
-          ? postApiLiveRequestCancel
-          : statusString === 'finish'
-            ? postApiLiveRequestFinish
-            : postApiLiveRequestSinging
-
-    await postFn({
-      id: song.id,
-    })
-      .then((data) => {
-        if (data.code == 200) {
-          console.log(`[SONG-REQUEST] 更新状态: ${song.songName} -> ${statusString}`)
-          song.status = status
-          if (status === SongRequestStatus.Singing) {
-            song.startSingAt = Date.now()
-          } else if (status > SongRequestStatus.Singing) {
-            song.finishAt = Date.now()
+    isBatchLoading.value = true
+    try {
+      const res = await postApiLiveRequestBatchStatus({ ids, status, refundPoint })
+      if (res.code === 200) {
+        const updatedSet = new Set(res.data)
+        const now = Date.now()
+        for (const s of originSongs.value) {
+          if (updatedSet.has(s.id)) {
+            applySongStatusUpdate(s, status, refundPoint, now)
           }
-          window.$message.success(`已更新状态为: ${statusString2}`)
-        } else {
-          console.log(`[SONG-REQUEST] 更新状态失败: ${data.message}`)
-          window.$message.error(`更新状态失败: ${data.message}`)
         }
-      })
-      .catch((_err) => {
-        window.$message.error(`更新状态失败`)
-      })
-      .finally(() => {
-        isLoading.value = false
-      })
+        window.$message.success(`已批量更新 ${res.data.length} 条点播状态为「${STATUS_MAP[status]}」`)
+        return true
+      }
+      window.$message.error(`批量更新失败: ${res.message}`)
+    } catch (err) {
+      console.error('[SONG-REQUEST] 批量更新失败', err)
+      window.$message.error('批量更新失败')
+    } finally {
+      isBatchLoading.value = false
+    }
+    return false
+  }
+
+  async function reorderSongs(orderedIds: number[]) {
+    if (orderedIds.length === 0) return false
+    const orderMap = new Map(orderedIds.map((id, idx) => [id, idx]))
+    for (const item of sourceList.value) {
+      const idx = orderMap.get(item.id)
+      if (idx !== undefined) {
+        item.sortOrder = idx
+      }
+    }
+
+    if (!isLoggedIn.value) return true
+
+    try {
+      const res = await postApiLiveRequestReorder(orderedIds)
+      if (res.code !== 200) {
+        window.$message.error(`保存排序失败: ${res.message}`)
+        return false
+      }
+      return true
+    } catch (err) {
+      console.error('[SONG-REQUEST] 调序失败', err)
+      window.$message.error('保存排序失败')
+      return false
+    }
+  }
+
+  async function reorderWaitingSongs(
+    targetId: number,
+    buildReordered: (waiting: SongRequestInfo[], idx: number) => SongRequestInfo[] | null,
+  ) {
+    const waiting = unfilteredActiveSongs.value.filter((s) => s.status === SongRequestStatus.Waiting)
+    const idx = waiting.findIndex((s) => s.id === targetId)
+    if (idx === -1) return false
+    const reordered = buildReordered(waiting, idx)
+    if (!reordered) return false
+    const singing = unfilteredActiveSongs.value.filter((s) => s.status === SongRequestStatus.Singing)
+    return reorderSongs([...singing.map((s) => s.id), ...reordered.map((s) => s.id)])
+  }
+
+  async function moveSong(song: SongRequestInfo, direction: 'up' | 'down') {
+    await reorderWaitingSongs(song.id, (waiting, idx) => {
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (targetIdx < 0 || targetIdx >= waiting.length) return null
+      const reordered = [...waiting]
+      const [moved] = reordered.splice(idx, 1)
+      reordered.splice(targetIdx, 0, moved)
+      return reordered
+    })
+  }
+
+  async function pinSong(song: SongRequestInfo) {
+    const ok = await reorderWaitingSongs(song.id, (waiting, idx) =>
+      idx <= 0 ? null : [song, ...waiting.filter((s) => s.id !== song.id)],
+    )
+    if (ok) {
+      window.$message.success(`已将「${song.songName}」置顶`)
+    }
+  }
+
+  async function resetOrder() {
+    for (const item of sourceList.value) {
+      if (item.status <= SongRequestStatus.Singing) {
+        item.sortOrder = null
+      }
+    }
+    if (!isLoggedIn.value) {
+      window.$message.success('已恢复按规则排序')
+      return true
+    }
+
+    isBatchLoading.value = true
+    try {
+      const res = await postApiLiveRequestResetOrder()
+      if (res.code === 200) {
+        window.$message.success('已恢复为规则排序')
+        return true
+      }
+      window.$message.error(`恢复排序失败: ${res.message}`)
+    } catch (err) {
+      console.error('[SONG-REQUEST] 重置排序失败', err)
+      window.$message.error('恢复排序失败')
+    } finally {
+      isBatchLoading.value = false
+    }
+    return false
   }
 
   async function deleteSongs(values: SongRequestInfo[]) {
-    isLoading.value = true
+    if (values.length === 0) return
+    const idSet = new Set(values.map((s) => s.id))
+    if (!isLoggedIn.value) {
+      localActiveSongs.value = localActiveSongs.value.filter((s) => !idSet.has(s.id))
+      window.$message.success('删除成功')
+      return
+    }
 
+    isBatchLoading.value = true
     try {
       const data = await postApiLiveRequestDelete(values.map((s) => s.id))
-
-      if (data.code == 200) {
+      if (data.code === 200) {
         window.$message.success('删除成功')
-        originSongs.value = originSongs.value.filter((s) => !values.includes(s))
+        originSongs.value = originSongs.value.filter((s) => !idSet.has(s.id))
       } else {
         window.$message.error(`删除失败: ${data.message}`)
       }
-    } catch (_err) {
-      console.error('[SONG-REQUEST] 删除请求失败', _err)
+    } catch (err) {
+      console.error('[SONG-REQUEST] 删除请求失败', err)
       window.$message.error('删除失败')
     } finally {
-      isLoading.value = false
+      isBatchLoading.value = false
     }
   }
 
-  async function deactiveAllSongs() {
-    isLoading.value = true
+  async function deactiveAllSongs(refundPoint = false) {
+    if (!isLoggedIn.value) {
+      const now = Date.now()
+      for (const s of localActiveSongs.value) {
+        if (s.status <= SongRequestStatus.Singing) {
+          applySongStatusUpdate(s, SongRequestStatus.Cancel, false, now)
+        }
+      }
+      window.$message.success('已全部取消')
+      return
+    }
 
+    isBatchLoading.value = true
     try {
-      const data = await postApiLiveRequestDeactivate()
-
-      if (data.code == 200) {
-        window.$message.success('已全部取消')
-        songs.value.forEach((s) => {
+      const data = await postApiLiveRequestDeactivate({ refundPoint })
+      if (data.code === 200) {
+        const now = Date.now()
+        for (const s of originSongs.value) {
           if (s.status <= SongRequestStatus.Singing) {
-            s.status = SongRequestStatus.Cancel
+            applySongStatusUpdate(s, SongRequestStatus.Cancel, refundPoint, now)
           }
-        })
+        }
+        window.$message.success(refundPoint ? '已全部取消并退回已消费积分' : '已全部取消')
       } else {
         window.$message.error(`取消失败: ${data.message}`)
       }
-    } catch (_err) {
-      console.error('[SONG-REQUEST] 取消全部失败', _err)
+    } catch (err) {
+      console.error('[SONG-REQUEST] 取消全部失败', err)
       window.$message.error('取消失败')
     } finally {
-      isLoading.value = false
+      isBatchLoading.value = false
     }
   }
 
@@ -365,59 +523,63 @@ export const useLiveRequest = defineStore('songRequest', () => {
     if (!isLoggedIn.value) return
 
     try {
-      const data = await getApiLiveRequestGetActive({
-        id: accountInfo.value?.id,
-      })
-
-      if (data.code == 200) {
-        data.data.forEach((item) => {
-          const song = originSongs.value.find((s) => s.id == item.id)
+      const data = await getApiLiveRequestGetActive({ id: accountInfo.value?.id })
+      if (data.code === 200) {
+        for (const item of data.data) {
+          const song = originSongs.value.find((s) => s.id === item.id)
           if (song) {
-            if (song.status != item.status) song.status = item.status
+            if (song.status !== item.status) song.status = item.status
             if (song.priorityLevel !== item.priorityLevel) song.priorityLevel = item.priorityLevel
             if (song.pointCost !== item.pointCost) song.pointCost = item.pointCost
+            if (song.pointRefunded !== item.pointRefunded) song.pointRefunded = item.pointRefunded
+            if (song.sortOrder !== item.sortOrder) song.sortOrder = item.sortOrder
             if (item.startSingAt && !song.startSingAt) song.startSingAt = item.startSingAt
             if (item.finishAt && !song.finishAt) song.finishAt = item.finishAt
           } else {
             originSongs.value.unshift(item)
-            if (item.from == SongRequestFrom.Web) {
+            if (item.from === SongRequestFrom.Web) {
               window.$message.success(`[${item.user?.name}] 直接从网页歌单点播: ${item.songName}`)
             }
           }
-        })
+        }
       } else {
         window.$message.error(`无法获取点播队列: ${data.message}`)
       }
-    } catch (_err) {
-      console.error('[SONG-REQUEST] 更新活跃歌曲失败', _err)
+    } catch (err) {
+      console.error('[SONG-REQUEST] 更新活跃歌曲失败', err)
     }
   }
 
   async function blockUser(item: SongRequestInfo) {
-    if (item.from != SongRequestFrom.Danmaku) {
-      window.$message.error(`[${item.user?.name}] 不是来自弹幕的用户`)
+    if (
+      item.from !== SongRequestFrom.Danmaku &&
+      item.from !== SongRequestFrom.SC &&
+      item.from !== SongRequestFrom.Gift
+    ) {
+      window.$message.error(`[${item.user?.name || '该记录'}] 不是来自直播间观众`)
       return
     }
+    if (!item.user) return
 
-    if (item.user) {
-      try {
-        const data = await AddBiliBlackList(GuidUtils.toOuid(item.user.uid, item.user.oid), item.user.name)
-
-        if (data.code == 200) {
-          window.$message.success(`[${item.user?.name}] 已添加到黑名单`)
-          updateSongStatus(item, SongRequestStatus.Cancel)
-        } else {
-          window.$message.error(data.message)
-        }
-      } catch (_err) {
-        console.error('[SONG-REQUEST] 添加黑名单失败', _err)
-        window.$message.error('添加黑名单失败')
+    try {
+      const data = await AddBiliBlackList(GuidUtils.toOuid(item.user.uid, item.user.oid), item.user.name)
+      if (data.code === 200) {
+        window.$message.success(`[${item.user.name}] 已添加到黑名单`)
+        await updateSongStatus(item, SongRequestStatus.Cancel)
+      } else {
+        window.$message.error(data.message)
       }
+    } catch (err) {
+      console.error('[SONG-REQUEST] 添加黑名单失败', err)
+      window.$message.error('添加黑名单失败')
     }
   }
 
   function checkMessage(msg: string) {
-    if (isLoggedIn.value && accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.SongRequest) != true) {
+    if (
+      isLoggedIn.value &&
+      accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.SongRequest) !== true
+    ) {
       return false
     }
     const reqSettings = accountInfo.value?.settings?.songRequest
@@ -429,54 +591,26 @@ export const useLiveRequest = defineStore('songRequest', () => {
     return msg.trim().toLowerCase().startsWith(prefix.toLowerCase())
   }
 
-  function getSCColor(price: number): string {
-    if (price === 0) return `#2a60b2`
-    if (price > 0 && price < 30) return `#2a60b2`
-    if (price >= 30 && price < 50) return `#2a60b2`
-    if (price >= 50 && price < 100) return `#427d9e`
-    if (price >= 100 && price < 500) return `#c99801`
-    if (price >= 500 && price < 1000) return `#e09443`
-    if (price >= 1000 && price < 2000) return `#e54d4d`
-    if (price >= 2000) return `#ab1a32`
-    return ''
-  }
-
-  function getGuardColor(level: number | null | undefined): string {
-    if (level) {
-      switch (level) {
-        case 1:
-          return 'rgb(122, 4, 35)'
-        case 2:
-          return 'rgb(157, 155, 255)'
-        case 3:
-          return 'rgb(104, 136, 241)'
-      }
-    }
-    return ''
-  }
-
   function onGetDanmaku(danmaku: EventModel) {
-    console.log(checkMessage(danmaku.msg))
     if (checkMessage(danmaku.msg)) {
-      addSong(danmaku)
+      void addSong(danmaku)
     }
   }
 
   function onGetSC(danmaku: EventModel) {
     const settings = accountInfo.value?.settings?.songRequest
-
-    if (settings.allowSC && checkMessage(danmaku.msg)) {
-      addSong(danmaku)
+    if (settings?.allowSC && checkMessage(danmaku.msg)) {
+      void addSong(danmaku)
     }
   }
 
-  let updateActiveTimer: any = null
+  let updateActiveTimer: ReturnType<typeof setInterval> | null = null
 
   function startUpdateTimer() {
     stopUpdateTimer()
     updateActiveTimer = setInterval(() => {
-      updateActive()
-    }, 2000)
+      void updateActive()
+    }, 3000)
   }
 
   function stopUpdateTimer() {
@@ -486,62 +620,52 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
   }
 
-  let updateKeyTimer: any = null
-
-  function startUpdateKeyTimer() {
-    stopUpdateKeyTimer()
-    updateKeyTimer = setInterval(() => {
-      updateKey.value++
-    }, 1000)
-  }
-
-  function stopUpdateKeyTimer() {
-    if (updateKeyTimer) {
-      clearInterval(updateKeyTimer)
-      updateKeyTimer = null
-    }
-  }
-
   async function init() {
     await initData()
-    startUpdateKeyTimer()
     startUpdateTimer()
   }
 
   function dispose() {
-    stopUpdateKeyTimer()
     stopUpdateTimer()
   }
 
   return {
-    // 状态
     isLoading,
+    isBatchLoading,
     originSongs,
     songs,
     activeSongs,
+    unfilteredActiveSongs,
+    hasCustomOrder,
     historySongs,
     newSongName,
     selectedSong,
     isLrcLoading,
+    activeFilterKeyword,
     filterSongName,
     filterSongNameContains,
     filterName,
     filterNameContains,
-    updateKey,
+    stats,
+    isStatsLoading,
     STATUS_MAP,
     isWarnMessageAutoClose,
     isReverse,
     defaultPrefix,
-
-    // 计算
     configCanEdit,
+    isSongOperating,
 
-    // 方法
     init,
     dispose,
+    fetchStats,
     addSong,
     addSongManual,
     updateSongStatus,
+    batchUpdateStatus,
+    reorderSongs,
+    moveSong,
+    pinSong,
+    resetOrder,
     deleteSongs,
     deactiveAllSongs,
     updateActive,

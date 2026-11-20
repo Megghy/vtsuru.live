@@ -1,606 +1,545 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
-import type { SettingSongRequest } from '@/api/generated/model'
+import { QueueGiftFilterType, QueueSortType, type SettingSongRequest } from '@/api/generated/model'
+import StickyDraftSaveBar from '@/apps/open-live/components/shared/StickyDraftSaveBar.vue'
 import { useLiveRequest } from '@/composables/useLiveRequest'
+import { useUnsavedChangesGuard } from '@/shared/composables/useUnsavedChangesGuard'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
-import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
+import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 
-const defaultSettings = {
-  orderPrefix: '点播',
-  onlyAllowSongList: false,
-  queueMaxSize: 10,
-  allowAllDanmaku: true,
-  allowFromWeb: true,
-  needWearFanMedal: false,
-  needJianzhang: false,
-  needTidu: false,
-  needZongdu: false,
-  allowSC: true,
-  scIgnoreLimit: true,
-  scMinPrice: 30,
-  fanMedalMinLevel: 0,
-  allowReorderSong: false,
-  enableCooldown: false,
-  cooldownSecond: 1200,
-  zongduCooldownSecond: 300,
-  tiduCooldownSecond: 600,
-  jianzhangCooldownSecond: 900,
-  enableWebCooldown: true,
-  webCooldownSecond: 600,
-  isReverse: false,
-  enablePointRequest: false,
-  pointRequestCost: 0,
-  pointIgnoreLimit: false,
-  allowPointPriority: false,
-  pointPriorityKeyword: '插队',
-  pointPriorityCost: 100,
-} as SettingSongRequest
+function createDefaultSongRequestSetting(): SettingSongRequest {
+  return {
+    orderPrefix: '点播',
+    sortType: QueueSortType.TimeFirst,
+    enableOnStreaming: false,
+    onlyAllowSongList: false,
+    queueMaxSize: 10,
+    allowAllDanmaku: true,
+    allowFromWeb: true,
+    allowAnonymousFromWeb: false,
+    needWearFanMedal: false,
+    needJianzhang: false,
+    needTidu: false,
+    needZongdu: false,
+    allowSC: true,
+    scIgnoreLimit: true,
+    scMinPrice: 30,
+    fanMedalMinLevel: 0,
+    allowReorderSong: false,
+    allowGift: false,
+    giftNames: [],
+    minGiftPrice: null,
+    giftFilterType: QueueGiftFilterType.Or,
+    allowIncreasePaymentBySendGift: false,
+    allowIncreaseByAnyPayment: false,
+    enableCooldown: false,
+    cooldownSecond: 1200,
+    zongduCooldownSecond: 300,
+    tiduCooldownSecond: 600,
+    jianzhangCooldownSecond: 900,
+    enableWebCooldown: true,
+    webCooldownSecond: 600,
+    showRequireInfo: true,
+    showUserName: true,
+    showFanMadelInfo: true,
+    obsTitle: '点播',
+    obsTitleToday: '今日已唱',
+    isReverse: false,
+    enablePointRequest: false,
+    pointRequestCost: 0,
+    pointIgnoreLimit: false,
+    allowPointPriority: false,
+    pointPriorityKeyword: '插队',
+    pointPriorityCost: 100,
+  }
+}
+
+function normalizeSetting(raw?: Partial<SettingSongRequest> | null): SettingSongRequest {
+  const base = createDefaultSongRequestSetting()
+  return {
+    ...base,
+    ...raw,
+    giftNames: [...(raw?.giftNames ?? base.giftNames ?? [])],
+  }
+}
 
 const liveRequest = useLiveRequest()
 const accountInfo = useAccount()
-const configCanEdit = computed(() => {
-  return accountInfo.value != null && accountInfo.value != undefined
-})
-const settings = computed({
-  get: () => accountInfo.value?.settings?.songRequest ?? defaultSettings,
-  set: (value) => {
-    if (accountInfo.value.id) {
-      accountInfo.value.settings.songRequest = value
-    }
-  },
+
+const draft = ref<SettingSongRequest>(createDefaultSongRequestSetting())
+const savedSnapshot = ref('')
+const isSaving = ref(false)
+
+const canEdit = computed(() => liveRequest.configCanEdit)
+
+function syncDraftFromSource(raw?: Partial<SettingSongRequest> | null) {
+  const normalized = normalizeSetting(raw)
+  draft.value = normalized
+  savedSnapshot.value = JSON.stringify(normalized)
+}
+
+const isDirty = computed(() => {
+  if (!canEdit.value || !savedSnapshot.value) return false
+  return JSON.stringify(draft.value) !== savedSnapshot.value
 })
 
-async function updateSettings() {
-  if (accountInfo.value.id) {
-    liveRequest.isLoading = true
-    try {
-      await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
-      toast.success('已保存')
-      return true
-    } catch (err) {
-      toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
-      return false
-    } finally {
-      liveRequest.isLoading = false
-    }
+useUnsavedChangesGuard(() => isDirty.value, '点播规则存在未保存的更改，离开后将会丢失，确定要离开吗？')
+
+function initDraft() {
+  if (accountInfo.value?.settings?.songRequest) {
+    syncDraftFromSource(accountInfo.value.settings.songRequest)
   } else {
-    toast.success('完成')
+    syncDraftFromSource(undefined)
+  }
+}
+
+onMounted(() => {
+  initDraft()
+})
+
+watch(
+  () => accountInfo.value?.id,
+  () => {
+    if (!isDirty.value) {
+      initDraft()
+    }
+  },
+)
+
+function resetDraft() {
+  if (!savedSnapshot.value) return
+  syncDraftFromSource(JSON.parse(savedSnapshot.value) as SettingSongRequest)
+  toast.info('已还原未保存的更改')
+}
+
+async function saveSettings() {
+  if (!accountInfo.value?.id) return
+  isSaving.value = true
+  try {
+    const payload = normalizeSetting(draft.value)
+    await SaveSetting('SongRequest', payload)
+    accountInfo.value.settings.songRequest = payload
+    syncDraftFromSource(payload)
+    toast.success('点播规则已保存')
+  } catch (err) {
+    toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
+  } finally {
+    isSaving.value = false
   }
 }
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
-    <!-- 规则卡片 -->
+  <div class="flex flex-col gap-3.5">
+    <StickyDraftSaveBar
+      v-if="canEdit"
+      :is-dirty="isDirty"
+      :is-saving="isSaving"
+      :can-edit="canEdit"
+      dirty-title="点播规则存在未保存的更改"
+      dirty-hint="修改各项前缀、门槛、冷却或 OBS 标题后，点击「保存设置」统一提交"
+      clean-hint="所有点播规则均支持预览对比，调整完成后点击「保存设置」统一生效。"
+      @reset="resetDraft"
+      @save="saveSettings"
+    />
+
+    <!-- 点播指令与资格门槛 -->
     <Card>
-      <CardHeader class="p-3 pb-1">
-        <CardTitle>规则</CardTitle>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">指令、队列上限与准入门槛</CardTitle>
       </CardHeader>
-      <CardContent class="p-3 pt-2 space-y-3">
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="flex items-center gap-1.5 w-[320px] max-w-full">
-            <span class="text-xs text-muted-foreground shrink-0 w-24">点播弹幕前缀</span>
-            <template v-if="liveRequest.configCanEdit">
-              <Input
-                v-model="settings.orderPrefix"
-                class="flex-1"
-              />
-              <Button
-                variant="secondary"
-                class="shrink-0"
-                @click="updateSettings"
-              >
-                保存
-              </Button>
-            </template>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <FormField label="点播弹幕前缀">
+            <Input
+              v-if="canEdit"
+              v-model="draft.orderPrefix"
+              placeholder="例如：点播"
+            />
             <Input
               v-else
               v-model="liveRequest.defaultPrefix"
-              class="flex-1"
+              placeholder="本地演示前缀"
             />
-          </div>
+          </FormField>
 
-          <Alert
-            variant="info"
-            v-if="settings.orderPrefix && settings.orderPrefix.includes(' ')"
-            class="py-1 px-2.5 w-fit"
-          >
-            <AlertDescription class="m-0"> 前缀包含空格，可能导致用户输入困难。 </AlertDescription>
-          </Alert>
+          <FormField label="最大等待队列长度">
+            <NumberField
+              v-model="draft.queueMaxSize"
+              :min="1"
+              :max="500"
+              :disabled="!canEdit"
+            />
+          </FormField>
         </div>
 
-        <div class="flex items-center gap-1.5 w-[320px] max-w-full">
-          <span class="text-xs text-muted-foreground shrink-0 w-24">最大队列长度</span>
-          <NumberField
-            :model-value="settings.queueMaxSize"
-            :disabled="!liveRequest.configCanEdit"
-            class="flex-1"
-            @update:model-value="settings.queueMaxSize = $event || 10"
+        <Alert
+          v-if="draft.orderPrefix && draft.orderPrefix.includes(' ')"
+          variant="info"
+          class="py-1.5 px-3"
+        >
+          <AlertDescription class="text-xs m-0">
+            点播前缀包含空格，部分观众发送弹幕时可能忘记加空格导致识别失败。
+          </AlertDescription>
+        </Alert>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <SettingRow
+            v-model="draft.enableOnStreaming"
+            type="switch"
+            variant="card"
+            title="仅在直播时允许加入"
+            description="未开播期间自动拒收弹幕点播"
+            :disabled="!canEdit"
           />
-          <Button
-            variant="secondary"
-            class="shrink-0"
-            :disabled="!liveRequest.configCanEdit"
-            @click="updateSettings"
-          >
-            保存
-          </Button>
-        </div>
-
-        <div class="flex items-center gap-4 flex-wrap text-xs">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.enableOnStreaming"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.enableOnStreaming = $event), updateSettings())"
-            />
-            <span>仅在直播时允许加入</span>
-          </label>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.allowAllDanmaku"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.allowAllDanmaku = $event), updateSettings())"
-            />
-            <span>允许所有弹幕点播</span>
-          </label>
-        </div>
-
-        <template v-if="!settings.allowAllDanmaku">
-          <div class="flex items-center gap-4 flex-wrap text-xs pt-1 border-t">
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <Checkbox
-                :checked="settings.needWearFanMedal"
-                :disabled="!liveRequest.configCanEdit"
-                @update:checked="((settings.needWearFanMedal = $event), updateSettings())"
-              />
-              <span>需要拥有粉丝牌</span>
-            </label>
-
-            <div
-              v-if="settings.needWearFanMedal"
-              class="flex items-center gap-1.5 w-[280px] max-w-full"
-            >
-              <span class="text-xs text-muted-foreground shrink-0">最低粉丝牌等级</span>
-              <NumberField
-                :model-value="settings.fanMedalMinLevel"
-                :disabled="!liveRequest.configCanEdit"
-                class="flex-1"
-                @update:model-value="settings.fanMedalMinLevel = $event || 0"
-              />
-              <Button
-                variant="secondary"
-                class="shrink-0"
-                :disabled="!liveRequest.configCanEdit"
-                @click="updateSettings"
-              >
-                保存
-              </Button>
-            </div>
-
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <Checkbox
-                :checked="settings.needJianzhang"
-                :disabled="!liveRequest.configCanEdit"
-                @update:checked="((settings.needJianzhang = $event), updateSettings())"
-              />
-              <span>只允许舰长</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <Checkbox
-                :checked="settings.needTidu"
-                :disabled="!liveRequest.configCanEdit"
-                @update:checked="((settings.needTidu = $event), updateSettings())"
-              />
-              <span>只允许提督</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <Checkbox
-                :checked="settings.needZongdu"
-                :disabled="!liveRequest.configCanEdit"
-                @update:checked="((settings.needZongdu = $event), updateSettings())"
-              />
-              <span>只允许总督</span>
-            </label>
-          </div>
-        </template>
-
-        <div class="flex items-center gap-4 flex-wrap text-xs pt-1 border-t">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.allowSC"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.allowSC = $event), updateSettings())"
-            />
-            <span>允许通过 SuperChat 点播</span>
-          </label>
-          <label
-            v-if="settings.allowSC"
-            class="flex items-center gap-1.5 cursor-pointer"
-          >
-            <Checkbox
-              :checked="settings.scIgnoreLimit"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.scIgnoreLimit = $event), updateSettings())"
-            />
-            <span>SC 点播无视限制</span>
-          </label>
-
-          <div
-            v-if="settings.allowSC"
-            class="flex items-center gap-1.5 w-[260px] max-w-full"
-          >
-            <span class="text-xs text-muted-foreground shrink-0">最低 SC 价格</span>
-            <NumberField
-              :model-value="settings.scMinPrice"
-              :disabled="!liveRequest.configCanEdit"
-              class="flex-1"
-              @update:model-value="settings.scMinPrice = $event || 30"
-            />
-            <Button
-              variant="secondary"
-              class="shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
-              保存
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-
-    <!-- 点歌卡片 -->
-    <Card>
-      <CardHeader class="p-3 pb-1">
-        <CardTitle>点歌</CardTitle>
-      </CardHeader>
-      <CardContent class="p-3 pt-2">
-        <div class="flex items-center gap-4 flex-wrap text-xs">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.onlyAllowSongList"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.onlyAllowSongList = $event), updateSettings())"
-            />
-            <span>
-              仅允许点
-              <a
-                href="/manage/song-list"
-                target="_blank"
-                class="text-primary hover:underline font-medium"
-              >
-                歌单
-              </a>
-              内的歌曲
-            </span>
-          </label>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.allowReorderSong"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.allowReorderSong = $event), updateSettings())"
-            />
-            <span>允许重复点歌</span>
-          </label>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.allowFromWeb"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.allowFromWeb = $event), updateSettings())"
-            />
-            <span>允许通过网页点歌</span>
-          </label>
-          <label
-            v-if="settings.allowFromWeb"
-            class="flex items-center gap-1.5 cursor-pointer"
-          >
-            <Checkbox
-              :checked="settings.allowAnonymousFromWeb"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.allowAnonymousFromWeb = $event), updateSettings())"
-            />
-            <span>允许匿名网页点歌</span>
-          </label>
-        </div>
-      </CardContent>
-    </Card>
-
-    <!-- 冷却卡片 -->
-    <Card>
-      <CardHeader class="p-3 pb-1">
-        <CardTitle>冷却（秒）</CardTitle>
-      </CardHeader>
-      <CardContent class="p-3 pt-2 space-y-3">
-        <div class="flex items-center gap-4 flex-wrap text-xs">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.enableCooldown"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.enableCooldown = $event), updateSettings())"
-            />
-            <span>启用点播冷却</span>
-          </label>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.enableWebCooldown"
-              :disabled="!liveRequest.configCanEdit"
-              @update:checked="((settings.enableWebCooldown = $event), updateSettings())"
-            />
-            <span>启用网页点播冷却</span>
-          </label>
-        </div>
-
-        <div
-          v-if="settings.enableCooldown"
-          class="flex items-center gap-3 flex-wrap pt-2 border-t"
-        >
-          <div class="flex items-center gap-1.5 w-[260px] max-w-full">
-            <span class="text-xs text-muted-foreground shrink-0 w-16">普通弹幕</span>
-            <NumberField
-              :model-value="settings.cooldownSecond"
-              :disabled="!liveRequest.configCanEdit"
-              class="flex-1"
-              @update:model-value="settings.cooldownSecond = $event || 1200"
-            />
-            <Button
-              variant="secondary"
-              class="shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
-              保存
-            </Button>
-          </div>
-
-          <div class="flex items-center gap-1.5 w-[240px] max-w-full">
-            <span class="text-xs text-muted-foreground shrink-0 w-12">舰长</span>
-            <NumberField
-              :model-value="settings.jianzhangCooldownSecond"
-              :disabled="!liveRequest.configCanEdit"
-              class="flex-1"
-              @update:model-value="settings.jianzhangCooldownSecond = $event || 900"
-            />
-            <Button
-              variant="secondary"
-              class="shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
-              保存
-            </Button>
-          </div>
-
-          <div class="flex items-center gap-1.5 w-[240px] max-w-full">
-            <span class="text-xs text-muted-foreground shrink-0 w-12">提督</span>
-            <NumberField
-              :model-value="settings.tiduCooldownSecond"
-              :disabled="!liveRequest.configCanEdit"
-              class="flex-1"
-              @update:model-value="settings.tiduCooldownSecond = $event || 600"
-            />
-            <Button
-              variant="secondary"
-              class="shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
-              保存
-            </Button>
-          </div>
-
-          <div class="flex items-center gap-1.5 w-[240px] max-w-full">
-            <span class="text-xs text-muted-foreground shrink-0 w-12">总督</span>
-            <NumberField
-              :model-value="settings.zongduCooldownSecond"
-              :disabled="!liveRequest.configCanEdit"
-              class="flex-1"
-              @update:model-value="settings.zongduCooldownSecond = $event || 300"
-            />
-            <Button
-              variant="secondary"
-              class="shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
-              保存
-            </Button>
-          </div>
-        </div>
-
-        <div
-          v-if="settings.enableWebCooldown"
-          class="flex items-center gap-1.5 w-[260px] max-w-full pt-2 border-t"
-        >
-          <span class="text-xs text-muted-foreground shrink-0 w-16">网页点播</span>
-          <NumberField
-            :model-value="settings.webCooldownSecond"
-            :disabled="!liveRequest.configCanEdit"
-            class="flex-1"
-            @update:model-value="settings.webCooldownSecond = $event || 600"
+          <SettingRow
+            v-model="draft.allowAllDanmaku"
+            type="switch"
+            variant="card"
+            title="允许所有普通弹幕点播"
+            description="关闭后仅满足下方粉丝牌或大航海要求的用户可点播"
+            :disabled="!canEdit"
           />
-          <Button
-            variant="secondary"
-            class="shrink-0"
-            :disabled="!liveRequest.configCanEdit"
-            @click="updateSettings"
-          >
-            保存
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-
-    <!-- OBS 卡片 -->
-    <Card>
-      <CardHeader class="p-3 pb-1">
-        <CardTitle>OBS</CardTitle>
-      </CardHeader>
-      <CardContent class="p-3 pt-2">
-        <div class="flex items-center gap-4 flex-wrap text-xs">
-          <div class="flex items-center gap-1.5 w-[260px] max-w-full">
-            <span class="text-xs text-muted-foreground shrink-0 w-10">标题</span>
-            <template v-if="configCanEdit">
-              <Input
-                v-model="settings.obsTitle"
-                placeholder="默认为 点播"
-                class="flex-1"
-              />
-              <Button
-                variant="secondary"
-                class="shrink-0"
-                @click="updateSettings"
-              >
-                保存
-              </Button>
-            </template>
-          </div>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.showRequireInfo"
-              :disabled="!configCanEdit"
-              @update:checked="((settings.showRequireInfo = $event), updateSettings())"
-            />
-            <span>显示底部需求信息</span>
-          </label>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.showUserName"
-              :disabled="!configCanEdit"
-              @update:checked="((settings.showUserName = $event), updateSettings())"
-            />
-            <span>显示点播用户名</span>
-          </label>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.showFanMadelInfo"
-              :disabled="!configCanEdit"
-              @update:checked="((settings.showFanMadelInfo = $event), updateSettings())"
-            />
-            <span>显示点播用户粉丝牌</span>
-          </label>
-        </div>
-      </CardContent>
-    </Card>
-
-    <!-- 积分消费与插队 -->
-    <Card>
-      <CardHeader class="p-3 pb-1">
-        <CardTitle>积分点歌与插队</CardTitle>
-      </CardHeader>
-      <CardContent class="p-3 pt-2 space-y-3 text-xs">
-        <div class="flex flex-wrap items-center gap-4">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.enablePointRequest"
-              :disabled="!configCanEdit"
-              @update:checked="((settings.enablePointRequest = $event), updateSettings())"
-            />
-            <span>启用积分点播与网页积分点歌</span>
-          </label>
-          <label
-            v-if="settings.enablePointRequest"
-            class="flex items-center gap-1.5 cursor-pointer"
-          >
-            <Checkbox
-              :checked="settings.pointIgnoreLimit"
-              :disabled="!configCanEdit"
-              @update:checked="((settings.pointIgnoreLimit = $event), updateSettings())"
-            />
-            <span>消耗积分时忽略粉丝牌/舰长与冷却限制</span>
-          </label>
         </div>
 
         <div
-          v-if="settings.enablePointRequest"
-          class="flex items-center gap-1.5 w-[260px] max-w-full"
+          v-if="!draft.allowAllDanmaku"
+          class="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3 text-xs"
         >
-          <span class="text-muted-foreground shrink-0">点播消耗</span>
+          <div class="flex items-center gap-4 flex-wrap">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <Checkbox
+                v-model:checked="draft.needWearFanMedal"
+                :disabled="!canEdit"
+              />
+              <span>需要佩戴主播粉丝牌</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <Checkbox
+                v-model:checked="draft.needJianzhang"
+                :disabled="!canEdit"
+              />
+              <span>允许舰长</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <Checkbox
+                v-model:checked="draft.needTidu"
+                :disabled="!canEdit"
+              />
+              <span>允许提督</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <Checkbox
+                v-model:checked="draft.needZongdu"
+                :disabled="!canEdit"
+              />
+              <span>允许总督</span>
+            </label>
+          </div>
+
+          <FormField
+            v-if="draft.needWearFanMedal"
+            label="最低粉丝牌等级"
+            class="max-w-xs"
+          >
+            <NumberField
+              v-model="draft.fanMedalMinLevel"
+              :min="0"
+              :max="40"
+              :disabled="!canEdit"
+            />
+          </FormField>
+        </div>
+
+        <!-- SuperChat 点播 -->
+        <div class="pt-2 border-t border-border/60 space-y-2.5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <SettingRow
+              v-model="draft.allowSC"
+              type="switch"
+              variant="card"
+              title="允许通过 SuperChat (SC) 点播"
+              description="醒目留言附带点播前缀时直接加入队列"
+              :disabled="!canEdit"
+            />
+            <SettingRow
+              v-if="draft.allowSC"
+              v-model="draft.scIgnoreLimit"
+              type="switch"
+              variant="card"
+              title="SC 点播无视人数上限与资格"
+              description="即使队列已满或非舰长，SC 仍可成功点播"
+              :disabled="!canEdit"
+            />
+          </div>
+
+          <FormField
+            v-if="draft.allowSC"
+            label="SC 点播最低金额 (元)"
+            class="max-w-xs"
+          >
+            <NumberField
+              v-model="draft.scMinPrice"
+              :min="0"
+              :disabled="!canEdit"
+              @update:model-value="(v) => (draft.scMinPrice = v ?? 30)"
+            />
+          </FormField>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- 歌单与网页点歌 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">点歌范围与网页自助点歌</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 grid grid-cols-1 md:grid-cols-2 gap-2.5">
+        <SettingRow
+          v-model="draft.onlyAllowSongList"
+          type="switch"
+          variant="card"
+          title="仅允许点歌单内的曲目"
+          description="拦截主播歌单以外的陌生歌曲，可前往「我的歌单」维护曲库"
+          :disabled="!canEdit"
+        />
+        <SettingRow
+          v-model="draft.allowReorderSong"
+          type="switch"
+          variant="card"
+          title="允许队列内重复点播同首歌"
+          description="开启后多名观众可同时点同一首歌"
+          :disabled="!canEdit"
+        />
+        <SettingRow
+          v-model="draft.allowFromWeb"
+          type="switch"
+          variant="card"
+          title="允许观众从公开歌单页网页点歌"
+          description="观众访问个人歌单页面即可一键提交点播"
+          :disabled="!canEdit"
+        />
+        <SettingRow
+          v-if="draft.allowFromWeb"
+          v-model="draft.allowAnonymousFromWeb"
+          type="switch"
+          variant="card"
+          title="允许未登录游客匿名网页点歌"
+          description="关闭时需登录并绑定 B 站账号才可在网页点歌"
+          :disabled="!canEdit"
+        />
+      </CardContent>
+    </Card>
+
+    <!-- 冷却时间控制 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">点播冷却时间（秒）</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <SettingRow
+            v-model="draft.enableCooldown"
+            type="switch"
+            variant="card"
+            title="启用弹幕点播冷却"
+            description="限制同一观众两次弹幕点播之间的最小间隔"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.enableWebCooldown"
+            type="switch"
+            variant="card"
+            title="启用网页点歌冷却"
+            description="独立控制观众在网页端发起点歌的冷却时间"
+            :disabled="!canEdit"
+          />
+        </div>
+
+        <div
+          v-if="draft.enableCooldown"
+          class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/60"
+        >
+          <FormField label="普通观众 (秒)">
+            <NumberField
+              v-model="draft.cooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+          <FormField label="舰长 (秒)">
+            <NumberField
+              v-model="draft.jianzhangCooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+          <FormField label="提督 (秒)">
+            <NumberField
+              v-model="draft.tiduCooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+          <FormField label="总督 (秒)">
+            <NumberField
+              v-model="draft.zongduCooldownSecond"
+              :min="0"
+              :disabled="!canEdit"
+            />
+          </FormField>
+        </div>
+
+        <FormField
+          v-if="draft.enableWebCooldown"
+          label="网页点歌冷却 (秒)"
+          class="max-w-xs"
+        >
           <NumberField
-            :model-value="settings.pointRequestCost"
+            v-model="draft.webCooldownSecond"
             :min="0"
-            :disabled="!configCanEdit"
-            class="flex-1"
-            @update:model-value="settings.pointRequestCost = $event ?? 0"
+            :disabled="!canEdit"
           />
-          <span class="text-muted-foreground shrink-0">积分</span>
-          <Button
-            variant="secondary"
-            class="shrink-0"
-            :disabled="!configCanEdit"
-            @click="updateSettings"
-          >
-            保存
-          </Button>
+        </FormField>
+      </CardContent>
+    </Card>
+
+    <!-- OBS 展示选项 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">OBS 挂件显示设置</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <FormField label="点播 OBS 标题">
+            <Input
+              v-model="draft.obsTitle"
+              placeholder="默认为 点播"
+              :disabled="!canEdit"
+            />
+          </FormField>
+          <FormField label="今日已唱 OBS 标题">
+            <Input
+              v-model="draft.obsTitleToday"
+              placeholder="默认为 今日已唱"
+              :disabled="!canEdit"
+            />
+          </FormField>
         </div>
 
-        <div class="border-t pt-3 space-y-2.5">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              :checked="settings.allowPointPriority"
-              :disabled="!configCanEdit"
-              @update:checked="((settings.allowPointPriority = $event), updateSettings())"
-            />
-            <span>允许观众使用积分插队（支持弹幕指令与网页插队）</span>
-          </label>
-
-          <div
-            v-if="settings.allowPointPriority"
-            class="flex flex-wrap items-center gap-3"
-          >
-            <div class="flex items-center gap-1.5 w-[240px] max-w-full">
-              <span class="text-muted-foreground shrink-0">插队关键词</span>
-              <Input
-                v-model="settings.pointPriorityKeyword"
-                placeholder="例如：插队"
-                :disabled="!configCanEdit"
-                class="flex-1"
-              />
-            </div>
-            <div class="flex items-center gap-1.5 w-[220px] max-w-full">
-              <span class="text-muted-foreground shrink-0">插队消耗</span>
-              <NumberField
-                :model-value="settings.pointPriorityCost"
-                :min="0"
-                :disabled="!configCanEdit"
-                class="flex-1"
-                @update:model-value="settings.pointPriorityCost = $event ?? 0"
-              />
-              <span class="text-muted-foreground shrink-0">积分</span>
-            </div>
-            <Button
-              variant="secondary"
-              class="shrink-0"
-              :disabled="!configCanEdit"
-              @click="updateSettings"
-            >
-              保存
-            </Button>
-          </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <SettingRow
+            v-model="draft.showRequireInfo"
+            type="switch"
+            variant="card"
+            title="显示底部点播规则"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.showUserName"
+            type="switch"
+            variant="card"
+            title="显示点播观众昵称"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.showFanMadelInfo"
+            type="switch"
+            variant="card"
+            title="显示观众粉丝牌"
+            :disabled="!canEdit"
+          />
         </div>
       </CardContent>
     </Card>
 
-    <!-- 警告消息卡片 -->
+    <!-- 积分消费、插队与本地通知 -->
     <Card>
-      <CardHeader class="p-3 pb-1">
-        <CardTitle>警告消息</CardTitle>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">积分点播、插队与提醒偏好</CardTitle>
       </CardHeader>
-      <CardContent class="p-3 pt-2">
-        <label class="flex items-center gap-1.5 cursor-pointer text-xs">
-          <Checkbox
-            :checked="liveRequest.isWarnMessageAutoClose"
-            @update:checked="liveRequest.isWarnMessageAutoClose = $event"
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <SettingRow
+            v-model="draft.enablePointRequest"
+            type="switch"
+            variant="card"
+            title="启用积分点播与网页积分点歌"
+            description="开启后观众点播需消耗指定积分"
+            :disabled="!canEdit"
           />
-          <span>自动关闭警告消息</span>
-        </label>
+          <SettingRow
+            v-if="draft.enablePointRequest"
+            v-model="draft.pointIgnoreLimit"
+            type="switch"
+            variant="card"
+            title="消耗积分时忽略门槛与冷却"
+            description="使用积分点歌时跳过粉丝牌、舰长及冷却限制"
+            :disabled="!canEdit"
+          />
+        </div>
+
+        <FormField
+          v-if="draft.enablePointRequest"
+          label="每次点播消耗积分"
+          class="max-w-xs"
+        >
+          <NumberField
+            v-model="draft.pointRequestCost"
+            :min="0"
+            :disabled="!canEdit"
+          />
+        </FormField>
+
+        <div class="pt-2 border-t border-border/60 space-y-2.5">
+          <SettingRow
+            v-model="draft.allowPointPriority"
+            type="switch"
+            variant="card"
+            title="允许使用积分插队"
+            description="支持在直播间发送插队关键词或在公开歌单页直接加价插队"
+            :disabled="!canEdit"
+          />
+
+          <div
+            v-if="draft.allowPointPriority"
+            class="grid grid-cols-1 md:grid-cols-2 gap-3"
+          >
+            <FormField label="弹幕插队触发前缀">
+              <Input
+                v-model="draft.pointPriorityKeyword"
+                placeholder="例如：插队"
+                :disabled="!canEdit"
+              />
+            </FormField>
+            <FormField label="插队额外消耗积分">
+              <NumberField
+                v-model="draft.pointPriorityCost"
+                :min="0"
+                :disabled="!canEdit"
+              />
+            </FormField>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-border/60">
+          <div class="flex-between rounded-lg border border-border/70 bg-muted/20 p-2.5 text-xs">
+            <div>
+              <div class="font-medium text-foreground">自动关闭点播失败提醒通知</div>
+              <div class="text-muted-foreground">仅保存在当前浏览器本地，开启后失败弹窗将在 3 秒后自动关闭</div>
+            </div>
+            <Switch v-model:checked="liveRequest.isWarnMessageAutoClose" />
+          </div>
+        </div>
       </CardContent>
     </Card>
   </div>

@@ -10,4 +10,5 @@ import type { QueueStatus } from './queueStatus'
 export type PostApiQueueSetStatusParams = {
   id?: number
   status?: QueueStatus
+  refundPoint?: boolean
 }

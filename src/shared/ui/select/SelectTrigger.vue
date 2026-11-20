@@ -33,7 +33,7 @@ const sizeClasses: Record<string, string> = {
     v-bind="forwardedProps"
     :class="
       cn(
-        'flex w-full items-center justify-between rounded-md border border-input bg-background ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:truncate text-start',
+        'flex w-full items-center justify-between rounded-md border border-input bg-control ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:truncate text-start',
         sizeClasses[props.size] || sizeClasses.default,
         props.class,
       )

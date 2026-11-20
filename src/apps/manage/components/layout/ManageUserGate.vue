@@ -112,6 +112,7 @@ onMounted(async () => {
       >
         <component
           :is="Component"
+          v-if="Component"
           :key="`${String(viewRoute.name)}-${auth.biliAuth.id}`"
         />
       </Transition>
@@ -155,9 +156,7 @@ onMounted(async () => {
       <template v-if="auth.replacementToken">
         <DialogHeader>
           <DialogTitle class="text-sm">保存新的登录链接</DialogTitle>
-          <DialogDescription class="text-xs">
-            登录链接已更新，请复制并妥善保存新的长期登录链接。
-          </DialogDescription>
+          <DialogDescription class="text-xs"> 登录链接已更新，请复制并妥善保存新的长期登录链接。 </DialogDescription>
         </DialogHeader>
         <div class="py-2">
           <Input

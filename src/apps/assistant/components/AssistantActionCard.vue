@@ -109,16 +109,22 @@ function saveEdit() {
 </script>
 
 <template>
-  <Card class="w-full mt-2 shadow-xs">
-    <CardHeader class="p-3 flex flex-row items-center justify-between space-y-0 border-b border-border/50">
+  <Card class="w-full mt-2 shadow-sm border-border">
+    <CardHeader class="p-3 flex flex-row items-center justify-between space-y-0 border-b border-border/70 bg-muted/30">
       <div class="flex items-center gap-2 min-w-0">
         <strong class="action-card__title text-xs font-semibold truncate">{{ proposal.title }}</strong>
-        <Badge :variant="RISK_META[proposal.risk]?.variant || 'secondary'" size="xs">
+        <Badge
+          :variant="RISK_META[proposal.risk]?.variant || 'secondary'"
+          size="xs"
+        >
           {{ RISK_META[proposal.risk]?.label }}
         </Badge>
       </div>
 
-      <Badge :variant="STATUS_META[proposal.status].variant" size="xs">
+      <Badge
+        :variant="STATUS_META[proposal.status].variant"
+        size="xs"
+      >
         {{ STATUS_META[proposal.status].label }}
       </Badge>
     </CardHeader>
@@ -145,18 +151,33 @@ function saveEdit() {
         />
       </div>
 
-      <Alert size="sm" v-if="proposal.status === 'failed' && proposal.error" variant="destructive">
+      <Alert
+        size="sm"
+        v-if="proposal.status === 'failed' && proposal.error"
+        variant="destructive"
+      >
         <AlertDescription>{{ proposal.error }}</AlertDescription>
       </Alert>
-      <Alert size="sm" v-else-if="isScheduled" class="border-primary/30 bg-primary/5 text-foreground">
+      <Alert
+        size="sm"
+        v-else-if="isScheduled"
+        class="border-primary/30 bg-primary/5 text-foreground"
+      >
         <AlertDescription>已设定 {{ scheduledText }} 自动执行</AlertDescription>
       </Alert>
-      <Alert size="sm" variant="warning" v-else-if="proposal.status === 'requires_confirmation' && isHighRisk && !editing">
+      <Alert
+        size="sm"
+        variant="warning"
+        v-else-if="proposal.status === 'requires_confirmation' && isHighRisk && !editing"
+      >
         <AlertDescription>高风险操作, 请确认后执行</AlertDescription>
       </Alert>
     </CardContent>
 
-    <CardFooter v-if="editing || isScheduled || isPending || proposal.status === 'failed'" class="p-2.5 flex justify-end gap-1.5">
+    <CardFooter
+      v-if="editing || isScheduled || isPending || proposal.status === 'failed'"
+      class="p-2.5 flex justify-end gap-1.5"
+    >
       <template v-if="editing">
         <Button
           variant="outline"
@@ -213,10 +234,17 @@ function saveEdit() {
               class="font-mono"
             />
             <div class="flex justify-end gap-1.5">
-              <Button size="xs" variant="outline" @click="schedulePicker = false">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="schedulePicker = false"
+              >
                 取消
               </Button>
-              <Button size="xs" @click="confirmSchedule">
+              <Button
+                size="xs"
+                @click="confirmSchedule"
+              >
                 确定
               </Button>
             </div>

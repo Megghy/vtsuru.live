@@ -1,6 +1,7 @@
 import type { MaybeRefOrGetter } from 'vue'
 import { computed, ref, toValue, watch } from 'vue'
 
+import { useAccount } from '@/api/account'
 import type { DanmakuUserInfo, ResponseSongModel } from '@/api/generated/model'
 import { getApiMusicRequestGetWaiting } from '@/api/generated/music-request/music-request'
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
@@ -16,10 +17,11 @@ interface WaitMusicInfo {
  * 使其支持 classic / fresh / minimal 三种样式与滚动速度。
  */
 export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
+  const account = useAccount()
   const playing = ref<WaitMusicInfo>()
   const waiting = ref<WaitMusicInfo[]>([])
 
-  const title = computed(() => '点歌')
+  const title = computed(() => account.value?.settings?.musicRequest?.obsTitle?.trim() || '点歌机')
   const countText = computed(() => `已有 ${waiting.value.length ?? 0} 首`)
 
   const current = computed<ObsDisplayCurrent>(() => {

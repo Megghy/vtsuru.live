@@ -5,6 +5,8 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { SongRequestFrom } from './songRequestFrom'
+import type { SongRequestStatus } from './songRequestStatus'
 
 export type GetApiLiveRequestGetParams = {
   /**
@@ -17,4 +19,8 @@ export type GetApiLiveRequestGetParams = {
    * @maximum 2147483647
    */
   pageNum?: number
+  keyword?: string
+  user?: string
+  status?: SongRequestStatus
+  from?: SongRequestFrom
 }
