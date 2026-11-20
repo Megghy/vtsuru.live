@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import Image24Regular from '@vicons/fluent/es/Image24Regular'
-import { X } from 'lucide-vue-next'
+import { X, ZoomIn } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 
 import { fileFingerprint, useFilePicker } from '@/composables/useFilePicker'
+import { ImageLightbox } from '@/shared/ui/image-preview'
 
 import type { UploadImageItem } from './types'
 import { acquireFilePreviewUrl, createLocalImageItem, peekFilePreviewUrl, releaseFilePreviewUrl } from './utils'
@@ -84,6 +85,31 @@ const canAddMore = computed(() => {
 })
 
 const isMultiple = computed(() => (props.maxFiles ?? 2) > 1)
+const isSingleReplaceMode = computed(() => props.maxFiles === 1 && !props.disabled)
+const isMultiPreviewMode = computed(() => props.maxFiles !== 1)
+
+const previewOpen = ref(false)
+const previewIndex = ref(0)
+const previewGallery = computed(() =>
+  (props.modelValue ?? []).map((item) => ({
+    src: resolveItemUrl(item),
+    alt: item.name,
+  })),
+)
+
+function openPreviewAt(idx: number) {
+  if (!isMultiPreviewMode.value) return
+  previewIndex.value = idx
+  previewOpen.value = true
+}
+
+function handleThumbnailActivate(idx: number) {
+  if (isSingleReplaceMode.value) {
+    triggerPick()
+  } else if (isMultiPreviewMode.value) {
+    openPreviewAt(idx)
+  }
+}
 
 function appendFiles(files: File[]) {
   if (props.disabled || !files.length) return
@@ -182,18 +208,50 @@ const labelText = computed(() => {
       v-for="(item, index) in modelValue"
       :key="item.id"
       class="relative border border-border overflow-hidden group bg-muted/20"
-      :class="slotSizeClasses"
+      :class="[
+        slotSizeClasses,
+        isSingleReplaceMode
+          ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          : isMultiPreviewMode && 'cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+      ]"
+      :role="isSingleReplaceMode || isMultiPreviewMode ? 'button' : undefined"
+      :tabindex="isSingleReplaceMode || isMultiPreviewMode ? 0 : undefined"
+      :title="isSingleReplaceMode ? placeholder || '点击更换图片' : isMultiPreviewMode ? `放大查看 ${item.name}` : undefined"
+      :aria-label="
+        isSingleReplaceMode ? placeholder || '点击更换图片' : isMultiPreviewMode ? `放大查看 ${item.name}` : undefined
+      "
+      @click="handleThumbnailActivate(index)"
+      @keydown.enter.prevent="handleThumbnailActivate(index)"
+      @keydown.space.prevent="handleThumbnailActivate(index)"
     >
       <img
         :src="resolveItemUrl(item)"
         :alt="item.name"
         class="size-full object-cover"
       />
+      <div
+        v-if="isSingleReplaceMode"
+        class="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/45 transition-colors flex-col-center gap-0.5 text-white opacity-0 group-hover:opacity-100"
+      >
+        <Image24Regular :class="size === 'xs' ? 'size-3.5' : 'size-4'" />
+        <span
+          v-if="size !== 'xs'"
+          class="text-[10px] font-medium"
+        >
+          更换
+        </span>
+      </div>
+      <div
+        v-else-if="isMultiPreviewMode"
+        class="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex-center text-white opacity-0 group-hover:opacity-100"
+      >
+        <ZoomIn :class="size === 'xs' ? 'size-3.5' : 'size-4'" />
+      </div>
       <button
         v-if="!disabled"
         type="button"
         :aria-label="`移除 ${item.name}`"
-        class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity flex-center"
+        class="z-10 absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-80 sm:opacity-75 group-hover:opacity-100 focus:opacity-100 transition-opacity flex-center"
         @click.stop="removeAt(index)"
       >
         <X :class="size === 'xs' ? 'size-2.5' : 'size-3'" />
@@ -223,5 +281,12 @@ const labelText = computed(() => {
         {{ labelText }}
       </span>
     </button>
+
+    <ImageLightbox
+      v-if="isMultiPreviewMode"
+      v-model:open="previewOpen"
+      :imgs="previewGallery"
+      :index="previewIndex"
+    />
   </div>
 </template>

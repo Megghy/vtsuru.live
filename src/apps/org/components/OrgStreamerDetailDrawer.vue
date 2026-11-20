@@ -10,6 +10,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
@@ -218,12 +219,18 @@ function getHeatmapColor(val: number) {
                   :key="live.liveId"
                   class="pt-2 first:pt-0 flex items-start gap-2.5"
                 >
+                  <ImagePreview
+                    v-if="live.coverUrl"
+                    :src="live.coverUrl"
+                    :alt="live.title"
+                    class="w-24 h-14 rounded border-border/60 shrink-0"
+                  />
                   <img
-                    :src="live.coverUrl || DEFAULT_COVER"
+                    v-else
+                    :src="DEFAULT_COVER"
                     referrerpolicy="no-referrer"
                     class="w-24 h-14 rounded object-cover border border-border/60 shrink-0"
                     alt=""
-                    @error="(e) => ((e.target as HTMLImageElement).src = DEFAULT_COVER)"
                   />
                   <div class="min-w-0 flex-1 space-y-1">
                     <strong class="font-medium text-foreground text-xs block truncate">

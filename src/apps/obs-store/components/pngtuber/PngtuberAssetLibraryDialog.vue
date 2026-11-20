@@ -2,6 +2,7 @@
 import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
 import Image24Regular from '@vicons/fluent/es/Image24Regular'
 import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import { ZoomIn } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -21,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog'
+import { ImageLightbox } from '@/shared/ui/image-preview'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Spin } from '@/shared/ui/spin'
 
@@ -52,6 +54,14 @@ const filteredAssets = computed(() => {
 
 const unusedCount = computed(() => assets.value.filter((a) => !a.inUse).length)
 const totalBytes = computed(() => assets.value.reduce((acc, a) => acc + a.byteSize, 0))
+const previewOpen = ref(false)
+const previewIndex = ref(0)
+const previewGallery = computed(() => filteredAssets.value.map((a) => ({ src: a.url, alt: a.assetId })))
+
+function openPreview(idx: number) {
+  previewIndex.value = idx
+  previewOpen.value = true
+}
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
@@ -204,7 +214,7 @@ async function cleanupUnused() {
           class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 py-1"
         >
           <div
-            v-for="asset in filteredAssets"
+            v-for="(asset, idx) in filteredAssets"
             :key="asset.assetId"
             class="group relative flex flex-col rounded-lg border bg-card overflow-hidden transition-colors"
             :class="[
@@ -215,7 +225,11 @@ async function cleanupUnused() {
             ]"
             @click="choose(asset)"
           >
-            <div class="relative h-28 flex-center p-2 bg-muted/50">
+            <div
+              class="relative h-28 flex-center p-2 bg-muted/50"
+              :class="!selectable && 'cursor-zoom-in'"
+              @click="!selectable && openPreview(idx)"
+            >
               <img
                 :src="asset.url"
                 :alt="asset.assetId"
@@ -225,7 +239,7 @@ async function cleanupUnused() {
               <Badge
                 size="xs"
                 :variant="asset.inUse ? 'success' : 'secondary'"
-                class="absolute top-1.5 left-1.5"
+                class="pointer-events-none absolute top-1.5 left-1.5"
               >
                 {{ asset.inUse ? '使用中' : '未引用' }}
               </Badge>
@@ -233,10 +247,19 @@ async function cleanupUnused() {
                 v-if="asset.frameCount > 1"
                 size="xs"
                 variant="outline"
-                class="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur-sm"
+                class="pointer-events-none absolute top-1.5 right-1.5 bg-background/80 backdrop-blur-sm"
               >
                 {{ asset.frameCount }}帧
               </Badge>
+              <button
+                type="button"
+                aria-label="放大查看素材"
+                title="放大查看素材"
+                class="absolute bottom-1.5 right-1.5 size-6 rounded-full bg-black/55 text-white hover:bg-black/80 flex-center opacity-80 group-hover:opacity-100 transition-opacity cursor-zoom-in"
+                @click.stop="openPreview(idx)"
+              >
+                <ZoomIn class="size-3.5" />
+              </button>
             </div>
 
             <div class="p-2 flex items-center justify-between gap-1 text-[11px] text-muted-foreground border-t border-border/60">
@@ -283,4 +306,10 @@ async function cleanupUnused() {
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <ImageLightbox
+    v-model:open="previewOpen"
+    :imgs="previewGallery"
+    :index="previewIndex"
+  />
 </template>

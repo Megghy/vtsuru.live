@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ZoomIn } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
@@ -12,6 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { FormField } from '@/shared/ui/form-field'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -70,6 +72,15 @@ const typeLabel = computed(() => {
 })
 
 const availableSubs = computed(() => goods.value?.subItems?.filter((s) => s.count == null || s.count > 0) ?? [])
+const subCoverGallery = computed(() =>
+  (goods.value?.subItems ?? []).map((s) => s.cover?.path).filter((path): path is string => Boolean(path)),
+)
+
+function getSubCoverIndex(path?: string | null) {
+  if (!path) return 0
+  const idx = subCoverGallery.value.indexOf(path)
+  return idx >= 0 ? idx : 0
+}
 
 /** 头部价格:多款式取区间,单商品取自身价 */
 const priceText = computed(() => {
@@ -272,8 +283,15 @@ const requestClose = () => {
       <!-- 紧凑头部 -->
       <DialogHeader class="pb-2 border-b border-border/60">
         <div class="flex items-start gap-3">
+          <ImagePreview
+            v-if="goods.cover?.path"
+            :src="goods.cover.path"
+            :alt="goods.name"
+            class="size-14 rounded-lg border-border/80 shrink-0"
+          />
           <img
-            :src="goods.cover ? goods.cover.path : emptyCover"
+            v-else
+            :src="emptyCover"
             class="size-14 rounded-lg object-cover border border-border/80 shrink-0"
             alt="封面"
           />
@@ -426,12 +444,35 @@ const requestClose = () => {
                     @click.stop
                     @update:checked="toggleSubItem(sub.id, $event)"
                   />
-                  <img
+                  <ImagePreview
                     v-if="sub.cover?.path"
                     :src="sub.cover.path"
-                    class="size-10 rounded object-cover border border-border/60 shrink-0"
-                    alt=""
-                  />
+                    :alt="sub.name"
+                    :gallery="subCoverGallery"
+                    :index="getSubCoverIndex(sub.cover.path)"
+                    wrapper-class="shrink-0"
+                  >
+                    <template #default="{ open }">
+                      <button
+                        type="button"
+                        class="group/subimg relative size-10 rounded overflow-hidden border border-border/60 shrink-0 cursor-zoom-in focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                        :aria-label="`放大查看款式 ${sub.name}`"
+                        @click.stop="open()"
+                      >
+                        <img
+                          :src="sub.cover?.path"
+                          class="size-full object-cover transition-transform duration-200 group-hover/subimg:scale-105"
+                          :alt="sub.name"
+                          referrerpolicy="no-referrer"
+                        />
+                        <span
+                          class="pointer-events-none absolute inset-0 bg-black/0 group-hover/subimg:bg-black/25 transition-colors flex-center opacity-0 group-hover/subimg:opacity-100"
+                        >
+                          <ZoomIn class="size-3 text-white drop-shadow" />
+                        </span>
+                      </button>
+                    </template>
+                  </ImagePreview>
                   <div class="min-w-0 flex flex-col gap-0.5">
                     <div class="flex items-center gap-1.5">
                       <strong class="font-medium text-foreground text-xs truncate">{{ sub.name }}</strong>

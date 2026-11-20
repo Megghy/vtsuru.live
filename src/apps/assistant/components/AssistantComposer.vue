@@ -9,6 +9,7 @@ import { nextTick, onBeforeUnmount, ref } from 'vue'
 
 import { useFilePicker, validatePickedFiles } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -153,17 +154,34 @@ onBeforeUnmount(() => recognition?.abort())
           :key="i"
           class="relative shrink-0 size-14 rounded-md overflow-hidden border border-border"
         >
-          <img
+          <ImagePreview
             :src="img"
-            alt="附件"
-            class="size-full object-cover block"
-          />
+            :alt="`附件 ${i + 1}`"
+            :gallery="images"
+            :index="i"
+            wrapper-class="block size-full"
+          >
+            <template #default="{ open }">
+              <button
+                type="button"
+                class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                :aria-label="`放大查看附件 ${i + 1}`"
+                @click="open()"
+              >
+                <img
+                  :src="img"
+                  alt="附件"
+                  class="size-full object-cover block"
+                />
+              </button>
+            </template>
+          </ImagePreview>
           <Button
             variant="ghost"
             size="icon-xs"
-            class="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/65 text-white hover:bg-black/85"
+            class="z-10 absolute top-0.5 right-0.5 size-4 rounded-full bg-black/65 text-white hover:bg-black/85"
             aria-label="移除图片"
-            @click="removeImage(i)"
+            @click.stop="removeImage(i)"
           >
             <component
               :is="Dismiss12Regular"

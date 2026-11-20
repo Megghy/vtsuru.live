@@ -1,6 +1,16 @@
 import { h, type VNode } from 'vue'
 
-const NoteImage = (props: any) => h('img', { ...props, class: 'rounded-md max-w-full my-2 border border-border' })
+import { ImagePreview } from '@/shared/ui/image-preview'
+
+const NoteImage = (props: { src: string; width?: number; alt?: string }) =>
+  h(ImagePreview, {
+    src: props.src,
+    alt: props.alt || '更新截图',
+    wrapperClass: 'block max-w-full my-2',
+    class: 'h-auto w-auto max-w-full rounded-md border-border',
+    imageClass: 'w-full h-auto object-contain',
+    style: props.width ? { maxWidth: `${props.width}px` } : undefined,
+  })
 const NoteButton = (props: any, context: any) =>
   h(
     'button',

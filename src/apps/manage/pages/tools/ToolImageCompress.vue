@@ -8,6 +8,7 @@ import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
@@ -36,6 +37,7 @@ const formatOptions = [
   { label: 'WebP (有损)', value: 'webp' },
 ]
 const isLossy = computed(() => format.value !== 'png')
+const previewGallery = computed(() => items.value.map((i) => ({ src: i.thumbUrl, alt: i.file.name })))
 
 const dropZoneRef = ref<HTMLElement>()
 const { isOverDropZone } = useDropZone(dropZoneRef, { onDrop: (files) => files && addFiles(files) })
@@ -254,11 +256,28 @@ function clearAll() {
               class="border border-border rounded-lg p-2 flex flex-col gap-2 bg-card text-xs"
             >
               <div class="w-full h-28 bg-muted/40 rounded flex-center overflow-hidden">
-                <img
+                <ImagePreview
                   :src="item.thumbUrl"
-                  class="max-h-full max-w-full object-contain"
-                  alt=""
-                />
+                  :alt="item.file.name"
+                  :gallery="previewGallery"
+                  :index="idx"
+                  wrapper-class="size-full flex-center"
+                >
+                  <template #default="{ open }">
+                    <button
+                      type="button"
+                      class="size-full flex-center cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                      :aria-label="`放大查看 ${item.file.name}`"
+                      @click="open()"
+                    >
+                      <img
+                        :src="item.thumbUrl"
+                        class="max-h-full max-w-full object-contain"
+                        :alt="item.file.name"
+                      />
+                    </button>
+                  </template>
+                </ImagePreview>
               </div>
               <div class="flex flex-col gap-0.5 min-w-0">
                 <span

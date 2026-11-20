@@ -25,6 +25,7 @@ import { useRouter } from 'vue-router'
 import { getApiVtsuruGetIndexData } from '@/api/generated/vtsuru/vtsuru'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import { Button } from '@/shared/ui/button'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -406,11 +407,26 @@ onMounted(() => {
           </div>
           <div class="userpage-intro-media">
             <div class="userpage-intro-image">
-              <img
+              <ImagePreview
                 src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
-                referrerpolicy="no-referrer"
                 alt="自定义页面示例"
-              />
+                wrapper-class="block size-full"
+              >
+                <template #default="{ open }">
+                  <button
+                    type="button"
+                    class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label="放大查看自定义页面示例"
+                    @click="open()"
+                  >
+                    <img
+                      src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
+                      referrerpolicy="no-referrer"
+                      alt="自定义页面示例"
+                    />
+                  </button>
+                </template>
+              </ImagePreview>
             </div>
           </div>
         </div>

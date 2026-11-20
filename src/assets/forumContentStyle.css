@@ -51,3 +51,11 @@
 .editor-content-view input[type='checkbox'] {
   margin-right: 5px;
 }
+
+.editor-content-view img {
+  cursor: zoom-in;
+}
+
+.editor-content-view a img {
+  cursor: pointer;
+}

@@ -25,6 +25,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { ImageLightbox, useHtmlImagePreview } from '@/shared/ui/image-preview'
 import { Pagination } from '@/shared/ui/pagination'
 import { Separator } from '@/shared/ui/separator'
 import { Textarea } from '@/shared/ui/textarea'
@@ -85,6 +86,7 @@ const canOprate = computed(() => {
 })
 
 const safeTopicHtml = computed(() => sanitizeForumHtml(topic.value?.content))
+const topicImagePreview = useHtmlImagePreview()
 
 async function refreshComments() {
   if (topicId.value === -1) return
@@ -247,6 +249,12 @@ onMounted(async () => {
           <div
             class="editor-content-view leading-relaxed text-foreground break-words min-h-24"
             v-html="safeTopicHtml"
+            @click="topicImagePreview.handleHtmlClick"
+          />
+          <ImageLightbox
+            v-model:open="topicImagePreview.open.value"
+            :imgs="topicImagePreview.imgs.value"
+            :index="topicImagePreview.index.value"
           />
 
           <div

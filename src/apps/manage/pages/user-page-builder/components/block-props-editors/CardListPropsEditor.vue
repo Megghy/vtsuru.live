@@ -4,6 +4,7 @@ import { ref } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -109,11 +110,11 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
                   >
                     清除
                   </Button>
-                  <img
+                  <ImagePreview
                     v-if="item.imageFile?.path"
                     :src="item.imageFile.path"
-                    alt=""
-                    class="w-14 h-10 object-cover border border-border rounded"
+                    :alt="item.title || '卡片图片'"
+                    class="w-14 h-10 border-border rounded shrink-0"
                   />
                 </div>
               </div>

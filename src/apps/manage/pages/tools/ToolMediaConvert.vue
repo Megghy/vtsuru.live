@@ -11,6 +11,7 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -1219,12 +1220,27 @@ onBeforeUnmount(() => {
 
                 <template v-if="item.outputUrl">
                   <span class="output-label text-xs text-muted-foreground"> 输出预览 </span>
-                  <img
+                  <ImagePreview
                     v-if="item.outputKind === 'gif'"
                     :src="item.outputUrl"
-                    class="preview"
-                    alt=""
-                  />
+                    :alt="item.outputName || 'GIF 输出预览'"
+                    wrapper-class="block w-full"
+                  >
+                    <template #default="{ open }">
+                      <button
+                        type="button"
+                        class="block cursor-zoom-in p-0 border-0 bg-transparent text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                        :aria-label="`放大查看 ${item.outputName || 'GIF 输出预览'}`"
+                        @click="open()"
+                      >
+                        <img
+                          :src="item.outputUrl"
+                          class="preview"
+                          :alt="item.outputName || 'GIF 输出预览'"
+                        />
+                      </button>
+                    </template>
+                  </ImagePreview>
                   <video
                     v-else-if="item.outputKind === 'video'"
                     :src="item.outputUrl"

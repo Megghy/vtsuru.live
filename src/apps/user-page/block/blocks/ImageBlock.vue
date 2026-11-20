@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+import { ImagePreview } from '@/shared/ui/image-preview'
+
 import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
@@ -87,18 +89,33 @@ watch(
         role="status"
         >{{ failed ? '图片加载失败' : '图片加载中' }}</span
       >
-      <img
+      <ImagePreview
         v-if="!failed"
-        class="relative z-1 motion-reduce:transition-none transition-opacity duration-180"
-        :class="loaded ? 'opacity-100' : 'opacity-0'"
         :src="model.url"
-        :alt="model.alt"
-        referrerpolicy="no-referrer"
-        decoding="async"
-        :style="imgStyle"
-        @load="loaded = true"
-        @error="failed = true"
-      />
+        :alt="model.alt || '图片预览'"
+        :disabled="!loaded || failed"
+        wrapper-class="block w-full"
+      >
+        <template #default="{ open }">
+          <img
+            class="relative z-1 motion-reduce:transition-none transition-opacity duration-180"
+            :class="[loaded ? 'opacity-100 cursor-zoom-in' : 'opacity-0']"
+            :src="model.url"
+            :alt="model.alt"
+            :role="loaded ? 'button' : undefined"
+            :tabindex="loaded ? 0 : undefined"
+            :aria-label="loaded ? `放大查看 ${model.alt || '图片'}` : undefined"
+            referrerpolicy="no-referrer"
+            decoding="async"
+            :style="imgStyle"
+            @load="loaded = true"
+            @error="failed = true"
+            @click="loaded && open()"
+            @keydown.enter.prevent="loaded && open()"
+            @keydown.space.prevent="loaded && open()"
+          />
+        </template>
+      </ImagePreview>
     </div>
   </BlockCard>
 </template>

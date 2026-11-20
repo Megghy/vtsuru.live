@@ -13,7 +13,7 @@ import PngtuberAssetLibraryDialog from './PngtuberAssetLibraryDialog.vue'
 const props = defineProps<{ value: string; label: string; disabled?: boolean }>()
 const emit = defineEmits<{ change: [value: string] }>()
 
-const url = ref(props.value)
+const url = ref(props.value ?? '')
 const busy = ref(false)
 const dragging = ref(false)
 const libraryOpen = ref(false)
@@ -25,7 +25,7 @@ onScopeDispose(() => {
 watch(
   () => props.value,
   (value) => {
-    url.value = value
+    url.value = value ?? ''
   },
 )
 async function upload(file?: File) {
@@ -52,7 +52,7 @@ function drop(event: DragEvent) {
 function apply() {
   if (props.disabled) return
   try {
-    const next = new URL(url.value.trim())
+    const next = new URL((url.value ?? '').trim())
     if (!['https:', 'http:'].includes(next.protocol)) throw new Error()
     emit('change', next.href)
   } catch {
@@ -157,7 +157,7 @@ function selectFromLibrary(selectedUrl: string) {
         size="xs"
         variant="secondary"
         class="shrink-0"
-        :disabled="disabled || busy || !url.trim()"
+        :disabled="disabled || busy || !(url ?? '').trim()"
         @click="apply"
       >
         应用

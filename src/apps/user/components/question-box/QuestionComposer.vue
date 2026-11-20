@@ -16,6 +16,7 @@ import { AVATAR_URL } from '@/shared/config'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
@@ -299,16 +300,36 @@ async function submit() {
               :key="url"
               class="attachment-item"
             >
-              <img
+              <ImagePreview
                 :src="url"
-                alt=""
-              />
+                :alt="`待发送图片 ${index + 1}`"
+                :gallery="imagePreviewUrls"
+                :index="index"
+                wrapper-class="block size-full"
+              >
+                <template #default="{ open }">
+                  <div
+                    role="button"
+                    tabindex="0"
+                    class="size-full cursor-zoom-in focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                    :aria-label="`放大查看第 ${index + 1} 张图片`"
+                    @click="open()"
+                    @keydown.enter.prevent="open()"
+                    @keydown.space.prevent="open()"
+                  >
+                    <img
+                      :src="url"
+                      :alt="`待发送图片 ${index + 1}`"
+                    />
+                  </div>
+                </template>
+              </ImagePreview>
               <Button
                 variant="ghost"
                 size="icon-xs"
-                class="absolute top-1 right-1 rounded-full bg-black/60 text-white hover:bg-black/80"
+                class="z-10 absolute top-1 right-1 rounded-full bg-black/60 text-white hover:bg-black/80"
                 :aria-label="`移除第 ${index + 1} 张图片`"
-                @click="removeImage(index)"
+                @click.stop="removeImage(index)"
               >
                 <Dismiss24Regular class="size-3.5" />
               </Button>

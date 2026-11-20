@@ -8,6 +8,7 @@ import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { NumberField } from '@/shared/ui/number-field'
 import { Slider } from '@/shared/ui/slider'
@@ -90,7 +91,7 @@ function moveImage(id: number, offset: -1 | 1) {
     />
 
     <Card
-      v-for="image in images"
+      v-for="(image, idx) in images"
       :key="image.id"
       class="cursor-pointer transition-all border"
       :class="selectedImageId === image.id ? 'border-primary ring-1 ring-primary/30' : 'hover:border-input'"
@@ -99,11 +100,28 @@ function moveImage(id: number, offset: -1 | 1) {
       <CardHeader class="p-3">
         <div class="flex-between">
           <div class="flex items-center gap-2.5 min-w-0">
-            <img
+            <ImagePreview
               :src="image.path"
-              :alt="image.name"
-              class="size-10 rounded object-cover border border-border shrink-0"
-            />
+              :alt="image.name || `图片 #${image.id}`"
+              :gallery="images"
+              :index="idx"
+              wrapper-class="shrink-0"
+            >
+              <template #default="{ open }">
+                <button
+                  type="button"
+                  class="size-10 rounded overflow-hidden border border-border shrink-0 cursor-zoom-in p-0 bg-muted/20 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                  :aria-label="`放大查看 ${image.name || `图片 #${image.id}`}`"
+                  @click.stop="open()"
+                >
+                  <img
+                    :src="image.path"
+                    :alt="image.name"
+                    class="size-full object-cover"
+                  />
+                </button>
+              </template>
+            </ImagePreview>
             <span class="text-xs font-medium text-foreground truncate max-w-[200px]">
               {{ image.name || `图片 #${image.id}` }}
             </span>

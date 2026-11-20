@@ -54,7 +54,7 @@ function cloneConfig(value?: ServiceConfigData): ServiceConfigData {
   return {
     fields: (value?.fields ?? []).map((field) => ({
       id: field.id || nextFieldId(),
-      label: field.label,
+      label: field.label ?? '',
       type: field.type,
       required: field.required,
       options: [...(field.options ?? [])],
@@ -139,7 +139,7 @@ function removeField(index: number) {
 }
 
 function normalizeField(field: ServiceField) {
-  field.label = field.label.trim()
+  field.label = (field.label ?? '').trim()
   if (field.type !== ServiceFieldType.Select && field.type !== ServiceFieldType.MultiSelect) field.options = []
 }
 

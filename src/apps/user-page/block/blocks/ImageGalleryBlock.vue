@@ -5,6 +5,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -182,6 +183,7 @@ const carouselStyle = computed(() => ({
 }))
 
 const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc ?? '')
+const galleryUrls = computed(() => model.value.items.map((item) => item.src))
 </script>
 
 <template>
@@ -222,20 +224,38 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
             >
               {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
             </div>
-            <img
+            <ImagePreview
               :src="item.src"
-              :alt="item.alt"
-              :loading="index === 0 ? 'eager' : 'lazy'"
-              decoding="async"
-              referrerpolicy="no-referrer"
-              class="block size-full motion-reduce:transition-none transition-opacity duration-180"
-              :class="
-                failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0'
-              "
-              :style="{ objectFit: model.fit }"
-              @load="markLoaded(item.src)"
-              @error="markFailed(item.src)"
-            />
+              :alt="item.alt || item.desc || '图片预览'"
+              :gallery="galleryUrls"
+              :index="index"
+              :disabled="!loadedSources.has(item.src) || failedSources.has(item.src)"
+              wrapper-class="block size-full"
+            >
+              <template #default="{ open, disabled }">
+                <img
+                  :src="item.src"
+                  :alt="item.alt"
+                  :loading="index === 0 ? 'eager' : 'lazy'"
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                  class="block size-full motion-reduce:transition-none transition-opacity duration-180"
+                  :class="[
+                    failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0',
+                    !disabled && 'cursor-zoom-in',
+                  ]"
+                  :style="{ objectFit: model.fit }"
+                  :role="!disabled ? 'button' : undefined"
+                  :tabindex="!disabled ? 0 : undefined"
+                  :aria-label="!disabled ? `放大查看 ${item.alt || item.desc || `第 ${index + 1} 张图片`}` : undefined"
+                  @load="markLoaded(item.src)"
+                  @error="markFailed(item.src)"
+                  @click="!disabled && open()"
+                  @keydown.enter.prevent="!disabled && open()"
+                  @keydown.space.prevent="!disabled && open()"
+                />
+              </template>
+            </ImagePreview>
           </div>
 
           <!-- Arrows -->
@@ -326,21 +346,39 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
             >
               {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
             </div>
-            <img
+            <ImagePreview
               :src="item.src"
-              :alt="item.alt"
-              :loading="index === 0 ? 'eager' : 'lazy'"
-              decoding="async"
-              referrerpolicy="no-referrer"
-              class="block w-full motion-reduce:transition-none transition-opacity duration-180"
-              :class="[
-                failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0',
-                model.layout === 'masonry' ? 'h-auto min-h-[120px]' : 'h-full',
-              ]"
-              :style="{ objectFit: model.fit, maxHeight: model.maxHeight || undefined }"
-              @load="markLoaded(item.src)"
-              @error="markFailed(item.src)"
-            />
+              :alt="item.alt || item.desc || '图片预览'"
+              :gallery="galleryUrls"
+              :index="index"
+              :disabled="!loadedSources.has(item.src) || failedSources.has(item.src)"
+              :wrapper-class="model.layout === 'masonry' ? 'block w-full' : 'block size-full'"
+            >
+              <template #default="{ open, disabled }">
+                <img
+                  :src="item.src"
+                  :alt="item.alt"
+                  :loading="index === 0 ? 'eager' : 'lazy'"
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                  class="block w-full motion-reduce:transition-none transition-opacity duration-180"
+                  :class="[
+                    failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0',
+                    model.layout === 'masonry' ? 'h-auto min-h-[120px]' : 'h-full',
+                    !disabled && 'cursor-zoom-in',
+                  ]"
+                  :style="{ objectFit: model.fit, maxHeight: model.maxHeight || undefined }"
+                  :role="!disabled ? 'button' : undefined"
+                  :tabindex="!disabled ? 0 : undefined"
+                  :aria-label="!disabled ? `放大查看 ${item.alt || item.desc || `第 ${index + 1} 张图片`}` : undefined"
+                  @load="markLoaded(item.src)"
+                  @error="markFailed(item.src)"
+                  @click="!disabled && open()"
+                  @keydown.enter.prevent="!disabled && open()"
+                  @keydown.space.prevent="!disabled && open()"
+                />
+              </template>
+            </ImagePreview>
           </div>
           <figcaption
             v-if="item.desc"

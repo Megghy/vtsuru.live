@@ -12,6 +12,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
@@ -147,13 +148,29 @@ onMounted(() => load())
         >
           <!-- 封面大图 -->
           <div class="h-36 overflow-hidden relative bg-muted/40">
-            <img
+            <ImagePreview
               v-if="item.live.coverUrl"
               :src="withImageSize(item.live.coverUrl, '@140h')"
-              referrerpolicy="no-referrer"
-              class="w-full h-full object-cover"
-              alt=""
-            />
+              :preview-src="item.live.coverUrl"
+              :alt="item.live.title"
+              wrapper-class="block size-full"
+            >
+              <template #default="{ open }">
+                <button
+                  type="button"
+                  class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  :aria-label="`放大查看 ${item.live.title}`"
+                  @click="open()"
+                >
+                  <img
+                    :src="withImageSize(item.live.coverUrl, '@140h')"
+                    referrerpolicy="no-referrer"
+                    class="w-full h-full object-cover"
+                    :alt="item.live.title"
+                  />
+                </button>
+              </template>
+            </ImagePreview>
             <div
               v-else
               class="w-full h-full flex-center text-muted-foreground"
@@ -165,7 +182,7 @@ onMounted(() => load())
             </div>
 
             <!-- 状态标签 -->
-            <div class="absolute top-2 right-2">
+            <div class="pointer-events-none absolute top-2 right-2">
               <Badge
                 v-if="!item.live.isFinish"
                 variant="default"

@@ -8,6 +8,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -60,6 +61,15 @@ function getItemPreviewSrc(it: any) {
   if (file && typeof file === 'object' && !Array.isArray(file) && typeof file.path === 'string' && file.path)
     return file.path
   return ''
+}
+
+const previewGallery = computed(() =>
+  itemsModel.value.map((it) => getItemPreviewSrc(it)).filter((src): src is string => Boolean(src)),
+)
+
+function getGalleryIndex(src: string) {
+  const idx = previewGallery.value.indexOf(src)
+  return idx >= 0 ? idx : 0
 }
 
 function getItemKey(it: any) {
@@ -323,12 +333,13 @@ function propertyAvailable(property: string) {
           <div class="flex-between">
             <div class="flex items-center gap-2 min-w-0">
               <span class="drag-handle cursor-grab text-muted-foreground font-mono select-none">≡</span>
-              <img
+              <ImagePreview
                 v-if="getItemPreviewSrc(element)"
                 :src="getItemPreviewSrc(element)"
-                alt=""
-                referrerpolicy="no-referrer"
-                class="size-10 object-cover rounded border border-border shrink-0"
+                :alt="element.alt || element.desc || `图片 #${index + 1}`"
+                :gallery="previewGallery"
+                :index="getGalleryIndex(getItemPreviewSrc(element))"
+                class="size-10 rounded border-border shrink-0"
               />
               <span class="text-xs text-muted-foreground font-mono">#{{ index + 1 }}</span>
             </div>

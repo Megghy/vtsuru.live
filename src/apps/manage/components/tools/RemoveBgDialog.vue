@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { useRemoveBg } from '@/composables/useRemoveBg'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
@@ -38,6 +39,13 @@ const progressPercent = computed(() => {
   if (!progress.value?.total) return 0
   return Math.round((progress.value.current / progress.value.total) * 100)
 })
+
+const compareGallery = computed(() =>
+  [
+    props.sourceUrl ? { src: props.sourceUrl, alt: '原图' } : null,
+    resultUrl.value ? { src: resultUrl.value, alt: '抠图结果' } : null,
+  ].filter((item): item is { src: string; alt: string } => item !== null),
+)
 
 watch(
   () => props.show,
@@ -173,11 +181,29 @@ function cancel() {
           <div
             class="aspect-video bg-muted/30 rounded border border-border flex-center overflow-hidden"
           >
-            <img
+            <ImagePreview
               v-if="sourceUrl"
               :src="sourceUrl"
-              class="max-h-full max-w-full object-contain"
-            />
+              alt="原图"
+              :gallery="compareGallery"
+              :index="0"
+              wrapper-class="size-full flex-center"
+            >
+              <template #default="{ open }">
+                <button
+                  type="button"
+                  class="size-full flex-center cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                  aria-label="放大查看原图"
+                  @click="open()"
+                >
+                  <img
+                    :src="sourceUrl"
+                    alt="原图"
+                    class="max-h-full max-w-full object-contain"
+                  />
+                </button>
+              </template>
+            </ImagePreview>
           </div>
         </div>
 
@@ -186,11 +212,29 @@ function cancel() {
           <div
             class="aspect-video bg-muted/30 rounded border border-border flex-center overflow-hidden manage-checkerboard"
           >
-            <img
+            <ImagePreview
               v-if="resultUrl"
               :src="resultUrl"
-              class="max-h-full max-w-full object-contain"
-            />
+              alt="抠图结果"
+              :gallery="compareGallery"
+              :index="compareGallery.length > 1 ? 1 : 0"
+              wrapper-class="size-full flex-center"
+            >
+              <template #default="{ open }">
+                <button
+                  type="button"
+                  class="size-full flex-center cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                  aria-label="放大查看抠图结果"
+                  @click="open()"
+                >
+                  <img
+                    :src="resultUrl"
+                    alt="抠图结果"
+                    class="max-h-full max-w-full object-contain"
+                  />
+                </button>
+              </template>
+            </ImagePreview>
             <span
               v-else
               class="text-xs text-muted-foreground"

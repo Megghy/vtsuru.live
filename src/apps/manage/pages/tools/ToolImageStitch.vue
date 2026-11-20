@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
@@ -681,11 +682,28 @@ onBeforeUnmount(clearAll)
                     title="拖拽排序"
                     >{{ index + 1 }}</span
                   >
-                  <img
+                  <ImagePreview
                     :src="element.url"
-                    alt=""
-                    class="thumb"
-                  />
+                    :alt="element.file.name"
+                    :gallery="items.map((i) => ({ src: i.url, alt: i.file.name }))"
+                    :index="index"
+                    wrapper-class="shrink-0"
+                  >
+                    <template #default="{ open }">
+                      <button
+                        type="button"
+                        class="thumb cursor-zoom-in p-0 border-0 overflow-hidden focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                        :aria-label="`放大查看 ${element.file.name}`"
+                        @click.stop="open()"
+                      >
+                        <img
+                          :src="element.url"
+                          :alt="element.file.name"
+                          class="size-full object-cover block"
+                        />
+                      </button>
+                    </template>
+                  </ImagePreview>
                   <div class="image-row__body">
                     <span
                       class="image-name font-medium"

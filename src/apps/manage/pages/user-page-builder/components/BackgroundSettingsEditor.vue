@@ -5,6 +5,7 @@ import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
@@ -233,11 +234,10 @@ function clearAll() {
           v-else
           class="flex items-center gap-2.5 py-2 px-2.5 border border-border rounded-lg bg-muted w-full box-border"
         >
-          <img
+          <ImagePreview
             :src="imagePath"
             alt="背景预览"
-            referrerpolicy="no-referrer"
-            class="size-10 object-cover rounded-md border border-border shrink-0"
+            class="size-10 rounded-md border-border shrink-0"
           />
           <div class="flex flex-col flex-1 min-w-0 gap-0.5">
             <span class="text-[13px] font-medium text-foreground">已上传背景图</span>

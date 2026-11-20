@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 import { getApiQaGetTags } from '@/api/generated/qa/qa'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -358,12 +359,11 @@ function enableFeedbackEmbed(enabled: boolean) {
           >
             清除
           </Button>
-          <img
+          <ImagePreview
             v-if="blockProps.imageFile?.path"
             :src="blockProps.imageFile.path"
-            alt=""
-            referrerpolicy="no-referrer"
-            class="size-8 rounded object-cover border border-border"
+            :alt="blockProps.imageFile?.name || '图片预览'"
+            class="size-8 rounded border-border shrink-0"
           />
           <span class="text-xs text-muted-foreground truncate max-w-[200px]">
             {{ blockProps.imageFile?.name || blockProps.imageFile?.path || '' }}

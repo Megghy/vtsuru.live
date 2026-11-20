@@ -1,6 +1,6 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 import {
   acquireFilePreviewUrl,
@@ -109,5 +109,77 @@ describe('image-upload', () => {
     releaseFilePreviewUrl(file)
     expect(revokeSpy).toHaveBeenCalledWith(u1)
     revokeSpy.mockRestore()
+  })
+
+  it('allows clicking thumbnail to replace in single-file mode without blocking remove button', async () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+    const items = ref<UploadImageItem[]>([
+      ...fromRemoteImageList([{ id: 789, name: 'cover.png', path: 'https://vtsuru.live/files/cover.png' }]),
+    ])
+
+    const wrapper = mount(ImageUpload, {
+      props: {
+        modelValue: items.value,
+        maxFiles: 1,
+        placeholder: '点击更换封面',
+        'onUpdate:modelValue': (val: UploadImageItem[]) => {
+          items.value = val
+        },
+      },
+    })
+
+    const replaceTrigger = wrapper.find('[role="button"][aria-label="点击更换封面"]')
+    expect(replaceTrigger.exists()).toBe(true)
+    await replaceTrigger.trigger('click')
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+
+    await wrapper.find('button[aria-label^="移除"]').trigger('click')
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(items.value).toEqual([])
+
+    wrapper.unmount()
+    clickSpy.mockRestore()
+  })
+
+  it('opens lightbox preview when clicking thumbnail in multi-file mode without blocking remove button', async () => {
+    const items = ref<UploadImageItem[]>([
+      ...fromRemoteImageList([
+        { id: 101, name: 'first.png', path: 'https://vtsuru.live/files/first.png' },
+        { id: 102, name: 'second.png', path: 'https://vtsuru.live/files/second.png' },
+      ]),
+    ])
+
+    const wrapper = mount(ImageUpload, {
+      attachTo: document.body,
+      props: {
+        modelValue: items.value,
+        maxFiles: 5,
+        'onUpdate:modelValue': (val: UploadImageItem[]) => {
+          items.value = val
+        },
+      },
+    })
+
+    const secondTrigger = wrapper.find('[role="button"][aria-label="放大查看 second.png"]')
+    expect(secondTrigger.exists()).toBe(true)
+    await secondTrigger.trigger('click')
+    await nextTick()
+
+    const lightbox = document.body.querySelector('[data-testid="image-lightbox"]')
+    expect(lightbox).not.toBeNull()
+    expect(lightbox!.querySelector('img')?.getAttribute('src')).toBe('https://vtsuru.live/files/second.png')
+    expect(lightbox!.textContent).toContain('2 / 2')
+
+    const closeBtn = lightbox!.querySelector('button[aria-label="关闭预览"]') as HTMLButtonElement
+    closeBtn.click()
+    await flushPromises()
+    await vi.waitFor(() => expect(document.body.querySelector('[data-testid="image-lightbox"]')).toBeNull())
+
+    await wrapper.find('button[aria-label="移除 first.png"]').trigger('click')
+    expect(items.value).toHaveLength(1)
+    expect(items.value[0].id).toBe('102')
+    expect(document.body.querySelector('[data-testid="image-lightbox"]')).toBeNull()
+
+    wrapper.unmount()
   })
 })

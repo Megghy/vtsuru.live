@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
+import { ImageLightbox, useHtmlImagePreview } from '@/shared/ui/image-preview'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { getUserAvatarUrl } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
@@ -37,6 +38,7 @@ const canOprate = computed(() => {
 })
 
 const safeCommentHtml = computed(() => sanitizeForumHtml(props.item.content))
+const commentImagePreview = useHtmlImagePreview()
 
 function delComment(id: number) {
   useForum.DelComment(id).then((success) => {
@@ -113,6 +115,12 @@ function formatFullTime(time: number) {
         <div
           class="editor-content-view text-xs leading-relaxed text-foreground break-words"
           v-html="safeCommentHtml"
+          @click="commentImagePreview.handleHtmlClick"
+        />
+        <ImageLightbox
+          v-model:open="commentImagePreview.open.value"
+          :imgs="commentImagePreview.imgs.value"
+          :index="commentImagePreview.index.value"
         />
 
         <Card

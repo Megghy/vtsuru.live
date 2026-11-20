@@ -5,6 +5,7 @@ import type { LiveControl } from '@/apps/client/composables/useLiveControl'
 import { roomInfo } from '@/apps/client/data/info'
 import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
+import { ImagePreview } from '@/shared/ui/image-preview'
 
 const props = defineProps<{ control: LiveControl }>()
 const c = props.control
@@ -30,12 +31,28 @@ const { open: triggerSelectFile } = useFilePicker({
         <div
           class="aspect-video w-full max-w-[200px] rounded-md border border-border bg-muted/40 overflow-hidden flex-center relative shadow-inner"
         >
-          <img
+          <ImagePreview
             v-if="roomInfo?.user_cover || roomInfo?.keyframe"
-            :src="roomInfo?.user_cover || roomInfo?.keyframe"
+            :src="roomInfo?.user_cover || roomInfo?.keyframe || ''"
             alt="当前直播封面"
-            class="size-full object-cover"
-          />
+            wrapper-class="block size-full"
+          >
+            <template #default="{ open }">
+              <button
+                type="button"
+                class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="放大查看当前直播封面"
+                @click="open()"
+              >
+                <img
+                  :src="roomInfo?.user_cover || roomInfo?.keyframe"
+                  alt="当前直播封面"
+                  referrerpolicy="no-referrer"
+                  class="size-full object-cover"
+                />
+              </button>
+            </template>
+          </ImagePreview>
           <div
             v-else
             class="flex flex-col items-center gap-1 text-muted-foreground"
@@ -88,12 +105,27 @@ const { open: triggerSelectFile } = useFilePicker({
           v-if="c.coverPreviewUrl.value"
           class="aspect-video w-full max-w-[200px] rounded-md border-2 border-primary/50 bg-muted/40 overflow-hidden relative shadow-sm"
         >
-          <img
+          <ImagePreview
             :src="c.coverPreviewUrl.value"
             alt="新封面预览"
-            class="size-full object-cover"
-          />
-          <div class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">
+            wrapper-class="block size-full"
+          >
+            <template #default="{ open }">
+              <button
+                type="button"
+                class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="放大查看新封面预览"
+                @click="open()"
+              >
+                <img
+                  :src="c.coverPreviewUrl.value"
+                  alt="新封面预览"
+                  class="size-full object-cover"
+                />
+              </button>
+            </template>
+          </ImagePreview>
+          <div class="pointer-events-none absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">
             待应用预览
           </div>
         </div>

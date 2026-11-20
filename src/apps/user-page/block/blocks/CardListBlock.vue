@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
+import { ImagePreview } from '@/shared/ui/image-preview'
 
 import BlockCard from '../BlockCard.vue'
 import CardListAction from './CardListAction.vue'
@@ -47,6 +48,12 @@ const items = computed(() =>
       })
     : [],
 )
+const galleryImages = computed(() => items.value.map((item) => item.image).filter(Boolean))
+
+function getImageIndex(image: string) {
+  const idx = galleryImages.value.indexOf(image)
+  return idx >= 0 ? idx : 0
+}
 </script>
 
 <template>
@@ -65,20 +72,36 @@ const items = computed(() =>
         class="min-w-0 overflow-hidden border border-border rounded-[var(--radius)] bg-muted"
         :class="layout === 'list' ? 'grid grid-cols-[minmax(140px,28%)_minmax(0,1fr)] @max-[620px]:grid-cols-1' : ''"
       >
-        <img
+        <ImagePreview
           v-if="item.image"
           :src="item.image"
-          :alt="item.title"
-          loading="lazy"
-          decoding="async"
-          referrerpolicy="no-referrer"
-          class="block w-full bg-muted object-cover"
-          :class="
-            layout === 'list'
-              ? 'h-full min-h-[150px] aspect-auto @max-[620px]:min-h-0 @max-[620px]:aspect-video'
-              : 'aspect-video'
-          "
-        />
+          :alt="item.title || '图片预览'"
+          :gallery="galleryImages"
+          :index="getImageIndex(item.image)"
+          :wrapper-class="layout === 'list' ? 'block w-full h-full' : 'block w-full'"
+        >
+          <template #default="{ open }">
+            <img
+              :src="item.image"
+              :alt="item.title"
+              loading="lazy"
+              decoding="async"
+              referrerpolicy="no-referrer"
+              role="button"
+              tabindex="0"
+              :aria-label="`放大查看 ${item.title || '图片'}`"
+              class="block w-full bg-muted object-cover cursor-zoom-in"
+              :class="
+                layout === 'list'
+                  ? 'h-full min-h-[150px] aspect-auto @max-[620px]:min-h-0 @max-[620px]:aspect-video'
+                  : 'aspect-video'
+              "
+              @click="open()"
+              @keydown.enter.prevent="open()"
+              @keydown.space.prevent="open()"
+            />
+          </template>
+        </ImagePreview>
         <div class="grid gap-2.25 p-3">
           <h3
             v-if="item.title"

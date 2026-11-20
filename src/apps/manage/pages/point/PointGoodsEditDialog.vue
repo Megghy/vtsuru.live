@@ -145,7 +145,7 @@ const uploadingPrivateFile = ref(false)
 const privateFileInputRef = ref<HTMLInputElement>()
 
 const isEditMode = computed(() => Boolean(currentGoodsModel.value.goods.id))
-const isDirectCollect = computed(() => currentGoodsModel.value.goods.collectUrl === undefined)
+const isDirectCollect = computed(() => currentGoodsModel.value.goods.collectUrl == null)
 const currentSetting = computed(() => currentGoodsModel.value.goods.setting!)
 
 const subItemsForDisplay = computed(() => {
@@ -184,9 +184,13 @@ function initFromEditingGoods(item?: ResponsePointGoodModel) {
     return
   }
 
-  const copied = JSON.parse(JSON.stringify(item)) as UploadPointGoodsModel & {
-    subItems?: TempSubPointGoodsModel[]
-  }
+  const copied = JSON.parse(JSON.stringify(item)) as UploadPointGoodsModel
+  const rawSubItems = (item.subItems ?? []) as Array<TempSubPointGoodsModel & { count?: number | null }>
+
+  copied.collectUrl = copied.collectUrl?.trim() ? copied.collectUrl : undefined
+  copied.content = copied.content ?? ''
+  copied.description = copied.description ?? ''
+  copied.count = copied.count ?? undefined
 
   if (copied.setting?.guardFree && !copied.setting.guardFreeMonths?.length) {
     copied.setting.guardFreeMonths = [copied.setting.guardFree]
@@ -208,12 +212,29 @@ function initFromEditingGoods(item?: ResponsePointGoodModel) {
   }
 
   const coversMap: Record<number, UploadImageItem[]> = {}
-  copied.subItems = (copied.subItems ?? []).map((sub) => {
-    const id = sub.id ?? tempSubItemIdSeed--
-    if (sub.cover?.path) {
-      coversMap[id] = buildCoverUploadItems(sub.cover)
+  copied.subItems = rawSubItems.map((rawSub) => {
+    const { count: legacyCount, ...sub } = JSON.parse(JSON.stringify(rawSub)) as TempSubPointGoodsModel & {
+      count?: number | null
     }
-    return { ...sub, id }
+    const id = sub.id ?? tempSubItemIdSeed--
+    const resolvedStock = sub.stock ?? legacyCount ?? undefined
+    const isInheritedCover = sub.cover?.id != null && item.cover?.id != null && sub.cover.id === item.cover.id
+    let subCover = sub.cover
+    if (subCover?.path && !isInheritedCover) {
+      coversMap[id] = buildCoverUploadItems(subCover)
+    } else {
+      coversMap[id] = []
+      subCover = undefined
+    }
+    return {
+      ...sub,
+      id,
+      stock: resolvedStock,
+      cover: subCover,
+      isAllowRebuy: sub.isAllowRebuy ?? undefined,
+      maxBuyCount: sub.maxBuyCount ?? undefined,
+      description: sub.description ?? undefined,
+    }
   })
   subItemCoverFiles.value = coversMap
   privateAttachments.value = [...(item.privateAttachments ?? [])]
@@ -403,10 +424,10 @@ function validateGoodsModel(): boolean {
   if (g.count !== undefined && g.count !== null && g.count < 0) return failValidation('礼物库存不能小于 0', 'basic')
 
   if (g.type === GoodsTypes.Physical) {
-    if (g.collectUrl === undefined && !isAllowedPrivacyPolicy.value) {
+    if (g.collectUrl == null && !isAllowedPrivacyPolicy.value) {
       return failValidation('请先阅读并同意本站收货隐私协议', 'basic')
     }
-    if (g.collectUrl !== undefined && !g.collectUrl.trim()) {
+    if (g.collectUrl != null && !g.collectUrl.trim()) {
       return failValidation('请填写站外收集链接', 'basic')
     }
   } else if (g.type === GoodsTypes.Virtual) {
@@ -472,6 +493,9 @@ function buildSubmitPayload(coverFile?: APIFileModel, subCoverResults?: Map<numb
   const g = JSON.parse(JSON.stringify(currentGoodsModel.value.goods)) as UploadPointGoodsModel
   g.name = g.name?.trim()
   g.description = g.description?.trim() ? g.description.trim() : undefined
+  if (g.type === GoodsTypes.Physical) {
+    g.collectUrl = g.collectUrl?.trim() ? g.collectUrl.trim() : undefined
+  }
   g.cover = coverFile
   g.maxSubItemSelections = g.maxSubItemSelections || undefined
 
@@ -618,13 +642,13 @@ function formatFileSize(bytes: number) {
                   <div class="flex items-center gap-1.5 shrink-0">
                     <Checkbox
                       id="goods-unlimited-stock"
-                      :checked="currentGoodsModel.goods.count === undefined"
+                      :checked="currentGoodsModel.goods.count == null"
                       @update:checked="(v) => (currentGoodsModel.goods.count = v ? undefined : 10)"
                     />
                     <label for="goods-unlimited-stock" class="text-xs cursor-pointer">不限库存</label>
                   </div>
                   <NumberField
-                    v-if="currentGoodsModel.goods.count !== undefined"
+                    v-if="currentGoodsModel.goods.count != null"
                     :model-value="currentGoodsModel.goods.count ?? 0"
                     :min="0"
                     class="flex-1"
@@ -1016,13 +1040,13 @@ function formatFileSize(bytes: number) {
                         <div class="flex items-center gap-1.5 shrink-0">
                           <Checkbox
                             :id="`sub-unlimited-${sub.id}`"
-                            :checked="sub.stock === undefined"
+                            :checked="sub.stock == null"
                             @update:checked="(v) => (sub.stock = v ? undefined : 10)"
                           />
                           <label :for="`sub-unlimited-${sub.id}`" class="text-xs cursor-pointer">不限</label>
                         </div>
                         <NumberField
-                          v-if="sub.stock !== undefined"
+                          v-if="sub.stock != null"
                           :model-value="sub.stock ?? 0"
                           :min="0"
                           class="flex-1"
@@ -1062,14 +1086,14 @@ function formatFileSize(bytes: number) {
                               <div class="flex items-center gap-1.5">
                                 <Checkbox
                                   :id="`sub-rebuy-inherit-${sub.id}`"
-                                  :checked="sub.isAllowRebuy === undefined"
+                                  :checked="sub.isAllowRebuy == null"
                                   @update:checked="(v) => updateSubItemInheritFlag(sub, 'isAllowRebuy', Boolean(v))"
                                 />
                                 <label :for="`sub-rebuy-inherit-${sub.id}`" class="text-xs cursor-pointer">
                                   沿用主商品
                                 </label>
                               </div>
-                              <div v-if="sub.isAllowRebuy !== undefined" class="flex items-center gap-1.5">
+                              <div v-if="sub.isAllowRebuy != null" class="flex items-center gap-1.5">
                                 <Checkbox
                                   :id="`sub-rebuy-val-${sub.id}`"
                                   :checked="Boolean(sub.isAllowRebuy)"
@@ -1087,7 +1111,7 @@ function formatFileSize(bytes: number) {
                               <div class="flex items-center gap-1.5 shrink-0">
                                 <Checkbox
                                   :id="`sub-max-inherit-${sub.id}`"
-                                  :checked="sub.maxBuyCount === undefined"
+                                  :checked="sub.maxBuyCount == null"
                                   @update:checked="(v) => updateSubItemInheritFlag(sub, 'maxBuyCount', Boolean(v))"
                                 />
                                 <label :for="`sub-max-inherit-${sub.id}`" class="text-xs cursor-pointer">
@@ -1095,7 +1119,7 @@ function formatFileSize(bytes: number) {
                                 </label>
                               </div>
                               <NumberField
-                                v-if="sub.maxBuyCount !== undefined"
+                                v-if="sub.maxBuyCount != null"
                                 :model-value="sub.maxBuyCount ?? 1"
                                 :min="1"
                                 class="flex-1"

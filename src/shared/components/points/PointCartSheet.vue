@@ -9,6 +9,7 @@ import { postApiPointBuyBatch } from '@/api/generated/point/point'
 import { IMGUR_URL } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { ScrollArea } from '@/shared/ui/scroll-area'
@@ -146,8 +147,15 @@ async function checkout() {
             class="p-2.5 rounded-lg border flex gap-2.5"
             :class="line.error ? 'border-destructive/50 bg-destructive/5' : 'border-border/80'"
           >
+            <ImagePreview
+              v-if="line.good?.cover?.path"
+              :src="line.good.cover.path"
+              :alt="line.good?.name || '礼物封面'"
+              class="size-12 rounded border-border/60 shrink-0"
+            />
             <img
-              :src="line.good?.cover?.path ?? emptyCover"
+              v-else
+              :src="emptyCover"
               class="size-12 rounded object-cover border border-border/60 shrink-0"
               alt=""
             />

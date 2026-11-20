@@ -8,7 +8,7 @@ import { UploadStage } from '@/shared/services/fileUpload'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Spin } from '@/shared/ui/spin'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
@@ -47,6 +47,18 @@ watch(
 function isImagePath(path?: string) {
   const normalized = path?.toLowerCase().split(/[?#]/, 1)[0] ?? ''
   return /\.(?:png|jpe?g|gif|webp|svg)$/.test(normalized)
+}
+
+const previewGallery = computed(() =>
+  resources.visibleResources.value
+    .filter((f) => isImagePath(f.path) && !f.missing && Boolean(f.path))
+    .map((f) => ({ src: f.path!, alt: f.name || `资源 #${f.id}` })),
+)
+
+function getPreviewIndex(path?: string) {
+  if (!path) return 0
+  const idx = previewGallery.value.findIndex((item) => item.src === path)
+  return idx >= 0 ? idx : 0
 }
 
 function formatBytes(bytes?: number) {
@@ -197,27 +209,33 @@ function confirmDelete(resource: BuilderResource) {
             >
               <div class="flex-between gap-3">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <Popover v-if="isImagePath(file.path) && !file.missing">
-                    <PopoverTrigger as-child>
-                      <img
-                        :src="file.path"
-                        :alt="file.name || `资源 ${file.id}`"
-                        referrerpolicy="no-referrer"
-                        loading="lazy"
-                        decoding="async"
-                        class="resource-thumbnail size-11 rounded object-cover cursor-pointer border"
-                        @load="readImageDimensions(file.id, $event)"
-                      />
-                    </PopoverTrigger>
-                    <PopoverContent class="p-1 max-w-[320px] max-h-[320px] overflow-hidden">
-                      <img
-                        :src="file.path"
-                        :alt="file.name"
-                        referrerpolicy="no-referrer"
-                        class="w-full h-full object-contain"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <ImagePreview
+                    v-if="isImagePath(file.path) && !file.missing && file.path"
+                    :src="file.path"
+                    :alt="file.name || `资源 ${file.id}`"
+                    :gallery="previewGallery"
+                    :index="getPreviewIndex(file.path)"
+                    wrapper-class="shrink-0"
+                  >
+                    <template #default="{ open }">
+                      <button
+                        type="button"
+                        class="size-11 rounded overflow-hidden border border-border p-0 bg-muted/20 cursor-zoom-in focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                        :aria-label="`放大查看 ${file.name || `资源 #${file.id}`}`"
+                        @click="open()"
+                      >
+                        <img
+                          :src="file.path"
+                          :alt="file.name || `资源 ${file.id}`"
+                          referrerpolicy="no-referrer"
+                          loading="lazy"
+                          decoding="async"
+                          class="resource-thumbnail size-full object-cover block"
+                          @load="readImageDimensions(file.id, $event)"
+                        />
+                      </button>
+                    </template>
+                  </ImagePreview>
                   <div
                     v-else
                     class="resource-thumbnail resource-placeholder size-11 rounded border bg-muted flex-center text-[10px] text-muted-foreground font-mono"

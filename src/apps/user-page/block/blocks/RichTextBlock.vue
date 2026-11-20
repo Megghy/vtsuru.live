@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { ImageLightbox, useHtmlImagePreview } from '@/shared/ui/image-preview'
+
 import BlockCard from '../BlockCard.vue'
 import { sanitizeRichText } from '../richTextSanitizer'
 
@@ -19,6 +21,7 @@ const config = computed(() => {
 })
 
 const safeHtml = computed(() => sanitizeRichText(config.value.html))
+const richTextImagePreview = useHtmlImagePreview()
 </script>
 
 <template>
@@ -29,6 +32,12 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
     <div
       class="rich-text text-foreground text-sm leading-[1.75] break-words"
       v-html="safeHtml"
+      @click="richTextImagePreview.handleHtmlClick"
+    />
+    <ImageLightbox
+      v-model:open="richTextImagePreview.open.value"
+      :imgs="richTextImagePreview.imgs.value"
+      :index="richTextImagePreview.index.value"
     />
   </BlockCard>
 </template>
@@ -79,6 +88,10 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
   margin: 1.5em auto;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  cursor: zoom-in;
+}
+.rich-text :deep(a img) {
+  cursor: pointer;
 }
 .rich-text :deep(blockquote) {
   margin: 1.5em 0;

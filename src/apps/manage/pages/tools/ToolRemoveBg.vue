@@ -8,6 +8,7 @@ import { useRemoveBg } from '@/composables/useRemoveBg'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
@@ -24,6 +25,12 @@ const resultUrl = ref<string>()
 const processing = ref(false)
 const preloading = ref(false)
 const dropZoneRef = ref<HTMLDivElement>()
+const compareGallery = computed(() =>
+  [
+    originalUrl.value ? { src: originalUrl.value, alt: '原图' } : null,
+    resultUrl.value ? { src: resultUrl.value, alt: '结果' } : null,
+  ].filter((item): item is { src: string; alt: string } => item !== null),
+)
 
 const modeOptions = [
   { label: '去背景', value: 'remove-bg', description: '移除背景，保留前景主体' },
@@ -319,20 +326,57 @@ function download() {
             <div class="preview-row">
               <div class="preview-item">
                 <span class="text-xs text-muted-foreground">原图</span>
-                <img
+                <ImagePreview
+                  v-if="originalUrl"
                   :src="originalUrl"
-                  class="preview-img"
-                />
+                  alt="原图"
+                  :gallery="compareGallery"
+                  :index="0"
+                  wrapper-class="block w-full"
+                >
+                  <template #default="{ open }">
+                    <button
+                      type="button"
+                      class="block cursor-zoom-in p-0 border-0 bg-transparent text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                      aria-label="放大查看原图"
+                      @click="open()"
+                    >
+                      <img
+                        :src="originalUrl"
+                        alt="原图"
+                        class="preview-img"
+                      />
+                    </button>
+                  </template>
+                </ImagePreview>
               </div>
               <div
                 v-if="resultUrl"
                 class="preview-item"
               >
                 <span class="text-xs text-muted-foreground">结果</span>
-                <img
+                <ImagePreview
                   :src="resultUrl"
-                  class="preview-img tool-checkerboard"
-                />
+                  alt="结果"
+                  :gallery="compareGallery"
+                  :index="compareGallery.length > 1 ? 1 : 0"
+                  wrapper-class="block w-full"
+                >
+                  <template #default="{ open }">
+                    <button
+                      type="button"
+                      class="block cursor-zoom-in p-0 border-0 bg-transparent text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                      aria-label="放大查看抠图结果"
+                      @click="open()"
+                    >
+                      <img
+                        :src="resultUrl"
+                        alt="结果"
+                        class="preview-img tool-checkerboard"
+                      />
+                    </button>
+                  </template>
+                </ImagePreview>
               </div>
             </div>
           </Spin>

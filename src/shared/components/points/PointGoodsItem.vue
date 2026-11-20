@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Pin16Filled from '@vicons/fluent/es/Pin16Filled'
+import { ZoomIn } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
@@ -8,6 +9,7 @@ import { IMGUR_URL } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardFooter } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel | undefined
@@ -61,8 +63,37 @@ const priceRangeText = computed(() => {
   >
     <!-- 商品封面 -->
     <div class="cover-wrapper relative w-full aspect-video overflow-hidden bg-muted/40">
+      <ImagePreview
+        v-if="goods.cover?.path"
+        :src="goods.cover.path"
+        :alt="goods.name"
+        wrapper-class="block size-full"
+      >
+        <template #default="{ open }">
+          <button
+            type="button"
+            class="relative block size-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            :aria-label="`放大查看 ${goods.name}`"
+            @click="open()"
+          >
+            <img
+              :src="goods.cover?.path"
+              :alt="goods.name"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              class="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+            />
+            <span
+              class="pointer-events-none absolute top-2 left-2 size-6 rounded-full bg-black/55 text-white flex-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"
+            >
+              <ZoomIn class="size-3.5" />
+            </span>
+          </button>
+        </template>
+      </ImagePreview>
       <img
-        :src="goods.cover ? goods.cover.path : emptyCover"
+        v-else
+        :src="emptyCover"
         :alt="goods.name"
         loading="lazy"
         referrerpolicy="no-referrer"
@@ -72,7 +103,7 @@ const priceRangeText = computed(() => {
       <!-- 售罄遮罩 -->
       <div
         v-if="isSoldOut"
-        class="sold-out-mask absolute inset-0 bg-black/60 backdrop-blur-xs flex-center"
+        class="sold-out-mask pointer-events-none absolute inset-0 bg-black/60 backdrop-blur-xs flex-center"
       >
         <span class="sold-out-text text-white font-bold text-xs px-2.5 py-1 rounded bg-black/70 border border-white/20">
           已售完
@@ -82,7 +113,7 @@ const priceRangeText = computed(() => {
       <!-- 置顶标记 -->
       <div
         v-if="goods.isPinned"
-        class="pin-badge absolute top-2 right-2 size-6 rounded-full bg-primary text-primary-foreground flex-center shadow-xs"
+        class="pin-badge pointer-events-none absolute top-2 right-2 size-6 rounded-full bg-primary text-primary-foreground flex-center shadow-xs"
         title="置顶商品"
       >
         <component
@@ -93,7 +124,7 @@ const priceRangeText = computed(() => {
 
       <!-- 底部浮层信息 -->
       <div
-        class="cover-overlay absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-between gap-1.5 text-white"
+        class="cover-overlay pointer-events-none absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-between gap-1.5 text-white"
       >
         <!-- 左侧标签组 -->
         <div class="overlay-tags flex items-center gap-1 flex-wrap">

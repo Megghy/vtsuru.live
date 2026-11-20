@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, type HTMLAttributes } from 'vue'
-import VueEasyLightbox from 'vue-easy-lightbox'
 import { ImageOff, ZoomIn } from 'lucide-vue-next'
+import { computed, ref, watch, type HTMLAttributes } from 'vue'
+
 import { cn } from '@/shared/utils/cn'
 
-interface GalleryItemLike {
-  path?: string
-  url?: string
-  name?: string
-}
-
-type GallerySource = string | GalleryItemLike
+import ImageLightbox from './ImageLightbox.vue'
+import { resolvePreviewImages, type GallerySource } from './types'
 
 const props = withDefaults(
   defineProps<{
@@ -20,7 +15,10 @@ const props = withDefaults(
     gallery?: GallerySource[]
     index?: number
     class?: HTMLAttributes['class']
+    wrapperClass?: HTMLAttributes['class']
     imageClass?: HTMLAttributes['class']
+    disabled?: boolean
+    referrerpolicy?: ReferrerPolicy
     rotateDisabled?: boolean
     moveDisabled?: boolean
     zoomDisabled?: boolean
@@ -33,7 +31,10 @@ const props = withDefaults(
     gallery: undefined,
     index: 0,
     class: undefined,
+    wrapperClass: undefined,
     imageClass: undefined,
+    disabled: false,
+    referrerpolicy: 'no-referrer',
     rotateDisabled: false,
     moveDisabled: false,
     zoomDisabled: false,
@@ -46,23 +47,23 @@ const isVisible = ref(false)
 const currentIndex = ref(props.index)
 const hasError = ref(false)
 
-function extractUrl(item: GallerySource): string {
-  if (typeof item === 'string') {
-    return item
-  }
-  return item?.path || item?.url || ''
-}
+watch(
+  () => props.src,
+  () => {
+    hasError.value = false
+  },
+)
 
-const computedImgs = computed<string[]>(() => {
+const computedImgs = computed<GallerySource[]>(() => {
   if (props.gallery && props.gallery.length > 0) {
-    return props.gallery.map(extractUrl).filter(Boolean)
+    return resolvePreviewImages(props.gallery, props.alt)
   }
   const fallback = props.previewSrc || props.src
-  return fallback ? [fallback] : []
+  return fallback ? [{ src: fallback, alt: props.alt }] : []
 })
 
 function openLightbox() {
-  if (!computedImgs.value.length) return
+  if (props.disabled || !computedImgs.value.length) return
   if (props.gallery && props.gallery.length > 0) {
     currentIndex.value = Math.max(0, Math.min(props.index, computedImgs.value.length - 1))
   } else {
@@ -70,28 +71,22 @@ function openLightbox() {
   }
   isVisible.value = true
 }
-
-function closeLightbox() {
-  isVisible.value = false
-}
-
-function handleImageError() {
-  hasError.value = true
-}
 </script>
 
 <template>
-  <div class="inline-flex">
-    <!-- 默认缩略图或自定义插槽触发器 -->
+  <div :class="cn('inline-flex', wrapperClass)">
     <slot
       :open="openLightbox"
       :has-error="hasError"
+      :disabled="disabled"
     >
       <button
         type="button"
+        :disabled="disabled"
         :class="
           cn(
-            'group relative inline-flex h-20 w-24 overflow-hidden rounded border border-border/60 bg-muted/20 cursor-zoom-in transition-all hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary',
+            'group relative inline-flex h-20 w-24 overflow-hidden rounded border border-border/60 bg-muted/20 transition-all focus:outline-none focus:ring-1 focus:ring-primary',
+            disabled ? 'cursor-default' : 'cursor-zoom-in hover:border-primary/50',
             props.class,
           )
         "
@@ -103,16 +98,19 @@ function handleImageError() {
           <img
             :src="src"
             :alt="alt"
+            :referrerpolicy="referrerpolicy"
             :class="
               cn(
-                'size-full object-cover transition-transform duration-200 group-hover:scale-105',
+                'size-full object-cover transition-transform duration-200',
+                !disabled && 'group-hover:scale-105',
                 imageClass,
               )
             "
             loading="lazy"
-            @error="handleImageError"
+            @error="hasError = true"
           />
           <span
+            v-if="!disabled"
             class="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex-center opacity-0 group-hover:opacity-100"
           >
             <ZoomIn class="size-4 text-white drop-shadow" />
@@ -128,18 +126,17 @@ function handleImageError() {
       </button>
     </slot>
 
-    <!-- 专业 Lightbox 弹窗 -->
-    <VueEasyLightbox
-      :visible="isVisible"
+    <ImageLightbox
+      v-model:open="isVisible"
       :imgs="computedImgs"
       :index="currentIndex"
+      :alt="alt"
+      :referrerpolicy="referrerpolicy"
       :loop="loop"
       :rotate-disabled="rotateDisabled"
       :move-disabled="moveDisabled"
       :zoom-disabled="zoomDisabled"
       :mask-closable="maskClosable"
-      teleport="body"
-      @hide="closeLightbox"
     />
   </div>
 </template>

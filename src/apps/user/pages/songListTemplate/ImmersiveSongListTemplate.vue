@@ -9,6 +9,7 @@ import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { Badge } from '@/shared/ui/badge'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 
 import SongOptionBadges from './components/SongOptionBadges.vue'
@@ -87,13 +88,28 @@ const stageRequestLabel = computed(() => {
           :key="selectedSong?.key ?? 'empty'"
           class="w-full aspect-square rounded-xl overflow-hidden bg-muted flex-center"
         >
-          <img
+          <ImagePreview
             v-if="selectedSong?.cover"
             :src="selectedSong.cover"
             :alt="selectedSong.name"
-            class="size-full object-cover"
-            referrerpolicy="no-referrer"
-          />
+            wrapper-class="block size-full"
+          >
+            <template #default="{ open }">
+              <button
+                type="button"
+                class="block size-full cursor-zoom-in p-0 border-0 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                :aria-label="`放大查看 ${selectedSong.name} 封面`"
+                @click="open()"
+              >
+                <img
+                  :src="selectedSong.cover"
+                  :alt="selectedSong.name"
+                  class="size-full object-cover"
+                  referrerpolicy="no-referrer"
+                />
+              </button>
+            </template>
+          </ImagePreview>
           <component
             :is="MusicNote224Filled"
             v-else
