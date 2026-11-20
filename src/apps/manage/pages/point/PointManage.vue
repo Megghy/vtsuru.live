@@ -285,7 +285,15 @@ const isAllFilteredSelected = computed(
 )
 
 function toggleSelectAllFiltered(checked: boolean) {
-  selectedGoodsIds.value = checked ? filteredGoods.value.map((g) => g.id) : []
+  const filteredIds = filteredGoods.value.map((g) => g.id)
+  if (checked) {
+    const selectedSet = new Set(selectedGoodsIds.value)
+    const added = filteredIds.filter((id) => !selectedSet.has(id))
+    selectedGoodsIds.value = [...selectedGoodsIds.value, ...added]
+  } else {
+    const filteredSet = new Set(filteredIds)
+    selectedGoodsIds.value = selectedGoodsIds.value.filter((id) => !filteredSet.has(id))
+  }
 }
 
 function onModalOpen() {
@@ -346,7 +354,7 @@ async function batchSetGoodsStatus(ids: number[], status: GoodsStatus) {
       goods.value.forEach((g) => {
         if (idSet.has(g.id)) g.status = status
       })
-      selectedGoodsIds.value = []
+      selectedGoodsIds.value = selectedGoodsIds.value.filter((id) => !idSet.has(id))
       message.success(status === GoodsStatus.Normal ? `已上架 ${ids.length} 件礼物` : `已下架 ${ids.length} 件礼物`)
     } else {
       message.error(`失败: ${res.message}`)
