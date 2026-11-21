@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import CodeWorkingOutline from '@vicons/ionicons5/es/CodeWorkingOutline'
-import FolderOpenOutline from '@vicons/ionicons5/es/FolderOpenOutline'
 import { watchDebounced } from '@vueuse/core'
-import { ClipboardPaste, FileUp, Trash2 } from 'lucide-vue-next'
+import { ClipboardPaste, Code2, FileUp, FolderOpen, Trash2 } from 'lucide-vue-next'
 import { computed, inject, ref, watch } from 'vue'
 
 import { FileKind } from '@/api/generated/model'
@@ -531,7 +529,7 @@ function confirmManualPaste() {
                       aria-label="格式化代码"
                       @click="codeEditor?.formatDocument()"
                     >
-                      <CodeWorkingOutline class="size-4" />
+                      <Code2 class="size-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent> 格式化代码 </TooltipContent>
@@ -544,7 +542,7 @@ function confirmManualPaste() {
                       aria-label="切换资源栏"
                       @click="resourcesVisible = !resourcesVisible"
                     >
-                      <FolderOpenOutline class="size-4" />
+                      <FolderOpen class="size-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent> {{ resourcesVisible ? '收起资源栏' : '展开资源栏' }} </TooltipContent>

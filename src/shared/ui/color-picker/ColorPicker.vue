@@ -50,16 +50,18 @@ const props = withDefaults(
     modes?: ColorMode[]
     swatches?: string[]
     size?: 'small' | 'medium' | 'large' | 'xs'
+    placeholder?: string
     class?: HTMLAttributes['class']
   }>(),
   {
-    modelValue: '#000000',
+    modelValue: null,
     value: null,
     disabled: false,
     showAlpha: true,
     modes: () => ['hex', 'rgb', 'hsl'],
     swatches: undefined,
     size: 'small',
+    placeholder: '未设置',
   },
 )
 
@@ -71,11 +73,17 @@ const emit = defineEmits<{
 
 const open = ref(false)
 
+// 外部是否显式传入了有效颜色值，用于区分「未设置（继承默认）」与「已设为 #000000」
+const hasExplicitColor = computed(() => {
+  const raw = props.value ?? props.modelValue
+  return typeof raw === 'string' && raw.trim().length > 0
+})
+
 // 当前内部色彩的核心真源 (HSB + Alpha)
 const currentHsb = ref<HSBColor>({
-  h: 0,
-  s: 0,
-  b: 0,
+  h: 200,
+  s: 70,
+  b: 85,
   a: 1,
 })
 
@@ -333,11 +341,22 @@ function isSwatchActive(swatch: string): boolean {
           :disabled="disabled"
         >
           <div
-            class="size-4 shrink-0 rounded-xs border border-black/15 shadow-inner overflow-hidden [background-image:linear-gradient(var(--preview-color),var(--preview-color)),repeating-conic-gradient(#ccc_0%_25%,#fff_0%_50%)] [background-size:100%_100%,6px_6px]"
+            v-if="hasExplicitColor"
+            class="size-4 shrink-0 rounded-xs border border-border shadow-inner overflow-hidden [background-image:linear-gradient(var(--preview-color),var(--preview-color)),repeating-conic-gradient(#ccc_0%_25%,#fff_0%_50%)] [background-size:100%_100%,6px_6px]"
             :style="{ '--preview-color': currentHex }"
           />
-          <span class="font-mono uppercase text-foreground min-w-[64px] text-left truncate text-xs">
-            {{ currentHex }}
+          <div
+            v-else
+            class="size-4 shrink-0 rounded-xs border border-dashed border-muted-foreground/50 bg-muted/40 relative overflow-hidden"
+            aria-hidden="true"
+          >
+            <span class="absolute inset-0 block bg-[linear-gradient(135deg,transparent_45%,var(--muted-foreground)_45%,var(--muted-foreground)_55%,transparent_55%)] opacity-45" />
+          </div>
+          <span
+            class="min-w-[64px] text-left truncate text-xs"
+            :class="hasExplicitColor ? 'font-mono uppercase text-foreground' : 'text-muted-foreground'"
+          >
+            {{ hasExplicitColor ? currentHex : placeholder }}
           </span>
         </Button>
       </PopoverTrigger>

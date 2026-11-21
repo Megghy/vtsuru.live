@@ -30,17 +30,19 @@ defineProps<{
           <SelectValue :placeholder="`${label}目标类型`" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="page">页面</SelectItem>
-          <SelectItem value="external">外链</SelectItem>
+          <SelectItem value="page">站内页面</SelectItem>
+          <SelectItem value="external">外部链接</SelectItem>
+          <SelectItem value="copy">复制文本</SelectItem>
+          <SelectItem value="back">返回上页</SelectItem>
         </SelectContent>
       </Select>
     </FormField>
     <FormField
-      :label="`${label}目标`"
+      :label="getNavigationTargetType(action) === 'copy' ? `${label}复制内容` : `${label}目标`"
       class="span-full"
     >
       <Select
-        v-if="action.page"
+        v-if="getNavigationTargetType(action) === 'page'"
         v-model="action.page"
       >
         <SelectTrigger>
@@ -56,11 +58,30 @@ defineProps<{
           </SelectItem>
         </SelectContent>
       </Select>
+      <div
+        v-else-if="getNavigationTargetType(action) === 'copy'"
+        class="space-y-2"
+      >
+        <Input
+          v-model="action.copyText"
+          placeholder="点击后自动复制的文本..."
+        />
+        <Input
+          v-model="action.copiedMessage"
+          placeholder="复制成功提示（可选）"
+        />
+      </div>
       <Input
-        v-else
+        v-else-if="getNavigationTargetType(action) === 'external'"
         v-model="action.url"
         placeholder="https://..."
       />
+      <span
+        v-else
+        class="text-xs text-muted-foreground"
+      >
+        点击后返回上一页
+      </span>
     </FormField>
   </PropsGrid>
 </template>

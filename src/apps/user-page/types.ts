@@ -53,6 +53,8 @@ export interface UserPageConfig {
   title?: string
   navIcon?: UserPageNavIconId
   description?: string
+  ogImageFile?: unknown
+  ogImageUrl?: string
   navVisible?: boolean
   navOrder?: number
   contrib?: ContribPageRef

@@ -14,8 +14,8 @@ import { getNavigationTargetType, setNavigationTargetType } from './navigationTa
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
-const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor(() => props.block)
-const linkItems = ensureArrayProp<Record<string, any>>('items')
+const { blockProps, ensureArrayProp, arrayProp, internalPageOptions } = useBlockPropsEditor(() => props.block)
+const linkItems = arrayProp<Record<string, any>>('items')
 </script>
 
 <template>
@@ -81,18 +81,19 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
             <SelectValue placeholder="跳转类型" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="page">页面</SelectItem>
-            <SelectItem value="external">外链</SelectItem>
-            <SelectItem value="back">返回</SelectItem>
+            <SelectItem value="page">站内页面</SelectItem>
+            <SelectItem value="external">外部链接</SelectItem>
+            <SelectItem value="copy">复制文本</SelectItem>
+            <SelectItem value="back">返回上页</SelectItem>
           </SelectContent>
         </Select>
       </FormField>
       <FormField
-        label="目标"
+        :label="getNavigationTargetType(blockProps) === 'copy' ? '复制内容' : '目标'"
         class="span-full"
       >
         <Select
-          v-if="blockProps.page"
+          v-if="getNavigationTargetType(blockProps) === 'page'"
           v-model="blockProps.page"
         >
           <SelectTrigger>
@@ -108,8 +109,21 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
             </SelectItem>
           </SelectContent>
         </Select>
+        <div
+          v-else-if="getNavigationTargetType(blockProps) === 'copy'"
+          class="space-y-2"
+        >
+          <Input
+            v-model="blockProps.copyText"
+            placeholder="点击后自动复制的群号、口令或邮箱..."
+          />
+          <Input
+            v-model="blockProps.copiedMessage"
+            placeholder="复制成功提示（可选，默认“已复制到剪贴板”）"
+          />
+        </div>
         <Input
-          v-else-if="!blockProps.back"
+          v-else-if="getNavigationTargetType(blockProps) === 'external'"
           v-model="blockProps.url"
           placeholder="链接 https://..."
         />

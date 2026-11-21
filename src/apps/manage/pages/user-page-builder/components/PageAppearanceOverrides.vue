@@ -79,7 +79,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
   <AccordionItem
     v-if="page.mode !== 'block'"
     value="page-bg"
-    class="border-b border-border"
+    class="page-bg-section border-b border-border"
   >
     <AccordionTrigger class="text-xs font-semibold py-2.5"> 页面背景 </AccordionTrigger>
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
@@ -96,7 +96,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
   <AccordionItem
     v-if="page.mode !== 'block'"
     value="page-theme"
-    class="border-b border-border"
+    class="page-theme-section border-b border-border"
   >
     <AccordionTrigger class="text-xs font-semibold py-2.5"> 页面主题 </AccordionTrigger>
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
@@ -116,7 +116,6 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
             />
             <Button
               variant="outline"
-              class="px-2"
               :disabled="primaryColor == null"
               @click="primaryColor = undefined"
             >
@@ -133,7 +132,6 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
             />
             <Button
               variant="outline"
-              class="px-2"
               :disabled="backgroundColor == null"
               @click="backgroundColor = undefined"
             >
@@ -144,10 +142,10 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
 
         <FormField label="页面主题模式">
           <Select v-model="themeMode">
-            <SelectTrigger>
+            <SelectTrigger class="w-full">
               <SelectValue placeholder="模式" />
             </SelectTrigger>
-            <SelectContent class="text-xs">
+            <SelectContent>
               <SelectItem value="auto">跟随站点</SelectItem>
               <SelectItem value="light">强制亮色</SelectItem>
               <SelectItem value="dark">强制暗色</SelectItem>

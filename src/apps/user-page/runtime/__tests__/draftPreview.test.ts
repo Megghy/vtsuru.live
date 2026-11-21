@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
 
 import { consumeDraftPreview, createDraftPreview } from '../draftPreview'
 
@@ -30,5 +31,20 @@ describe('draft preview token', () => {
 
     expect(consumeDraftPreview(token, 42)).toBeNull()
     expect(consumeDraftPreview('../settings', 42)).toBeNull()
+  })
+
+  it('支持直接传入 Vue 响应式 Proxy 对象生成预览令牌', () => {
+    const reactiveSettings = reactive({
+      version: 2 as const,
+      home: { mode: 'block' as const, block: { version: 1 as const, blocks: [{ id: 'b1', type: 'commission' as const, props: { items: [{ name: '头像' }] } }] } },
+      pages: {},
+    })
+    const token = createDraftPreview(42, reactiveSettings)
+
+    expect(consumeDraftPreview(token, 42)).toEqual({
+      version: 2,
+      home: { mode: 'block', block: { version: 1, blocks: [{ id: 'b1', type: 'commission', props: { items: [{ name: '头像' }] } }] } },
+      pages: {},
+    })
   })
 })

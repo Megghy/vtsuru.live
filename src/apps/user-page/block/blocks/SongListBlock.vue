@@ -1,22 +1,34 @@
 <script setup lang="ts">
-import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
-import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
-import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
-import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
+import { Copy, ExternalLink, Music, RefreshCw, Search, Send } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { toast } from 'vue-sonner'
 
+import { useAccount } from '@/api/account'
+import { postApiLiveRequestAddFromWeb } from '@/api/generated/live-request/live-request'
 import type { ResponseSongModel, ResponseUserInfo, SettingSongRequest } from '@/api/generated/model'
 import { FunctionTypes } from '@/api/generated/model'
 import { fetchPublicSongList, fetchPublicSongRequestSettings } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
+import { canRequestSong } from '@/apps/user/pages/songListTemplate/utils/songRequestUtils'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Spin } from '@/shared/ui/spin'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -24,6 +36,9 @@ const props = defineProps<{
   blockProps: unknown
   userInfo?: ResponseUserInfo
 }>()
+
+const account = useAccount()
+const biliAuth = useBiliAuth()
 
 const values = computed<Record<string, unknown>>(() =>
   props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
@@ -37,8 +52,12 @@ const maxItems = computed(() => {
 })
 const showSearch = computed(() => values.value.showSearch !== false)
 const showRequestStatus = computed(() => values.value.showRequestStatus !== false)
+const allowQuickRequest = computed(() => values.value.allowQuickRequest !== false)
 const songListEnabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.SongList))
 const search = ref('')
+const pendingSong = ref<ResponseSongModel | null>(null)
+const requesting = ref(false)
+const nextRequestTime = ref(new Date(0))
 
 const query = useUserPageRuntimeQuery<{ songs: ResponseSongModel[]; settings: SettingSongRequest }>({
   key: () => `song-list-summary:${props.userInfo?.id ?? 0}`,
@@ -94,6 +113,64 @@ function requestStatus(song: ResponseSongModel) {
   if (!settings.allowAnonymousFromWeb) return { label: '登录后可点', variant: 'secondary' as const }
   return { label: '可网页点歌', variant: 'default' as const }
 }
+
+function getSongAction(song: ResponseSongModel) {
+  if (!props.userInfo || !query.data.value?.settings) return { kind: 'copy' as const, reason: '' }
+  const check = canRequestSong(
+    song,
+    props.userInfo,
+    query.data.value.settings,
+    Boolean(account.value.id),
+    biliAuth.isAuthed,
+    nextRequestTime.value,
+  )
+  if (check.shouldCopyOnly) return { kind: 'copy' as const, reason: check.reason }
+  if (!check.canRequest) return { kind: 'disabled' as const, reason: check.reason }
+  return { kind: 'request' as const, reason: '' }
+}
+
+async function handleQuickAction(song: ResponseSongModel) {
+  const action = getSongAction(song)
+  if (action.kind === 'copy') {
+    const prefix = query.data.value?.settings?.orderPrefix ?? ''
+    const cmd = `${prefix} ${song.name}`.trim()
+    try {
+      await navigator.clipboard.writeText(cmd)
+      toast.success(`已复制点歌指令：${cmd}`)
+    } catch {
+      toast.error('复制失败，请手动复制')
+    }
+    return
+  }
+  if (action.kind === 'disabled') {
+    toast.info(action.reason || '暂不可点歌')
+    return
+  }
+  pendingSong.value = song
+}
+
+async function confirmQuickRequest() {
+  const song = pendingSong.value
+  const ownerId = props.userInfo?.id
+  if (!song || !ownerId || requesting.value) return
+  requesting.value = true
+  try {
+    const requestOptions = biliAuth.isAuthed
+      ? { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) }
+      : undefined
+    const res = await postApiLiveRequestAddFromWeb({ target: ownerId, song: song.key }, requestOptions)
+    if (res.code !== 200) {
+      throw new Error(res.message || '点歌失败')
+    }
+    nextRequestTime.value = new Date(Date.now() + 30_000)
+    toast.success(`已成功点播《${song.name}》`)
+    pendingSong.value = null
+  } catch (err: any) {
+    toast.error(err?.message || '点歌失败，请稍后重试')
+  } finally {
+    requesting.value = false
+  }
+}
 </script>
 
 <template>
@@ -104,10 +181,7 @@ function requestStatus(song: ResponseSongModel) {
     <template #header>
       <div class="song-header flex-between w-full">
         <span class="song-heading flex items-center gap-1.5 font-semibold text-sm">
-          <component
-            :is="MusicalNotesOutline"
-            class="size-4"
-          />
+          <Music class="size-4" />
           歌单与点歌
         </span>
         <RouterLink
@@ -119,27 +193,20 @@ function requestStatus(song: ResponseSongModel) {
           <Button
             variant="link"
             size="xs"
-            class="h-auto p-0"
+            class="h-auto p-0 gap-1"
             @click="navigate"
           >
             完整歌单
-            <component
-              :is="OpenOutline"
-              class="size-3.5 ml-1"
-            />
+            <ExternalLink class="size-3.5" />
           </Button>
         </RouterLink>
       </div>
     </template>
 
-    <Alert
-      size="sm"
-      v-if="!songListEnabled"
-    >
-      <AlertDescription> 歌单功能未启用 </AlertDescription>
+    <Alert v-if="!songListEnabled">
+      <AlertDescription>歌单功能未启用</AlertDescription>
     </Alert>
     <Alert
-      size="sm"
       v-else-if="query.status.value === 'error'"
       variant="destructive"
     >
@@ -151,10 +218,7 @@ function requestStatus(song: ResponseSongModel) {
           class="gap-1"
           @click="load(true)"
         >
-          <component
-            :is="RefreshOutline"
-            class="size-3"
-          />
+          <RefreshCw class="size-3" />
           重试
         </Button>
       </AlertDescription>
@@ -170,10 +234,7 @@ function requestStatus(song: ResponseSongModel) {
         v-if="showSearch"
         class="relative mb-2.5"
       >
-        <component
-          :is="SearchOutline"
-          class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground"
-        />
+        <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
         <Input
           v-model="search"
           placeholder="搜索歌曲或歌手"
@@ -206,6 +267,28 @@ function requestStatus(song: ResponseSongModel) {
               {{ song.author?.join(' / ') || '未填写歌手' }}
             </span>
           </div>
+          <div class="flex items-center gap-1.5 justify-end @max-[420px]:justify-start">
+            <Badge
+              v-if="showRequestStatus"
+              :variant="requestStatus(song).variant"
+              size="xs"
+            >
+              {{ requestStatus(song).label }}
+            </Badge>
+            <Button
+              v-if="allowQuickRequest"
+              variant="outline"
+              size="xs"
+              class="gap-1"
+              @click="handleQuickAction(song)"
+            >
+              <component
+                :is="getSongAction(song).kind === 'request' ? Send : Copy"
+                class="size-3"
+              />
+              {{ getSongAction(song).kind === 'request' ? '点歌' : '复制' }}
+            </Button>
+          </div>
           <p
             v-if="variant === 'full' && song.description"
             class="song-summary col-span-2 text-xs text-muted-foreground m-0 leading-relaxed whitespace-pre-wrap"
@@ -225,16 +308,31 @@ function requestStatus(song: ResponseSongModel) {
               {{ tag }}
             </Badge>
           </div>
-          <Badge
-            v-if="showRequestStatus"
-            :variant="requestStatus(song).variant"
-            size="xs"
-            class="@max-[420px]:col-start-1 @max-[420px]:row-auto @max-[420px]:justify-self-start"
-          >
-            {{ requestStatus(song).label }}
-          </Badge>
         </article>
       </div>
     </div>
+
+    <AlertDialog
+      :open="!!pendingSong"
+      @update:open="(val) => !val && (pendingSong = null)"
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>确认点歌</AlertDialogTitle>
+          <AlertDialogDescription>
+            确定向主播点播《{{ pendingSong?.name }}》吗？
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel :disabled="requesting">取消</AlertDialogCancel>
+          <AlertDialogAction
+            :disabled="requesting"
+            @click.prevent="confirmQuickRequest"
+          >
+            {{ requesting ? '提交中...' : '确认点歌' }}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </BlockCard>
 </template>

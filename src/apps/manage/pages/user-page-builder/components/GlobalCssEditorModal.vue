@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import MoonOutline from '@vicons/ionicons5/es/MoonOutline'
-import SunnyOutline from '@vicons/ionicons5/es/SunnyOutline'
-import { Eye, EyeOff } from 'lucide-vue-next'
+import { Eye, EyeOff, Moon, Sun } from 'lucide-vue-next'
 import { computed, inject, ref, watch } from 'vue'
 
 import { GLOBAL_CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
@@ -208,11 +206,11 @@ watch(
               :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
               @click="previewDark = !previewDark"
             >
-              <SunnyOutline
+              <Sun
                 v-if="previewDark"
                 class="size-4"
               />
-              <MoonOutline
+              <Moon
                 v-else
                 class="size-4"
               />

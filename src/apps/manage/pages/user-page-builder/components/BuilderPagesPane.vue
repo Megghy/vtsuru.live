@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
-import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
-import HomeOutline from '@vicons/ionicons5/es/HomeOutline'
+import { ChevronLeft, ChevronRight, Home } from 'lucide-vue-next'
 import { inject } from 'vue'
 
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
@@ -36,13 +34,13 @@ const { pageEntries } = usePageEntries(editor)
     :class="{ 'pages-pane--collapsed': props.collapsed }"
   >
     <CardHeader
-      class="p-2 border-b border-border flex flex-row items-center space-y-0"
-      :class="props.collapsed ? 'justify-center' : 'justify-between'"
+      class="h-10 px-3 py-0 border-b border-border flex flex-row items-center space-y-0 shrink-0"
+      :class="props.collapsed ? 'justify-center px-1.5' : 'justify-between'"
     >
       <Transition name="fade">
         <CardTitle
           v-if="!props.collapsed"
-          class="text-xs"
+          class="text-xs font-semibold"
         >
           页面
         </CardTitle>
@@ -58,7 +56,7 @@ const { pageEntries } = usePageEntries(editor)
               @click="emit('toggle-collapse')"
             >
               <component
-                :is="props.collapsed ? ChevronForwardOutline : ChevronBackOutline"
+                :is="props.collapsed ? ChevronRight : ChevronLeft"
                 class="size-3.5"
               />
             </Button>
@@ -76,7 +74,7 @@ const { pageEntries } = usePageEntries(editor)
         :class="{ 'is-active': !props.collapsed }"
         :aria-hidden="props.collapsed"
       >
-        <div class="pane-scroll h-full w-full overflow-y-auto p-3">
+        <div class="pane-scroll h-full w-full overflow-y-auto scrollbar-thin p-3">
           <PageManager />
         </div>
       </div>
@@ -85,7 +83,7 @@ const { pageEntries } = usePageEntries(editor)
         :class="{ 'is-active': props.collapsed }"
         :aria-hidden="!props.collapsed"
       >
-        <div class="compact-page-scroll h-full w-full overflow-y-auto">
+        <div class="compact-page-scroll h-full w-full overflow-y-auto scrollbar-thin">
           <div class="compact-page-nav flex flex-col items-center gap-2 py-2.5">
             <TooltipProvider>
               <Tooltip>
@@ -97,10 +95,7 @@ const { pageEntries } = usePageEntries(editor)
                     aria-label="主页"
                     @click="editor.currentKey.value = 'home'"
                   >
-                    <component
-                      :is="HomeOutline"
-                      class="size-3.5"
-                    />
+                    <Home class="size-3.5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">主页</TooltipContent>

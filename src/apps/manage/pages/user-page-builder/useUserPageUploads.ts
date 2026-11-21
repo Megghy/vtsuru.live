@@ -14,7 +14,7 @@ type UploadKey = 'imageFile' | 'avatarFile'
 
 type PendingUploadContext =
   | { kind: 'block'; blockId: string; key: UploadKey }
-  | { kind: 'itemImage'; blockId: string; item: Record<string, any> }
+  | { kind: 'itemImage'; blockId: string; item: Record<string, any>; itemIndex: number }
   | { kind: 'galleryBulk'; blockId: string }
   | { kind: 'pageBackground' }
   | { kind: 'globalBackground' }
@@ -37,6 +37,11 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
   const { open: openImagePicker } = useFilePicker({
     accept: USER_PAGE_IMAGE_EXTENSIONS,
     maxSize: USER_PAGE_IMAGE_MAX_BYTES,
+    onError: opts.notify.error,
+  })
+  const { open: openAudioPicker } = useFilePicker({
+    accept: '.mp3,.wav,.ogg,.m4a,.webm,audio/*',
+    maxSize: 10 * 1024 * 1024,
     onError: opts.notify.error,
   })
 
@@ -89,7 +94,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('找不到要上传到的图片项')
       return
     }
-    openForContext({ kind: 'itemImage', blockId: block.id, item })
+    openForContext({ kind: 'itemImage', blockId: block.id, item, itemIndex })
   }
 
   function triggerUploadGalleryBulk(block: BlockNode) {
@@ -205,7 +210,9 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
         } else if (ctx.kind === 'itemImage') {
           const propsObj = opts.ensurePropsObject(block)
           if (!Array.isArray(propsObj.items)) propsObj.items = []
-          const it = propsObj.items.find((item: unknown) => item === ctx.item)
+          const it =
+            propsObj.items.find((item: unknown) => item === ctx.item) ??
+            (typeof ctx.itemIndex === 'number' ? asObject(propsObj.items[ctx.itemIndex]) : null)
           if (!it) throw new Error('找不到要上传到的图片项，可能已被删除或撤销')
           it.imageFile = uploadedList[0]
         } else if (ctx.kind === 'galleryBulk') {
@@ -260,6 +267,73 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     delete bg.pageBackgroundImageFile
   }
 
+  function resolveUploadTarget(target: Record<string, any> | (() => Record<string, any> | null | undefined)) {
+    return typeof target === 'function' ? target() : target
+  }
+
+  function triggerUploadTargetImage(
+    target: Record<string, any> | (() => Record<string, any> | null | undefined),
+    key = 'imageFile',
+  ) {
+    openImagePicker({
+      multiple: false,
+      onSelect: async (files) => {
+        if (!files.length) return
+        const fileError = validateUserPageImageFiles(files, false)
+        if (fileError) {
+          opts.notify.error(fileError)
+          return
+        }
+        isUploading.value = true
+        uploadQueue.value = [{ name: files[0].name, stage: UploadStage.Preparing }]
+        try {
+          const uploadedList = await uploadFiles(files[0], FileStore.Configs, (stage) => {
+            uploadQueue.value = uploadQueue.value.map((item) => ({ ...item, stage: stage as UploadStage }))
+          })
+          if (!uploadedList?.length) throw new Error('上传失败：无返回结果')
+          const liveTarget = resolveUploadTarget(target)
+          if (!liveTarget) throw new Error('找不到上传目标，可能已被删除或撤销')
+          liveTarget[key] = uploadedList[0]
+          opts.notify.success('已上传图片')
+        } catch (e) {
+          reportUserPageError(e, 'upload')
+          opts.notify.error((e as Error).message || String(e))
+        } finally {
+          isUploading.value = false
+        }
+      },
+    })
+  }
+
+  function triggerUploadTargetAudio(
+    target: Record<string, any> | (() => Record<string, any> | null | undefined),
+    key = 'audioFile',
+  ) {
+    openAudioPicker({
+      multiple: false,
+      onSelect: async (files) => {
+        if (!files.length) return
+        isUploading.value = true
+        uploadQueue.value = [{ name: files[0].name, stage: UploadStage.Preparing }]
+        try {
+          const uploadedList = await uploadFiles(files[0], FileStore.Configs, (stage) => {
+            uploadQueue.value = uploadQueue.value.map((item) => ({ ...item, stage: stage as UploadStage }))
+          })
+          if (!uploadedList?.length) throw new Error('上传失败：无返回结果')
+          const liveTarget = resolveUploadTarget(target)
+          if (!liveTarget) throw new Error('找不到上传目标，可能已被删除或撤销')
+          liveTarget[key] = uploadedList[0]
+          opts.notify.success('已上传音频')
+        } catch (e) {
+          reportUserPageError(e, 'upload')
+          opts.notify.error((e as Error).message || String(e))
+        } finally {
+          isUploading.value = false
+        }
+      },
+    })
+  }
+
   return {
     isUploading,
     uploadQueue,
@@ -269,6 +343,8 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     triggerUploadPageBackground,
     triggerUploadGlobalBackground,
     triggerUploadPageBackgroundOverride,
+    triggerUploadTargetImage,
+    triggerUploadTargetAudio,
     clearUploadedFile,
     clearUploadedItemImage,
     clearPageBackgroundImageFile,

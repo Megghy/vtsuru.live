@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import CodeSlashOutline from '@vicons/ionicons5/es/CodeSlashOutline'
-import DesktopOutline from '@vicons/ionicons5/es/DesktopOutline'
-import HandLeftOutline from '@vicons/ionicons5/es/HandLeftOutline'
-import NavigateOutline from '@vicons/ionicons5/es/NavigateOutline'
-import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
-import OptionsOutline from '@vicons/ionicons5/es/OptionsOutline'
-import PhonePortraitOutline from '@vicons/ionicons5/es/PhonePortraitOutline'
-import TabletPortraitOutline from '@vicons/ionicons5/es/TabletPortraitOutline'
 import { useIntervalFn, useNow } from '@vueuse/core'
-import { Maximize2, Minimize2, Scaling } from 'lucide-vue-next'
+import {
+  Code2,
+  ExternalLink,
+  Hand,
+  Home,
+  Maximize2,
+  Minimize2,
+  Monitor,
+  MousePointer2,
+  PanelLeft,
+  Scaling,
+  SlidersHorizontal,
+  Smartphone,
+  Tablet,
+} from 'lucide-vue-next'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
 import { fetchBiliProfile } from '@/apps/user-page/api'
@@ -20,8 +26,11 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { FormField } from '@/shared/ui/form-field'
+import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -56,16 +65,46 @@ const previewRoot = ref<HTMLElement | null>(null)
 const previewMode = ref<'select' | 'interact'>('select')
 const simulatedLiveState = ref<'actual' | 'live' | 'offline'>('actual')
 const simulatedNow = ref<number | null>(null)
+const showPublicShell = ref(false)
+
 const legacyIndexTemplate = computed(
   () =>
     IndexTemplateMap[editor.account.value?.settings.indexTemplate || 'default']?.component ??
     IndexTemplateMap.default.component,
 )
 const actualNow = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) })
-const viewportOptions: Array<{ value: PreviewViewport; label: string; icon: typeof PhonePortraitOutline }> = [
-  { value: 'phone', label: '手机', icon: PhonePortraitOutline },
-  { value: 'tablet', label: '平板', icon: TabletPortraitOutline },
-  { value: 'desktop', label: '桌面', icon: DesktopOutline },
+
+const simulatedNowInput = computed({
+  get() {
+    if (simulatedNow.value === null) return ''
+    const d = new Date(simulatedNow.value)
+    if (Number.isNaN(d.getTime())) return ''
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  },
+  set(raw: string) {
+    const s = raw.trim()
+    if (!s) {
+      simulatedNow.value = null
+      return
+    }
+    const ms = Date.parse(s)
+    simulatedNow.value = Number.isFinite(ms) ? ms : null
+  },
+})
+
+const hasActiveSimulation = computed(
+  () => simulatedLiveState.value !== 'actual' || simulatedNow.value !== null || showPublicShell.value,
+)
+
+const isImmersiveCustom = computed(
+  () => editor.currentPage.value.mode === 'custom' && editor.currentPage.value.custom?.immersive === true,
+)
+
+const viewportOptions = [
+  { value: 'phone' as PreviewViewport, label: '手机', icon: Smartphone },
+  { value: 'tablet' as PreviewViewport, label: '平板', icon: Tablet },
+  { value: 'desktop' as PreviewViewport, label: '桌面', icon: Monitor },
 ]
 
 const biliProfileQuery = useUserPageRuntimeQuery<any | null>({
@@ -160,8 +199,10 @@ watch(
 
 <template>
   <Card class="pane-card w-full h-full flex flex-col">
-    <CardHeader class="p-3 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
-      <CardTitle class="truncate max-w-[200px]"> 预览 - {{ editor.currentLabel.value }} </CardTitle>
+    <CardHeader class="h-10 px-3 py-0 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
+      <CardTitle class="text-xs font-semibold truncate max-w-[180px]">
+        预览 · {{ editor.currentLabel.value }}
+      </CardTitle>
 
       <div class="flex items-center gap-1.5">
         <ToggleGroup
@@ -181,7 +222,7 @@ watch(
                   value="select"
                   aria-label="选择区块"
                 >
-                  <component :is="NavigateOutline" />
+                  <MousePointer2 class="size-3.5" />
                 </ToggleGroupItem>
               </TooltipTrigger>
               <TooltipContent>选择区块</TooltipContent>
@@ -192,7 +233,7 @@ watch(
                   value="interact"
                   aria-label="操作页面"
                 >
-                  <component :is="HandLeftOutline" />
+                  <Hand class="size-3.5" />
                 </ToggleGroupItem>
               </TooltipTrigger>
               <TooltipContent>操作页面</TooltipContent>
@@ -220,7 +261,10 @@ watch(
                   :value="option.value"
                   :aria-label="`${option.label}预览`"
                 >
-                  <component :is="option.icon" />
+                  <component
+                    :is="option.icon"
+                    class="size-3.5"
+                  />
                 </ToggleGroupItem>
               </TooltipTrigger>
               <TooltipContent>{{ option.label }}预览</TooltipContent>
@@ -277,28 +321,57 @@ watch(
           <PopoverTrigger as-child>
             <Button
               size="icon-xs"
-              variant="ghost"
+              :variant="hasActiveSimulation ? 'secondary' : 'ghost'"
               aria-label="预览条件"
             >
-              <component
-                :is="OptionsOutline"
-                class="size-3.5"
-              />
+              <SlidersHorizontal class="size-3.5" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent class="w-64 flex flex-col gap-2.5">
-            <FormField label="直播状态">
+          <PopoverContent
+            align="end"
+            class="w-72 flex flex-col gap-3 p-3"
+          >
+            <FormField label="模拟直播状态">
               <Select v-model="simulatedLiveState">
-                <SelectTrigger size="xs">
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="直播状态" />
                 </SelectTrigger>
-                <SelectContent class="text-xs">
+                <SelectContent>
                   <SelectItem value="actual">使用真实状态</SelectItem>
                   <SelectItem value="live">模拟直播中</SelectItem>
                   <SelectItem value="offline">模拟未开播</SelectItem>
                 </SelectContent>
               </Select>
             </FormField>
+
+            <FormField
+              label="模拟时间（测试定时显隐区块）"
+              description="留空表示使用当前真实时间"
+            >
+              <div class="flex items-center gap-1.5">
+                <Input
+                  v-model="simulatedNowInput"
+                  type="datetime-local"
+                  class="flex-1 min-w-0"
+                />
+                <Button
+                  v-if="simulatedNow !== null"
+                  variant="ghost"
+                  size="xs"
+                  @click="simulatedNow = null"
+                >
+                  重置
+                </Button>
+              </div>
+            </FormField>
+
+            <SettingRow
+              title="显示公开页导航壳子"
+              description="预览顶栏/侧栏及沉浸模式 Dock 占位"
+              variant="none"
+            >
+              <Switch v-model:checked="showPublicShell" />
+            </SettingRow>
           </PopoverContent>
         </Popover>
 
@@ -311,20 +384,16 @@ watch(
                 aria-label="在真实页面中预览草稿"
                 @click="editor.openPreview"
               >
-                <component
-                  :is="OpenOutline"
-                  class="size-3.5"
-                />
+                <ExternalLink class="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>在真实页面中预览草稿</TooltipContent>
+            <TooltipContent>在新标签页预览草稿</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
     </CardHeader>
 
     <CardContent class="p-0 flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
-      <!-- ref 必须落在 DOM 上。CardContent 的 ref 是组件实例，没有 querySelectorAll。 -->
       <div
         ref="previewRoot"
         class="contents"
@@ -341,6 +410,18 @@ watch(
             <div :class="previewBgClass" />
           </template>
 
+          <!-- 可选：真实公开页顶栏 / 侧栏壳子占位 -->
+          <div
+            v-if="showPublicShell && !isImmersiveCustom"
+            class="sticky top-0 z-20 flex items-center justify-between px-3 h-10 border-b border-border bg-background/80 backdrop-blur-md text-xs text-muted-foreground select-none pointer-events-none"
+          >
+            <div class="flex items-center gap-2 font-semibold text-foreground">
+              <PanelLeft class="size-3.5 text-primary" />
+              <span>VTSURU · @{{ editor.account.value.name || 'streamer' }}</span>
+            </div>
+            <span>公开页顶栏占位</span>
+          </div>
+
           <Transition
             name="fade-slide"
             mode="out-in"
@@ -351,7 +432,7 @@ watch(
                   ? 'block'
                   : editor.currentPage.value.mode
               "
-              class="preview-content"
+              class="preview-content relative"
             >
               <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
                 <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
@@ -390,10 +471,7 @@ watch(
                   <div
                     class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
                   >
-                    <component
-                      :is="CodeSlashOutline"
-                      class="size-10 text-primary mb-2"
-                    />
+                    <Code2 class="size-10 text-primary mb-2" />
                     <div class="text-sm font-semibold mb-1">
                       扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
                     </div>
@@ -402,11 +480,11 @@ watch(
                       与相关属性，保存后可在外部预览中查看实际渲染效果。
                     </div>
                     <div class="flex justify-center mt-3.5">
-                      <Button @click="editor.openPreview">
-                        <component
-                          :is="OpenOutline"
-                          class="size-3.5 mr-1"
-                        />
+                      <Button
+                        class="gap-1.5"
+                        @click="editor.openPreview"
+                      >
+                        <ExternalLink class="size-3.5" />
                         在对外页面中预览
                       </Button>
                     </div>
@@ -414,15 +492,21 @@ watch(
                 </div>
               </template>
               <template v-else>
-                <Alert
-                  size="sm"
-                  class="m-4"
-                >
+                <Alert class="m-4">
                   <AlertDescription>
                     当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
                   </AlertDescription>
                 </Alert>
               </template>
+
+              <!-- 沉浸模式 Dock 占位提示 -->
+              <div
+                v-if="showPublicShell && isImmersiveCustom"
+                class="pointer-events-none fixed bottom-4 right-4 z-30 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/85 backdrop-blur-md px-3 py-1.5 text-xs text-foreground shadow-md"
+              >
+                <Home class="size-3.5 text-primary" />
+                <span>沉浸模式悬浮 Dock 占位</span>
+              </div>
             </div>
           </Transition>
         </PhonePreview>

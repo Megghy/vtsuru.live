@@ -34,7 +34,6 @@ function syncContribReference(options: UseUserPageContribOptions) {
     (mode) => {
       if (mode === 'block') {
         options.currentPage.value.block ??= createDefaultProject()
-        options.currentPage.value.block.theme ??= {}
       }
       if (mode !== 'contrib') return
       options.currentPage.value.contrib ??= { scope: 'global', pageId: '' }

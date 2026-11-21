@@ -16,7 +16,12 @@ import { ThemeType } from '@/api/client-types'
 import { useFollowingStates } from '@/api/following'
 import type { ResponseUserInfo } from '@/api/generated/model'
 import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
-import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
+import {
+  fetchBiliProfile,
+  fetchPublicForumExists,
+  fetchPublicUserInfo,
+  fetchUserPagesSettingsByUserId,
+} from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
@@ -125,6 +130,7 @@ type UserNavGroup = {
 }
 
 const navGroups = shallowRef<UserNavGroup[]>([])
+const forumExists = ref(false)
 const userPagesSettings = ref<UserPagesSettings | null>(null)
 const publicCustomCss = computed(() => {
   const css = userPagesSettings.value?.customCss
@@ -207,7 +213,7 @@ const seoTitle = computed(() => {
 
 const pageSlugTitle = computed(() => {
   const name = route.name?.toString()
-  if (name === 'user-index') return '主页'
+  if (name === 'user-index') return currentUserPageConfig.value?.title?.trim() || '主页'
   if (name !== 'user-page') return ''
   const title = currentUserPageConfig.value?.title?.trim()
   return title || '页面'
@@ -220,7 +226,16 @@ const seoDescription = computed(() => {
   return 'VTSURU 公开用户页面'
 })
 
-usePublicPageSeo({ title: seoTitle, description: seoDescription })
+const seoImage = computed(() => {
+  const cfg = currentUserPageConfig.value as Record<string, any> | null
+  const filePath = typeof cfg?.ogImageFile?.path === 'string' ? cfg.ogImageFile.path.trim() : ''
+  if (filePath) return filePath
+  const rawUrl = typeof cfg?.ogImageUrl === 'string' ? cfg.ogImageUrl.trim() : ''
+  if (rawUrl) return rawUrl
+  return siderAvatarUrl.value || ''
+})
+
+usePublicPageSeo({ title: seoTitle, description: seoDescription, image: seoImage })
 
 type PageThemeMode = 'auto' | 'light' | 'dark'
 
@@ -372,7 +387,9 @@ function updateMenuOptions() {
 
   const enabledFunctions = getEnabledUserFunctions(userInfo.value)
   baseItems.push(
-    ...USER_FEATURE_DEFINITIONS.filter((feature) => isUserFeatureEnabled(feature, enabledFunctions)).map((feature) => ({
+    ...USER_FEATURE_DEFINITIONS.filter((feature) =>
+      feature.key === 'forum' ? forumExists.value : isUserFeatureEnabled(feature, enabledFunctions),
+    ).map((feature) => ({
       label: feature.label,
       key: feature.routeName,
       icon: feature.icon,
@@ -475,9 +492,17 @@ async function loadPublicUser(userId: string | string[] | undefined, signal: Abo
   }
   if (signal.aborted) return
 
+  forumExists.value = false
   updateMenuOptions()
   loadStatus.value = 'ready'
   void requestBiliUserData(fetchedUserInfo, signal)
+  void fetchPublicForumExists(fetchedUserInfo.id, { signal })
+    .then((exists) => {
+      if (signal.aborted) return
+      forumExists.value = exists === true
+      if (forumExists.value) updateMenuOptions()
+    })
+    .catch(() => {})
 }
 
 watch(

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import CloudUploadOutline from '@vicons/ionicons5/es/CloudUploadOutline'
-import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import { CloudUpload, Copy } from 'lucide-vue-next'
 
 import type { APIFileModel } from '@/api/generated/model'
 import { FileStore } from '@/shared/services/fileUpload'
@@ -44,7 +43,7 @@ const emit = defineEmits<{
                 aria-label="上传图片"
                 @click="emit('upload')"
               >
-                <CloudUploadOutline class="size-4" />
+                <CloudUpload class="size-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent> 上传图片 </TooltipContent>
@@ -104,7 +103,7 @@ const emit = defineEmits<{
                   aria-label="复制资源链接"
                   @click.stop="emit('copyPath', file.path)"
                 >
-                  <CopyOutline class="size-4" />
+                  <Copy class="size-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>复制链接</TooltipContent>

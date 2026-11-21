@@ -111,6 +111,8 @@ function validateNode(
 
   validateNodeName(node, errors)
   optionalBoolean(node, 'hidden', path, errors)
+  optionalNumber(node, 'colSpan', 1, 12, path, errors, true)
+  optionalNumber(node, 'rowSpan', 1, 6, path, errors, true)
   validateNodeVisibility(node, path, errors)
   const definition = SHARED_BLOCK_DEFINITION_MAP[type as BlockType]
   const props = node.props === undefined ? null : asObject(node.props)
@@ -201,14 +203,20 @@ export function countImagesInBlocks(blocks: BlockNode[], includeHidden = false):
     const props = asObject(block.props)
     if (block.type === 'layout') {
       if (Array.isArray(props?.children)) count += countImagesInBlocks(props.children as BlockNode[], includeHidden)
+    } else if (block.type === 'profile') {
+      if (props?.avatarFile) count += 1
     } else if (block.type === 'image') {
-      if (props?.imageFile) count += 1
+      if (props?.imageFile || isNonEmptyString(props?.url)) count += 1
     } else if (block.type === 'imageGallery' && Array.isArray(props?.items)) {
       count += props.items.filter((item) => {
         const object = asObject(item)
         return Boolean(object?.imageFile) || isNonEmptyString(object?.url)
       }).length
     } else if (block.type === 'cardList' && Array.isArray(props?.items)) {
+      count += props.items.filter((item) => Boolean(asObject(item)?.imageFile)).length
+    } else if (block.type === 'ocProfile' && Array.isArray(props?.images)) {
+      count += props.images.filter((item) => Boolean(asObject(item)?.imageFile)).length
+    } else if (block.type === 'commission' && Array.isArray(props?.items)) {
       count += props.items.filter((item) => Boolean(asObject(item)?.imageFile)).length
     } else if (block.type === 'customHtml' && Array.isArray(props?.assets)) {
       count += props.assets.filter((item) => Boolean(asObject(item)?.file)).length

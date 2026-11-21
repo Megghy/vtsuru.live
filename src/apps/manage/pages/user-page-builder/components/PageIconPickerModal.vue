@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
+import { Search } from 'lucide-vue-next'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, shallowRef, watch } from 'vue'
 
@@ -10,7 +10,7 @@ import {
   resolveUserPageNavIcon,
 } from '@/apps/user-page/pageIcons'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Spin } from '@/shared/ui/spin'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -98,9 +98,13 @@ function selectIcon(value: string | undefined) {
   show.value = false
 }
 
-watch(show, (visible) => {
-  if (visible) void loadCatalog()
-})
+watch(
+  show,
+  (visible) => {
+    if (visible) void loadCatalog()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -111,11 +115,12 @@ watch(show, (visible) => {
     <DialogContent class="max-w-[min(860px,94vw)] p-6">
       <DialogHeader>
         <DialogTitle class="text-base"> 选择导航图标 </DialogTitle>
+        <DialogDescription class="sr-only"> 搜索并选择子页面在公开导航栏中展示的图标。 </DialogDescription>
       </DialogHeader>
 
       <div class="page-icon-picker space-y-3">
         <div class="relative">
-          <SearchOutline class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             v-model="search"
             class="pl-8"

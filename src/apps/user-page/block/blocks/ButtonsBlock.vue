@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { Check, Copy } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import BlockCard from '../BlockCard.vue'
 import { buttonAppearanceClass, buttonAppearanceStyle, normalizeButtonAppearance } from '../buttonAppearance'
@@ -18,6 +20,8 @@ const propsObj = computed<Record<string, any>>(() => {
 const items = computed(() => (Array.isArray(propsObj.value.items) ? propsObj.value.items : []))
 const route = useRoute()
 const router = useRouter()
+const copiedIndex = ref<number | null>(null)
+let copiedTimer: number | undefined
 
 function slugOk(slug: string) {
   return /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug)
@@ -48,9 +52,11 @@ function isHttpsUrlString(v: unknown): v is string {
 
 type NormalizedButtonItem = {
   label: string
-  kind: 'external' | 'page' | 'back'
+  kind: 'external' | 'page' | 'back' | 'copy'
   href?: string
   to?: string
+  copyText?: string
+  copiedMessage?: string
 }
 
 const normalizedItems = computed<NormalizedButtonItem[]>(() => {
@@ -58,6 +64,14 @@ const normalizedItems = computed<NormalizedButtonItem[]>(() => {
   return list.map((raw) => {
     const it = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as any) : {}
     const label = typeof it.label === 'string' ? it.label : ''
+    if (typeof it.copyText === 'string' && it.copyText.trim().length > 0) {
+      return {
+        label,
+        kind: 'copy',
+        copyText: it.copyText,
+        copiedMessage: typeof it.copiedMessage === 'string' && it.copiedMessage.trim() ? it.copiedMessage.trim() : undefined,
+      }
+    }
     if (it.back === true) return { label, kind: 'back' }
     const page = typeof it.page === 'string' ? it.page.trim() : ''
     if (page) {
@@ -128,6 +142,30 @@ const itemsClass = computed(() => {
   }
   return 'items-start'
 })
+
+async function handleAction(item: NormalizedButtonItem, index: number) {
+  if (item.kind === 'copy' && item.copyText) {
+    try {
+      await navigator.clipboard.writeText(item.copyText)
+      toast.success(item.copiedMessage || '已复制到剪贴板')
+      copiedIndex.value = index
+      window.clearTimeout(copiedTimer)
+      copiedTimer = window.setTimeout(() => {
+        copiedIndex.value = null
+      }, 1500)
+    } catch {
+      toast.error('复制失败，请手动复制')
+    }
+    return
+  }
+  if (item.kind === 'back') {
+    router.back()
+    return
+  }
+  if (item.kind === 'page' && item.to) {
+    void router.push(item.to)
+  }
+}
 </script>
 
 <template>
@@ -160,12 +198,17 @@ const itemsClass = computed(() => {
         <button
           v-else
           type="button"
-          class="inline-flex-center font-medium cursor-pointer"
+          class="inline-flex-center gap-1.5 font-medium cursor-pointer"
           :class="btnClass"
           :style="btnStyle"
-          @click="it.kind === 'back' ? router.back() : router.push(it.to || route.fullPath)"
+          @click="handleAction(it, idx)"
         >
-          {{ it.label }}
+          <component
+            :is="copiedIndex === idx ? Check : Copy"
+            v-if="it.kind === 'copy'"
+            class="size-3.5 shrink-0"
+          />
+          <span>{{ it.label }}</span>
         </button>
       </template>
     </div>

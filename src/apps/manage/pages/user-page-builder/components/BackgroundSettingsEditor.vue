@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { Image as ImageIcon, Trash2 } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -219,13 +218,10 @@ function clearAll() {
       <FormField label="背景图片">
         <div
           v-if="!imagePath"
-          class="flex-col-center p-4 border border-dashed border-border rounded-lg bg-muted cursor-pointer transition w-full box-border hover:border-primary hover:bg-popover"
+          class="flex-col-center p-4 border border-dashed border-border rounded-lg bg-muted cursor-pointer transition-colors duration-150 w-full box-border hover:border-primary hover:bg-popover"
           @click="props.target.uploadImage?.()"
         >
-          <component
-            :is="ImageOutline"
-            class="size-6 text-muted-foreground mb-1"
-          />
+          <ImageIcon class="size-6 text-muted-foreground mb-1" />
           <div class="text-xs font-medium">点击上传背景图</div>
           <div class="text-[11px] text-muted-foreground">支持 PNG, JPG, WebP 格式</div>
         </div>
@@ -246,21 +242,17 @@ function clearAll() {
             <Button
               size="xs"
               variant="outline"
-              class="px-2"
               @click="props.target.uploadImage?.()"
             >
               更换
             </Button>
             <Button
-              size="xs"
+              size="icon-xs"
               variant="destructive"
-              class="px-2"
+              aria-label="清除背景图"
               @click="props.target.clearImage?.()"
             >
-              <component
-                :is="TrashOutline"
-                class="size-3.5"
-              />
+              <Trash2 class="size-3.5" />
             </Button>
           </div>
         </div>
@@ -268,10 +260,10 @@ function clearAll() {
 
       <FormField label="图片填充方式">
         <Select v-model="fit">
-          <SelectTrigger>
+          <SelectTrigger class="w-full">
             <SelectValue placeholder="填充方式" />
           </SelectTrigger>
-          <SelectContent class="text-xs">
+          <SelectContent>
             <SelectItem value="cover">铺满裁剪 (cover)</SelectItem>
             <SelectItem value="contain">完整显示 (contain)</SelectItem>
             <SelectItem value="fill">拉伸填满 (fill)</SelectItem>
@@ -298,26 +290,16 @@ function clearAll() {
         label="遮罩色调与透明度"
         class="gap-2 pt-2 border-t border-border"
       >
-        <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
-          <Button
-            :variant="scrimMode === 'auto' ? 'default' : 'ghost'"
-            @click="scrimMode = 'auto'"
-          >
-            自适应
-          </Button>
-          <Button
-            :variant="scrimMode === 'black' ? 'default' : 'ghost'"
-            @click="scrimMode = 'black'"
-          >
-            暗黑遮罩
-          </Button>
-          <Button
-            :variant="scrimMode === 'white' ? 'default' : 'ghost'"
-            @click="scrimMode = 'white'"
-          >
-            纯白遮罩
-          </Button>
-        </div>
+        <ToggleGroup
+          type="single"
+          :model-value="scrimMode"
+          class="w-full grid grid-cols-3"
+          @update:model-value="(val) => val && (scrimMode = val as any)"
+        >
+          <ToggleGroupItem value="auto">自适应</ToggleGroupItem>
+          <ToggleGroupItem value="black">暗黑遮罩</ToggleGroupItem>
+          <ToggleGroupItem value="white">纯白遮罩</ToggleGroupItem>
+        </ToggleGroup>
         <div class="flex items-center gap-3">
           <Slider
             :model-value="[scrimStrength]"
@@ -341,26 +323,16 @@ function clearAll() {
         label="视觉滤镜与模糊"
         class="gap-2 pt-2 border-t border-border"
       >
-        <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
-          <Button
-            :variant="blurMode === 'none' ? 'default' : 'ghost'"
-            @click="blurMode = 'none'"
-          >
-            清晰无滤镜
-          </Button>
-          <Button
-            :variant="blurMode === 'background' ? 'default' : 'ghost'"
-            @click="blurMode = 'background'"
-          >
-            模糊背景
-          </Button>
-          <Button
-            :variant="blurMode === 'glass' ? 'default' : 'ghost'"
-            @click="blurMode = 'glass'"
-          >
-            磨砂玻璃
-          </Button>
-        </div>
+        <ToggleGroup
+          type="single"
+          :model-value="blurMode"
+          class="w-full grid grid-cols-3"
+          @update:model-value="(val) => val && (blurMode = val as any)"
+        >
+          <ToggleGroupItem value="none">清晰无滤镜</ToggleGroupItem>
+          <ToggleGroupItem value="background">模糊背景</ToggleGroupItem>
+          <ToggleGroupItem value="glass">磨砂玻璃</ToggleGroupItem>
+        </ToggleGroup>
         <div
           v-if="blurMode !== 'none'"
           class="flex items-center gap-3"

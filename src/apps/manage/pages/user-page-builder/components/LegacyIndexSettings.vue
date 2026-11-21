@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
-import ArrowDownOutline from '@vicons/ionicons5/es/ArrowDownOutline'
-import ArrowUpOutline from '@vicons/ionicons5/es/ArrowUpOutline'
-import { computed, ref } from 'vue'
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import type { ResponseUserIndexModel, VideoData } from '@/api/generated/model'
@@ -14,9 +12,10 @@ import {
 } from '@/api/generated/user-index/user-index'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { IndexTemplateMap } from '@/shared/config/templates'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -321,11 +320,19 @@ accountInfo.value.settings.index.links ??= {}
 if (!accountInfo.value.settings.index.linkOrder || accountInfo.value.settings.index.linkOrder.length === 0) {
   accountInfo.value.settings.index.linkOrder = Object.keys(accountInfo.value.settings.index.links || {})
 }
-await loadIndexInfo()
+onMounted(() => {
+  void loadIndexInfo()
+})
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
+    <Alert class="bg-muted/60">
+      <AlertDescription class="text-xs">
+        经典模板的模板选择、公告、视频与外链会直接同步至主播账号配置并立即生效，不经过右侧草稿/发布流程。
+      </AlertDescription>
+    </Alert>
+
     <!-- 主页模板 -->
     <div class="flex flex-col gap-2">
       <div class="text-xs font-semibold text-muted-foreground uppercase">主页模板</div>
@@ -342,10 +349,10 @@ await loadIndexInfo()
             class="flex-1 min-w-0"
             @update:model-value="saveIndexTemplate"
           >
-            <SelectTrigger>
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent class="text-xs">
+            <SelectContent>
               <SelectItem
                 v-for="opt in indexTemplateOptions"
                 :key="opt.value"
@@ -530,10 +537,7 @@ await loadIndexInfo()
                 aria-label="上移链接"
                 @click="moveLink(link[0], 'up')"
               >
-                <component
-                  :is="ArrowUpOutline"
-                  class="size-3.5"
-                />
+                <ArrowUp class="size-3.5" />
               </Button>
               <Button
                 size="icon-xs"
@@ -541,10 +545,7 @@ await loadIndexInfo()
                 aria-label="下移链接"
                 @click="moveLink(link[0], 'down')"
               >
-                <component
-                  :is="ArrowDownOutline"
-                  class="size-3.5"
-                />
+                <ArrowDown class="size-3.5" />
               </Button>
               <Button
                 size="xs"
@@ -565,10 +566,7 @@ await loadIndexInfo()
                   class="text-destructive hover:text-destructive"
                   aria-label="删除链接"
                 >
-                  <component
-                    :is="Delete24Regular"
-                    class="size-3.5"
-                  />
+                  <Trash2 class="size-3.5" />
                 </Button>
               </Popconfirm>
             </div>
@@ -583,6 +581,7 @@ await loadIndexInfo()
     <DialogContent class="max-w-md p-4">
       <DialogHeader>
         <DialogTitle class="text-sm">添加视频</DialogTitle>
+        <DialogDescription class="sr-only">输入 Bilibili 视频链接或 BV 号以添加到经典主页。</DialogDescription>
       </DialogHeader>
       <div class="py-2 flex flex-col gap-2">
         <Input
@@ -610,6 +609,7 @@ await loadIndexInfo()
     <DialogContent class="max-w-md p-4">
       <DialogHeader>
         <DialogTitle class="text-sm">添加链接</DialogTitle>
+        <DialogDescription class="sr-only">输入外链名称与地址以添加到经典主页。</DialogDescription>
       </DialogHeader>
       <div class="py-2 flex flex-col gap-2">
         <Input
@@ -641,6 +641,7 @@ await loadIndexInfo()
     <DialogContent class="max-w-4xl p-4 max-h-[85vh] flex flex-col">
       <DialogHeader>
         <DialogTitle class="text-sm">主页模板预览 - {{ selectedIndexTemplate.name }}</DialogTitle>
+        <DialogDescription class="sr-only">预览所选经典主页模板的展示效果。</DialogDescription>
       </DialogHeader>
       <div class="flex-1 overflow-y-auto mt-2 border border-border rounded-lg p-2 bg-background">
         <component

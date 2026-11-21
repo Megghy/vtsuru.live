@@ -112,10 +112,11 @@ export function validateLinkTarget(props: PropsObject, path: string, errors: Val
   const hasUrl = props.url !== undefined
   const hasPage = props.page !== undefined
   const hasBack = props.back === true
+  const hasCopyText = props.copyText !== undefined
   if (props.back !== undefined && props.back !== true)
     errors.push(`${path}: back 必须为 true`, validationFieldPath(path, 'back'))
-  const count = Number(hasUrl) + Number(hasPage) + Number(hasBack)
-  if (count !== 1) errors.push(`${path}: 必须且只能提供 url/page/back 其中一个`)
+  const count = Number(hasUrl) + Number(hasPage) + Number(hasBack) + Number(hasCopyText)
+  if (count !== 1) errors.push(`${path}: 必须且只能提供 url/page/back/copyText 其中一个`)
   if (hasUrl && !isHttpsUrl(props.url)) errors.push(`${path}: url 必须是 https URL`, validationFieldPath(path, 'url'))
   if (
     hasPage &&
@@ -123,5 +124,17 @@ export function validateLinkTarget(props: PropsObject, path: string, errors: Val
       (props.page !== 'home' && !/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(props.page)))
   ) {
     errors.push(`${path}: page 必须是 home 或合法 slug`, validationFieldPath(path, 'page'))
+  }
+  if (hasCopyText) {
+    if (!isNonEmptyString(props.copyText))
+      errors.push(`${path}: copyText 不能为空`, validationFieldPath(path, 'copyText'))
+    else if (props.copyText.length > 500)
+      errors.push(`${path}: copyText 不能超过 500 字符`, validationFieldPath(path, 'copyText'))
+  }
+  if (props.copiedMessage !== undefined) {
+    if (typeof props.copiedMessage !== 'string')
+      errors.push(`${path}: copiedMessage 必须是 string`, validationFieldPath(path, 'copiedMessage'))
+    else if (props.copiedMessage.length > 80)
+      errors.push(`${path}: copiedMessage 不能超过 80 字符`, validationFieldPath(path, 'copiedMessage'))
   }
 }

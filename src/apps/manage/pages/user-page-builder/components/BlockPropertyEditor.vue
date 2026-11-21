@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
-import ConstructOutline from '@vicons/ionicons5/es/ConstructOutline'
-import GridOutline from '@vicons/ionicons5/es/GridOutline'
-import LayersOutline from '@vicons/ionicons5/es/LayersOutline'
-import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
-import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
+import {
+  ArrowLeft,
+  Image as ImageIcon,
+  Layers,
+  LayoutGrid,
+  Palette,
+  Sliders,
+  Sparkles,
+} from 'lucide-vue-next'
 import { computed, defineAsyncComponent, inject, ref, watch } from 'vue'
 
 import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
+import { getBlockLabel } from '@/apps/user-page/block/registry'
 import { listContribPageRefs } from '@/apps/user-page/contrib/registry'
 import { getUserPageNavIconLabel, resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import type { UserPageConfig } from '@/apps/user-page/types'
@@ -25,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { FormField } from '@/shared/ui/form-field'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
@@ -32,12 +37,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
-import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { UserPageEditorKey } from '../context'
-import { PAGE_MODE_OPTIONS, createDefaultProject } from '../editorPageConfig'
+import { createDefaultProject, getAvailablePageModeOptions } from '../editorPageConfig'
 import BlockTypeEditor from './BlockTypeEditor.vue'
 import ErrorBoundary from './ErrorBoundary.vue'
 import PropsGrid from './PropsGrid.vue'
@@ -66,9 +71,15 @@ watch(
   { immediate: true },
 )
 
+const isHome = computed(() => editor.currentKey.value === 'home')
 const blocksCount = computed(() => editor.currentProject.value?.blocks?.length ?? 0)
 const isBlockMode = computed(() => editor.currentPage.value.mode === 'block')
 const isSelectingBlock = computed(() => Boolean(editor.selectedBlock.value || editor.selectedBlocks.value.length > 0))
+const availableModeOptions = computed(() => getAvailablePageModeOptions(isHome.value, editor.currentPage.value.mode))
+const currentModeMeta = computed(() =>
+  availableModeOptions.value.find((opt) => opt.value === editor.currentPage.value.mode),
+)
+
 const contribPageOptions = computed(() => {
   const contrib = editor.currentContrib.value
   const scope = contrib?.scope ?? 'global'
@@ -77,11 +88,20 @@ const contribPageOptions = computed(() => {
     .filter((item) => item.scope === scope && (scope === 'global' || item.streamerId === accountId))
     .map((item) => item.pageId)
 })
+
+const ogPreviewUrl = computed(() => {
+  const page = editor.currentPage.value as Record<string, any>
+  if (typeof page.ogImageFile?.path === 'string' && page.ogImageFile.path) return page.ogImageFile.path
+  if (typeof page.ogImageUrl === 'string' && /^https:\/\//i.test(page.ogImageUrl.trim())) return page.ogImageUrl.trim()
+  return ''
+})
+
 const capacityStatusClass = computed(() => {
   if (editor.configBytesPercent.value >= 90) return 'text-destructive font-medium'
   if (editor.configBytesPercent.value >= 75) return 'text-amber-600 dark:text-amber-400 font-medium'
   return 'text-muted-foreground'
 })
+
 function formatBytesShort(bytes: number) {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -90,6 +110,10 @@ function formatBytesShort(bytes: number) {
 
 function setCurrentPageNavIcon(value: string | undefined) {
   editor.currentPage.value.navIcon = value
+}
+
+function clearPageOgImage() {
+  delete (editor.currentPage.value as Record<string, any>).ogImageFile
 }
 
 watch(editor.currentKey, (key) => (pageSlug.value = key))
@@ -145,29 +169,29 @@ function groupSelection() {
 </script>
 
 <template>
-  <Card class="block-property-editor w-full h-full flex flex-col">
-    <CardHeader class="p-3 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
-      <CardTitle>
+  <Card class="pane-card block-property-editor w-full h-full flex flex-col">
+    <CardHeader class="h-10 px-3 py-0 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
+      <CardTitle class="text-xs font-semibold">
         {{ isSelectingBlock ? '区块属性' : '页面配置' }}
       </CardTitle>
 
       <div class="flex items-center gap-2">
-        <TooltipProvider v-if="editor.currentKey.value !== 'home'">
+        <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
                 size="xs"
                 variant="outline"
+                class="gap-1"
                 @click="editor.pageThemeModal.value = true"
               >
-                <component
-                  :is="ColorPaletteOutline"
-                  class="size-3.5 mr-1"
-                />
-                页面主题
+                <Palette class="size-3.5 text-primary" />
+                <span>{{ isHome ? '外观' : '本页主题' }}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent> 编辑当前子页面的背景与主题（未设置时继承全局主题） </TooltipContent>
+            <TooltipContent>
+              {{ isHome ? '编辑主页外观与全局主题' : '编辑当前子页面的专属背景与主题（未设置时继承全局）' }}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
@@ -176,19 +200,19 @@ function groupSelection() {
             <TooltipTrigger as-child>
               <div class="flex items-center gap-1.5 cursor-help">
                 <span
-                  class="text-xs whitespace-nowrap"
+                  class="text-[11px] whitespace-nowrap tabular-nums"
                   :class="capacityStatusClass"
                 >
-                  容量 {{ editor.configBytesPercent.value }}%
+                  {{ editor.configBytesPercent.value }}%
                 </span>
                 <Progress
                   :model-value="editor.configBytesPercent.value"
-                  class="w-16 h-1.5"
+                  class="w-12 h-1.5"
                 />
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              已用 {{ formatBytesShort(editor.configBytes.value) }} / 上限
+              配置容量：{{ formatBytesShort(editor.configBytes.value) }} / 上限
               {{ formatBytesShort(editor.MAX_CONFIG_BYTES) }}
             </TooltipContent>
           </Tooltip>
@@ -196,22 +220,19 @@ function groupSelection() {
       </div>
     </CardHeader>
 
-    <CardContent class="p-3 flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto">
-      <!-- 当处于具体区块选中状态时，顶部提供返回页面配置入口 -->
+    <CardContent class="p-3 flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-thin">
+      <!-- 选中区块时的返回条 -->
       <div
         v-if="isSelectingBlock"
-        class="py-2 px-2.5 rounded-md bg-[var(--brand-tint,rgba(0,150,255,0.08))] border border-[var(--brand-soft,rgba(0,150,255,0.2))]"
+        class="py-2 px-2.5 rounded-lg bg-primary/8 border border-primary/25"
       >
-        <div class="flex-between">
-          <div class="flex items-center gap-1.5 text-xs font-semibold">
-            <component
-              :is="ConstructOutline"
-              class="size-4 text-primary"
-            />
-            <span>
+        <div class="flex-between gap-2">
+          <div class="flex items-center gap-1.5 text-xs font-semibold min-w-0">
+            <Sliders class="size-3.5 text-primary shrink-0" />
+            <span class="truncate">
               {{
                 editor.selectedBlock.value
-                  ? `编辑区块 · ${editor.selectedBlock.value.type}`
+                  ? editor.selectedBlock.value.name?.trim() || getBlockLabel(editor.selectedBlock.value.type)
                   : `已选中 ${editor.selectedBlocks.value.length} 个区块`
               }}
             </span>
@@ -219,88 +240,86 @@ function groupSelection() {
           <Button
             size="xs"
             variant="outline"
+            class="gap-1 shrink-0"
             @click="deselectBlock"
           >
-            返回页面配置
+            <ArrowLeft class="size-3" />
+            页面配置
           </Button>
         </div>
       </div>
 
-      <!-- 页面级基础信息（非单区块编辑时完整呈现） -->
+      <!-- 紧凑模式切换器（不再占满大半屏） -->
       <div
         v-if="!isSelectingBlock"
-        class="flex flex-col gap-2"
+        class="space-y-1.5"
       >
-        <div>
-          <span class="text-xs font-semibold text-foreground">页面搭建模式</span>
-        </div>
-        <div
-          role="radiogroup"
-          aria-label="页面搭建模式"
-          class="flex flex-col gap-2"
+        <FormField
+          label="页面搭建模式"
+          :description="currentModeMeta?.description"
         >
-          <button
-            v-for="opt in PAGE_MODE_OPTIONS"
-            :key="opt.value"
-            type="button"
-            role="radio"
-            :aria-checked="editor.currentPage.value.mode === opt.value"
-            class="w-full text-left py-2.5 px-3 rounded-lg border border-border bg-muted cursor-pointer transition-colors flex flex-col gap-1 hover:border-primary hover:bg-popover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            :class="{
-              'border-primary bg-[var(--brand-tint,rgba(0,150,255,0.08))] shadow-[0_0_0_1px_var(--primary)]':
-                editor.currentPage.value.mode === opt.value,
-            }"
-            @click="handleModeChange(opt.value)"
+          <ToggleGroup
+            type="single"
+            :model-value="editor.currentPage.value.mode"
+            class="w-full grid"
+            :style="{ gridTemplateColumns: `repeat(${availableModeOptions.length}, minmax(0, 1fr))` }"
+            @update:model-value="(val) => val && handleModeChange(val as UserPageConfig['mode'])"
           >
-            <div class="flex-between w-full">
-              <span class="text-[13px] font-semibold text-foreground">{{ opt.label }}</span>
-              <Tag
-                v-if="opt.tag"
-                variant="outline"
-                size="tiny"
-              >
-                {{ opt.tag }}
-              </Tag>
-            </div>
-            <div class="text-xs leading-snug text-muted-foreground">
-              {{ opt.description }}
-            </div>
-          </button>
-        </div>
+            <ToggleGroupItem
+              v-for="opt in availableModeOptions"
+              :key="opt.value"
+              :value="opt.value"
+              class="text-xs"
+            >
+              {{ opt.label.replace('可视化自由搭建', '自由搭建').replace('自定义代码页', '自定义代码') }}
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </FormField>
       </div>
 
-      <!-- 子页面基本设置 (名称、导航图标、排序、Slug) -->
+      <!-- 页面基本信息与社交分享卡片（主页与子页均可用） -->
       <Accordion
-        v-if="!isSelectingBlock && editor.currentKey.value !== 'home'"
+        v-if="!isSelectingBlock"
         v-model="expandedPageSections"
         type="multiple"
-        class="w-full border rounded-lg p-2 bg-card"
+        class="w-full border border-border rounded-lg px-2.5 py-1 bg-card"
       >
         <AccordionItem
           value="page-info"
-          class="border-b-0"
+          class="page-info-section border-b-0"
         >
-          <AccordionTrigger class="text-xs font-semibold py-2"> 页面基本信息 (子页面属性) </AccordionTrigger>
-          <AccordionContent class="pt-2 pb-1">
+          <AccordionTrigger class="text-xs font-semibold py-2">
+            {{ isHome ? '主页信息与分享卡片 (SEO)' : '页面信息、导航与分享卡片' }}
+          </AccordionTrigger>
+          <AccordionContent class="pt-2 pb-1 space-y-3">
             <PropsGrid>
-              <FormField label="页面名称">
+              <FormField
+                :label="isHome ? '主页标题（浏览器标签与分享标题）' : '页面名称'"
+                :class="isHome ? 'span-full' : ''"
+                data-validation-field="title"
+              >
                 <Input
                   v-model="editor.currentPage.value.title"
-                  placeholder="例如：我的作品 / 赞助支持"
+                  maxlength="100"
+                  :placeholder="isHome ? '留空默认显示“主页”' : '例如：我的作品 / 赞助支持'"
                 />
               </FormField>
 
-              <FormField label="导航图标">
+              <FormField
+                v-if="!isHome"
+                label="导航图标"
+                data-validation-field="navIcon"
+              >
                 <Button
                   variant="outline"
-                  class="justify-start"
+                  class="w-full justify-start gap-1.5"
                   @click="pageIconPickerShown = true"
                 >
                   <component
                     :is="resolveUserPageNavIcon(editor.currentPage.value.navIcon)"
-                    class="size-3.5 mr-1.5"
+                    class="size-3.5 shrink-0"
                   />
-                  {{ getUserPageNavIconLabel(editor.currentPage.value.navIcon) }}
+                  <span class="truncate">{{ getUserPageNavIconLabel(editor.currentPage.value.navIcon) }}</span>
                 </Button>
                 <PageIconPickerModal
                   v-if="hasOpenedPageIconPicker || pageIconPickerShown"
@@ -310,58 +329,93 @@ function groupSelection() {
                 />
               </FormField>
 
-              <SettingRow
-                title="在导航菜单中显示"
-                variant="none"
-                class="pt-4"
-              >
-                <Switch
-                  :checked="editor.currentPage.value.navVisible"
-                  @update:checked="editor.currentPage.value.navVisible = $event"
-                />
-              </SettingRow>
-
               <FormField
-                label="页面描述"
+                label="页面简介（SEO 与分享摘要）"
                 class="span-full"
+                data-validation-field="description"
               >
                 <Textarea
                   v-model="editor.currentPage.value.description"
-                  placeholder="可选描述，用于 SEO 和展示"
+                  maxlength="300"
+                  placeholder="转发链接到 B站 / QQ / 微信 时展示的简介"
                   rows="2"
                 />
               </FormField>
 
-              <FormField label="排序权重">
-                <NumberField
-                  v-model="editor.currentPage.value.navOrder"
-                  placeholder="数字越小越靠前"
-                />
-              </FormField>
-
-              <FormField label="链接路径 (Slug)">
-                <div class="flex items-center gap-1.5">
-                  <Input
-                    v-model="pageSlug"
-                    placeholder="例如 links / sponsor"
-                    class="flex-1"
-                    @keyup.enter="renameCurrentPage"
-                  />
+              <FormField
+                label="社交分享封面图 (og:image)"
+                description="建议 1200×630 横图；留空时默认使用主播头像"
+                class="span-full"
+                data-validation-field="ogImageFile"
+              >
+                <div class="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    class="px-2"
-                    :disabled="pageSlug === editor.currentKey.value"
-                    @click="renameCurrentPage"
+                    class="gap-1.5"
+                    :disabled="editor.isUploading.value"
+                    @click="editor.triggerUploadTargetImage(() => editor.currentPage.value as any, 'ogImageFile')"
                   >
-                    修改
+                    <ImageIcon class="size-3.5" />
+                    上传封面
                   </Button>
+                  <Button
+                    variant="ghost"
+                    :disabled="!(editor.currentPage.value as any).ogImageFile"
+                    @click="clearPageOgImage"
+                  >
+                    清除
+                  </Button>
+                  <ImagePreview
+                    v-if="ogPreviewUrl"
+                    :src="ogPreviewUrl"
+                    alt="分享封面预览"
+                    class="size-8 rounded border border-border shrink-0"
+                  />
                 </div>
               </FormField>
+
+              <template v-if="!isHome">
+                <SettingRow
+                  title="在导航菜单中显示"
+                  variant="none"
+                  class="span-full py-1"
+                >
+                  <Switch
+                    :checked="editor.currentPage.value.navVisible"
+                    @update:checked="editor.currentPage.value.navVisible = $event"
+                  />
+                </SettingRow>
+
+                <FormField label="排序权重">
+                  <NumberField
+                    v-model="editor.currentPage.value.navOrder"
+                    placeholder="数字越小越靠前"
+                  />
+                </FormField>
+
+                <FormField label="链接路径 (Slug)">
+                  <div class="flex items-center gap-1.5">
+                    <Input
+                      v-model="pageSlug"
+                      placeholder="例如 links / sponsor"
+                      class="flex-1 min-w-0"
+                      @keyup.enter="renameCurrentPage"
+                    />
+                    <Button
+                      variant="outline"
+                      :disabled="pageSlug === editor.currentKey.value"
+                      @click="renameCurrentPage"
+                    >
+                      修改
+                    </Button>
+                  </div>
+                </FormField>
+              </template>
             </PropsGrid>
           </AccordionContent>
         </AccordionItem>
 
-        <PageAppearanceOverrides />
+        <PageAppearanceOverrides v-if="!isHome" />
       </Accordion>
 
       <!-- 模式对应的主体内容区 -->
@@ -370,27 +424,26 @@ function groupSelection() {
         mode="out-in"
       >
         <div :key="`${editor.currentPage.value.mode}:${!!editor.currentProject.value}:${isSelectingBlock}`">
-          <!-- 1. 经典模板模式 -->
           <CustomPageSettings v-if="editor.currentPage.value.mode === 'custom'" />
+
           <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-            <div class="text-xs font-semibold text-muted-foreground uppercase pt-2 pb-1 border-t border-border">
+            <div class="text-xs font-semibold text-muted-foreground pt-1 pb-1.5 border-t border-border">
               经典模板配置
             </div>
             <LegacyIndexSettings />
           </template>
 
-          <!-- 2. 扩展组件页模式 -->
           <template v-else-if="editor.currentPage.value.mode === 'contrib'">
-            <div class="text-xs font-semibold text-muted-foreground uppercase pt-2 pb-1 border-t border-border">
+            <div class="text-xs font-semibold text-muted-foreground pt-1 pb-1.5 border-t border-border">
               扩展组件参数
             </div>
             <PropsGrid>
               <FormField label="作用域">
                 <Select v-model="editor.currentContrib.value!.scope">
-                  <SelectTrigger>
+                  <SelectTrigger class="w-full">
                     <SelectValue placeholder="作用域" />
                   </SelectTrigger>
-                  <SelectContent class="text-xs">
+                  <SelectContent>
                     <SelectItem value="global">全局扩展</SelectItem>
                     <SelectItem value="streamer">主播专属扩展</SelectItem>
                   </SelectContent>
@@ -412,10 +465,10 @@ function groupSelection() {
                       }
                     "
                   >
-                    <SelectTrigger>
+                    <SelectTrigger class="w-full">
                       <SelectValue placeholder="从已注册组件中选择（或下方手动输入）" />
                     </SelectTrigger>
-                    <SelectContent class="text-xs">
+                    <SelectContent>
                       <SelectItem
                         v-for="pid in contribPageOptions"
                         :key="pid"
@@ -444,21 +497,17 @@ function groupSelection() {
             </PropsGrid>
 
             <Alert
-              size="sm"
               v-if="editor.contribConfigError.value"
               variant="destructive"
               class="mt-3"
             >
-              <AlertDescription>
-                {{ editor.contribConfigError.value }}
-              </AlertDescription>
+              <AlertDescription>{{ editor.contribConfigError.value }}</AlertDescription>
             </Alert>
             <Alert
-              size="sm"
               v-else-if="editor.contribConfigLoading.value"
               class="mt-3"
             >
-              <AlertDescription> 扩展页配置加载中... </AlertDescription>
+              <AlertDescription>扩展页配置加载中...</AlertDescription>
             </Alert>
             <template v-else-if="editor.contribConfigItems.value">
               <div class="flex-between mt-3 mb-2">
@@ -479,7 +528,6 @@ function groupSelection() {
               </ErrorBoundary>
             </template>
             <Alert
-              size="sm"
               v-else
               class="mt-3"
             >
@@ -489,13 +537,12 @@ function groupSelection() {
             </Alert>
           </template>
 
-          <!-- 3. 可视化自由搭建 (区块模式) -->
           <template v-else-if="isBlockMode && editor.currentProject.value">
             <Transition
               name="fade-slide"
               mode="out-in"
             >
-              <!-- 3.1 单区块属性编辑 -->
+              <!-- 单区块属性编辑 -->
               <div
                 v-if="editor.selectedBlock.value"
                 :key="`selected:${editor.selectedBlock.value.id}`"
@@ -507,11 +554,11 @@ function groupSelection() {
                 </ErrorBoundary>
               </div>
 
-              <!-- 3.2 多区块批量操作面板 -->
+              <!-- 多区块批量操作面板 -->
               <div
                 v-else-if="editor.selectedBlocks.value.length > 1"
                 key="multi"
-                class="grid gap-2 mt-2 p-2.5 border border-border rounded-md bg-muted"
+                class="grid gap-2 mt-1 p-2.5 border border-border rounded-lg bg-muted/50"
               >
                 <span class="text-xs font-semibold">已选择 {{ editor.selectedBlocks.value.length }} 个区块</span>
                 <div class="flex flex-wrap gap-1.5">
@@ -558,7 +605,7 @@ function groupSelection() {
                     透明背景
                   </Button>
                 </div>
-                <div class="flex flex-wrap gap-1.5 pt-1 border-t border-border">
+                <div class="flex flex-wrap gap-1.5 pt-1.5 border-t border-border">
                   <Button
                     size="xs"
                     @click="groupSelection"
@@ -589,19 +636,16 @@ function groupSelection() {
                 </div>
               </div>
 
-              <!-- 3.3 未选中区块时的页面工作台/概览卡片 -->
+              <!-- 未选中区块时的页面工作台概览 -->
               <div
                 v-else
                 key="overview-workbench"
-                class="p-3 border border-border rounded-lg bg-muted"
+                class="p-3 border border-border rounded-lg bg-muted/40 space-y-2.5"
               >
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1">
                   <div class="flex-between">
                     <div class="flex items-center gap-1.5 text-xs font-semibold">
-                      <component
-                        :is="LayersOutline"
-                        class="size-4 text-primary"
-                      />
+                      <Layers class="size-3.5 text-primary" />
                       <span>页面区块概览</span>
                     </div>
                     <Badge
@@ -611,110 +655,84 @@ function groupSelection() {
                       已添加 {{ blocksCount }} 个区块
                     </Badge>
                   </div>
-                  <div class="text-xs text-muted-foreground leading-normal">
-                    点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。
+                  <div class="text-xs text-muted-foreground leading-relaxed">
+                    点击左侧区块树或中间预览画布中的任意组件即可进入细节配置。
                   </div>
                 </div>
 
-                <Separator class="my-2" />
+                <Separator />
 
-                <div class="workbench-actions">
-                  <span class="text-xs text-muted-foreground mb-2 block font-medium">快速搭建操作</span>
-                  <div class="flex flex-col gap-2">
-                    <div class="grid grid-cols-2 gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger as-child>
-                          <Button>
-                            <component
-                              :is="GridOutline"
-                              class="size-3.5 mr-1"
-                            />
-                            添加区块
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent class="w-56 max-h-72 overflow-y-auto">
-                          <template
-                            v-for="opt in addBlockOptions"
-                            :key="opt.key"
-                          >
-                            <DropdownMenuSeparator
-                              v-if="opt.type === 'divider' || String(opt.key).startsWith('divider:')"
-                            />
-                            <DropdownMenuLabel
-                              v-if="opt.disabled"
-                              class="text-xs font-bold text-muted-foreground"
-                            >
-                              {{ typeof opt.label === 'function' ? '分组' : opt.label }}
+                <div class="space-y-2">
+                  <div class="grid grid-cols-2 gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger as-child>
+                        <Button class="gap-1.5">
+                          <LayoutGrid class="size-3.5" />
+                          添加区块
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent class="w-56 max-h-72 overflow-y-auto scrollbar-thin">
+                        <template
+                          v-for="opt in addBlockOptions"
+                          :key="opt.key"
+                        >
+                          <template v-if="opt.groupLabel">
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel class="text-[11px] font-semibold text-muted-foreground">
+                              {{ opt.groupLabel }}
                             </DropdownMenuLabel>
-                            <DropdownMenuItem
-                              v-else
-                              @click="handleAddBlockMenuSelect(String(opt.key))"
-                            >
-                              <component
-                                :is="opt.icon"
-                                v-if="opt.icon"
-                                class="size-3.5 mr-2"
-                              />
-                              {{ typeof opt.label === 'function' ? '' : opt.label }}
-                            </DropdownMenuItem>
                           </template>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger as-child>
-                          <Button variant="outline">
-                            <component
-                              :is="SparklesOutline"
-                              class="size-3.5 mr-1"
-                            />
-                            起始模板
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent class="w-48">
                           <DropdownMenuItem
-                            v-for="opt in templateOptions"
-                            :key="opt.key"
-                            @click="insertTemplate(String(opt.key))"
+                            v-else
+                            @click="handleAddBlockMenuSelect(String(opt.key))"
                           >
+                            <component
+                              :is="opt.icon"
+                              v-if="opt.icon"
+                              class="size-3.5 mr-2"
+                            />
                             {{ opt.label }}
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                        </template>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
-                    <Button
-                      variant="outline"
-                      class="w-full"
-                      @click="editor.pageThemeModal.value = true"
-                    >
-                      <component
-                        :is="ColorPaletteOutline"
-                        class="size-3.5 mr-1"
-                      />
-                      {{ editor.currentKey.value === 'home' ? '设置主页外观与全局主题' : '设置本页专属主题与背景' }}
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger as-child>
+                        <Button
+                          variant="outline"
+                          class="gap-1.5"
+                        >
+                          <Sparkles class="size-3.5" />
+                          起始模板
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent class="w-52">
+                        <DropdownMenuItem
+                          v-for="opt in templateOptions"
+                          :key="opt.key"
+                          @click="insertTemplate(String(opt.key))"
+                        >
+                          {{ opt.label }}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
+
+                  <Button
+                    variant="outline"
+                    class="w-full gap-1.5"
+                    @click="editor.pageThemeModal.value = true"
+                  >
+                    <Palette class="size-3.5 text-primary" />
+                    {{ isHome ? '设置主页外观与全局主题' : '设置本页专属主题与背景' }}
+                  </Button>
                 </div>
               </div>
             </Transition>
           </template>
         </div>
       </Transition>
-
-      <div class="mt-auto pt-2">
-        <Button
-          variant="outline"
-          class="w-full"
-          @click="editor.openPreview"
-        >
-          <component
-            :is="OpenOutline"
-            class="size-3.5 mr-1"
-          />
-          在新标签页打开对外预览
-        </Button>
-      </div>
     </CardContent>
   </Card>
 </template>

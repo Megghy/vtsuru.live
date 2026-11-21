@@ -24,8 +24,11 @@ function asCssSize(v: unknown): string {
 const model = computed(() => {
   const o = asObject(props.blockProps) ?? {}
   const file = asObject(o.imageFile)
+  const fileUrl = file && typeof file.path === 'string' && file.path ? file.path : ''
+  const rawUrl = typeof o.url === 'string' ? o.url.trim() : ''
+  const externalUrl = /^https:\/\//i.test(rawUrl) ? rawUrl : ''
   return {
-    url: file && typeof file.path === 'string' && file.path ? file.path : '',
+    url: fileUrl || externalUrl,
     fileId: file && typeof file.id === 'number' ? file.id : undefined,
     alt: typeof o.alt === 'string' ? o.alt : '',
     maxWidth: asCssSize(o.maxWidth),

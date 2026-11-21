@@ -43,6 +43,11 @@ const VIEWERS: Record<BlockType, AsyncComponentLoader> = {
   countdown: async () => import('./blocks/CountdownBlock.vue'),
   feedback: async () => import('./blocks/FeedbackBlock.vue'),
   supporter: async () => import('./blocks/SupporterBlock.vue'),
+  danmakuVote: async () => import('./blocks/DanmakuVoteBlock.vue'),
+  queueStatus: async () => import('./blocks/QueueStatusBlock.vue'),
+  ocProfile: async () => import('./blocks/OcProfileBlock.vue'),
+  commission: async () => import('./blocks/CommissionBlock.vue'),
+  voiceBoard: async () => import('./blocks/VoiceBoardBlock.vue'),
 }
 
 const AsyncBlockLoading = () =>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import AlertCircleOutline from '@vicons/ionicons5/es/AlertCircleOutline'
-import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
-import EllipsisHorizontalOutline from '@vicons/ionicons5/es/EllipsisHorizontalOutline'
-import EyeOffOutline from '@vicons/ionicons5/es/EyeOffOutline'
-import EyeOutline from '@vicons/ionicons5/es/EyeOutline'
-import LocateOutline from '@vicons/ionicons5/es/LocateOutline'
-import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
+import {
+  AlertCircle,
+  ChevronRight,
+  Crosshair,
+  Eye,
+  EyeOff,
+  GripVertical,
+  MoreHorizontal,
+} from 'lucide-vue-next'
 import { computed, inject } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -48,7 +50,7 @@ const props = defineProps<{
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const indentWidth = computed(() => `${props.depth * 14}px`)
+const indentWidth = computed(() => `${props.depth * 12}px`)
 const blocksModel = computed({
   get() {
     return props.blocks
@@ -146,7 +148,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
       :data-block-id="b.id"
     >
       <div
-        class="block-item-row relative flex gap-1.5 items-center py-1.5 px-2 rounded-lg border border-transparent cursor-pointer select-none transition-colors hover:bg-muted"
+        class="group block-item-row relative flex gap-1 items-center py-1.5 px-1.5 rounded-md border border-transparent cursor-pointer select-none transition-colors duration-150 hover:bg-muted"
         :class="{
           'border-border bg-muted': props.selectionSet.has(b.id),
           'border-destructive': props.invalidSet.has(b.id),
@@ -173,150 +175,154 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         @mouseleave="editor.hoveredBlockId.value === b.id && (editor.hoveredBlockId.value = null)"
       >
         <div
+          v-if="props.depth > 0"
           class="shrink-0"
           :style="{ width: indentWidth }"
         />
 
-        <component
-          :is="ChevronForwardOutline"
+        <ChevronRight
           v-if="b.type === 'layout'"
-          class="expand-toggle size-4 cursor-pointer text-muted-foreground transition-transform"
+          class="expand-toggle size-3.5 cursor-pointer text-muted-foreground transition-transform duration-150 shrink-0"
           :class="{ 'rotate-90': props.expandedLayoutIdSet.has(b.id) }"
           title="折叠/展开"
           @click.stop="props.onToggleExpanded(b.id)"
         />
-        <div
-          v-else
-          class="expand-placeholder w-4 h-4 shrink-0"
-        />
-
-        <component
-          :is="ReorderThreeOutline"
-          class="drag-handle size-4.5 cursor-grab active:cursor-grabbing text-muted-foreground shrink-0"
+        <GripVertical
+          class="drag-handle size-3.5 cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground shrink-0"
           title="拖拽排序"
         />
 
         <component
           :is="getIcon(b.type)!"
           v-if="getIcon(b.type)"
-          class="type-icon size-4 shrink-0 text-muted-foreground"
-        />
-        <div
-          v-else
-          class="type-icon-placeholder w-4 h-4 shrink-0"
+          class="type-icon size-3.5 shrink-0 text-muted-foreground"
         />
 
-        <div class="block-label flex-1 min-w-0 flex items-center">
-          <span class="overflow-hidden text-ellipsis whitespace-nowrap text-xs">
+        <div class="block-label flex-1 min-w-0 flex items-center gap-1">
+          <span
+            class="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-medium"
+            :title="getDisplayTitle(b)"
+          >
             {{ getDisplayTitle(b) }}
           </span>
           <span
-            v-if="b.name && b.name.trim().length"
-            class="type-hint text-[11px] text-muted-foreground ml-2 truncate"
-          >
-            {{ getBlockLabel(b.type) }}
-          </span>
-          <span
             v-if="b.type === 'layout'"
-            class="text-[11px] text-muted-foreground ml-1.5"
+            class="text-[11px] text-muted-foreground tabular-nums shrink-0"
           >
             ({{ getLayoutChildrenModel(b).length }})
+          </span>
+          <span
+            v-else-if="b.colSpan && b.colSpan > 1"
+            class="text-[10px] text-muted-foreground bg-background/80 border border-border rounded px-1 tabular-nums shrink-0"
+            :title="`占 ${b.colSpan} 列`"
+          >
+            {{ b.colSpan }}列
           </span>
         </div>
 
         <Transition name="fade-scale">
           <span
             v-if="props.dragGroupTargetId === b.id"
-            class="drag-group-hint text-xs text-primary border border-primary px-1.5 rounded-full"
+            class="drag-group-hint text-[11px] text-primary border border-primary px-1.5 rounded-full shrink-0"
           >
             {{ props.dragGroupTargetMode === 'into-layout' ? '松开加入组' : '松开成组' }}
           </span>
         </Transition>
 
-        <component
-          :is="AlertCircleOutline"
+        <AlertCircle
           v-if="props.invalidSet.has(b.id)"
-          class="size-4 text-destructive shrink-0"
+          class="size-3.5 text-destructive shrink-0"
           title="该区块配置有误"
         />
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
-                @click.stop="b.hidden = !b.hidden"
-              >
-                <component
-                  :is="b.hidden ? EyeOffOutline : EyeOutline"
-                  class="size-3.5"
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{{ b.hidden ? '显示区块' : '隐藏区块' }}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <!-- 隐藏态常驻小眼睛提醒；其余操作在 hover / 选中时显现，为区块标题留足空间 -->
+        <div
+          class="flex items-center gap-0.5 shrink-0 transition-opacity duration-150"
+          :class="
+            props.selectionSet.has(b.id)
+              ? 'opacity-100'
+              : b.hidden
+                ? 'opacity-80 group-hover:opacity-100'
+                : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100'
+          "
+        >
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="none"
+                  variant="ghost"
+                  class="size-5 rounded-sm"
+                  :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
+                  @click.stop="b.hidden = !b.hidden"
+                >
+                  <component
+                    :is="b.hidden ? EyeOff : Eye"
+                    class="size-3"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{{ b.hidden ? '显示区块' : '隐藏区块' }}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                aria-label="在预览中定位"
-                @click.stop="scrollToPreviewBlock(b.id)"
-              >
-                <component
-                  :is="LocateOutline"
-                  class="size-3.5"
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>在预览中定位</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="none"
+                  variant="ghost"
+                  class="size-5 rounded-sm"
+                  :class="b.hidden && !props.selectionSet.has(b.id) ? 'hidden group-hover:inline-flex' : ''"
+                  aria-label="在预览中定位"
+                  @click.stop="scrollToPreviewBlock(b.id)"
+                >
+                  <Crosshair class="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>在预览中定位</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              aria-label="更多区块操作"
-              @click.stop
-            >
-              <component
-                :is="EllipsisHorizontalOutline"
-                class="size-3.5"
-              />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            class="w-44"
-          >
-            <template
-              v-for="item in props.blockActionOptions"
-              :key="item.key"
-            >
-              <DropdownMenuSeparator v-if="item.type === 'divider'" />
-              <DropdownMenuItem
-                v-else
-                :disabled="item.disabled"
-                :class="item.key === 'delete' ? 'text-destructive focus:text-destructive' : ''"
-                @click="props.onBlockAction(String(item.key), b.id)"
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button
+                size="none"
+                variant="ghost"
+                class="size-5 rounded-sm"
+                :class="b.hidden && !props.selectionSet.has(b.id) ? 'hidden group-hover:inline-flex' : ''"
+                aria-label="更多区块操作"
+                @click.stop
               >
-                <component
-                  :is="item.icon"
-                  v-if="item.icon"
-                  class="size-4 shrink-0"
-                />
-                {{ item.label }}
-              </DropdownMenuItem>
-            </template>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <MoreHorizontal class="size-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              class="w-44"
+            >
+              <template
+                v-for="item in props.blockActionOptions"
+                :key="item.key"
+              >
+                <DropdownMenuSeparator v-if="item.type === 'divider'" />
+                <DropdownMenuItem
+                  v-else
+                  :disabled="item.disabled"
+                  :class="item.key === 'delete' ? 'text-destructive focus:text-destructive' : ''"
+                  @click="props.onBlockAction(String(item.key), b.id)"
+                >
+                  <component
+                    :is="item.icon"
+                    v-if="item.icon"
+                    class="size-3.5 shrink-0"
+                  />
+                  {{ item.label }}
+                </DropdownMenuItem>
+              </template>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <Transition name="fade">

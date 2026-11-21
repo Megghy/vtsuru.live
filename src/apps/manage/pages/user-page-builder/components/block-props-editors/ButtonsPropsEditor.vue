@@ -88,18 +88,19 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                     <SelectValue placeholder="跳转类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="page">页面</SelectItem>
-                    <SelectItem value="external">外链</SelectItem>
-                    <SelectItem value="back">返回</SelectItem>
+                    <SelectItem value="page">站内页面</SelectItem>
+                    <SelectItem value="external">外部链接</SelectItem>
+                    <SelectItem value="copy">复制文本</SelectItem>
+                    <SelectItem value="back">返回上页</SelectItem>
                   </SelectContent>
                 </Select>
               </FormField>
               <FormField
-                label="目标"
+                :label="getNavigationTargetType(item) === 'copy' ? '复制内容' : '目标'"
                 class="span-full"
               >
                 <Select
-                  v-if="item.page"
+                  v-if="getNavigationTargetType(item) === 'page'"
                   v-model="item.page"
                 >
                   <SelectTrigger>
@@ -115,8 +116,21 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                     </SelectItem>
                   </SelectContent>
                 </Select>
+                <div
+                  v-else-if="getNavigationTargetType(item) === 'copy'"
+                  class="space-y-2"
+                >
+                  <Input
+                    v-model="item.copyText"
+                    placeholder="点击后自动复制的群号、口令或邮箱..."
+                  />
+                  <Input
+                    v-model="item.copiedMessage"
+                    placeholder="复制成功提示（可选，默认“已复制到剪贴板”）"
+                  />
+                </div>
                 <Input
-                  v-else-if="!item.back"
+                  v-else-if="getNavigationTargetType(item) === 'external'"
                   v-model="item.url"
                   placeholder="https://..."
                 />

@@ -40,6 +40,11 @@ export const BLOCK_TYPES = [
   'countdown',
   'feedback',
   'supporter',
+  'danmakuVote',
+  'queueStatus',
+  'ocProfile',
+  'commission',
+  'voiceBoard',
 ] as const
 
 export type BlockType = (typeof BLOCK_TYPES)[number]
@@ -71,6 +76,8 @@ export interface BlockNode {
   name?: string
   hidden?: boolean
   visibility?: BlockVisibility
+  colSpan?: number
+  rowSpan?: number
   props?: unknown
 }
 

@@ -1,10 +1,13 @@
-import BookCoins20Filled from '@vicons/fluent/es/BookCoins20Filled'
-import CalendarClock24Filled from '@vicons/fluent/es/CalendarClock24Filled'
-import CheckmarkCircle24Filled from '@vicons/fluent/es/CheckmarkCircle24Filled'
-import VideoAdd20Filled from '@vicons/fluent/es/VideoAdd20Filled'
-import Chatbox from '@vicons/ionicons5/es/Chatbox'
-import Chatbubbles from '@vicons/ionicons5/es/Chatbubbles'
-import MusicalNotes from '@vicons/ionicons5/es/MusicalNotes'
+import {
+  CalendarClock,
+  CheckCircle2,
+  Coins,
+  Film,
+  ListOrdered,
+  MessageSquare,
+  MessagesSquare,
+  Music,
+} from 'lucide-vue-next'
 import type { Component } from 'vue'
 
 import { FunctionTypes } from '@/api/generated/model'
@@ -28,44 +31,51 @@ export const USER_FEATURE_DEFINITIONS: readonly UserFeatureDefinition[] = [
     key: 'songList',
     label: '歌单 / 点歌',
     routeName: 'user-songList',
-    icon: MusicalNotes,
+    icon: Music,
     functionType: FunctionTypes.SongList,
   },
   {
     key: 'questionBox',
     label: '提问箱',
     routeName: 'user-questionBox',
-    icon: Chatbox,
+    icon: MessageSquare,
     functionType: FunctionTypes.QuestionBox,
   },
   {
     key: 'checkInRanking',
     label: '签到排行',
     routeName: 'user-checkin',
-    icon: CheckmarkCircle24Filled,
+    icon: CheckCircle2,
     functionType: FunctionTypes.CheckInRanking,
   },
   {
     key: 'pointGoods',
     label: '积分兑换',
     routeName: 'user-goods',
-    icon: BookCoins20Filled,
+    icon: Coins,
     functionType: FunctionTypes.Point,
   },
   {
     key: 'videoCollect',
     label: '视频征集',
     routeName: 'user-video-collect',
-    icon: VideoAdd20Filled,
+    icon: Film,
     functionType: FunctionTypes.VideoCollect,
   },
-  { key: 'forum', label: '讨论区', routeName: 'user-forum', icon: Chatbubbles, functionType: null },
+  { key: 'forum', label: '讨论区', routeName: 'user-forum', icon: MessagesSquare, functionType: null },
   {
     key: 'schedule',
     label: '直播日程',
     routeName: 'user-schedule',
-    icon: CalendarClock24Filled,
+    icon: CalendarClock,
     functionType: FunctionTypes.Schedule,
+  },
+  {
+    key: 'queue',
+    label: '排队队列',
+    routeName: 'user-queue',
+    icon: ListOrdered,
+    functionType: FunctionTypes.Queue,
   },
 ]
 

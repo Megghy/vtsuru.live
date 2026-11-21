@@ -149,6 +149,23 @@ const layoutStyle = computed(() => ({
 
 const blockComponents = BLOCK_COMPONENTS
 
+function getGridChildStyle(child: BlockNode) {
+  if (layout.value !== 'grid') return undefined
+  const colSpan =
+    typeof child.colSpan === 'number' && Number.isInteger(child.colSpan) && child.colSpan > 1
+      ? Math.min(child.colSpan, columns.value)
+      : undefined
+  const rowSpan =
+    typeof child.rowSpan === 'number' && Number.isInteger(child.rowSpan) && child.rowSpan > 1
+      ? Math.min(child.rowSpan, 6)
+      : undefined
+  if (!colSpan && !rowSpan) return undefined
+  return {
+    '--bento-col-span': colSpan ? String(colSpan) : undefined,
+    '--bento-row-span': rowSpan ? String(rowSpan) : undefined,
+  } as Record<string, string | undefined>
+}
+
 function handleBlockClick(event: MouseEvent, blockId: string) {
   if (props.editorMode !== 'select') return
   event.preventDefault()
@@ -183,6 +200,7 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
           :key="child.id"
           class="item relative min-w-0"
           :class="{
+            'bento-grid-item': layout === 'grid',
             'flex-[0_1_240px]': layout === 'row',
             'flex-none': layout === 'column',
             'self-stretch flex [&>*]:flex-1 [&>*]:min-w-0': layout !== 'column' && alignKey === 'stretch',
@@ -195,6 +213,7 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
           :data-block-overlay="child.hidden ? '已隐藏' : '当前预览条件下不显示'"
           :data-block-id="child.id"
           :data-block-type="child.type"
+          :style="getGridChildStyle(child)"
           @click="handleBlockClick($event, child.id)"
           @mouseenter="props.editorMode && emit('hover-block', child.id)"
           @mouseleave="props.editorMode && emit('hover-block', null)"
@@ -226,6 +245,16 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 </template>
 
 <style scoped>
+.bento-grid-item {
+  grid-column: span var(--bento-col-span, 1) / span var(--bento-col-span, 1);
+  grid-row: span var(--bento-row-span, 1) / span var(--bento-row-span, 1);
+}
+@container (max-width: 520px) {
+  .bento-grid-item {
+    grid-column: span 1 / span 1;
+    grid-row: span 1 / span 1;
+  }
+}
 .item.selected {
   outline: 2px solid var(--primary);
   outline-offset: 3px;

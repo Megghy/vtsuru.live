@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import AlertCircleOutline from '@vicons/ionicons5/es/AlertCircleOutline'
-import ArrowRedoOutline from '@vicons/ionicons5/es/ArrowRedoOutline'
-import ArrowUndoOutline from '@vicons/ionicons5/es/ArrowUndoOutline'
-import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
-import EllipsisHorizontalOutline from '@vicons/ionicons5/es/EllipsisHorizontalOutline'
-import EyeOutline from '@vicons/ionicons5/es/EyeOutline'
-import FolderOpenOutline from '@vicons/ionicons5/es/FolderOpenOutline'
-import GridOutline from '@vicons/ionicons5/es/GridOutline'
-import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
-import SaveOutline from '@vicons/ionicons5/es/SaveOutline'
-import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
-import { computed, inject } from 'vue'
+import {
+  AlertCircle,
+  Download,
+  Eye,
+  FolderOpen,
+  LayoutGrid,
+  MoreHorizontal,
+  Palette,
+  Redo2,
+  RotateCcw,
+  Save,
+  Settings2,
+  Trash2,
+  Undo2,
+  Upload,
+} from 'lucide-vue-next'
+import { computed, inject, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import {
@@ -35,12 +39,15 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const dialog = useDialog()
+const importInputRef = ref<HTMLInputElement | null>(null)
+
 const statusText = computed(() =>
   editor.hasUnpublishedChanges.value && !editor.isDirty.value
     ? `${editor.saveStatusText.value} · 未发布`
     : editor.saveStatusText.value,
 )
 const problemCount = computed(() => editor.liveValidationIssues.value.length)
+const isBlockMode = computed(() => editor.currentPage.value.mode === 'block')
 
 function confirmRollback() {
   dialog.warning({
@@ -63,20 +70,56 @@ function confirmClearDraft() {
 }
 
 function confirmDiscardLocalChanges() {
-  const savedSnapshot = editor.lastSavedSnapshot.value
   dialog.warning({
     title: '放弃本地修改',
     content: '将恢复最近一次保存的服务端草稿，已发布版本和服务端草稿不会被删除。',
     positiveText: '放弃修改',
     negativeText: '取消',
-    onPositiveClick: () => editor.discardLocalChanges(savedSnapshot),
+    onPositiveClick: () => editor.discardLocalChanges(editor.lastSavedSnapshot.value),
   })
+}
+
+function handleExportJson() {
+  try {
+    const raw = editor.exportCurrentBlockPageJson()
+    const blob = new Blob([raw], { type: 'application/json;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `vtsuru-page-${editor.currentKey.value}-${new Date().toISOString().slice(0, 10)}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+    editor.message.success('已导出当前区块页 JSON')
+  } catch (err: any) {
+    editor.message.error(err?.message || '导出失败')
+  }
+}
+
+function triggerImportJson() {
+  importInputRef.value?.click()
+}
+
+async function handleImportFileChange(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0]
+  if (!file) return
+  try {
+    const text = await file.text()
+    editor.importCurrentBlockPageJson(text)
+  } catch (err: any) {
+    editor.message.error(err?.message || '导入失败，请确认文件格式有效')
+  } finally {
+    if (input) input.value = ''
+  }
 }
 
 function handleMoreAction(key: string) {
   if (key === 'resources') editor.resourcesModal.value = true
   else if (key === 'layout') emit('open-layout')
+  else if (key === 'export-json') handleExportJson()
+  else if (key === 'import-json') triggerImportJson()
   else if (key === 'auto-save') editor.autoSaveEnabled.value = !editor.autoSaveEnabled.value
+  else if (key === 'discard-local') confirmDiscardLocalChanges()
   else if (key === 'preview-rollback') editor.openRollbackPreview()
   else if (key === 'rollback') confirmRollback()
   else if (key === 'clear') confirmClearDraft()
@@ -85,6 +128,24 @@ function handleMoreAction(key: string) {
 
 <template>
   <div class="min-w-0 flex items-center justify-end gap-1.5 flex-nowrap">
+    <input
+      ref="importInputRef"
+      type="file"
+      accept=".json,application/json"
+      class="hidden"
+      @change="handleImportFileChange"
+    />
+
+    <span
+      class="inline-block min-w-0 max-w-[136px] overflow-hidden text-right text-ellipsis whitespace-nowrap text-[11px] text-muted-foreground mr-1 max-[920px]:hidden"
+      :class="{ 'text-destructive': editor.hasSyncError.value }"
+      role="status"
+      aria-live="polite"
+      :title="statusText"
+    >
+      {{ statusText }}
+    </span>
+
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger as-child>
@@ -95,13 +156,10 @@ function handleMoreAction(key: string) {
             aria-label="撤销"
             @click="editor.undo"
           >
-            <component
-              :is="ArrowUndoOutline"
-              class="size-4"
-            />
+            <Undo2 class="size-3.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>撤销</TooltipContent>
+        <TooltipContent>撤销 (Ctrl+Z)</TooltipContent>
       </Tooltip>
     </TooltipProvider>
 
@@ -115,70 +173,40 @@ function handleMoreAction(key: string) {
             aria-label="重做"
             @click="editor.redo"
           >
-            <component
-              :is="ArrowRedoOutline"
-              class="size-4"
-            />
+            <Redo2 class="size-3.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>重做</TooltipContent>
+        <TooltipContent>重做 (Ctrl+Y)</TooltipContent>
       </Tooltip>
     </TooltipProvider>
 
     <Button
       variant="outline"
+      class="gap-1.5"
       @click="emit('open-global-style')"
     >
-      <component
-        :is="ColorPaletteOutline"
-        class="size-4 mr-1 text-primary"
-      />
-      外观与主题
+      <Palette class="size-3.5 text-primary" />
+      <span class="max-[640px]:hidden">外观与主题</span>
     </Button>
-
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <Button
-            class="max-[760px]:px-2"
-            variant="outline"
-            :disabled="!editor.isDirty.value || editor.isSaving.value"
-            aria-label="放弃本地修改"
-            @click="confirmDiscardLocalChanges"
-          >
-            <component
-              :is="RefreshOutline"
-              class="size-4 min-[761px]:mr-1"
-            />
-            <span class="max-[760px]:hidden">放弃本地修改</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>放弃本地修改</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
 
     <Button
       variant="outline"
+      class="gap-1.5"
       :disabled="editor.isSaving.value"
       @click="editor.saveDraft"
     >
-      <component
-        :is="SaveOutline"
-        class="size-4 mr-1"
-      />
-      保存
+      <Save class="size-3.5" />
+      <span>保存</span>
     </Button>
 
     <Button
       v-if="problemCount"
       variant="destructive"
+      class="gap-1.5"
       @click="editor.openPublishModal"
     >
-      <component
-        :is="AlertCircleOutline"
-        class="size-4 mr-1"
-      />
-      {{ problemCount }} 个问题
+      <AlertCircle class="size-3.5" />
+      <span>{{ problemCount }} 个问题</span>
     </Button>
 
     <Button
@@ -195,62 +223,60 @@ function handleMoreAction(key: string) {
           size="icon-sm"
           aria-label="更多操作"
         >
-          <component
-            :is="EllipsisHorizontalOutline"
-            class="size-4"
-          />
+          <MoreHorizontal class="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        class="w-48"
+        class="w-52"
       >
         <div class="px-2 py-1.5 text-[11px] text-muted-foreground select-none">
           编辑来源：{{ editor.loadedFromLabel.value }}
         </div>
-        <template v-if="editor.currentPage.value.mode === 'block'">
-          <DropdownMenuItem @click="handleMoreAction('resources')">
-            <component
-              :is="FolderOpenOutline"
-              class="size-3.5 mr-2"
-            />
-            资源管理
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="handleMoreAction('layout')">
-            <component
-              :is="GridOutline"
-              class="size-3.5 mr-2"
-            />
-            编辑器布局
-          </DropdownMenuItem>
+        <DropdownMenuItem @click="handleMoreAction('resources')">
+          <FolderOpen class="size-3.5 mr-2" />
+          资源管理
+        </DropdownMenuItem>
+        <DropdownMenuItem @click="handleMoreAction('layout')">
+          <LayoutGrid class="size-3.5 mr-2" />
+          编辑器布局
+        </DropdownMenuItem>
+        <template v-if="isBlockMode">
           <DropdownMenuSeparator />
+          <DropdownMenuItem @click="handleMoreAction('export-json')">
+            <Download class="size-3.5 mr-2" />
+            导出当前页 JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="handleMoreAction('import-json')">
+            <Upload class="size-3.5 mr-2" />
+            导入区块页 JSON
+          </DropdownMenuItem>
         </template>
+        <DropdownMenuSeparator />
         <DropdownMenuItem @click="handleMoreAction('auto-save')">
-          <component
-            :is="SettingsOutline"
-            class="size-3.5 mr-2"
-          />
+          <Settings2 class="size-3.5 mr-2" />
           {{ editor.autoSaveEnabled.value ? '关闭自动保存' : '开启自动保存' }}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          :disabled="!editor.isDirty.value || editor.isSaving.value"
+          @click="handleMoreAction('discard-local')"
+        >
+          <RotateCcw class="size-3.5 mr-2" />
+          放弃本地修改
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           :disabled="!editor.rollbackAvailable.value"
           @click="handleMoreAction('preview-rollback')"
         >
-          <component
-            :is="EyeOutline"
-            class="size-3.5 mr-2"
-          />
+          <Eye class="size-3.5 mr-2" />
           预览可回滚版本
         </DropdownMenuItem>
         <DropdownMenuItem
           :disabled="!editor.rollbackAvailable.value || editor.isSaving.value"
           @click="handleMoreAction('rollback')"
         >
-          <component
-            :is="RefreshOutline"
-            class="size-3.5 mr-2"
-          />
+          <RotateCcw class="size-3.5 mr-2" />
           回滚已发布版本
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -258,23 +284,10 @@ function handleMoreAction(key: string) {
           class="text-destructive focus:text-destructive"
           @click="handleMoreAction('clear')"
         >
-          <component
-            :is="TrashOutline"
-            class="size-3.5 mr-2"
-          />
+          <Trash2 class="size-3.5 mr-2" />
           清空草稿
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-
-    <span
-      class="inline-block min-w-0 max-w-[148px] overflow-hidden text-left text-ellipsis whitespace-nowrap text-xs text-muted-foreground max-[760px]:hidden"
-      :class="{ 'text-destructive': editor.hasSyncError.value }"
-      role="status"
-      aria-live="polite"
-      :title="statusText"
-    >
-      {{ statusText }}
-    </span>
   </div>
 </template>

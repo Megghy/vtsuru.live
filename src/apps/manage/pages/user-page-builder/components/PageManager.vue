@@ -1,24 +1,30 @@
 <script setup lang="ts">
-import AppsOutline from '@vicons/ionicons5/es/AppsOutline'
-import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
-import EllipsisHorizontalOutline from '@vicons/ionicons5/es/EllipsisHorizontalOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { Copy, LayoutGrid, MoreHorizontal, Plus, Trash2 } from 'lucide-vue-next'
 import { computed, defineAsyncComponent, inject, nextTick, ref, watch } from 'vue'
 
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import type { UserPageConfig } from '@/apps/user-page/types'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { FormField } from '@/shared/ui/form-field'
-import { Input } from '@/shared/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Separator } from '@/shared/ui/separator'
-import { Tag } from '@/shared/ui/tag'
 
 import { UserPageEditorKey } from '../context'
-import { PAGE_MODE_OPTIONS } from '../editorPageConfig'
+import { getAvailablePageModeOptions } from '../editorPageConfig'
 import { usePageEntries } from '../usePageEntries'
 
 const PageIconPickerModal = defineAsyncComponent(() => import('./PageIconPickerModal.vue'))
@@ -29,6 +35,7 @@ if (!editor) throw new Error('UserPageEditor context is missing')
 const addPageModal = ref(false)
 const newSlug = ref('')
 const newMode = ref<UserPageConfig['mode']>('block')
+const subpageModeOptions = computed(() => getAvailablePageModeOptions(false))
 
 const duplicatePageModal = ref(false)
 const duplicateFromSlug = ref('')
@@ -119,7 +126,7 @@ function confirmDuplicatePage() {
       <div class="page-item__row flex items-center gap-1">
         <Button
           :variant="editor.currentKey.value === 'home' ? 'default' : 'outline'"
-          class="page-item__main w-full justify-start px-2"
+          class="page-item__main w-full justify-start"
           @click="editor.currentKey.value = 'home'"
         >
           <span class="truncate text-left w-full">主页 /@{{ editor.account.value.name || '...' }}</span>
@@ -131,10 +138,11 @@ function confirmDuplicatePage() {
 
     <Button
       variant="outline"
-      class="w-full"
+      class="w-full gap-1.5"
       :disabled="!canCreateMorePages"
       @click="addPageModal = true"
     >
+      <Plus class="size-3.5" />
       新建子页面
     </Button>
 
@@ -143,7 +151,7 @@ function confirmDuplicatePage() {
         v-for="section in pageSections"
         :key="section.key"
       >
-        <span class="text-xs text-muted-foreground mt-1">
+        <span class="text-[11px] font-medium text-muted-foreground mt-1">
           {{ section.label }}
         </span>
         <div
@@ -155,7 +163,7 @@ function confirmDuplicatePage() {
           <div class="page-item__row flex items-center gap-1">
             <Button
               :variant="editor.currentKey.value === p.slug ? 'default' : 'outline'"
-              class="page-item__main flex-1 min-w-0 justify-start px-2"
+              class="page-item__main flex-1 min-w-0 justify-start"
               @click="editor.currentKey.value = p.slug"
             >
               <div class="flex items-center w-full min-w-0 gap-1.5">
@@ -174,10 +182,7 @@ function confirmDuplicatePage() {
                   size="icon-xs"
                   aria-label="更多页面操作"
                 >
-                  <component
-                    :is="EllipsisHorizontalOutline"
-                    class="size-3.5"
-                  />
+                  <MoreHorizontal class="size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -185,27 +190,18 @@ function confirmDuplicatePage() {
                 class="min-w-32"
               >
                 <DropdownMenuItem @click="openIconPicker(p.slug)">
-                  <component
-                    :is="AppsOutline"
-                    class="size-3.5 mr-2"
-                  />
+                  <LayoutGrid class="size-3.5 mr-2" />
                   选择图标
                 </DropdownMenuItem>
                 <DropdownMenuItem @click="handlePageAction('duplicate', p.slug)">
-                  <component
-                    :is="CopyOutline"
-                    class="size-3.5 mr-2"
-                  />
+                  <Copy class="size-3.5 mr-2" />
                   复制
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   class="text-destructive focus:text-destructive"
                   @click="handlePageAction('delete', p.slug)"
                 >
-                  <component
-                    :is="TrashOutline"
-                    class="size-3.5 mr-2"
-                  />
+                  <Trash2 class="size-3.5 mr-2" />
                   删除
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -220,26 +216,31 @@ function confirmDuplicatePage() {
       <DialogContent class="max-w-md p-4">
         <DialogHeader>
           <DialogTitle class="text-sm">新建子页面</DialogTitle>
+          <DialogDescription class="sr-only">输入页面链接标识并选择搭建模式以创建新的公开子页面。</DialogDescription>
         </DialogHeader>
         <div class="flex flex-col gap-3 py-2">
           <FormField
+            v-model="newSlug"
             type="text"
             label="页面链接标识 (Slug)"
             required
             placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）"
-            v-model="newSlug"
           />
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium">搭建模式</label>
+          <FormField label="搭建模式">
             <RadioGroup
               v-model="newMode"
               class="flex flex-col gap-2"
             >
               <label
-                v-for="opt in PAGE_MODE_OPTIONS"
+                v-for="opt in subpageModeOptions"
                 :key="opt.value"
-                class="flex items-start gap-2 p-2 rounded-lg border border-border cursor-pointer hover:bg-muted/50"
+                class="flex items-start gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors"
+                :class="
+                  newMode === opt.value
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:bg-muted/50'
+                "
               >
                 <RadioGroupItem
                   :value="opt.value"
@@ -248,13 +249,13 @@ function confirmDuplicatePage() {
                 <div class="flex-1 text-xs">
                   <div class="flex items-center gap-1.5 font-medium">
                     {{ opt.label }}
-                    <Tag
+                    <Badge
                       v-if="opt.tag"
                       variant="secondary"
-                      class="text-[10px] h-4 px-1"
+                      size="xs"
                     >
                       {{ opt.tag }}
-                    </Tag>
+                    </Badge>
                   </div>
                   <div class="text-muted-foreground mt-0.5 text-[11px] leading-relaxed">
                     {{ opt.description }}
@@ -262,12 +263,9 @@ function confirmDuplicatePage() {
                 </div>
               </label>
             </RadioGroup>
-          </div>
+          </FormField>
 
-          <Alert
-            size="sm"
-            class="bg-primary/5 border-primary/20"
-          >
+          <Alert class="bg-primary/5 border-primary/20">
             <AlertDescription>
               创建后访问地址：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
             </AlertDescription>
@@ -277,13 +275,15 @@ function confirmDuplicatePage() {
           <Button
             variant="outline"
             @click="addPageModal = false"
-            >取消</Button
           >
+            取消
+          </Button>
           <Button
             :disabled="!newSlug.trim().length"
             @click="createPage"
-            >创建</Button
           >
+            创建
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -293,61 +293,58 @@ function confirmDuplicatePage() {
       <DialogContent class="max-w-sm p-4">
         <DialogHeader>
           <DialogTitle class="text-sm">复制子页面</DialogTitle>
+          <DialogDescription class="sr-only">输入新的页面标识，基于所选子页面创建一份独立副本。</DialogDescription>
         </DialogHeader>
         <div class="flex flex-col gap-3 py-2">
-          <Alert
-            size="sm"
-            class="bg-primary/5 border-primary/20"
-          >
+          <Alert class="bg-primary/5 border-primary/20">
             <AlertDescription>复制自：/{{ duplicateFromSlug || 'slug' }}</AlertDescription>
           </Alert>
           <FormField
+            v-model="duplicateToSlug"
             type="text"
             label="新页面标识 (Slug)"
+            description="会自动为复制后的页面生成新的区块 ID，避免与原页面冲突。"
             required
             placeholder="例如 links-copy"
-            v-model="duplicateToSlug"
           />
-          <span class="text-[11px] text-muted-foreground">会自动为复制后的页面生成新的区块 ID，避免与原页面冲突。</span>
         </div>
         <DialogFooter>
           <Button
             variant="outline"
             @click="duplicatePageModal = false"
-            >取消</Button
           >
+            取消
+          </Button>
           <Button
             :disabled="!duplicateToSlug.trim().length"
             @click="confirmDuplicatePage"
-            >确定</Button
           >
+            确定
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
 
     <!-- 删除确认弹窗 -->
-    <Dialog v-model:open="deletePageModal">
-      <DialogContent class="max-w-sm p-4">
-        <DialogHeader>
-          <DialogTitle class="text-sm text-destructive">删除子页面</DialogTitle>
-        </DialogHeader>
-        <div class="py-2 text-xs text-muted-foreground">
-          将删除 /{{ deletePageSlug }} 及其中全部配置，此操作可通过撤销恢复。
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            @click="deletePageModal = false"
-            >取消</Button
-          >
-          <Button
-            variant="destructive"
+    <AlertDialog v-model:open="deletePageModal">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>删除子页面</AlertDialogTitle>
+          <AlertDialogDescription>
+            将删除 /{{ deletePageSlug }} 及其中全部配置，此操作可通过撤销恢复。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>取消</AlertDialogCancel>
+          <AlertDialogAction
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             @click="confirmDeletePage"
-            >删除</Button
           >
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            删除
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     <PageIconPickerModal
       v-if="hasOpenedIconPicker || iconPickerShown"

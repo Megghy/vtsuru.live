@@ -11,7 +11,7 @@ import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { UserPagesSettings } from '@/apps/user-page/types'
 
-import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks } from './editorHelpers'
+import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks, stableStringify } from './editorHelpers'
 import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
 import { parseServerValidationIssues, type UserPageValidationIssue } from './validateUserPagesSettings'
 
@@ -52,11 +52,19 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
   function applyPersistedSettings(requestSnapshot: string, persistedSettings: UserPagesSettings) {
     const persistedSnapshot = JSON.stringify(persistedSettings)
     const hasNewerChanges = JSON.stringify(opts.settings.value) !== requestSnapshot
-    opts.lastSavedSnapshot.value = persistedSnapshot
     opts.localDraftBaseSnapshot.value = persistedSnapshot
-    if (!hasNewerChanges && JSON.stringify(opts.settings.value) !== persistedSnapshot) {
+    const semanticallySame = (() => {
+      try {
+        return stableStringify(opts.settings.value, 0) === stableStringify(persistedSettings, 0)
+      } catch {
+        return false
+      }
+    })()
+    if (!hasNewerChanges && !semanticallySame && JSON.stringify(opts.settings.value) !== persistedSnapshot) {
       opts.settings.value = deepCloneJson(persistedSettings)
     }
+    opts.lastSavedSnapshot.value =
+      !hasNewerChanges && semanticallySame ? JSON.stringify(opts.settings.value) : persistedSnapshot
     opts.localDraftStorage.value = {
       settings: deepCloneJson(opts.settings.value),
       baseSnapshot: persistedSnapshot,

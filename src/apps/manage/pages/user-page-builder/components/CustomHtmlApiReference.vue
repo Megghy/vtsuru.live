@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import { Copy } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -89,7 +89,7 @@ async function copySnippet(snippet: string) {
                 aria-label="复制代码"
                 @click.stop="copySnippet(api.snippet)"
               >
-                <CopyOutline class="size-4" />
+                <Copy class="size-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>复制</TooltipContent>

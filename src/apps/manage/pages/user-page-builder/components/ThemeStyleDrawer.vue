@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import CheckmarkOutline from '@vicons/ionicons5/es/CheckmarkOutline'
-import CodeSlashOutline from '@vicons/ionicons5/es/CodeSlashOutline'
-import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
-import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { Check, Code2, Palette, Sparkles, Trash2 } from 'lucide-vue-next'
 import { computed, defineAsyncComponent, inject, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -379,14 +375,14 @@ function clearCurrentTheme() {
       <SheetHeader class="p-4 border-b border-border">
         <SheetTitle class="flex items-center gap-2 text-base">
           <component
-            :is="ColorPaletteOutline"
+            :is="Palette"
             class="size-5 text-primary"
           />
           <span>主页外观与主题</span>
         </SheetTitle>
       </SheetHeader>
 
-      <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div class="flex-1 overflow-y-auto scrollbar-thin p-4 flex flex-col gap-4">
         <!-- 作用域控制：主页时固定，子页时可选 -->
         <div class="bg-muted border border-border rounded-lg py-2.5 px-3.5">
           <template v-if="isCurrentHome">
@@ -426,14 +422,11 @@ function clearCurrentTheme() {
 
         <!-- 智能提取板块 -->
         <div
-          class="bg-[var(--brand-tint,rgba(99,102,241,0.05))] border border-dashed border-border rounded-lg py-2.5 px-3.5"
+          class="bg-primary/5 border border-dashed border-border rounded-lg py-2.5 px-3.5"
         >
           <div class="flex-between">
             <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
-              <component
-                :is="SparklesOutline"
-                class="size-4 text-primary"
-              />
+              <Sparkles class="size-4 text-primary" />
               <span>智能提取配色</span>
             </div>
             <div class="flex items-center gap-1.5">
@@ -446,8 +439,8 @@ function clearCurrentTheme() {
                 从头像提取
               </Button>
               <Button
-                size="xs"
                 v-if="currentBackgroundImageUrl"
+                size="xs"
                 variant="outline"
                 :disabled="isExtracting"
                 @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')"
@@ -465,7 +458,7 @@ function clearCurrentTheme() {
             <div class="flex-between mb-2">
               <div class="flex items-center gap-1.5 text-xs font-medium">
                 <span
-                  class="inline-block size-3.5 rounded-full border border-black/10"
+                  class="inline-block size-3.5 rounded-full border border-border"
                   :style="{ backgroundColor: extractedResult.primaryColor }"
                 />
                 <span>主色：{{ extractedResult.primaryColor }}</span>
@@ -495,9 +488,9 @@ function clearCurrentTheme() {
               <Button
                 v-for="swatch in extractedResult.swatches"
                 :key="swatch"
-                size="icon-xs"
+                size="none"
                 variant="outline"
-                class="size-5 rounded border-black/15 p-0 transition-transform hover:scale-110"
+                class="size-5 rounded border-border p-0 transition-transform duration-150 hover:scale-110"
                 :style="{ backgroundColor: swatch }"
                 :aria-label="`设为主题色 ${swatch}`"
                 @click="applyCustomSwatch(swatch)"
@@ -518,7 +511,7 @@ function clearCurrentTheme() {
               @click="applyPreset(preset)"
             >
               <div
-                class="relative h-[38px] rounded border border-black/8 flex-between px-2 mb-1"
+                class="relative h-[38px] rounded border border-border flex-between px-2 mb-1"
                 :style="{ backgroundColor: preset.backgroundColor }"
               >
                 <span
@@ -571,10 +564,10 @@ function clearCurrentTheme() {
 
             <FormField label="主题模式">
               <Select v-model="themeMode">
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="主题模式" />
                 </SelectTrigger>
-                <SelectContent class="text-xs">
+                <SelectContent>
                   <SelectItem value="auto">跟随站点 (自适应)</SelectItem>
                   <SelectItem value="light">强制浅色</SelectItem>
                   <SelectItem value="dark">强制深色</SelectItem>
@@ -615,12 +608,10 @@ function clearCurrentTheme() {
               >
                 <Button
                   variant="outline"
+                  class="gap-1.5"
                   @click="openCssEditor"
                 >
-                  <component
-                    :is="CodeSlashOutline"
-                    class="size-3.5 mr-1"
-                  />
+                  <Code2 class="size-3.5" />
                   编辑 CSS
                 </Button>
               </SettingRow>
@@ -636,20 +627,20 @@ function clearCurrentTheme() {
           cancel-text="取消"
           @confirm="clearCurrentTheme"
         >
-          <Button variant="destructive">
-            <component
-              :is="TrashOutline"
-              class="size-3.5 mr-1"
-            />
+          <Button
+            variant="destructive"
+            class="gap-1.5"
+          >
+            <Trash2 class="size-3.5" />
             {{ isPageScope ? '重置为继承全局' : '清空当前主题' }}
           </Button>
         </Popconfirm>
 
-        <Button @click="show = false">
-          <component
-            :is="CheckmarkOutline"
-            class="size-3.5 mr-1"
-          />
+        <Button
+          class="gap-1.5"
+          @click="show = false"
+        >
+          <Check class="size-3.5" />
           完成
         </Button>
       </SheetFooter>

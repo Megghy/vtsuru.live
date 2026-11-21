@@ -1,5 +1,6 @@
 import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
+import { listContribPageRefs } from '@/apps/user-page/contrib/registry'
 import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
 import { createId } from './editorHelpers'
@@ -88,6 +89,15 @@ export const PAGE_MODE_OPTIONS: PageModeOption[] = [
   },
   { value: 'custom', label: '自定义代码页', description: '使用 Vue 单文件组件编写完整页面。' },
 ]
+
+export function getAvailablePageModeOptions(isHome: boolean, currentMode?: UserPageConfig['mode']): PageModeOption[] {
+  const hasContribPages = listContribPageRefs().length > 0
+  return PAGE_MODE_OPTIONS.filter((option) => {
+    if (option.value === 'legacy' && !isHome) return false
+    if (option.value === 'contrib' && !hasContribPages && currentMode !== 'contrib') return false
+    return true
+  })
+}
 
 export function getPageModeLabel(mode: UserPageConfig['mode']) {
   if (mode === 'legacy') return '经典模板'

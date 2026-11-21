@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import { Image as ImageIcon } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 
 import { getApiQaGetTags } from '@/api/generated/qa/qa'
@@ -346,6 +346,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       <FormField
         label="本地图片"
         class="span-full"
+        data-validation-field="imageFile"
       >
         <div class="flex items-center gap-2">
           <Button
@@ -354,7 +355,7 @@ function enableFeedbackEmbed(enabled: boolean) {
             :disabled="editor.isUploading.value"
             @click="editor.triggerUpload(props.block, 'imageFile')"
           >
-            <ImageOutline class="size-4" />
+            <ImageIcon class="size-3.5" />
             上传图片
           </Button>
           <Button
@@ -374,6 +375,17 @@ function enableFeedbackEmbed(enabled: boolean) {
             {{ blockProps.imageFile?.name || blockProps.imageFile?.path || '' }}
           </span>
         </div>
+      </FormField>
+      <FormField
+        label="或外部图片链接 (HTTPS)"
+        description="优先展示本地上传图片；未上传时自动使用此外链"
+        class="span-full"
+        data-validation-field="url"
+      >
+        <Input
+          v-model="blockProps.url"
+          placeholder="https://example.com/banner.png"
+        />
       </FormField>
     </PropsGrid>
   </div>

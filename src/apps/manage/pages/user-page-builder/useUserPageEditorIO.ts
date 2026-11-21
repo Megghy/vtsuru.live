@@ -92,7 +92,7 @@ export function useUserPageEditorIO(options: UseUserPageEditorIOOptions) {
         : 'home'
     const path = pageKey === 'home' ? `/@${options.accountName.value}` : `/@${options.accountName.value}/${pageKey}`
     const url = new URL(path, window.location.origin)
-    url.searchParams.set('draftPreview', createDraftPreview(options.accountId.value, settings))
+    url.searchParams.set('draftPreview', createDraftPreview(options.accountId.value, deepCloneJson(settings)))
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 

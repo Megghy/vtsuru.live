@@ -48,5 +48,15 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
     >
       <Switch v-model:checked="blockProps.showRequestStatus" />
     </SettingRow>
+    <SettingRow
+      title="允许块内快捷点歌"
+      variant="none"
+      class="py-1"
+    >
+      <Switch
+        :checked="blockProps.allowQuickRequest !== false"
+        @update:checked="blockProps.allowQuickRequest = $event"
+      />
+    </SettingRow>
   </PropsGrid>
 </template>

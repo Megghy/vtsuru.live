@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import AddOutline from '@vicons/ionicons5/es/AddOutline'
-import ChevronDownOutline from '@vicons/ionicons5/es/ChevronDownOutline'
-import ContractOutline from '@vicons/ionicons5/es/ContractOutline'
-import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
-import ExpandOutline from '@vicons/ionicons5/es/ExpandOutline'
-import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { ChevronDown, ChevronsDownUp, ChevronsUpDown, Copy, GripVertical, Plus, Trash2 } from 'lucide-vue-next'
 import { computed, ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -80,7 +74,7 @@ function duplicateItem(index: number) {
           @click="expandAll"
         >
           <component
-            :is="ExpandOutline"
+            :is="ChevronsUpDown"
             class="size-3.5 mr-1"
           />
           全部展开
@@ -91,7 +85,7 @@ function duplicateItem(index: number) {
           @click="collapseAll"
         >
           <component
-            :is="ContractOutline"
+            :is="ChevronsDownUp"
             class="size-3.5 mr-1"
           />
           全部折叠
@@ -119,7 +113,7 @@ function duplicateItem(index: number) {
       >
         <header class="flex items-center gap-1.5 min-h-[38px] py-1 px-1.5">
           <component
-            :is="ReorderThreeOutline"
+            :is="GripVertical"
             class="repeater-drag-handle size-4.5 cursor-grab text-muted-foreground"
             title="拖拽排序"
           />
@@ -129,7 +123,7 @@ function duplicateItem(index: number) {
             @click="toggle(item._id)"
           >
             <component
-              :is="ChevronDownOutline"
+              :is="ChevronDown"
               class="repeater-chevron size-3.5 transition-transform"
               :class="{ 'rotate-0': expandedIds.has(item._id), '-rotate-90': !expandedIds.has(item._id) }"
             />
@@ -153,7 +147,7 @@ function duplicateItem(index: number) {
                   @click="duplicateItem(index)"
                 >
                   <component
-                    :is="CopyOutline"
+                    :is="Copy"
                     class="size-3.5"
                   />
                 </Button>
@@ -175,7 +169,7 @@ function duplicateItem(index: number) {
               aria-label="删除项目"
             >
               <component
-                :is="TrashOutline"
+                :is="Trash2"
                 class="size-3.5"
               />
             </Button>
@@ -199,7 +193,7 @@ function duplicateItem(index: number) {
       @click="addItem"
     >
       <component
-        :is="AddOutline"
+        :is="Plus"
         class="size-4 mr-1"
       />
       {{ addText || '添加项目' }}

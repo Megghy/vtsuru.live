@@ -25,6 +25,10 @@ export function useBlockPropsEditor(blockSource: MaybeRefOrGetter<BlockNode>) {
     return items
   }
 
+  function arrayProp<T = Record<string, any>>(key: string) {
+    return computed<T[]>(() => ensureArrayProp<T>(key))
+  }
+
   function propertyAvailable(property: string) {
     return isBlockPropertyAvailable(block.value.type, blockProps.value, property)
   }
@@ -62,6 +66,7 @@ export function useBlockPropsEditor(blockSource: MaybeRefOrGetter<BlockNode>) {
     block,
     blockProps,
     ensureArrayProp,
+    arrayProp,
     propertyAvailable,
     propertyNumberRange,
     propertyValues,

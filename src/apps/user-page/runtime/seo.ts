@@ -4,6 +4,7 @@ import { onScopeDispose, watchEffect } from 'vue'
 type SeoSource = {
   title: ComputedRef<string>
   description: ComputedRef<string>
+  image?: ComputedRef<string>
 }
 
 type RestorableElement = {
@@ -39,9 +40,19 @@ export function usePublicPageSeo(source: SeoSource) {
     record.element.setAttribute(attribute, value)
   }
 
+  function removeElement(selector: string) {
+    const record = managed.get(selector)
+    if (!record) return
+    if (record.created) record.element.remove()
+    else if (record.previous === null) record.element.removeAttribute(record.attribute)
+    else record.element.setAttribute(record.attribute, record.previous)
+    managed.delete(selector)
+  }
+
   watchEffect(() => {
     const title = source.title.value
     const description = source.description.value
+    const image = source.image?.value?.trim() || ''
     const canonical = `${window.location.origin}${window.location.pathname}`
     document.title = title
     setElement('meta[name="description"]', 'meta', 'content', description, { name: 'description' })
@@ -50,6 +61,15 @@ export function usePublicPageSeo(source: SeoSource) {
     setElement('meta[property="og:type"]', 'meta', 'content', 'profile', { property: 'og:type' })
     setElement('meta[property="og:url"]', 'meta', 'content', canonical, { property: 'og:url' })
     setElement('link[rel="canonical"]', 'link', 'href', canonical, { rel: 'canonical' })
+    if (image) {
+      setElement('meta[property="og:image"]', 'meta', 'content', image, { property: 'og:image' })
+      setElement('meta[name="twitter:card"]', 'meta', 'content', 'summary_large_image', { name: 'twitter:card' })
+      setElement('meta[name="twitter:image"]', 'meta', 'content', image, { name: 'twitter:image' })
+    } else {
+      removeElement('meta[property="og:image"]')
+      removeElement('meta[name="twitter:card"]')
+      removeElement('meta[name="twitter:image"]')
+    }
   })
 
   onScopeDispose(() => {

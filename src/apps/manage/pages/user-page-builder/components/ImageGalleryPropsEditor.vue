@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import AddOutline from '@vicons/ionicons5/es/AddOutline'
-import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { GripVertical, Image as ImageIcon, Plus, Trash2 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -100,7 +98,7 @@ function propertyAvailable(property: string) {
           <SelectTrigger>
             <SelectValue placeholder="选择样式" />
           </SelectTrigger>
-          <SelectContent class="text-xs">
+          <SelectContent>
             <SelectItem value="grid">网格</SelectItem>
             <SelectItem value="masonry">瀑布流</SelectItem>
             <SelectItem value="carousel">轮播</SelectItem>
@@ -155,7 +153,7 @@ function propertyAvailable(property: string) {
           <SelectTrigger>
             <SelectValue placeholder="裁剪方式" />
           </SelectTrigger>
-          <SelectContent class="text-xs">
+          <SelectContent>
             <SelectItem value="cover">裁剪铺满 - cover</SelectItem>
             <SelectItem value="contain">完整显示 - contain</SelectItem>
           </SelectContent>
@@ -185,7 +183,7 @@ function propertyAvailable(property: string) {
             <SelectTrigger>
               <SelectValue placeholder="动效" />
             </SelectTrigger>
-            <SelectContent class="text-xs">
+            <SelectContent>
               <SelectItem value="slide">滑动 - slide</SelectItem>
               <SelectItem value="fade">淡入淡出 - fade</SelectItem>
               <SelectItem value="card">卡片 - card</SelectItem>
@@ -200,7 +198,7 @@ function propertyAvailable(property: string) {
           <NumberField
             v-model="gallery.interval"
             :min="1000"
-            :max="20000"
+            :max="60000"
           />
         </FormField>
 
@@ -236,7 +234,7 @@ function propertyAvailable(property: string) {
             <SelectTrigger>
               <SelectValue placeholder="样式" />
             </SelectTrigger>
-            <SelectContent class="text-xs">
+            <SelectContent>
               <SelectItem value="line">短线</SelectItem>
               <SelectItem value="dot">圆点</SelectItem>
             </SelectContent>
@@ -251,7 +249,7 @@ function propertyAvailable(property: string) {
             <SelectTrigger>
               <SelectValue placeholder="位置" />
             </SelectTrigger>
-            <SelectContent class="text-xs">
+            <SelectContent>
               <SelectItem value="bottom">底部</SelectItem>
               <SelectItem value="top">顶部</SelectItem>
               <SelectItem value="left">左侧</SelectItem>
@@ -298,7 +296,7 @@ function propertyAvailable(property: string) {
             <SelectTrigger>
               <SelectValue placeholder="方式" />
             </SelectTrigger>
-            <SelectContent class="text-xs">
+            <SelectContent>
               <SelectItem value="click">点击</SelectItem>
               <SelectItem value="hover">悬停</SelectItem>
             </SelectContent>
@@ -316,7 +314,7 @@ function propertyAvailable(property: string) {
           @click="props.editor.triggerUploadGalleryBulk(props.block)"
         >
           <component
-            :is="ImageOutline"
+            :is="ImageIcon"
             class="size-3.5 mr-1"
           />
           批量上传
@@ -335,7 +333,7 @@ function propertyAvailable(property: string) {
         >
           <div class="flex-between">
             <div class="flex items-center gap-2 min-w-0">
-              <span class="drag-handle cursor-grab text-muted-foreground font-mono select-none">≡</span>
+              <GripVertical class="drag-handle size-3.5 cursor-grab text-muted-foreground shrink-0" />
               <ImagePreview
                 v-if="getItemPreviewSrc(element)"
                 :src="getItemPreviewSrc(element)"
@@ -364,15 +362,13 @@ function propertyAvailable(property: string) {
                 清除
               </Button>
               <Button
-                size="xs"
+                size="icon-xs"
                 variant="ghost"
                 class="text-destructive hover:text-destructive"
+                aria-label="删除图片"
                 @click="removeItem(index)"
               >
-                <component
-                  :is="TrashOutline"
-                  class="size-3.5"
-                />
+                <Trash2 class="size-3.5" />
               </Button>
             </div>
           </div>
@@ -398,7 +394,7 @@ function propertyAvailable(property: string) {
         @click="addItem"
       >
         <component
-          :is="AddOutline"
+          :is="Plus"
           class="size-3.5 mr-1"
         />
         添加图片

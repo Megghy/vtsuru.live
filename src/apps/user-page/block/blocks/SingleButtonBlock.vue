@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { Check, Copy } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import BlockCard from '../BlockCard.vue'
 import { buttonAppearanceClass, buttonAppearanceStyle, normalizeButtonAppearance } from '../buttonAppearance'
@@ -16,6 +18,8 @@ const propsObj = computed<Record<string, any>>(() => {
 })
 
 const router = useRouter()
+const copied = ref(false)
+let copiedTimer: number | undefined
 
 function slugOk(slug: string) {
   return /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug)
@@ -63,12 +67,36 @@ const internalTarget = computed(() => {
 
 const isBack = computed(() => propsObj.value.back === true)
 
+const copyText = computed(() => {
+  const v = propsObj.value.copyText
+  return typeof v === 'string' && v.trim().length > 0 ? v : null
+})
+
+const copiedMessage = computed(() => {
+  const v = propsObj.value.copiedMessage
+  return typeof v === 'string' && v.trim().length > 0 ? v.trim() : '已复制到剪贴板'
+})
+
 const externalHref = computed(() => {
   const v = propsObj.value.url
   return typeof v === 'string' ? v : 'https://'
 })
 
-function handleClick() {
+async function handleClick() {
+  if (copyText.value) {
+    try {
+      await navigator.clipboard.writeText(copyText.value)
+      toast.success(copiedMessage.value)
+      copied.value = true
+      window.clearTimeout(copiedTimer)
+      copiedTimer = window.setTimeout(() => {
+        copied.value = false
+      }, 1500)
+    } catch {
+      toast.error('复制失败，请手动复制')
+    }
+    return
+  }
   if (isBack.value) {
     router.back()
     return
@@ -95,14 +123,19 @@ const justifyClass = computed(() => {
       :class="justifyClass"
     >
       <button
-        v-if="isBack || internalTarget"
+        v-if="copyText || isBack || internalTarget"
         type="button"
-        class="inline-flex-center font-medium cursor-pointer"
+        class="inline-flex-center gap-1.5 font-medium cursor-pointer"
         :class="btnClass"
         :style="btnStyle"
         @click="handleClick"
       >
-        {{ label }}
+        <component
+          :is="copied ? Check : Copy"
+          v-if="copyText"
+          class="size-3.5 shrink-0"
+        />
+        <span>{{ label }}</span>
       </button>
       <a
         v-else

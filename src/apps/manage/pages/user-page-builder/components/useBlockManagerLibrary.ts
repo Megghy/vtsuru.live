@@ -1,10 +1,4 @@
-import AddCircleOutline from '@vicons/ionicons5/es/AddCircleOutline'
-import ArrowDownOutline from '@vicons/ionicons5/es/ArrowDownOutline'
-import ArrowUpOutline from '@vicons/ionicons5/es/ArrowUpOutline'
-import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
-import CreateOutline from '@vicons/ionicons5/es/CreateOutline'
-import LayersOutline from '@vicons/ionicons5/es/LayersOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { ArrowDown, ArrowUp, Copy, Layers, Pencil, PlusCircle, Trash2 } from 'lucide-vue-next'
 import { computed, h, inject, ref } from 'vue'
 
 import { BLOCK_LIBRARY, createBlockNode } from '@/apps/user-page/block/registry'
@@ -18,7 +12,8 @@ import { USER_PAGE_BLOCK_TEMPLATES_KEY } from '../storageKeys'
 
 export interface MenuOption {
   key: string
-  label?: string | (() => any)
+  label?: string
+  groupLabel?: string
   icon?: () => any
   disabled?: boolean
   children?: MenuOption[]
@@ -26,13 +21,22 @@ export interface MenuOption {
   props?: Record<string, any>
 }
 
+interface BlockTemplateNodeSpec {
+  type: BlockType
+  colSpan?: number
+  rowSpan?: number
+  props?: Record<string, unknown>
+  children?: BlockTemplateNodeSpec[]
+}
+
 interface BlockTemplate {
   key: string
   label: string
-  blocks: Array<{ type: BlockType; props?: Record<string, unknown> }>
+  description: string
+  blocks: BlockTemplateNodeSpec[]
 }
 
-interface PersonalBlockTemplate {
+export interface PersonalBlockTemplate {
   id: string
   label: string
   blocks: BlockNode[]
@@ -42,6 +46,7 @@ const blockTemplates: BlockTemplate[] = [
   {
     key: 'live-home',
     label: '直播主页',
+    description: '标准直播间名片 + 日程 + 社交入口',
     blocks: [
       { type: 'profile' },
       { type: 'liveStatus' },
@@ -52,8 +57,41 @@ const blockTemplates: BlockTemplate[] = [
     ],
   },
   {
+    key: 'bento-card',
+    label: 'Bento 个人名片',
+    description: '大小卡片混排，适合现代个人主页',
+    blocks: [
+      {
+        type: 'layout',
+        props: { layout: 'grid', columns: 3, gap: 12, align: 'stretch' },
+        children: [
+          { type: 'profile', colSpan: 2 },
+          { type: 'liveStatus', colSpan: 1, props: { variant: 'compact' } },
+          { type: 'danmakuVote', colSpan: 2, props: { showWhenIdle: true } },
+          { type: 'queueStatus', colSpan: 1, props: { compact: true } },
+          { type: 'socialLinks', colSpan: 3 },
+        ],
+      },
+      { type: 'featureNav' },
+      { type: 'footer' },
+    ],
+  },
+  {
+    key: 'oc-commission',
+    label: '约稿与人设站',
+    description: 'OC 设定集 + 价目表 + 语音按钮',
+    blocks: [
+      { type: 'profile' },
+      { type: 'ocProfile' },
+      { type: 'commission' },
+      { type: 'voiceBoard' },
+      { type: 'footer' },
+    ],
+  },
+  {
     key: 'portfolio',
     label: '作品展示',
+    description: '图集 + 视频列表作品主页',
     blocks: [
       { type: 'profile' },
       { type: 'heading', props: { text: '作品展示', level: 2 } },
@@ -65,6 +103,7 @@ const blockTemplates: BlockTemplate[] = [
   {
     key: 'schedule',
     label: '直播日程',
+    description: '本周安排 + 活动倒计时',
     blocks: [
       { type: 'heading', props: { text: '近期直播安排', level: 1 } },
       { type: 'streamSchedule' },
@@ -77,9 +116,11 @@ const blockTemplates: BlockTemplate[] = [
 const blockGroups = [
   {
     key: 'live',
-    label: '直播与日程',
+    label: '直播与互动',
     types: [
       'liveStatus',
+      'danmakuVote',
+      'queueStatus',
       'streamSchedule',
       'songList',
       'nowPlaying',
@@ -88,21 +129,47 @@ const blockGroups = [
       'videoCollect',
     ],
   },
-  { key: 'profile', label: '资料与品牌', types: ['profile', 'biliInfo', 'tags', 'milestone', 'faq', 'quote'] },
+  {
+    key: 'profile',
+    label: '资料与人设',
+    types: ['profile', 'ocProfile', 'biliInfo', 'tags', 'milestone', 'faq', 'quote'],
+  },
   {
     key: 'content',
     label: '内容与媒体',
-    types: ['cardList', 'videoList', 'embed', 'image', 'imageGallery', 'musicPlayer'],
+    types: ['cardList', 'videoList', 'embed', 'image', 'imageGallery', 'musicPlayer', 'voiceBoard', 'qrcode'],
   },
   {
     key: 'social',
-    label: '社交与运营',
-    types: ['featureNav', 'sectionNav', 'socialLinks', 'links', 'button', 'buttons', 'supporter', 'feedback'],
+    label: '社交与合作',
+    types: [
+      'featureNav',
+      'sectionNav',
+      'socialLinks',
+      'links',
+      'button',
+      'buttons',
+      'commission',
+      'supporter',
+      'feedback',
+    ],
   },
   {
     key: 'base',
     label: '布局与基础',
-    types: ['layout', 'heading', 'text', 'richText', 'alert', 'marquee', 'countdown', 'divider', 'spacer', 'footer'],
+    types: [
+      'layout',
+      'heading',
+      'text',
+      'richText',
+      'customHtml',
+      'alert',
+      'marquee',
+      'countdown',
+      'divider',
+      'spacer',
+      'footer',
+    ],
   },
 ] as const
 
@@ -110,20 +177,30 @@ function createBlockOption(item: (typeof BLOCK_LIBRARY)[number]): MenuOption {
   return {
     label: item.label,
     key: item.type,
-    icon: item.icon ? () => h(item.icon, { class: 'size-4' }) : undefined,
+    icon: item.icon ? () => h(item.icon, { class: 'size-3.5' }) : undefined,
   }
 }
 
 function createGroupLabel(label: string, key: string): MenuOption {
   return {
     key: `divider:${key}`,
-    label: () =>
-      h('div', { style: 'display:flex; align-items:center; gap: 10px; width: 100%;' }, [
-        h('span', { style: 'font-size: 12px; font-weight: 700; color: var(--muted-foreground);' }, label),
-        h('div', { style: 'height: 1px; flex: 1; background: var(--border);' }),
-      ]),
+    label,
+    groupLabel: label,
     disabled: true,
   }
+}
+
+function materializeTemplateSpec(spec: BlockTemplateNodeSpec): BlockNode {
+  const node = createBlockNode(spec.type, createId())
+  if (spec.colSpan && spec.colSpan > 1) node.colSpan = spec.colSpan
+  if (spec.rowSpan && spec.rowSpan > 1) node.rowSpan = spec.rowSpan
+  const baseProps = (node.props as Record<string, unknown>) ?? {}
+  const nextProps: Record<string, unknown> = spec.props ? { ...baseProps, ...spec.props } : baseProps
+  if (spec.type === 'layout' && Array.isArray(spec.children)) {
+    nextProps.children = spec.children.map(materializeTemplateSpec)
+  }
+  node.props = nextProps
+  return node
 }
 
 export function useBlockManagerLibrary() {
@@ -134,9 +211,16 @@ export function useBlockManagerLibrary() {
   const blockSearch = ref('')
   const blockTypeSet = new Set<string>(BLOCK_LIBRARY.map((item) => item.type))
   const personalTemplates = usePersistedStorage<PersonalBlockTemplate[]>(USER_PAGE_BLOCK_TEMPLATES_KEY, [])
+
+  const presetTemplates = computed(() => blockTemplates)
   const templateOptions = computed(() => [
-    ...blockTemplates.map((template) => ({ label: template.label, key: template.key })),
-    ...personalTemplates.value.map((template) => ({ label: template.label, key: `personal:${template.id}` })),
+    ...blockTemplates.map((template) => ({ label: template.label, description: template.description, key: template.key })),
+    ...personalTemplates.value.map((template) => ({
+      label: template.label,
+      description: `个人模板 · ${template.blocks.length} 个区块`,
+      key: `personal:${template.id}`,
+      personalId: template.id,
+    })),
   ])
 
   const filteredLibrary = computed(() => {
@@ -184,33 +268,33 @@ export function useBlockManagerLibrary() {
   })
 
   const blockActionOptions = computed<MenuOption[]>(() => [
-    { label: '上移', key: 'move-up', icon: () => h(ArrowUpOutline, { class: 'size-4' }) },
-    { label: '下移', key: 'move-down', icon: () => h(ArrowDownOutline, { class: 'size-4' }) },
+    { label: '上移', key: 'move-up', icon: () => h(ArrowUp, { class: 'size-3.5' }) },
+    { label: '下移', key: 'move-down', icon: () => h(ArrowDown, { class: 'size-3.5' }) },
     {
       label: '移动到',
       key: 'move-to',
       children: moveTargets.value,
-      icon: () => h(LayersOutline, { class: 'size-4' }),
+      icon: () => h(Layers, { class: 'size-3.5' }),
     },
     { type: 'divider', key: 'movement-divider' },
-    { label: '重命名', key: 'rename', icon: () => h(CreateOutline, { class: 'size-4' }) },
-    { label: '复制', key: 'copy', icon: () => h(CopyOutline, { class: 'size-4' }) },
+    { label: '重命名', key: 'rename', icon: () => h(Pencil, { class: 'size-3.5' }) },
+    { label: '复制', key: 'copy', icon: () => h(Copy, { class: 'size-3.5' }) },
     {
       label: '粘贴到下方',
       key: 'paste-after',
       disabled: editor.getClipboardBlocksCount() === 0,
-      icon: () => h(AddCircleOutline, { class: 'size-4' }),
+      icon: () => h(PlusCircle, { class: 'size-3.5' }),
     },
     { type: 'divider', key: 'duplicate-divider' },
-    { label: '在上方插入副本', key: 'dup-up', icon: () => h(AddCircleOutline, { class: 'size-4' }) },
-    { label: '在下方插入副本', key: 'dup-down', icon: () => h(AddCircleOutline, { class: 'size-4' }) },
+    { label: '在上方插入副本', key: 'dup-up', icon: () => h(PlusCircle, { class: 'size-3.5' }) },
+    { label: '在下方插入副本', key: 'dup-down', icon: () => h(PlusCircle, { class: 'size-3.5' }) },
     { type: 'divider', key: 'layout-divider' },
-    { label: '解散分组 - 仅布局', key: 'ungroup', icon: () => h(LayersOutline, { class: 'size-4' }) },
+    { label: '解散分组 - 仅布局', key: 'ungroup', icon: () => h(Layers, { class: 'size-3.5' }) },
     { type: 'divider', key: 'delete-divider' },
     {
       label: '删除区块',
       key: 'delete',
-      icon: () => h(TrashOutline, { class: 'size-4 text-destructive' }),
+      icon: () => h(Trash2, { class: 'size-3.5 text-destructive' }),
       props: { class: 'text-destructive' },
     },
   ])
@@ -222,11 +306,7 @@ export function useBlockManagerLibrary() {
     }
     const template = blockTemplates.find((item) => item.key === key)
     if (!template) return null
-    const nodes = template.blocks.map(({ type, props }) => {
-      const node = createBlockNode(type, createId())
-      if (props) node.props = { ...(node.props as Record<string, unknown>), ...props }
-      return node
-    })
+    const nodes = template.blocks.map(materializeTemplateSpec)
     return { label: template.label, nodes }
   }
 
@@ -289,14 +369,34 @@ export function useBlockManagerLibrary() {
     editor.message.success(`已保存 ${blocks.length} 个区块为个人模板`)
   }
 
+  function renamePersonalTemplate(id: string, nextLabel: string) {
+    const trimmed = nextLabel.trim()
+    if (!trimmed) return
+    const target = personalTemplates.value.find((item) => item.id === id)
+    if (!target) return
+    target.label = trimmed.slice(0, 40)
+    editor.message.success('已更新个人模板名称')
+  }
+
+  function deletePersonalTemplate(id: string) {
+    const idx = personalTemplates.value.findIndex((item) => item.id === id)
+    if (idx < 0) return
+    personalTemplates.value.splice(idx, 1)
+    editor.message.success('已删除个人模板')
+  }
+
   return {
     showAddMenu,
     blockSearch,
+    presetTemplates,
+    personalTemplates,
     templateOptions,
     addBlockOptions,
     blockActionOptions,
     insertTemplate,
     handleAddBlockMenuSelect,
     saveSelectionAsTemplate,
+    renamePersonalTemplate,
+    deletePersonalTemplate,
   }
 }

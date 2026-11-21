@@ -130,7 +130,7 @@ const radiusPresets = [
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
-              <SelectContent class="text-xs">
+              <SelectContent>
                 <SelectItem value="none">无边框</SelectItem>
                 <SelectItem value="subtle">轻微</SelectItem>
                 <SelectItem value="normal">标准</SelectItem>
@@ -144,7 +144,7 @@ const radiusPresets = [
               <SelectTrigger>
                 <SelectValue placeholder="继承（实线）" />
               </SelectTrigger>
-              <SelectContent class="text-xs">
+              <SelectContent>
                 <SelectItem value="solid">实线 (solid)</SelectItem>
                 <SelectItem value="dashed">虚线 (dashed)</SelectItem>
               </SelectContent>
@@ -156,7 +156,7 @@ const radiusPresets = [
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
-              <SelectContent class="text-xs">
+              <SelectContent>
                 <SelectItem value="none">无阴影</SelectItem>
                 <SelectItem value="subtle">轻微</SelectItem>
                 <SelectItem value="normal">标准</SelectItem>
@@ -179,7 +179,7 @@ const radiusPresets = [
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
-              <SelectContent class="text-xs">
+              <SelectContent>
                 <SelectItem value="compact">紧凑 (compact)</SelectItem>
                 <SelectItem value="normal">标准 (normal)</SelectItem>
                 <SelectItem value="relaxed">宽松 (relaxed)</SelectItem>
@@ -192,7 +192,7 @@ const radiusPresets = [
               <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
-              <SelectContent class="text-xs">
+              <SelectContent>
                 <SelectItem value="compact">紧凑 (compact)</SelectItem>
                 <SelectItem value="normal">标准 (normal)</SelectItem>
                 <SelectItem value="comfortable">舒适 (comfortable)</SelectItem>

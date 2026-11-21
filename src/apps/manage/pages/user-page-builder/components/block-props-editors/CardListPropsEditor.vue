@@ -18,10 +18,10 @@ import CardActionEditor from './CardActionEditor.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
-const { editor, blockProps, ensureArrayProp, propertyAvailable, internalPageOptions } = useBlockPropsEditor(
+const { editor, blockProps, arrayProp, propertyAvailable, internalPageOptions } = useBlockPropsEditor(
   () => props.block,
 )
-const items = ensureArrayProp<Record<string, any>>('items')
+const items = arrayProp<Record<string, any>>('items')
 const newTagInput = ref<Record<number, string>>({})
 
 function ensureAction(item: Record<string, any>, key: 'primaryAction' | 'secondaryAction') {

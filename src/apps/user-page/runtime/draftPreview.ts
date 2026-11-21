@@ -14,7 +14,7 @@ export function createDraftPreview(userId: number, settings: UserPagesSettings) 
   const payload: DraftPreviewPayload = {
     expiresAt: Date.now() + PREVIEW_TTL_MS,
     userId,
-    settings: structuredClone(settings),
+    settings,
   }
   localStorage.setItem(`${STORAGE_PREFIX}${token}`, JSON.stringify(payload))
   return token

@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
-import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { Copy, RefreshCw, Trash2 } from 'lucide-vue-next'
 import { computed, inject, reactive, watch } from 'vue'
 
 import { UploadStage } from '@/shared/services/fileUpload'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { Spin } from '@/shared/ui/spin'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -110,6 +108,7 @@ function confirmDelete(resource: BuilderResource) {
     <DialogContent class="max-w-[900px] w-[95vw] p-6 max-h-[88vh] flex flex-col gap-4">
       <DialogHeader>
         <DialogTitle class="text-base"> 资源管理 </DialogTitle>
+        <DialogDescription class="sr-only">查看并管理当前主页装修项目中引用的图片与静态资源。</DialogDescription>
       </DialogHeader>
 
       <div class="flex flex-col gap-4 min-h-0 flex-1 overflow-hidden">
@@ -161,7 +160,7 @@ function confirmDelete(resource: BuilderResource) {
                     aria-label="刷新资源"
                     @click="resources.loadResources"
                   >
-                    <RefreshOutline class="size-4" />
+                    <RefreshCw class="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent> 刷新资源 </TooltipContent>
@@ -286,7 +285,7 @@ function confirmDelete(resource: BuilderResource) {
                           aria-label="复制资源链接"
                           @click="copyResourcePath(file.path)"
                         >
-                          <CopyOutline class="size-4" />
+                          <Copy class="size-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent> 复制资源链接 </TooltipContent>
@@ -301,7 +300,7 @@ function confirmDelete(resource: BuilderResource) {
                           :disabled="resources.deletingId.value === file.id"
                           @click="confirmDelete(file)"
                         >
-                          <TrashOutline class="size-4" />
+                          <Trash2 class="size-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent> 删除资源 </TooltipContent>

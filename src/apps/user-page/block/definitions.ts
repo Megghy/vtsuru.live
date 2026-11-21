@@ -204,7 +204,10 @@ const validateButtons = withProps((props, path, errors, context) => {
 
 const validateImage = withProps((props, path, errors, context) => {
   optionalFile(props, 'imageFile', path, errors)
-  if (!context.hidden && props.imageFile === undefined) errors.push(`${path}: imageFile 必须提供`, 'imageFile')
+  optionalHttpsUrl(props, 'url', path, errors)
+  const hasUrl = isNonEmptyString(props.url)
+  if (!context.hidden && props.imageFile === undefined && !hasUrl)
+    errors.push(`${path}: imageFile 或 url 必须提供一个`, 'imageFile')
   optionalString(props, 'alt', path, errors)
   optionalEnum(props, 'shape', ['rounded', 'square', 'circle'], path, errors)
   optionalCssSize(props, 'maxWidth', path, errors)
@@ -417,6 +420,9 @@ const validateFeedback = withProps((props, path, errors, context) => {
   if (isBlockPropertyAvailable('feedback', props, 'embedMode'))
     optionalEnum(props, 'embedMode', ['questionBox', 'iframe'], path, errors)
   optionalBoolean(props, 'embed', path, errors)
+  if (isBlockPropertyAvailable('feedback', props, 'defaultTag')) optionalString(props, 'defaultTag', path, errors)
+  if (isBlockPropertyAvailable('feedback', props, 'showPublicQuestions'))
+    optionalBoolean(props, 'showPublicQuestions', path, errors)
   if (isBlockPropertyAvailable('feedback', props, 'height')) optionalNumber(props, 'height', 200, 1200, path, errors)
   if (isBlockPropertyAvailable('feedback', props, 'url') && isNonEmptyString(props.url) && !isHttpsUrl(props.url))
     errors.push(`${path}: url 必须是 https URL`, 'url')
@@ -642,11 +648,11 @@ export const SHARED_BLOCK_DEFINITIONS = [
     '歌单与点歌',
     'data',
     ['歌曲', '点歌', '搜索'],
-    { variant: 'compact', maxItems: 6, showSearch: true, showRequestStatus: true },
+    { variant: 'compact', maxItems: 6, showSearch: true, showRequestStatus: true, allowQuickRequest: true },
     withProps((p, path, errors) => {
       optionalEnum(p, 'variant', ['compact', 'full'], path, errors)
       optionalNumber(p, 'maxItems', 3, 30, path, errors, true)
-      booleans(p, ['showSearch', 'showRequestStatus'], path, errors)
+      booleans(p, ['showSearch', 'showRequestStatus', 'allowQuickRequest'], path, errors)
     }),
   ),
   definition(
@@ -716,8 +722,11 @@ export const SHARED_BLOCK_DEFINITIONS = [
     '当前播放与点歌队列',
     'data',
     ['当前歌曲', '正在演唱', '点歌', '队列'],
-    { showRequester: true },
-    withProps((p, path, errors) => optionalBoolean(p, 'showRequester', path, errors)),
+    { showRequester: true, showQueue: true, queueLimit: 5 },
+    withProps((p, path, errors) => {
+      booleans(p, ['showRequester', 'showQueue'], path, errors)
+      optionalNumber(p, 'queueLimit', 1, 10, path, errors, true)
+    }),
   ),
   definition('embed', '嵌入视频', 'media', ['B站', 'YouTube', '视频'], { url: '', title: '' }, validateEmbed, true),
   definition(
@@ -939,6 +948,203 @@ export const SHARED_BLOCK_DEFINITIONS = [
     ['赞助', '支持'],
     { title: '支持我', description: '', items: [] },
     validateSupporter,
+  ),
+  definition(
+    'danmakuVote',
+    '弹幕投票',
+    'data',
+    ['投票', '弹幕投票', '直播互动'],
+    { title: '直播弹幕投票', theme: 'glass', maxDisplay: 6, showWhenIdle: true, idleText: '当前暂无进行中的弹幕投票' },
+    withProps((p, path, errors) => {
+      optionalString(p, 'title', path, errors)
+      optionalEnum(p, 'theme', ['glass', 'neon', 'minimal', 'duel', 'light'], path, errors)
+      optionalNumber(p, 'maxDisplay', 2, 10, path, errors, true)
+      optionalBoolean(p, 'showWhenIdle', path, errors)
+      optionalString(p, 'idleText', path, errors)
+    }),
+  ),
+  definition(
+    'queueStatus',
+    '排队状态',
+    'data',
+    ['排队', '队列', '联机', '候场'],
+    { title: '当前排队状态', showLink: true, showWaitingCount: true, compact: false },
+    withProps((p, path, errors) => {
+      optionalString(p, 'title', path, errors)
+      booleans(p, ['showLink', 'showWaitingCount', 'compact'], path, errors)
+    }),
+  ),
+  definition(
+    'ocProfile',
+    'OC 设定集',
+    'content',
+    ['人设', 'OC', '立绘', '三视图', '色卡', '绘师', '建模师'],
+    {
+      title: 'OC 设定集',
+      characterName: '',
+      subtitle: '',
+      bio: '',
+      images: [],
+      palette: [
+        { name: '主色调', hex: '#38bdf8' },
+        { name: '点缀色', hex: '#f472b6' },
+      ],
+      specs: [],
+      credits: [],
+    },
+    withProps((p, path, errors) => {
+      ;['title', 'characterName', 'subtitle', 'bio'].forEach((k) => optionalString(p, k, path, errors))
+      if (p.images !== undefined) {
+        if (!Array.isArray(p.images)) errors.push(`${path}: images 必须是 array`, 'images')
+        else {
+          if (p.images.length > 8) errors.push(`${path}: images 最多 8 张`, 'images')
+          p.images.forEach((raw, idx) => {
+            const it = asObject(raw)
+            const ip = `${path}: images[${idx}]`
+            if (!it) {
+              errors.push(`${ip} 必须是 object`, `images[${idx}]`)
+              return
+            }
+            optionalString(it, 'label', ip, errors)
+            optionalFile(it, 'imageFile', ip, errors)
+            optionalHttpsUrl(it, 'url', ip, errors)
+          })
+        }
+      }
+      if (p.palette !== undefined) {
+        if (!Array.isArray(p.palette)) errors.push(`${path}: palette 必须是 array`, 'palette')
+        else {
+          if (p.palette.length > 12) errors.push(`${path}: palette 最多 12 项`, 'palette')
+          p.palette.forEach((raw, idx) => {
+            const it = asObject(raw)
+            const ip = `${path}: palette[${idx}]`
+            if (!it) {
+              errors.push(`${ip} 必须是 object`, `palette[${idx}]`)
+              return
+            }
+            optionalString(it, 'name', ip, errors)
+            if (it.hex !== undefined && (typeof it.hex !== 'string' || !/^#[\da-f]{6}$/i.test(it.hex)))
+              errors.push(`${ip}: hex 必须是六位十六进制颜色`, validationFieldPath(ip, 'hex'))
+          })
+        }
+      }
+      if (p.specs !== undefined) {
+        if (!Array.isArray(p.specs)) errors.push(`${path}: specs 必须是 array`, 'specs')
+        else {
+          if (p.specs.length > 12) errors.push(`${path}: specs 最多 12 项`, 'specs')
+          p.specs.forEach((raw, idx) => {
+            const it = asObject(raw)
+            const ip = `${path}: specs[${idx}]`
+            if (!it) errors.push(`${ip} 必须是 object`, `specs[${idx}]`)
+            else {
+              optionalString(it, 'label', ip, errors)
+              optionalString(it, 'value', ip, errors)
+            }
+          })
+        }
+      }
+      if (p.credits !== undefined) {
+        if (!Array.isArray(p.credits)) errors.push(`${path}: credits 必须是 array`, 'credits')
+        else {
+          if (p.credits.length > 12) errors.push(`${path}: credits 最多 12 项`, 'credits')
+          p.credits.forEach((raw, idx) => {
+            const it = asObject(raw)
+            const ip = `${path}: credits[${idx}]`
+            if (!it) errors.push(`${ip} 必须是 object`, `credits[${idx}]`)
+            else {
+              optionalString(it, 'role', ip, errors)
+              optionalString(it, 'name', ip, errors)
+              optionalHttpsUrl(it, 'url', ip, errors)
+            }
+          })
+        }
+      }
+    }),
+  ),
+  definition(
+    'commission',
+    '约稿与价目表',
+    'interaction',
+    ['约稿', '商务', '合作', '价目表', '排单'],
+    {
+      title: '约稿 / 合作说明',
+      status: 'open',
+      statusText: '',
+      turnaround: '预计 7-14 天',
+      notice: '',
+      items: [],
+      contactLabel: '复制联系方式',
+      contactCopyText: '',
+      contactUrl: '',
+    },
+    withProps((p, path, errors) => {
+      ;['title', 'statusText', 'turnaround', 'notice', 'contactLabel', 'contactCopyText'].forEach((k) =>
+        optionalString(p, k, path, errors),
+      )
+      optionalEnum(p, 'status', ['open', 'waitlist', 'closed'], path, errors)
+      optionalHttpsUrl(p, 'contactUrl', path, errors)
+      if (p.items !== undefined) {
+        if (!Array.isArray(p.items)) errors.push(`${path}: items 必须是 array`, 'items')
+        else {
+          if (p.items.length > 12) errors.push(`${path}: items 最多 12 项`, 'items')
+          p.items.forEach((raw, idx) => {
+            const it = asObject(raw)
+            const ip = `${path}: items[${idx}]`
+            if (!it) {
+              errors.push(`${ip} 必须是 object`, `items[${idx}]`)
+              return
+            }
+            optionalString(it, 'name', ip, errors)
+            optionalString(it, 'price', ip, errors)
+            optionalString(it, 'description', ip, errors)
+            optionalBoolean(it, 'featured', ip, errors)
+            optionalFile(it, 'imageFile', ip, errors)
+            if (it.tags !== undefined && (!Array.isArray(it.tags) || it.tags.some((t) => typeof t !== 'string')))
+              errors.push(`${ip}: tags 必须是 string[]`, validationFieldPath(ip, 'tags'))
+          })
+        }
+      }
+    }),
+  ),
+  definition(
+    'voiceBoard',
+    '语音包 / 声按钮',
+    'media',
+    ['语音', '声按钮', '台词', '试听', '音频'],
+    {
+      title: '语音按钮',
+      description: '点击即可试听语音片段',
+      columns: 3,
+      allowOverlap: false,
+      items: [],
+    },
+    withProps((p, path, errors) => {
+      optionalString(p, 'title', path, errors)
+      optionalString(p, 'description', path, errors)
+      optionalNumber(p, 'columns', 1, 4, path, errors, true)
+      optionalBoolean(p, 'allowOverlap', path, errors)
+      if (p.items !== undefined) {
+        if (!Array.isArray(p.items)) errors.push(`${path}: items 必须是 array`, 'items')
+        else {
+          if (p.items.length > 24) errors.push(`${path}: items 最多 24 项`, 'items')
+          p.items.forEach((raw, idx) => {
+            const it = asObject(raw)
+            const ip = `${path}: items[${idx}]`
+            if (!it) {
+              errors.push(`${ip} 必须是 object`, `items[${idx}]`)
+              return
+            }
+            optionalString(it, 'label', ip, errors)
+            optionalString(it, 'subtitle', ip, errors)
+            optionalString(it, 'tag', ip, errors)
+            optionalFile(it, 'audioFile', ip, errors)
+            optionalHttpsUrl(it, 'audioUrl', ip, errors)
+            if (it.color !== undefined && it.color !== '' && (typeof it.color !== 'string' || !/^#[\da-f]{6}$/i.test(it.color)))
+              errors.push(`${ip}: color 必须是六位十六进制颜色`, validationFieldPath(ip, 'color'))
+          })
+        }
+      }
+    }),
   ),
 ] as const satisfies readonly SharedBlockDefinition[]
 

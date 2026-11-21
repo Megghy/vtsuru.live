@@ -178,6 +178,27 @@ function validatePage(
     report(issues, pageTarget, 'mode', `页面模式不合法：${String(page.mode)}`)
     return
   }
+  if (pageKey !== 'home' && page.mode === 'legacy') {
+    report(issues, pageTarget, 'mode', '子页面不支持经典模板（legacy）模式，请切换为可视化搭建或自定义代码页')
+    return
+  }
+  if (typeof page.title === 'string' && page.title.length > 100)
+    report(issues, pageTarget, 'title', '页面标题不能超过 100 字符')
+  if (typeof page.description === 'string' && page.description.length > 300)
+    report(issues, pageTarget, 'description', '页面简介不能超过 300 字符')
+  if (page.ogImageFile !== undefined && page.ogImageFile !== null) {
+    const f = asObject(page.ogImageFile)
+    if (!f || !Number.isInteger(f.id) || Number(f.id) <= 0)
+      report(issues, pageTarget, 'ogImageFile', '分享封面图片文件无效')
+  }
+  if (typeof page.ogImageUrl === 'string' && page.ogImageUrl.trim().length > 0) {
+    try {
+      const parsed = new URL(page.ogImageUrl.trim())
+      if (parsed.protocol !== 'https:') report(issues, pageTarget, 'ogImageUrl', '分享封面链接必须是 https URL')
+    } catch {
+      report(issues, pageTarget, 'ogImageUrl', '分享封面链接必须是合法的 https URL')
+    }
+  }
   if (page.navIcon !== undefined && !isUserPageNavIcon(page.navIcon))
     report(issues, pageTarget, 'navIcon', '导航图标不合法')
   validateTheme((page as unknown as UnknownObject).theme, 'theme', pageTarget, issues)

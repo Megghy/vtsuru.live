@@ -134,7 +134,8 @@ const desktopDeviceStyle = computed(() => {
   width: min(100%, 390px);
   height: min(100%, 844px);
   min-height: 0;
-  background: #111;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 24px;
   padding: 10px;
   box-sizing: border-box;

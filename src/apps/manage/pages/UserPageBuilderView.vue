@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
 import { useEventListener } from '@vueuse/core'
-import { AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-vue-next'
+import { AlertCircle, AlertTriangle, CheckCircle2, GripVertical } from 'lucide-vue-next'
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
-import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { NumberField } from '@/shared/ui/number-field'
 import { Spin } from '@/shared/ui/spin'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -389,20 +387,21 @@ onBeforeRouteLeave(() => {
 
 <template>
   <div
-    class="user-page-builder h-[calc(100dvh-var(--vtsuru-header-height))] w-full p-[var(--vtsuru-content-padding)] box-border overflow-hidden flex flex-col gap-3"
+    class="user-page-builder h-[calc(100dvh-var(--vtsuru-header-height))] w-full px-[var(--vtsuru-content-padding)] py-2.5 box-border overflow-hidden flex flex-col gap-2"
   >
-    <ManagePageHeader
-      title="主页装修"
-      subtitle="配置个人主页、视觉主题与展示块"
-    >
-      <template #action>
-        <BuilderToolbar
-          v-if="editor.loadStatus.value === 'ready'"
-          @open-layout="layoutModal = true"
-          @open-global-style="openThemeDrawer('global')"
-        />
-      </template>
-    </ManagePageHeader>
+    <div class="flex items-center justify-between gap-3 min-w-0 shrink-0 pb-1.5 border-b border-border">
+      <div class="flex items-baseline gap-2 min-w-0">
+        <h1 class="m-0 text-sm font-semibold text-foreground shrink-0">主页装修</h1>
+        <span class="text-xs text-muted-foreground truncate max-[640px]:hidden">
+          配置个人主页、视觉主题与展示块
+        </span>
+      </div>
+      <BuilderToolbar
+        v-if="editor.loadStatus.value === 'ready'"
+        @open-layout="layoutModal = true"
+        @open-global-style="openThemeDrawer('global')"
+      />
+    </div>
 
     <Spin
       class="flex-1 min-h-0 overflow-hidden flex flex-col"
@@ -451,14 +450,13 @@ onBeforeRouteLeave(() => {
               <Button
                 size="xs"
                 variant="outline"
-                class="px-2"
                 @click="editor.discardConflictingLocalDraft"
               >
                 放弃本地修改
               </Button>
               <Button
                 size="xs"
-                class="bg-amber-600 px-2 text-white hover:bg-amber-700"
+                variant="default"
                 @click="editor.restoreConflictingLocalDraft"
               >
                 恢复本地修改
@@ -471,6 +469,7 @@ onBeforeRouteLeave(() => {
           ref="builderBodyEl"
           class="builder-body flex-1 min-h-0 flex flex-col gap-2"
           :data-workspace-mode="workspaceMode"
+          :data-focus-preview="focusPreview ? 'true' : 'false'"
         >
           <span
             class="sr-only"
@@ -501,7 +500,7 @@ onBeforeRouteLeave(() => {
 
           <div
             class="builder-pane-grid grid gap-1.5 flex-1 min-w-0 min-h-0"
-            :class="{ 'is-legacy': isLegacyMode, 'is-non-block': !isBlockMode }"
+            :class="{ 'is-non-block': !isBlockMode }"
             :style="workspaceGridStyle"
           >
             <div
@@ -549,6 +548,7 @@ onBeforeRouteLeave(() => {
           <DialogContent class="max-w-[520px] p-6">
             <DialogHeader>
               <DialogTitle>编辑器布局</DialogTitle>
+              <DialogDescription class="sr-only">调整页面搭建器各面板的排列顺序与列宽。</DialogDescription>
             </DialogHeader>
             <div class="flex gap-2 mb-3">
               <Button
@@ -581,7 +581,7 @@ onBeforeRouteLeave(() => {
                 class="my-2 flex-between gap-2.5 rounded-lg border border-border p-2.5"
               >
                 <div class="flex min-w-0 items-center gap-2.5">
-                  <ReorderThreeOutline class="drag-handle size-4 cursor-grab text-muted-foreground" />
+                  <GripVertical class="drag-handle size-4 cursor-grab text-muted-foreground" />
                   <span class="text-sm font-semibold">
                     {{ COLUMN_META[id as any]?.label ?? id }}
                   </span>
@@ -634,6 +634,7 @@ onBeforeRouteLeave(() => {
           <DialogContent class="max-w-[720px] p-6">
             <DialogHeader>
               <DialogTitle>发布前检查</DialogTitle>
+              <DialogDescription class="sr-only">查看配置体积、校验问题及发布前提示信息。</DialogDescription>
             </DialogHeader>
             <div class="flex flex-col gap-3">
               <span class="text-xs text-muted-foreground">
@@ -748,6 +749,11 @@ onBeforeRouteLeave(() => {
   order: 1 !important;
 }
 
+.builder-body[data-workspace-mode='medium'][data-focus-preview='true'] [data-pane-id='preview'] {
+  grid-column: 1;
+  order: 0 !important;
+}
+
 .builder-body[data-workspace-mode='medium'] [data-pane-id='pages'],
 .builder-body[data-workspace-mode='medium'] [data-pane-id='blocks'] {
   grid-column: 1;
@@ -780,7 +786,7 @@ onBeforeRouteLeave(() => {
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  animation: builder-pane-enter 220ms ease both;
+  animation: builder-pane-enter 180ms ease both;
 }
 
 .builder-column-resizer {
@@ -807,13 +813,13 @@ onBeforeRouteLeave(() => {
   border-radius: 1px;
   background: var(--border);
   content: '';
-  transition: background-color 140ms ease;
+  transition: background-color 150ms ease;
 }
 
 .builder-column-resizer:hover::after,
 .builder-column-resizer:focus-visible::after,
 .builder-column-resizer:active::after {
-  background: var(--brand-soft);
+  background: var(--primary);
 }
 
 :global(html.builder-column-resizing),
@@ -872,7 +878,7 @@ onBeforeRouteLeave(() => {
 .user-page-builder :deep(.preview-glass-surface) {
   min-height: 100%;
   padding: 12px 0;
-  background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
+  background: var(--glass-surface-bg, color-mix(in srgb, var(--background) 62%, transparent));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   transition:

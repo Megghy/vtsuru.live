@@ -8,6 +8,7 @@ export const USER_FEATURE_KEYS = [
   'videoCollect',
   'forum',
   'schedule',
+  'queue',
 ] as const
 
 export type UserFeatureKey = (typeof USER_FEATURE_KEYS)[number]

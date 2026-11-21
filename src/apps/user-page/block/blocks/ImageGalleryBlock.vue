@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
-import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -70,7 +69,7 @@ const model = computed(() => {
     autoplay: isBlockPropertyAvailable('imageGallery', o, 'autoplay') && o.autoplay === true,
     interval:
       isBlockPropertyAvailable('imageGallery', o, 'interval') && Number.isFinite(interval)
-        ? Math.min(20000, Math.max(1000, interval))
+        ? Math.min(60000, Math.max(1000, interval))
         : 5000,
     effect: (['fade', 'card', 'custom'].includes(String(o.effect)) ? o.effect : 'slide') as CarouselEffect,
     dotType: (o.dotType === 'dot' ? 'dot' : 'line') as CarouselDotType,
@@ -95,6 +94,11 @@ const loadedSources = ref(new Set<string>())
 const reducedMotion = ref(false)
 let motionQuery: MediaQueryList | undefined
 let autoplayTimer: number | undefined
+
+// 拖拽 / 触摸滑动状态
+let swipeStartX = 0
+let swipeActive = false
+let suppressNextClick = false
 
 function updateMotionPreference(event: MediaQueryListEvent | MediaQueryList) {
   reducedMotion.value = event.matches
@@ -123,6 +127,75 @@ function goToSlide(index: number) {
   resetAutoplay()
 }
 
+function onPointerDown(event: PointerEvent) {
+  if (model.value.items.length <= 1) return
+  if (event.pointerType === 'touch' && !model.value.touchable) return
+  if (event.pointerType !== 'touch' && !model.value.draggable) return
+  swipeStartX = event.clientX
+  swipeActive = true
+  suppressNextClick = false
+}
+
+function onPointerUp(event: PointerEvent) {
+  if (!swipeActive) return
+  swipeActive = false
+  const dx = event.clientX - swipeStartX
+  if (Math.abs(dx) >= 42) {
+    suppressNextClick = true
+    if (dx < 0) nextSlide()
+    else prevSlide()
+    resetAutoplay()
+  }
+}
+
+function onPointerCancel() {
+  swipeActive = false
+}
+
+function handleSlideImageClick(disabled: boolean, open: () => void) {
+  if (suppressNextClick) {
+    suppressNextClick = false
+    return
+  }
+  if (!disabled) open()
+}
+
+function getSlideStyle(index: number) {
+  const total = model.value.items.length
+  const active = activeIndex.value
+  const effect = model.value.effect
+  if (effect === 'fade') {
+    return {
+      opacity: active === index ? 1 : 0,
+      zIndex: active === index ? 10 : 0,
+      pointerEvents: active === index ? ('auto' as const) : ('none' as const),
+    }
+  }
+  // 计算相对偏移（支持循环最短路径）
+  let offset = index - active
+  if (model.value.loop && total > 2) {
+    if (offset > total / 2) offset -= total
+    if (offset < -total / 2) offset += total
+  }
+  if (effect === 'card') {
+    const abs = Math.abs(offset)
+    const visible = abs <= 1
+    return {
+      transform: `translateX(${offset * 68}%) scale(${active === index ? 1 : 0.86})`,
+      opacity: active === index ? 1 : visible ? 0.52 : 0,
+      zIndex: active === index ? 15 : visible ? 8 : 0,
+      pointerEvents: active === index ? ('auto' as const) : ('none' as const),
+    }
+  }
+  // slide / custom：水平平移
+  return {
+    transform: `translateX(${offset * 100}%)`,
+    opacity: Math.abs(offset) <= 1 ? 1 : 0,
+    zIndex: active === index ? 10 : Math.abs(offset) === 1 ? 5 : 0,
+    pointerEvents: active === index ? ('auto' as const) : ('none' as const),
+  }
+}
+
 function startAutoplay() {
   stopAutoplay()
   if (model.value.autoplay && !reducedMotion.value && model.value.items.length > 1) {
@@ -147,6 +220,7 @@ function resetAutoplay() {
 watch(
   () => [model.value.autoplay, model.value.interval, model.value.items.length, reducedMotion.value],
   () => {
+    if (activeIndex.value >= model.value.items.length) activeIndex.value = 0
     startAutoplay()
   },
 )
@@ -203,96 +277,96 @@ const galleryUrls = computed(() => model.value.items.map((item) => item.src))
 
       <template v-else-if="model.layout === 'carousel'">
         <div
-          class="relative w-full overflow-hidden rounded-[var(--radius)] bg-muted/40 group select-none"
+          class="relative w-full overflow-hidden rounded-[var(--radius)] bg-muted/40 group select-none touch-pan-y"
+          :class="model.draggable && model.items.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''"
           :style="carouselStyle"
           @mouseenter="stopAutoplay"
           @mouseleave="startAutoplay"
+          @pointerdown="onPointerDown"
+          @pointerup="onPointerUp"
+          @pointercancel="onPointerCancel"
         >
           <div
             v-for="(item, index) in model.items"
             :key="`${item.src}-${index}`"
-            class="absolute inset-0 transition-opacity duration-300 ease-in-out"
-            :class="{
-              'opacity-100 z-10': activeIndex === index,
-              'opacity-0 z-0 pointer-events-none': activeIndex !== index,
-            }"
+            class="absolute inset-0 transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none"
+            :class="model.effect === 'card' ? 'px-6 py-2' : ''"
+            :style="getSlideStyle(index)"
           >
             <div
-              class="absolute inset-0 z-[1] grid place-items-center min-h-[120px] p-4 text-muted-foreground bg-muted text-[13px] text-center"
-              :class="{ invisible: loadedSources.has(item.src) && !failedSources.has(item.src) }"
-              role="status"
+              class="relative size-full overflow-hidden"
+              :class="model.effect === 'card' ? 'rounded-[var(--radius)] border border-border shadow-md' : ''"
             >
-              {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
+              <div
+                class="absolute inset-0 z-[1] grid place-items-center min-h-[120px] p-4 text-muted-foreground bg-muted text-[13px] text-center"
+                :class="{ invisible: loadedSources.has(item.src) && !failedSources.has(item.src) }"
+                role="status"
+              >
+                {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
+              </div>
+              <ImagePreview
+                :src="item.src"
+                :crop="model.fit === 'cover'"
+                fallback-transform="card"
+                :alt="item.alt || item.desc || '图片预览'"
+                :gallery="galleryUrls"
+                :index="index"
+                :disabled="!loadedSources.has(item.src) || failedSources.has(item.src)"
+                wrapper-class="block size-full"
+              >
+                <template #default="{ open, disabled, thumbSrc, onError }">
+                  <img
+                    :src="thumbSrc || undefined"
+                    :alt="item.alt"
+                    :loading="index === 0 ? 'eager' : 'lazy'"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                    draggable="false"
+                    class="block size-full motion-reduce:transition-none transition-opacity duration-180"
+                    :class="[
+                      failedSources.has(item.src)
+                        ? 'invisible'
+                        : loadedSources.has(item.src)
+                          ? 'opacity-100'
+                          : 'opacity-0',
+                      !disabled && 'cursor-zoom-in',
+                    ]"
+                    :style="{ objectFit: model.fit }"
+                    :role="!disabled ? 'button' : undefined"
+                    :tabindex="!disabled ? 0 : undefined"
+                    :aria-label="!disabled ? `放大查看 ${item.alt || item.desc || `第 ${index + 1} 张图片`}` : undefined"
+                    @load="markLoaded(item.src)"
+                    @error="!onError() && markFailed(item.src)"
+                    @click="handleSlideImageClick(disabled, open)"
+                    @keydown.enter.prevent="!disabled && open()"
+                    @keydown.space.prevent="!disabled && open()"
+                  />
+                </template>
+              </ImagePreview>
             </div>
-            <ImagePreview
-              :src="item.src"
-              :crop="model.fit === 'cover'"
-              fallback-transform="card"
-              :alt="item.alt || item.desc || '图片预览'"
-              :gallery="galleryUrls"
-              :index="index"
-              :disabled="!loadedSources.has(item.src) || failedSources.has(item.src)"
-              wrapper-class="block size-full"
-            >
-              <template #default="{ open, disabled, thumbSrc, onError }">
-                <img
-                  :src="thumbSrc || undefined"
-                  :alt="item.alt"
-                  :loading="index === 0 ? 'eager' : 'lazy'"
-                  decoding="async"
-                  referrerpolicy="no-referrer"
-                  class="block size-full motion-reduce:transition-none transition-opacity duration-180"
-                  :class="[
-                    failedSources.has(item.src)
-                      ? 'invisible'
-                      : loadedSources.has(item.src)
-                        ? 'opacity-100'
-                        : 'opacity-0',
-                    !disabled && 'cursor-zoom-in',
-                  ]"
-                  :style="{ objectFit: model.fit }"
-                  :role="!disabled ? 'button' : undefined"
-                  :tabindex="!disabled ? 0 : undefined"
-                  :aria-label="!disabled ? `放大查看 ${item.alt || item.desc || `第 ${index + 1} 张图片`}` : undefined"
-                  @load="markLoaded(item.src)"
-                  @error="!onError() && markFailed(item.src)"
-                  @click="!disabled && open()"
-                  @keydown.enter.prevent="!disabled && open()"
-                  @keydown.space.prevent="!disabled && open()"
-                />
-              </template>
-            </ImagePreview>
           </div>
 
-          <!-- Arrows -->
           <template v-if="model.showArrow && model.items.length > 1">
             <Button
               variant="outline"
               size="icon-xs"
-              class="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 size-8 rounded-full bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 shadow-sm"
+              class="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 rounded-full bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 shadow-sm transition-opacity duration-150"
               aria-label="上一张"
               @click.stop="prevSlide"
             >
-              <component
-                :is="ChevronBackOutline"
-                class="size-4"
-              />
+              <ChevronLeft class="size-4" />
             </Button>
             <Button
               variant="outline"
               size="icon-xs"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 size-8 rounded-full bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 shadow-sm"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 rounded-full bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 shadow-sm transition-opacity duration-150"
               aria-label="下一张"
               @click.stop="nextSlide"
             >
-              <component
-                :is="ChevronForwardOutline"
-                class="size-4"
-              />
+              <ChevronRight class="size-4" />
             </Button>
           </template>
 
-          <!-- Dots -->
           <div
             v-if="model.showDots && model.items.length > 1"
             class="absolute z-20 flex gap-1.5 p-2"
@@ -307,7 +381,7 @@ const galleryUrls = computed(() => model.value.items.map((item) => item.src))
               v-for="(_, idx) in model.items"
               :key="idx"
               type="button"
-              class="transition-all duration-200"
+              class="transition-[transform,opacity,background-color] duration-200 cursor-pointer"
               :class="[
                 model.dotType === 'line'
                   ? 'h-1 rounded-full ' + (activeIndex === idx ? 'w-5 bg-white' : 'w-2.5 bg-white/50')

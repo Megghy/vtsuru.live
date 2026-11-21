@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import DesktopOutline from '@vicons/ionicons5/es/DesktopOutline'
-import MoonOutline from '@vicons/ionicons5/es/MoonOutline'
-import PhonePortraitOutline from '@vicons/ionicons5/es/PhonePortraitOutline'
-import SunnyOutline from '@vicons/ionicons5/es/SunnyOutline'
+import { Monitor, Moon, Smartphone, Sun } from 'lucide-vue-next'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
 import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
@@ -72,13 +69,13 @@ function handleDeviceChange(value: unknown) {
             value="desktop"
             aria-label="桌面预览"
           >
-            <DesktopOutline class="size-3.5" />
+            <Monitor class="size-3.5" />
           </ToggleGroupItem>
           <ToggleGroupItem
             value="mobile"
             aria-label="移动预览"
           >
-            <PhonePortraitOutline class="size-3.5" />
+            <Smartphone class="size-3.5" />
           </ToggleGroupItem>
         </ToggleGroup>
         <Button
@@ -87,11 +84,11 @@ function handleDeviceChange(value: unknown) {
           :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
           @click="previewDark = !previewDark"
         >
-          <SunnyOutline
+          <Sun
             v-if="previewDark"
             class="size-4"
           />
-          <MoonOutline
+          <Moon
             v-else
             class="size-4"
           />

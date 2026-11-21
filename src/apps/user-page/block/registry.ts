@@ -1,33 +1,44 @@
-import AlertCircleOutline from '@vicons/ionicons5/es/AlertCircleOutline'
-import AppsOutline from '@vicons/ionicons5/es/AppsOutline'
-import CalendarOutline from '@vicons/ionicons5/es/CalendarOutline'
-import ChatboxOutline from '@vicons/ionicons5/es/ChatboxOutline'
-import ChatbubbleEllipsesOutline from '@vicons/ionicons5/es/ChatbubbleEllipsesOutline'
-import CodeSlashOutline from '@vicons/ionicons5/es/CodeSlashOutline'
-import DocumentTextOutline from '@vicons/ionicons5/es/DocumentTextOutline'
-import GridOutline from '@vicons/ionicons5/es/GridOutline'
-import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
-import HelpCircleOutline from '@vicons/ionicons5/es/HelpCircleOutline'
-import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
-import ImagesOutline from '@vicons/ionicons5/es/ImagesOutline'
-import LinkOutline from '@vicons/ionicons5/es/LinkOutline'
-import MegaphoneOutline from '@vicons/ionicons5/es/MegaphoneOutline'
-import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
-import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
-import PersonCircleOutline from '@vicons/ionicons5/es/PersonCircleOutline'
-import PlayOutline from '@vicons/ionicons5/es/PlayOutline'
-import PricetagsOutline from '@vicons/ionicons5/es/PricetagsOutline'
-import QrCodeOutline from '@vicons/ionicons5/es/QrCodeOutline'
-import RadioOutline from '@vicons/ionicons5/es/RadioOutline'
-import RemoveOutline from '@vicons/ionicons5/es/RemoveOutline'
-import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
-import ResizeOutline from '@vicons/ionicons5/es/ResizeOutline'
-import ShareSocialOutline from '@vicons/ionicons5/es/ShareSocialOutline'
-import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
-import StorefrontOutline from '@vicons/ionicons5/es/StorefrontOutline'
-import TextOutline from '@vicons/ionicons5/es/TextOutline'
-import TimerOutline from '@vicons/ionicons5/es/TimerOutline'
-import VideocamOutline from '@vicons/ionicons5/es/VideocamOutline'
+import {
+  AlertCircle,
+  AlignLeft,
+  BarChart3,
+  Briefcase,
+  Calendar,
+  CircleHelp,
+  Clock,
+  Code2,
+  Compass,
+  ExternalLink,
+  FileText,
+  Film,
+  Grid2x2,
+  Heading,
+  Heart,
+  Image as ImageIcon,
+  Images,
+  LayoutGrid,
+  Link2,
+  List,
+  ListOrdered,
+  Megaphone,
+  Minus,
+  MousePointerClick,
+  MoveVertical,
+  Music,
+  Palette,
+  Play,
+  QrCode,
+  Quote,
+  Radio,
+  Share2,
+  Store,
+  Tag,
+  Timer,
+  UserCircle,
+  Video,
+  Volume2,
+  Vote,
+} from 'lucide-vue-next'
 import type { Component } from 'vue'
 
 import { BLOCK_COMPONENTS } from './blockComponents'
@@ -51,45 +62,50 @@ export interface BlockDefinition extends SharedBlockDefinition {
 }
 
 const ICONS: Record<BlockType, Component> = {
-  profile: PersonCircleOutline,
-  layout: GridOutline,
-  heading: TextOutline,
-  text: ChatboxOutline,
-  richText: DocumentTextOutline,
-  customHtml: CodeSlashOutline,
-  alert: AlertCircleOutline,
-  links: LinkOutline,
-  button: OpenOutline,
-  buttons: AppsOutline,
-  image: ImageOutline,
-  imageGallery: ImagesOutline,
-  qrcode: QrCodeOutline,
-  featureNav: GridOutline,
-  songList: MusicalNotesOutline,
-  cardList: GridOutline,
-  checkInRanking: StatsChartOutline,
-  featuredGoods: StorefrontOutline,
-  videoCollect: VideocamOutline,
-  sectionNav: ReorderThreeOutline,
-  nowPlaying: MusicalNotesOutline,
-  embed: VideocamOutline,
-  divider: RemoveOutline,
-  spacer: ResizeOutline,
-  footer: DocumentTextOutline,
-  liveStatus: RadioOutline,
-  streamSchedule: CalendarOutline,
-  biliInfo: StatsChartOutline,
-  videoList: PlayOutline,
-  socialLinks: ShareSocialOutline,
-  musicPlayer: MusicalNotesOutline,
-  tags: PricetagsOutline,
-  milestone: TimerOutline,
-  faq: HelpCircleOutline,
-  quote: ChatbubbleEllipsesOutline,
-  marquee: MegaphoneOutline,
-  countdown: TimerOutline,
-  feedback: HelpCircleOutline,
-  supporter: HeartOutline,
+  profile: UserCircle,
+  layout: LayoutGrid,
+  heading: Heading,
+  text: AlignLeft,
+  richText: FileText,
+  customHtml: Code2,
+  alert: AlertCircle,
+  links: Link2,
+  button: MousePointerClick,
+  buttons: Grid2x2,
+  image: ImageIcon,
+  imageGallery: Images,
+  qrcode: QrCode,
+  featureNav: Compass,
+  songList: Music,
+  cardList: LayoutGrid,
+  checkInRanking: BarChart3,
+  featuredGoods: Store,
+  videoCollect: Film,
+  sectionNav: List,
+  nowPlaying: Music,
+  embed: Video,
+  divider: Minus,
+  spacer: MoveVertical,
+  footer: FileText,
+  liveStatus: Radio,
+  streamSchedule: Calendar,
+  biliInfo: BarChart3,
+  videoList: Play,
+  socialLinks: Share2,
+  musicPlayer: Music,
+  tags: Tag,
+  milestone: Clock,
+  faq: CircleHelp,
+  quote: Quote,
+  marquee: Megaphone,
+  countdown: Timer,
+  feedback: ExternalLink,
+  supporter: Heart,
+  danmakuVote: Vote,
+  queueStatus: ListOrdered,
+  ocProfile: Palette,
+  commission: Briefcase,
+  voiceBoard: Volume2,
 }
 
 export const BLOCK_DEFINITIONS = SHARED_BLOCK_DEFINITIONS.map((definition): BlockDefinition => ({

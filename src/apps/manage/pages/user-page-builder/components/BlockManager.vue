@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 
 import { UserPageEditorKey } from '../context'
@@ -429,7 +439,7 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
-    <div class="block-manager__scroll flex-1 min-h-0 overflow-y-auto">
+    <div class="block-manager__scroll flex-1 min-h-0 overflow-y-auto scrollbar-thin">
       <div class="block-manager__tree p-2">
         <BlockTreeList
           :blocks="blocksModel"
@@ -458,6 +468,7 @@ onBeforeUnmount(() => {
       <DialogContent class="max-w-sm p-4">
         <DialogHeader>
           <DialogTitle class="text-sm">重命名区块</DialogTitle>
+          <DialogDescription class="sr-only">设置该区块在编辑器列表中的备注名称。</DialogDescription>
         </DialogHeader>
         <div class="py-2">
           <Input
@@ -479,28 +490,25 @@ onBeforeUnmount(() => {
     </Dialog>
 
     <!-- 删除确认弹窗 -->
-    <Dialog v-model:open="deleteBlockModal">
-      <DialogContent class="max-w-sm p-4">
-        <DialogHeader>
-          <DialogTitle class="text-sm text-destructive">删除区块</DialogTitle>
-        </DialogHeader>
-        <div class="py-2 text-xs text-muted-foreground">
-          将删除 {{ pendingDeleteIds.length }} 个区块，此操作可通过撤销恢复。
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            @click="deleteBlockModal = false"
-            >取消</Button
-          >
-          <Button
-            variant="destructive"
+    <AlertDialog v-model:open="deleteBlockModal">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>删除区块</AlertDialogTitle>
+          <AlertDialogDescription>
+            将删除 {{ pendingDeleteIds.length }} 个区块，此操作可通过撤销恢复。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>取消</AlertDialogCancel>
+          <AlertDialogAction
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             @click="confirmDeleteBlocks"
-            >删除</Button
           >
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            删除
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
