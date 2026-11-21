@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import ArchiveOutline from '@vicons/ionicons5/es/ArchiveOutline'
-import { computed, onUnmounted, ref } from 'vue'
+import { FolderOpen } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Separator } from '@/shared/ui/separator'
 import { Transfer, type TransferOption } from '@/shared/ui/transfer'
@@ -35,6 +36,7 @@ const folderSongs = ref<ResponseSongModel[]>([])
 const folderSongsOptions = ref<TransferOption[]>([])
 const selectedFolderSongs = ref<string[]>([])
 const isScanningFolder = ref(false)
+const useFolderAsTag = ref(true)
 
 const showBatchEdit = ref(false)
 const batchAuthorInput = ref('')
@@ -51,26 +53,26 @@ const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac
 
 async function scanDirectory(
   directoryHandle: any,
-  audioFiles: { name: string; file: File; path: string }[],
-  currentPath: string,
+  audioFiles: { name: string; path: string; folderTags: string[] }[],
+  folderParts: string[],
 ) {
   for await (const entry of directoryHandle.values()) {
-    const entryPath = currentPath ? `${currentPath}/${entry.name}` : entry.name
-
     if (entry.kind === 'file') {
-      const ext = entry.name.substring(entry.name.lastIndexOf('.')).toLowerCase()
+      const dotIdx = entry.name.lastIndexOf('.')
+      const ext = dotIdx >= 0 ? entry.name.substring(dotIdx).toLowerCase() : ''
       if (AUDIO_EXTENSIONS.has(ext)) {
-        const file = await entry.getFile()
-        audioFiles.push({ name: entry.name, file, path: entryPath })
+        const entryPath = folderParts.length ? `${folderParts.join('/')}/${entry.name}` : entry.name
+        audioFiles.push({ name: entry.name, path: entryPath, folderTags: [...folderParts] })
       }
     } else if (entry.kind === 'directory') {
-      await scanDirectory(entry, audioFiles, entryPath)
+      await scanDirectory(entry, audioFiles, [...folderParts, entry.name])
     }
   }
 }
 
-function parseAudioFileName(fileName: string, file: File, filePath: string): ResponseSongModel | null {
-  const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
+function parseAudioFileName(fileName: string, filePath: string, folderTags: string[]): ResponseSongModel | null {
+  const dotIdx = fileName.lastIndexOf('.')
+  const nameWithoutExt = dotIdx >= 0 ? fileName.substring(0, dotIdx) : fileName
 
   let name = ''
   let author: string[] = []
@@ -81,7 +83,7 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Res
       author = parts[0]
         .split(/[/、&]/)
         .map((a) => a.trim())
-        .filter((a) => a)
+        .filter(Boolean)
       name = parts.slice(1).join(' - ')
 
       if (parts[1].match(/[/、&]/)) {
@@ -91,7 +93,7 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Res
           .join(' - ')
           .split(/[/、&]/)
           .map((a) => a.trim())
-          .filter((a) => a)
+          .filter(Boolean)
       }
     }
   } else if (nameWithoutExt.includes('-') && !nameWithoutExt.startsWith('-')) {
@@ -100,7 +102,7 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Res
       author = parts[0]
         .split(/[/、&]/)
         .map((a) => a.trim())
-        .filter((a) => a)
+        .filter(Boolean)
       name = parts.slice(1).join('-')
     }
   } else if (nameWithoutExt.match(/^(?:\[|【)([^\]】]+)(?:\]|】)(.+)$/)) {
@@ -109,7 +111,7 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Res
       author = match[1]
         .split(/[/、&]/)
         .map((a) => a.trim())
-        .filter((a) => a)
+        .filter(Boolean)
       name = match[2].trim()
     }
   } else if (nameWithoutExt.match(/^([^《<]+)[《<]([^》>]+)[》>]$/)) {
@@ -118,7 +120,7 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Res
       author = match[1]
         .split(/[/、&]/)
         .map((a) => a.trim())
-        .filter((a) => a)
+        .filter(Boolean)
       name = match[2].trim()
     }
   } else {
@@ -127,22 +129,18 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Res
 
   if (!name) return null
 
-  const url = URL.createObjectURL(file)
-
   return {
-    id: 0,
+    id: -1,
     key: '',
     name,
     author: author.length > 0 ? author : ['未知'],
-    url,
-    description: `从文件导入: ${filePath}`,
+    url: undefined,
+    description: undefined,
     language: [],
-    tags: [],
+    tags: useFolderAsTag.value ? folderTags.filter(Boolean) : [],
     from: SongPlatform.Custom,
     createTime: Date.now(),
     updateTime: Date.now(),
-    // @ts-ignore
-    _originalFile: file,
     // @ts-ignore
     _filePath: filePath,
   } as ResponseSongModel
@@ -157,20 +155,33 @@ function updateFolderSongsOptions(newlyAddedSongs: ResponseSongModel[] = []) {
   }))
 }
 
-function batchEditFolderSongs(field: 'author' | 'language' | 'tags', value: string[]) {
+function batchEditFolderSongs(field: 'author' | 'language' | 'tags', rawInput: string) {
+  const values = rawInput
+    .split(/[,，]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (!values.length) {
+    message.warning('请输入有效内容')
+    return
+  }
+
   const selectedSongs = folderSongs.value.filter((s) =>
     selectedFolderSongs.value.includes(`${s.name}_${(s as any)._filePath}`),
   )
+  if (!selectedSongs.length) {
+    message.warning('请先在右侧勾选要设置的歌曲')
+    return
+  }
 
   selectedSongs.forEach((song) => {
-    if (field === 'author') {
-      song.author = value
-    } else if (field === 'language') {
-      song.language = value
-    } else if (field === 'tags') {
-      song.tags = value
-    }
+    if (field === 'author') song.author = values
+    else if (field === 'language') song.language = values
+    else if (field === 'tags') song.tags = [...new Set([...(song.tags ?? []), ...values])]
   })
+
+  if (field === 'author') batchAuthorInput.value = ''
+  else if (field === 'language') batchLanguageInput.value = ''
+  else batchTagInput.value = ''
 
   updateFolderSongsOptions()
   message.success(
@@ -190,13 +201,7 @@ async function addFolderSongs() {
       selectedFolderSongs.value.includes(`${s.name}_${(s as any)._filePath}`),
     )
 
-    const result = await addSongsToSongList(
-      songsToAdd.map((s) => ({
-        ...s,
-        description: `${s.description || ''} [注意: 链接为本地文件，刷新页面后可能失效]`,
-      })),
-      SongPlatform.Custom,
-    )
+    const result = await addSongsToSongList(songsToAdd, SongPlatform.Custom)
 
     if (result.code !== 200) {
       message.error(`添加失败: ${result.message}`)
@@ -214,16 +219,6 @@ async function addFolderSongs() {
   }
 }
 
-function revokeFolderSongUrls() {
-  for (const song of folderSongs.value) {
-    if (song.url?.startsWith('blob:')) {
-      URL.revokeObjectURL(song.url)
-    }
-  }
-}
-
-onUnmounted(revokeFolderSongUrls)
-
 async function selectFolder() {
   try {
     if (!('showDirectoryPicker' in window)) {
@@ -232,24 +227,22 @@ async function selectFolder() {
     }
 
     isScanningFolder.value = true
-    revokeFolderSongUrls()
     folderSongs.value = []
 
     // @ts-ignore
     const directoryHandle = await window.showDirectoryPicker({ mode: 'read' })
     message.info('正在扫描文件夹...')
 
-    const audioFiles: { name: string; file: File; path: string }[] = []
-    await scanDirectory(directoryHandle, audioFiles, '')
+    const audioFiles: { name: string; path: string; folderTags: string[] }[] = []
+    await scanDirectory(directoryHandle, audioFiles, [])
 
     if (audioFiles.length === 0) {
       message.warning('未在文件夹中找到音频文件')
       return
     }
 
-    message.info(`找到 ${audioFiles.length} 个音频文件，正在解析...`)
     for (const audioFile of audioFiles) {
-      const songInfo = parseAudioFileName(audioFile.name, audioFile.file, audioFile.path)
+      const songInfo = parseAudioFileName(audioFile.name, audioFile.path, audioFile.folderTags)
       if (songInfo) folderSongs.value.push(songInfo)
     }
 
@@ -274,24 +267,26 @@ async function selectFolder() {
       size="sm"
       variant="info"
     >
-      <AlertTitle>功能说明</AlertTitle>
+      <AlertTitle>本地伴奏 / 曲库文件扫描</AlertTitle>
       <AlertDescription class="space-y-1 mt-1">
-        <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
-        <p class="text-destructive font-medium">
-          注意：导入的歌曲链接为本地文件地址，仅在当前浏览器会话有效。刷新页面后可能需要重新导入。
-        </p>
+        <div>仅从本地文件夹解析文件名中的歌名、歌手与子目录分类并入库（不会将本机临时文件链接写入云端歌单）。</div>
       </AlertDescription>
     </Alert>
 
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-3">
       <Button
         :disabled="isScanningFolder"
         class="gap-1.5"
         @click="selectFolder"
       >
-        <ArchiveOutline class="size-4" />
+        <FolderOpen class="size-4" />
         {{ isScanningFolder ? '正在扫描...' : '选择本地文件夹' }}
       </Button>
+
+      <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground select-none">
+        <Checkbox v-model:checked="useFolderAsTag" />
+        <span>将子文件夹名自动设为歌曲标签</span>
+      </label>
     </div>
 
     <template v-if="folderSongsOptions.length > 0">
@@ -311,51 +306,48 @@ async function selectFolder() {
           v-if="showBatchEdit"
           class="p-3 rounded-lg border border-border bg-muted/20 space-y-2 text-xs"
         >
-          <p class="text-muted-foreground text-[11px]">选中歌曲后，可以批量设置作者、语言或标签信息</p>
+          <p class="text-muted-foreground text-[11px]">选中右侧待添加歌曲后，可批量覆盖或追加作者、语言或标签信息</p>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 min-w-0">
               <Input
-                size="xs"
                 v-model="batchAuthorInput"
                 placeholder="输入作者"
-                class="flex-1"
+                class="flex-1 min-w-0"
               />
               <Button
                 size="xs"
                 variant="outline"
-                @click="(batchEditFolderSongs('author', [batchAuthorInput]), (batchAuthorInput = ''))"
+                @click="batchEditFolderSongs('author', batchAuthorInput)"
               >
                 设置作者
               </Button>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 min-w-0">
               <Input
-                size="xs"
                 v-model="batchLanguageInput"
                 placeholder="输入语言"
-                class="flex-1"
+                class="flex-1 min-w-0"
               />
               <Button
                 size="xs"
                 variant="outline"
-                @click="(batchEditFolderSongs('language', [batchLanguageInput]), (batchLanguageInput = ''))"
+                @click="batchEditFolderSongs('language', batchLanguageInput)"
               >
                 设置语言
               </Button>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 min-w-0">
               <Input
-                size="xs"
                 v-model="batchTagInput"
                 placeholder="输入标签"
-                class="flex-1"
+                class="flex-1 min-w-0"
               />
               <Button
                 size="xs"
                 variant="outline"
-                @click="(batchEditFolderSongs('tags', [batchTagInput]), (batchTagInput = ''))"
+                @click="batchEditFolderSongs('tags', batchTagInput)"
               >
-                设置标签
+                追加标签
               </Button>
             </div>
           </div>

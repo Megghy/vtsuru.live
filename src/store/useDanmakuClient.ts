@@ -220,6 +220,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     currentIntent = intent
     const taskGeneration = ++generation
     await stopActiveConnection(true)
+    if (!isCurrent(taskGeneration, intent)) return useDanmakuClient()
     state.value = 'connecting'
     phase.value = reconnecting ? 'reconnecting' : 'electing'
     lastError.value = ''
@@ -255,7 +256,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     }
 
     if (!allowUpstream) {
-      releaseLeadership()
+      await releaseLeadership()
       state.value = 'waiting'
       phase.value = 'idle'
       return
@@ -408,7 +409,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     danmakuClient.value = undefined
     authInfo.value = undefined
     sourceMeta.value = undefined
-    releaseLeadership()
+    await releaseLeadership()
   }
 
   /** 手动重连：沿用当前来源意图；尚未建立过连接时按开放平台启动 */
@@ -521,9 +522,12 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     return !getBestRemoteSource(scope)
   }
 
-  function releaseLeadership() {
-    releaseLeaderLock?.()
+  async function releaseLeadership() {
+    const lockTask = leaderLockTask
+    const release = releaseLeaderLock
     releaseLeaderLock = undefined
+    release?.()
+    if (lockTask) await lockTask.catch(() => undefined)
   }
 
   function convergeFallbackLeader(remoteId: string, scope: string) {

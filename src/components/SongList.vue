@@ -14,6 +14,10 @@ defineProps<{
   liveRequestActive?: SongRequestInfo[]
 }>()
 
+const emit = defineEmits<{
+  'update:songs': [songs: ResponseSongModel[]]
+}>()
+
 const tableRef = ref<InstanceType<typeof SongListTable>>()
 
 defineExpose({
@@ -31,5 +35,6 @@ defineExpose({
     :is-self="isSelf"
     :extra-button="extraButton"
     :live-request-active="liveRequestActive"
+    @update:songs="emit('update:songs', $event)"
   />
 </template>

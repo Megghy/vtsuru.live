@@ -15,13 +15,14 @@ export interface SongRequestCheckResult {
 const COPY_REASONS = {
   webDisabled: '主播不允许从网页点歌, 点歌弹幕已复制到剪切板',
   anonymousDisabled: '主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点歌弹幕已复制到剪切板',
-  biliAuthRequired: '此歌曲有大航海或粉丝牌要求, 请先绑定 B 站账号后再网页点歌, 点歌弹幕已复制到剪切板',
+  biliAuthRequired: '此歌曲有大航海要求, 请先绑定 B 站账号后再网页点歌, 点歌弹幕已复制到剪切板',
 } as const
 
 const TOOLTIP_REASONS = {
+  disabled: '暂不接歌',
   webDisabled: '点歌 | 主播不允许从网页点歌, 点击后将复制点歌内容到剪切板',
   anonymousDisabled: '点歌 | 主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点击后将复制点歌内容到剪切板',
-  biliAuthRequired: '点歌 | 此歌曲有大航海或粉丝牌要求, 需先绑定 B 站账号验证身份, 点击将复制弹幕到剪切板',
+  biliAuthRequired: '点歌 | 此歌曲有大航海要求, 需先绑定 B 站账号验证身份, 点击将复制弹幕到剪切板',
 } as const
 
 function describeGuardTiers(options?: SongRequestOption): string {
@@ -33,9 +34,13 @@ function describeGuardTiers(options?: SongRequestOption): string {
   return tiers.join('/')
 }
 
-function hasGuardOrMedalRequirement(options?: SongRequestOption): boolean {
+function hasGuardRequirement(options?: SongRequestOption): boolean {
   if (!options) return false
-  return Boolean(options.needJianzhang || options.needTidu || options.needZongdu || (options.fanMedalMinLevel ?? 0) > 0)
+  return Boolean(options.needJianzhang || options.needTidu || options.needZongdu)
+}
+
+function hasFanMedalRequirement(options?: SongRequestOption): boolean {
+  return (options?.fanMedalMinLevel ?? 0) > 0
 }
 
 function hasScRequirement(options?: SongRequestOption): boolean {
@@ -69,8 +74,11 @@ function getCopyOnlyReason(
   if (hasScRequirement(song.options)) {
     return `此歌曲要求在直播间发送至少 ¥${song.options?.scMinPrice} 的 SC 醒目留言, 点歌弹幕已复制到剪切板`
   }
+  if (hasFanMedalRequirement(song.options)) {
+    return `此歌曲要求粉丝牌 ≥ ${song.options?.fanMedalMinLevel} 级，请在直播间发送弹幕点播，点歌弹幕已复制到剪切板`
+  }
   if (!liveRequestSettings?.allowFromWeb) return COPY_REASONS.webDisabled
-  if (hasGuardOrMedalRequirement(song.options) && !authState.isBiliAuthed) {
+  if (hasGuardRequirement(song.options) && !authState.isBiliAuthed) {
     return COPY_REASONS.biliAuthRequired
   }
   if (isAnonymousWebRequestBlocked(liveRequestSettings, authState)) return COPY_REASONS.anonymousDisabled
@@ -85,11 +93,15 @@ export function getSongRequestTooltip(
   liveRequestSettings: SettingSongRequest | undefined,
   authState: SongRequestAuthState,
 ): string {
+  if (song.isDisabled) return TOOLTIP_REASONS.disabled
   if (hasScRequirement(song.options)) {
     return `点歌 | 需直播间 SC ≥ ¥${song.options?.scMinPrice}, 点击后将复制点歌内容到剪切板`
   }
+  if (hasFanMedalRequirement(song.options)) {
+    return `点歌 | 需直播间粉丝牌 ≥ ${song.options?.fanMedalMinLevel} 级, 点击后将复制点歌内容到剪切板`
+  }
   if (!liveRequestSettings?.allowFromWeb) return TOOLTIP_REASONS.webDisabled
-  if (hasGuardOrMedalRequirement(song.options) && !authState.isBiliAuthed) {
+  if (hasGuardRequirement(song.options) && !authState.isBiliAuthed) {
     return TOOLTIP_REASONS.biliAuthRequired
   }
   if (isAnonymousWebRequestBlocked(liveRequestSettings, authState)) return TOOLTIP_REASONS.anonymousDisabled
@@ -144,6 +156,10 @@ export function canRequestSong(
   isBiliAuthed: boolean,
   nextRequestTime?: Date | number | string,
 ): SongRequestCheckResult {
+  if (song.isDisabled) {
+    return { canRequest: false, reason: '主播暂未开放此曲目点歌' }
+  }
+
   const reason = getCopyOnlyReason(song, liveRequestSettings, { isLoggedIn, isBiliAuthed })
   if (reason) {
     return { canRequest: false, reason, shouldCopyOnly: true }

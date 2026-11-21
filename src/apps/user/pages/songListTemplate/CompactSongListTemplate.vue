@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import Play24Filled from '@vicons/fluent/es/Play24Filled'
-import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { useVirtualList } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { ExternalLink, Pin, Play } from 'lucide-vue-next'
+import { ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
-import { Input } from '@/shared/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { toast } from '@/shared/utils'
+import { getPlayableAudioUrl, getSongExternalLink } from '@/shared/utils/songMedia'
 
+import SongListFilterToolbar from './components/SongListFilterToolbar.vue'
 import SongOptionBadges from './components/SongOptionBadges.vue'
+import SongRandomDialog from './components/SongRandomDialog.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
-import { filterSongs, getSongFieldOptions } from './utils/songListData'
+import { useSongListQueryState } from './utils/useSongListQueryState'
 import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
 
 const props = defineProps<SongListConfigType>()
@@ -33,28 +35,37 @@ const {
   liveRequestActive: () => props.liveRequestActive,
 })
 
-const searchKeyword = ref('')
-const selectedTag = ref<string | null>(null)
-const selectedAuthor = ref<string | null>(null)
+const {
+  searchKeyword,
+  selectedArtist,
+  selectedLanguage,
+  selectedTag,
+  selectedOption,
+  sortKey,
+  sortOrder,
+  hideDisabled,
+  artistOptions,
+  languageOptions,
+  tagOptions,
+  disabledCount,
+  filteredSongs,
+  hasFilters,
+  clearFilters,
+  pickRandomSong,
+  copyShareLink,
+} = useSongListQueryState(() => props.data)
+
 const previewSong = ref<ResponseSongModel>()
-const isLrcLoading = ref('')
+const isLrcLoading = ref<string>()
+const randomDialogOpen = ref(false)
+const randomSong = ref<ResponseSongModel | null>(null)
 
-const tagOptions = computed(() => {
-  return getSongFieldOptions(props.data, 'tags')
+const { listKey } = useFilterListKey({
+  committedKeyword: searchKeyword,
+  tag: selectedTag,
+  author: selectedArtist,
+  language: selectedLanguage,
 })
-const authorOptions = computed(() => {
-  return getSongFieldOptions(props.data, 'author')
-})
-
-const filteredSongs = computed<ResponseSongModel[]>(() => {
-  return filterSongs(props.data, {
-    keyword: searchKeyword.value,
-    tag: selectedTag.value,
-    author: selectedAuthor.value,
-  })
-})
-
-const { listKey } = useFilterListKey({ tag: selectedTag, author: selectedAuthor })
 
 const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
   itemHeight: 60,
@@ -65,78 +76,61 @@ function requestSong(song: ResponseSongModel) {
   if (!beginRequest(song)) return
   emits('requestSong', song)
 }
+
+function handleRandomPick() {
+  const picked = pickRandomSong(randomSong.value?.key)
+  if (!picked) {
+    toast.warning('当前没有可点选的歌曲')
+    return
+  }
+  randomSong.value = picked
+  randomDialogOpen.value = true
+}
 </script>
 
 <template>
-  <div class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] min-w-0 mx-auto p-[clamp(12px,2vw,24px)]">
-    <header class="flex items-end justify-between mb-3.5 gap-3.5">
-      <div>
+  <div class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] min-w-0 mx-auto p-[clamp(12px,2vw,24px)] space-y-3.5">
+    <header class="flex items-end justify-between gap-3">
+      <div class="min-w-0">
         <span class="block mb-0.5 text-primary text-[10px] font-bold">QUICK INDEX</span>
-        <h2 class="m-0 text-card-foreground text-[clamp(20px,3vw,28px)] leading-[1.15]">快速曲库</h2>
+        <h2 class="m-0 text-card-foreground text-[clamp(20px,3vw,26px)] leading-[1.15] truncate">
+          {{ userInfo?.name ? `${userInfo.name} · 快速曲库` : '快速曲库' }}
+        </h2>
       </div>
       <span
         :key="listKey"
-        class="text-xs font-mono text-muted-foreground"
+        class="text-xs font-mono tabular-nums text-muted-foreground shrink-0"
       >
         {{ filteredSongs.length }} 首
       </span>
     </header>
 
-    <div class="toolbar flex flex-wrap gap-2.5 items-center mb-3.5">
-      <div class="relative search flex-1 min-w-48">
-        <component
-          :is="Search24Regular"
-          class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <Input
-          v-model="searchKeyword"
-          class="pl-8"
-          placeholder="搜索歌曲 / 歌手 / 标签…"
-        />
-      </div>
-      <Select
-        :model-value="selectedAuthor || 'all'"
-        @update:model-value="selectedAuthor = $event === 'all' ? null : String($event)"
-      >
-        <SelectTrigger class="w-36">
-          <SelectValue placeholder="歌手" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">全部歌手</SelectItem>
-          <SelectItem
-            v-for="opt in authorOptions"
-            :key="opt.value"
-            :value="opt.value"
-          >
-            {{ opt.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-      <Select
-        :model-value="selectedTag || 'all'"
-        @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
-      >
-        <SelectTrigger class="w-36">
-          <SelectValue placeholder="标签" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">全部标签</SelectItem>
-          <SelectItem
-            v-for="opt in tagOptions"
-            :key="opt.value"
-            :value="opt.value"
-          >
-            {{ opt.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+    <SongListFilterToolbar
+      v-model:search-keyword="searchKeyword"
+      v-model:selected-artist="selectedArtist"
+      v-model:selected-language="selectedLanguage"
+      v-model:selected-tag="selectedTag"
+      v-model:selected-option="selectedOption"
+      v-model:sort-key="sortKey"
+      v-model:sort-order="sortOrder"
+      v-model:hide-disabled="hideDisabled"
+      :artist-options="artistOptions"
+      :language-options="languageOptions"
+      :tag-options="tagOptions"
+      :total-count="data?.length ?? 0"
+      :filtered-count="filteredSongs.length"
+      :disabled-count="disabledCount"
+      :has-filters="hasFilters"
+      @clear="clearFilters"
+      @random="handleRandomPick"
+      @share="copyShareLink"
+    />
 
     <SongPlayer
       v-if="previewSong"
       v-model:is-lrc-loading="isLrcLoading"
       :song="previewSong"
-      class="preview-player mb-3"
+      @close="previewSong = undefined"
     />
 
     <Transition
@@ -146,7 +140,7 @@ function requestSong(song: ResponseSongModel) {
       <Empty
         v-if="filteredSongs.length === 0"
         :key="`empty-${listKey}`"
-        description="暂无曲目"
+        :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
         class="mt-12 py-8"
       />
 
@@ -154,21 +148,26 @@ function requestSong(song: ResponseSongModel) {
         v-else
         :key="listKey"
         v-bind="containerProps"
-        class="h-[clamp(480px,68vh,840px)] overflow-y-auto"
+        class="h-[clamp(440px,68vh,840px)] overflow-y-auto scrollbar-thin rounded-[var(--vtsuru-page-radius,var(--radius))] border border-border/80 bg-card"
       >
         <div v-bind="wrapperProps">
           <div
             v-for="{ data: song, index } in list"
             :key="song.key"
-            class="grid grid-cols-[36px_40px_minmax(140px,1fr)_auto_auto] items-center gap-3 h-[60px] px-3 border-b border-border transition-colors hover:bg-muted"
+            class="grid grid-cols-[36px_minmax(0,1fr)_auto] sm:grid-cols-[36px_40px_minmax(140px,1fr)_auto_auto] items-center gap-2.5 sm:gap-3 h-[60px] px-2.5 sm:px-3 border-b border-border/70 transition-colors hover:bg-muted/50 min-w-0"
             :class="{
-              'bg-muted/30': index % 2 === 1,
+              'bg-muted/25': index % 2 === 1,
+              'is-singing': singingSongKeySet.has(song.key),
+              'is-queued': queuedSongKeySet.has(song.key),
+              'is-pinned': song.isPinned,
+              'is-disabled': song.isDisabled,
             }"
           >
-            <div class="text-xs font-mono text-muted-foreground text-center">
+            <div class="hidden sm:block text-xs font-mono tabular-nums text-muted-foreground text-center">
               {{ index + 1 }}
             </div>
-            <div class="size-10 rounded-md overflow-hidden bg-muted">
+
+            <div class="size-9 sm:size-10 rounded-md overflow-hidden bg-muted shrink-0">
               <img
                 v-if="song.cover"
                 :src="song.cover"
@@ -180,21 +179,38 @@ function requestSong(song: ResponseSongModel) {
               <span
                 v-else
                 class="flex-center size-full text-sm font-semibold text-muted-foreground"
-                >{{ song.name.charAt(0) }}</span
               >
+                {{ song.name.charAt(0) }}
+              </span>
             </div>
+
             <div class="min-w-0">
-              <div class="flex items-center gap-1.5 text-[13px] font-medium text-card-foreground">
+              <div class="flex items-center gap-1.5 text-[13px] font-medium text-card-foreground min-w-0">
+                <Pin
+                  v-if="song.isPinned"
+                  class="size-3 text-primary shrink-0"
+                />
                 <span
                   class="truncate"
                   :title="song.name"
-                  >{{ song.name }}</span
                 >
+                  {{ song.name }}
+                </span>
                 <span
                   v-if="song.translateName"
-                  class="text-[11px] text-muted-foreground"
-                  >{{ song.translateName }}</span
+                  class="text-[11px] text-muted-foreground truncate max-w-[120px] hidden sm:inline"
+                  :title="song.translateName"
                 >
+                  {{ song.translateName }}
+                </span>
+                <Badge
+                  v-if="song.isDisabled"
+                  variant="secondary"
+                  size="xs"
+                  class="shrink-0"
+                >
+                  暂不接歌
+                </Badge>
                 <SongStatusBadge
                   :song-key="song.key"
                   :singing-keys="singingSongKeySet"
@@ -205,17 +221,31 @@ function requestSong(song: ResponseSongModel) {
                   :options="song.options"
                   variant="semantic"
                   size="tiny"
+                  class="hidden sm:flex"
                 />
               </div>
-              <div
-                v-if="song.author?.length"
-                class="text-[11px] text-muted-foreground truncate"
-                :title="song.author.join(' / ')"
-              >
-                {{ song.author.join(' / ') }}
+              <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate min-w-0">
+                <span
+                  v-if="song.author?.length"
+                  class="truncate"
+                  :title="song.author.join(' / ')"
+                >
+                  {{ song.author.join(' / ') }}
+                </span>
+                <span
+                  v-else
+                  class="opacity-60"
+                >
+                  未知歌手
+                </span>
+                <template v-if="song.language?.length">
+                  <span>·</span>
+                  <span class="truncate">{{ song.language.join('/') }}</span>
+                </template>
               </div>
             </div>
-            <div class="flex gap-1">
+
+            <div class="hidden sm:flex gap-1">
               <button
                 v-for="tag in (song.tags ?? []).slice(0, 3)"
                 :key="tag"
@@ -228,27 +258,41 @@ function requestSong(song: ResponseSongModel) {
                 {{ tag }}
               </button>
             </div>
-            <div class="row-actions flex items-center gap-1">
+
+            <div class="row-actions flex items-center gap-1 shrink-0">
               <Button
-                v-if="song.url"
+                v-if="getPlayableAudioUrl(song)"
                 variant="ghost"
-                size="xs"
-                class="size-7 rounded-full text-muted-foreground"
+                size="icon-xs"
+                class="rounded-full text-muted-foreground"
                 :disabled="isLrcLoading === song.key"
                 aria-label="试听"
                 @click="previewSong = song"
               >
-                <component
-                  :is="Play24Filled"
-                  class="size-3.5"
-                />
+                <Play class="size-3.5" />
               </Button>
+              <a
+                v-if="getSongExternalLink(song)"
+                :href="getSongExternalLink(song)!.url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  class="rounded-full text-muted-foreground"
+                  :aria-label="getSongExternalLink(song)!.label"
+                >
+                  <ExternalLink class="size-3.5" />
+                </Button>
+              </a>
               <SongRequestButton
                 :song="song"
                 :live-request-settings="liveRequestSettings"
                 :auth-state="requestAuthState"
                 :loading="requestingKey === song.key"
                 :hidden="isSelf"
+                size="tiny"
                 @request="requestSong"
               />
             </div>
@@ -256,5 +300,15 @@ function requestSong(song: ResponseSongModel) {
         </div>
       </div>
     </Transition>
+
+    <SongRandomDialog
+      v-model:open="randomDialogOpen"
+      :song="randomSong"
+      :is-self="isSelf"
+      :live-request-settings="liveRequestSettings"
+      :can-reroll="filteredSongs.filter((s) => !s.isDisabled).length > 1"
+      @reroll="handleRandomPick"
+      @request="requestSong"
+    />
   </div>
 </template>

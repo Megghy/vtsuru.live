@@ -2,14 +2,16 @@
 import { ref } from 'vue'
 
 import type { SongRequestOption } from '@/api/generated/model'
+import SongTagChipInput from '@/components/song-list/SongTagChipInput.vue'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
-import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
-import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { toast } from '@/shared/utils'
+
+export type BatchUpdateMode = 'append' | 'remove' | 'replace'
 
 interface OptionItem {
   label: string
@@ -25,22 +27,24 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'delete'): void
-  (e: 'updateAuthor', value: string[], mode: 'replace' | 'append'): void
-  (e: 'updateTag', value: string[], mode: 'replace' | 'append'): void
-  (e: 'updateLanguage', value: string[], mode: 'replace' | 'append'): void
+  (e: 'updateAuthor', value: string[], mode: BatchUpdateMode): void
+  (e: 'updateTag', value: string[], mode: BatchUpdateMode): void
+  (e: 'updateLanguage', value: string[], mode: BatchUpdateMode): void
   (e: 'updateOption', value: SongRequestOption | undefined): void
+  (e: 'updatePin', value: boolean): void
+  (e: 'updateDisabled', value: boolean): void
 }>()
 
 const show = ref(false)
 
-const batchAuthorText = ref('')
-const batchTagText = ref('')
-const batchLanguageText = ref('')
+const batchAuthors = ref<string[]>([])
+const batchTags = ref<string[]>([])
+const batchLanguages = ref<string[]>([])
 const batchOption = ref<SongRequestOption | undefined>()
 
-const authorMode = ref<'replace' | 'append'>('append')
-const tagMode = ref<'replace' | 'append'>('append')
-const languageMode = ref<'replace' | 'append'>('append')
+const authorMode = ref<BatchUpdateMode>('append')
+const tagMode = ref<BatchUpdateMode>('append')
+const languageMode = ref<BatchUpdateMode>('append')
 
 function open() {
   show.value = true
@@ -49,43 +53,33 @@ function close() {
   show.value = false
 }
 
-function parseTags(text: string): string[] {
-  return text
-    .split(/[,，\s]+/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
 function handleUpdateAuthor() {
-  const authors = parseTags(batchAuthorText.value)
-  if (authors.length === 0) {
-    toast.warning('请输入作者')
+  if (authorMode.value !== 'replace' && batchAuthors.value.length === 0) {
+    toast.warning('请先添加或选择作者')
     return
   }
-  emit('updateAuthor', authors, authorMode.value)
-  batchAuthorText.value = ''
+  emit('updateAuthor', [...batchAuthors.value], authorMode.value)
+  batchAuthors.value = []
   close()
 }
 
 function handleUpdateTag() {
-  const tags = parseTags(batchTagText.value)
-  if (tags.length === 0) {
-    toast.warning('请输入标签')
+  if (tagMode.value !== 'replace' && batchTags.value.length === 0) {
+    toast.warning('请先添加或选择标签')
     return
   }
-  emit('updateTag', tags, tagMode.value)
-  batchTagText.value = ''
+  emit('updateTag', [...batchTags.value], tagMode.value)
+  batchTags.value = []
   close()
 }
 
 function handleUpdateLanguage() {
-  const langs = parseTags(batchLanguageText.value)
-  if (langs.length === 0) {
-    toast.warning('请输入语言')
+  if (languageMode.value !== 'replace' && batchLanguages.value.length === 0) {
+    toast.warning('请先添加或选择语言')
     return
   }
-  emit('updateLanguage', langs, languageMode.value)
-  batchLanguageText.value = ''
+  emit('updateLanguage', [...batchLanguages.value], languageMode.value)
+  batchLanguages.value = []
   close()
 }
 
@@ -100,77 +94,78 @@ defineExpose({ open, close })
 
 <template>
   <Dialog v-model:open="show">
-    <DialogContent class="sm:max-w-lg p-4 space-y-3">
+    <DialogContent class="sm:max-w-lg p-4 gap-3">
       <DialogHeader class="pb-2 border-b border-border/60">
         <DialogTitle class="text-sm">批量操作 · 已选 {{ selectedCount }} 首</DialogTitle>
       </DialogHeader>
 
       <Tabs
-        default-value="author"
+        default-value="tag"
         class="w-full"
       >
-        <TabsList class="grid grid-cols-5">
-          <TabsTrigger value="author" >作者</TabsTrigger
+        <TabsList class="grid grid-cols-6 w-full">
+          <TabsTrigger value="tag">标签</TabsTrigger>
+          <TabsTrigger value="author">作者</TabsTrigger>
+          <TabsTrigger value="language">语言</TabsTrigger>
+          <TabsTrigger value="option">要求</TabsTrigger>
+          <TabsTrigger value="status">状态</TabsTrigger>
+          <TabsTrigger
+            value="delete"
+            class="text-destructive"
           >
-          <TabsTrigger value="tag" >标签</TabsTrigger
-          >
-          <TabsTrigger value="language" >语言</TabsTrigger
-          >
-          <TabsTrigger value="option" >要求</TabsTrigger
-          >
-          <TabsTrigger value="delete" class="text-destructive" >删除</TabsTrigger
-          >
+            删除
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent
-          value="author"
-          class="pt-3 space-y-3 text-xs"
-        >
-          <RadioGroup
-            v-model="authorMode"
-            class="flex items-center gap-3"
-          >
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <RadioGroupItem value="append" />
-              <span>追加</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <RadioGroupItem value="replace" />
-              <span>替换</span>
-            </label>
-          </RadioGroup>
-          <Input
-            v-model="batchAuthorText"
-            placeholder="输入作者，多个用空格或逗号分隔"
-          />
-          <div class="flex justify-end">
-            <Button @click="handleUpdateAuthor"> 应用 </Button>
-          </div>
-        </TabsContent>
 
         <TabsContent
           value="tag"
           class="pt-3 space-y-3 text-xs"
         >
-          <RadioGroup
-            v-model="tagMode"
-            class="flex items-center gap-3"
+          <ToggleGroup
+            type="single"
+            :model-value="tagMode"
+            class="w-full grid grid-cols-3"
+            @update:model-value="(v) => v && (tagMode = v as BatchUpdateMode)"
           >
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <RadioGroupItem value="append" />
-              <span>追加</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <RadioGroupItem value="replace" />
-              <span>替换</span>
-            </label>
-          </RadioGroup>
-          <Input
-            v-model="batchTagText"
-            placeholder="输入标签，多个用空格或逗号分隔"
+            <ToggleGroupItem value="append">追加</ToggleGroupItem>
+            <ToggleGroupItem value="remove">移除指定</ToggleGroupItem>
+            <ToggleGroupItem value="replace">替换 / 清空</ToggleGroupItem>
+          </ToggleGroup>
+          <SongTagChipInput
+            v-model="batchTags"
+            :options="tagOptions"
+            :placeholder="tagMode === 'replace' ? '留空应用即可批量清空标签' : '输入或点选标签'"
           />
           <div class="flex justify-end">
-            <Button @click="handleUpdateTag"> 应用 </Button>
+            <Button @click="handleUpdateTag">
+              {{ tagMode === 'replace' && batchTags.length === 0 ? '清空标签' : '应用' }}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent
+          value="author"
+          class="pt-3 space-y-3 text-xs"
+        >
+          <ToggleGroup
+            type="single"
+            :model-value="authorMode"
+            class="w-full grid grid-cols-3"
+            @update:model-value="(v) => v && (authorMode = v as BatchUpdateMode)"
+          >
+            <ToggleGroupItem value="append">追加</ToggleGroupItem>
+            <ToggleGroupItem value="remove">移除指定</ToggleGroupItem>
+            <ToggleGroupItem value="replace">替换 / 清空</ToggleGroupItem>
+          </ToggleGroup>
+          <SongTagChipInput
+            v-model="batchAuthors"
+            :options="authorOptions"
+            :placeholder="authorMode === 'replace' ? '留空应用即可批量清空作者' : '输入或点选作者'"
+          />
+          <div class="flex justify-end">
+            <Button @click="handleUpdateAuthor">
+              {{ authorMode === 'replace' && batchAuthors.length === 0 ? '清空作者' : '应用' }}
+            </Button>
           </div>
         </TabsContent>
 
@@ -178,25 +173,25 @@ defineExpose({ open, close })
           value="language"
           class="pt-3 space-y-3 text-xs"
         >
-          <RadioGroup
-            v-model="languageMode"
-            class="flex items-center gap-3"
+          <ToggleGroup
+            type="single"
+            :model-value="languageMode"
+            class="w-full grid grid-cols-3"
+            @update:model-value="(v) => v && (languageMode = v as BatchUpdateMode)"
           >
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <RadioGroupItem value="append" />
-              <span>追加</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <RadioGroupItem value="replace" />
-              <span>替换</span>
-            </label>
-          </RadioGroup>
-          <Input
-            v-model="batchLanguageText"
-            placeholder="输入语言，多个用空格或逗号分隔"
+            <ToggleGroupItem value="append">追加</ToggleGroupItem>
+            <ToggleGroupItem value="remove">移除指定</ToggleGroupItem>
+            <ToggleGroupItem value="replace">替换 / 清空</ToggleGroupItem>
+          </ToggleGroup>
+          <SongTagChipInput
+            v-model="batchLanguages"
+            :options="languageOptions"
+            :placeholder="languageMode === 'replace' ? '留空应用即可批量清空语言' : '输入或点选语言'"
           />
           <div class="flex justify-end">
-            <Button @click="handleUpdateLanguage"> 应用 </Button>
+            <Button @click="handleUpdateLanguage">
+              {{ languageMode === 'replace' && batchLanguages.length === 0 ? '清空语言' : '应用' }}
+            </Button>
           </div>
         </TabsContent>
 
@@ -212,28 +207,28 @@ defineExpose({ open, close })
                   (batchOption = v ? { needJianzhang: false, needTidu: false, needZongdu: false } : undefined)
               "
             />
-            <span class="font-medium text-foreground">启用独立要求（将覆盖原有设置）</span>
+            <span class="font-medium text-foreground">启用独立要求（取消勾选点击应用将清空门槛）</span>
           </label>
 
           <template v-if="batchOption">
-            <div class="flex items-center gap-3 pl-5">
-              <label class="flex items-center gap-1 cursor-pointer">
+            <div class="flex items-center gap-4 pl-5 flex-wrap">
+              <label class="flex items-center gap-1.5 cursor-pointer">
                 <Checkbox v-model:checked="batchOption.needJianzhang" />
                 <span>舰长</span>
               </label>
-              <label class="flex items-center gap-1 cursor-pointer">
+              <label class="flex items-center gap-1.5 cursor-pointer">
                 <Checkbox v-model:checked="batchOption.needTidu" />
                 <span>提督</span>
               </label>
-              <label class="flex items-center gap-1 cursor-pointer">
+              <label class="flex items-center gap-1.5 cursor-pointer">
                 <Checkbox v-model:checked="batchOption.needZongdu" />
                 <span>总督</span>
               </label>
             </div>
 
-            <div class="flex items-center gap-3 pl-5 flex-wrap">
-              <div class="flex items-center gap-1.5">
-                <label class="flex items-center gap-1 cursor-pointer">
+            <div class="flex items-center gap-4 pl-5 flex-wrap">
+              <div class="flex items-center gap-2">
+                <label class="flex items-center gap-1.5 cursor-pointer">
                   <Checkbox
                     :checked="batchOption.scMinPrice != null"
                     @update:checked="(v: boolean) => (batchOption!.scMinPrice = v ? 30 : undefined)"
@@ -244,13 +239,13 @@ defineExpose({ open, close })
                   v-if="batchOption.scMinPrice != null"
                   v-model="batchOption.scMinPrice"
                   :min="1"
-                  class="w-20"
+                  class="w-28"
                 />
                 <span v-if="batchOption.scMinPrice != null">元</span>
               </div>
 
-              <div class="flex items-center gap-1.5">
-                <label class="flex items-center gap-1 cursor-pointer">
+              <div class="flex items-center gap-2">
+                <label class="flex items-center gap-1.5 cursor-pointer">
                   <Checkbox
                     :checked="batchOption.fanMedalMinLevel != null"
                     @update:checked="(v: boolean) => (batchOption!.fanMedalMinLevel = v ? 1 : undefined)"
@@ -261,7 +256,7 @@ defineExpose({ open, close })
                   v-if="batchOption.fanMedalMinLevel != null"
                   v-model="batchOption.fanMedalMinLevel"
                   :min="1"
-                  class="w-20"
+                  class="w-28"
                 />
                 <span v-if="batchOption.fanMedalMinLevel != null">级</span>
               </div>
@@ -270,6 +265,38 @@ defineExpose({ open, close })
 
           <div class="flex justify-end pt-2">
             <Button @click="handleUpdateOption"> 应用 </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent
+          value="status"
+          class="pt-3 space-y-3 text-xs"
+        >
+          <div class="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              @click="(emit('updatePin', true), close())"
+            >
+              设为置顶招牌
+            </Button>
+            <Button
+              variant="outline"
+              @click="(emit('updatePin', false), close())"
+            >
+              取消置顶
+            </Button>
+            <Button
+              variant="outline"
+              @click="(emit('updateDisabled', true), close())"
+            >
+              设为暂不接歌
+            </Button>
+            <Button
+              variant="outline"
+              @click="(emit('updateDisabled', false), close())"
+            >
+              恢复可点歌
+            </Button>
           </div>
         </TabsContent>
 

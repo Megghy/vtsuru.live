@@ -23,6 +23,8 @@ export interface ResponseSongModel {
   /** @nullable */
   url?: string | null
   /** @nullable */
+  externalUrl?: string | null
+  /** @nullable */
   language?: string[] | null
   tags: string[]
   options?: SongRequestOption
@@ -30,4 +32,12 @@ export interface ResponseSongModel {
   cover?: string | null
   /** @nullable */
   sortOrder?: number | null
+  /** @nullable */
+  isPinned?: boolean | null
+  /** @nullable */
+  isDisabled?: boolean | null
+  /** @nullable */
+  requestCount?: number | null
+  /** @nullable */
+  lastRequestedAt?: number | null
 }

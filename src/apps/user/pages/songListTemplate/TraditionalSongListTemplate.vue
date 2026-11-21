@@ -1,36 +1,33 @@
 <script setup lang="ts">
-import ArrowCounterclockwise20Filled from '@vicons/fluent/es/ArrowCounterclockwise20Filled'
-import ArrowSortDown20Filled from '@vicons/fluent/es/ArrowSortDown20Filled'
-import ArrowSortUp20Filled from '@vicons/fluent/es/ArrowSortUp20Filled'
-import SquareArrowForward24Filled from '@vicons/fluent/es/SquareArrowForward24Filled'
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, ExternalLink, Pin, Play } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
-import { SongPlatform } from '@/api/generated/model'
+import SongPlayer from '@/components/SongPlayer.vue'
 import { transformImageUrl } from '@/shared/services/imageTransform'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { SmartImage } from '@/shared/ui/image'
-import { Input } from '@/shared/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { getUserAvatarUrl, toast } from '@/shared/utils'
+import { getPlayableAudioUrl, getSongExternalLink, isSafeHttpUrl } from '@/shared/utils/songMedia'
 import bilibili from '@/svgs/bilibili.svg'
 import douyin from '@/svgs/douyin.svg'
 import neteaseMusic from '@/svgs/neteaseMusic.svg'
 import qqMusic from '@/svgs/qqMusic.svg'
 
+import SongListFilterToolbar from './components/SongListFilterToolbar.vue'
 import SongOptionBadges from './components/SongOptionBadges.vue'
+import SongRandomDialog from './components/SongRandomDialog.vue'
+import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
 import { Config, DefaultConfig, type TraditionalConfigType } from './traditionalSongListConfig'
-import { filterSongs, getSongFieldOptions } from './utils/songListData'
-import { getSongRequestConfirmText, getSongRequestTooltip } from './utils/songRequestUtils'
+import { getSongRequestTooltip } from './utils/songRequestUtils'
 import { useProgressiveList } from './utils/useProgressiveList'
+import { type SongListPublicSortKey, useSongListQueryState } from './utils/useSongListQueryState'
 import { useSongListTemplateCore } from './utils/useSongListTemplateCore'
-
-type SortKey = 'name' | 'author' | 'language' | 'tags' | 'options' | 'description'
 
 interface ProfileLink {
   label: string
@@ -42,100 +39,52 @@ const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>()
 const emit = defineEmits<{ requestSong: [song: ResponseSongModel] }>()
 defineExpose({ Config, DefaultConfig })
 
-const searchQuery = ref('')
-const selectedArtist = ref<string | null>(null)
-const selectedLanguage = ref<string | null>(null)
-const selectedTag = ref<string | null>(null)
-const selectedOption = ref<string | null>(null)
-const sortKey = ref<SortKey | null>(null)
-const sortOrder = ref<'asc' | 'desc'>('asc')
-
-const dialogState = ref<{
-  open: boolean
-  title: string
-  content: string
-  positiveText: string
-  negativeText?: string
-  onConfirm: () => void
-}>({
-  open: false,
-  title: '',
-  content: '',
-  positiveText: '',
-  onConfirm: () => {},
-})
-
 const {
   requestAuthState,
   isSelf,
+  requestingKey,
   singingSongKeys: singingSongKeySet,
   queuedSongKeys: queuedSongKeySet,
+  beginRequest,
 } = useSongListTemplateCore({
   userInfo: () => props.userInfo,
   liveRequestActive: () => props.liveRequestActive,
 })
 
-const artistOptions = computed(() => getSongFieldOptions(props.data, 'author'))
-const languageOptions = computed(() => [
-  { label: '未设定', value: '__unset' },
-  ...getSongFieldOptions(props.data, 'language'),
-])
-const tagOptions = computed(() => [{ label: '未设定', value: '__unset' }, ...getSongFieldOptions(props.data, 'tags')])
-const optionFilters: Record<string, (song: ResponseSongModel) => boolean> = {
-  unset: (song) => !song.options,
-  captain: (song) => song.options?.needJianzhang === true,
-  admiral: (song) => song.options?.needTidu === true,
-  governor: (song) => song.options?.needZongdu === true,
-  medal: (song) => (song.options?.fanMedalMinLevel ?? 0) > 0,
-  sc: (song) => (song.options?.scMinPrice ?? 0) > 0,
-}
-const optionOptions = [
-  { label: '全部条件', value: 'all' },
-  { label: '未设定', value: 'unset' },
-  { label: '舰长', value: 'captain' },
-  { label: '提督', value: 'admiral' },
-  { label: '总督', value: 'governor' },
-  { label: '粉丝牌', value: 'medal' },
-  { label: 'SC', value: 'sc' },
-]
-const sortOptions: { label: string; value: SortKey | 'default' }[] = [
-  { label: '默认顺序', value: 'default' },
-  { label: '按歌名', value: 'name' },
-  { label: '按歌手', value: 'author' },
-  { label: '按语言', value: 'language' },
-  { label: '按标签', value: 'tags' },
-  { label: '按点歌条件', value: 'options' },
-  { label: '按备注', value: 'description' },
-]
+const {
+  searchKeyword,
+  selectedArtist,
+  selectedLanguage,
+  selectedTag,
+  selectedOption,
+  sortKey,
+  sortOrder,
+  hideDisabled,
+  artistOptions,
+  languageOptions,
+  tagOptions,
+  disabledCount,
+  filteredSongs,
+  hasFilters,
+  setSort,
+  clearFilters,
+  pickRandomSong,
+  copyShareLink,
+} = useSongListQueryState(() => props.data)
 
-const filteredAndSortedSongs = computed(() => {
-  const songs = filterSongs(props.data, {
-    keyword: searchQuery.value,
-    author: selectedArtist.value,
-  }).filter((song) => {
-    if (!matchesField(song.language, selectedLanguage.value)) return false
-    if (!matchesField(song.tags, selectedTag.value)) return false
-    return !selectedOption.value || selectedOption.value === 'all' || optionFilters[selectedOption.value]?.(song)
-  })
+const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 48)
 
-  if (!sortKey.value || (sortKey.value as any) === 'default') return songs
-  const direction = sortOrder.value === 'asc' ? 1 : -1
-  return songs.toSorted((left, right) => {
-    const compared = compareSongs(left, right, sortKey.value as SortKey)
-    return compared === 0 ? left.name.localeCompare(right.name, 'zh-CN') : compared * direction
-  })
+const previewSong = ref<ResponseSongModel>()
+const isLrcLoading = ref<string>()
+const randomDialogOpen = ref(false)
+const randomSong = ref<ResponseSongModel | null>(null)
+
+const bgStyle = computed(() => {
+  const path = props.config?.backgroundFile?.[0]?.path
+  if (!path) return undefined
+  const url = transformImageUrl(path, '1920w_90q')
+  return url ? { '--song-list-bg-image': `url("${url}")` } : undefined
 })
-
-const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredAndSortedSongs, 48)
-
-const hasFilters = computed(
-  () =>
-    !!searchQuery.value ||
-    !!selectedArtist.value ||
-    !!selectedLanguage.value ||
-    !!selectedTag.value ||
-    !!selectedOption.value,
-)
 
 const profileLinks = computed<ProfileLink[]>(() => {
   const links: ProfileLink[] = []
@@ -150,9 +99,18 @@ const profileLinks = computed<ProfileLink[]>(() => {
 
 const customLinks = computed(() =>
   (props.config?.links ?? [])
-    .map((link) => ({ ...link, url: getSafeUrl(link.url) }))
+    .map((link) => ({ ...link, url: isSafeHttpUrl(link.url) }))
     .filter((link): link is { name: string; url: string } => !!link.url),
 )
+
+const tableHeaders: { key: SongListPublicSortKey; label: string; widthClass?: string }[] = [
+  { key: 'name', label: '歌名', widthClass: 'min-w-[200px]' },
+  { key: 'author', label: '歌手', widthClass: 'min-w-[110px]' },
+  { key: 'language', label: '语言', widthClass: 'w-20' },
+  { key: 'tags', label: '标签', widthClass: 'min-w-[90px]' },
+  { key: 'options', label: '点歌条件', widthClass: 'w-24' },
+  { key: 'description', label: '备注', widthClass: 'max-w-[180px]' },
+]
 
 watch(artistOptions, (options) => {
   if (selectedArtist.value && !options.some((option) => option.value === selectedArtist.value)) {
@@ -160,132 +118,54 @@ watch(artistOptions, (options) => {
   }
 })
 
-function matchesField(values: string[] | undefined, selected: string | null) {
-  if (!selected || selected === 'all') return true
-  return selected === '__unset' ? !values?.length : values?.includes(selected) === true
-}
-
-function compareSongs(left: ResponseSongModel, right: ResponseSongModel, key: SortKey) {
-  const leftValue = getSortValue(left, key)
-  const rightValue = getSortValue(right, key)
-  return leftValue.localeCompare(rightValue, 'zh-CN', { numeric: true })
-}
-
-function getSortValue(song: ResponseSongModel, key: SortKey) {
-  if (key === 'options') return song.options ? '1' : '0'
-  const value = song[key]
-  return Array.isArray(value) ? value.join(' ') : String(value ?? '')
-}
-
-function setSort(key: SortKey) {
-  if (sortKey.value === key) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-    return
-  }
-  sortKey.value = key
-  sortOrder.value = 'asc'
-}
-
-function clearFilters() {
-  searchQuery.value = ''
-  selectedArtist.value = null
-  selectedLanguage.value = null
-  selectedTag.value = null
-  selectedOption.value = null
-}
-
-function randomOrder() {
-  const songs = filteredAndSortedSongs.value.length ? filteredAndSortedSongs.value : (props.data ?? [])
-  if (!songs.length) {
-    toast.warning('当前没有可选歌曲')
-    return
-  }
-  const song = songs[Math.floor(Math.random() * songs.length)]
-  dialogState.value = {
-    open: true,
-    title: '随机结果',
-    content: `${song.name}${song.author?.length ? ` · ${song.author.join(' / ')}` : ''}`,
-    positiveText: isSelf.value ? '知道了' : '点这首',
-    negativeText: isSelf.value ? undefined : '再看看',
-    onConfirm: () => {
-      if (!isSelf.value) emit('requestSong', song)
-    },
-  }
-}
-
-function requestSong(song: ResponseSongModel) {
-  if (isSelf.value) return
-  const tooltip = getSongRequestTooltip(song, props.liveRequestSettings, requestAuthState.value)
-  dialogState.value = {
-    open: true,
-    title: '点歌',
-    content: `${getSongRequestConfirmText(song)}${tooltip === '点歌' ? '' : `\n${tooltip}`}`,
-    positiveText: '点歌',
-    negativeText: '取消',
-    onConfirm: () => emit('requestSong', song),
-  }
-}
-
-function getSongLink(song: ResponseSongModel) {
-  if (song.from === SongPlatform.Netease) return `https://music.163.com/#/song?id=${song.id}`
-  if (song.from === SongPlatform.FiveSing) return `https://5sing.kugou.com/bz/${song.id}.html`
-  return getSafeUrl(song.url)
-}
-
 function addProfileLink(links: ProfileLink[], label: string, value: string | undefined, icon: typeof bilibili) {
-  const url = getSafeUrl(value)
+  const url = isSafeHttpUrl(value)
   if (url) links.push({ label, url, icon })
 }
 
-function getSafeUrl(value?: string) {
-  if (!value) return
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : undefined
-  } catch {
-    return undefined
+function handleRandomPick() {
+  const picked = pickRandomSong(randomSong.value?.key)
+  if (!picked) {
+    toast.warning('当前没有可点选的歌曲')
+    return
   }
+  randomSong.value = picked
+  randomDialogOpen.value = true
+}
+
+function requestSong(song: ResponseSongModel) {
+  if (!beginRequest(song)) return
+  emit('requestSong', song)
 }
 </script>
 
 <template>
   <TooltipProvider>
     <section
-      class="w-full"
+      class="traditional-song-list w-full"
       :class="{ 'has-background': config?.backgroundFile?.length }"
-      :style="{
-        '--song-list-bg-image': config?.backgroundFile?.length
-          ? `url(&quot;${transformImageUrl(config.backgroundFile[0].path, '1920w_90q')}&quot;)`
-          : undefined,
-      }"
+      :style="bgStyle"
     >
-      <div class="content-frame max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <div
+        class="content-frame max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto px-[clamp(12px,2vw,24px)] py-6 space-y-5"
+      >
         <header
-          class="profile-panel flex flex-wrap items-center gap-6 p-6 rounded-2xl bg-card/80 backdrop-blur-md border border-border/80 shadow-xs"
+          class="profile-panel flex flex-wrap items-center gap-5 p-5 sm:p-6 rounded-[var(--vtsuru-page-radius,var(--radius))] bg-card/85 backdrop-blur-md border border-border/80 shadow-xs"
         >
           <SmartImage
-            class="profile-avatar size-20 rounded-full object-cover border-2 border-primary/20"
+            class="profile-avatar size-16 sm:size-20 rounded-full object-cover border-2 border-primary/20 shrink-0"
             :src="userInfo?.faceUrl || userInfo?.streamerInfo?.faceUrl || getUserAvatarUrl(userInfo?.id)"
             :alt="userInfo?.name ?? '主播头像'"
             fallback-transform="avatar"
             referrerpolicy="no-referrer"
           />
-          <div class="profile-copy flex-1 min-w-48">
-            <p class="eyebrow text-xs font-semibold tracking-wider text-primary uppercase">SONG LIBRARY</p>
-            <h1 class="text-2xl font-bold text-foreground mt-0.5">
+          <div class="profile-copy flex-1 min-w-0">
+            <p class="eyebrow text-[11px] font-semibold tracking-wider text-primary uppercase">SONG LIBRARY</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-foreground mt-0.5 truncate">
               {{ config?.title ?? `${userInfo?.name ?? ''}的歌单` }}
             </h1>
-            <p
-              v-if="config?.description"
-              class="profile-summary text-xs text-muted-foreground mt-1"
-            >
-              {{ config.description }}
-            </p>
-            <p
-              v-else
-              class="profile-summary text-xs text-muted-foreground mt-1"
-            >
-              选择喜欢的歌曲，点击歌名即可点歌
+            <p class="profile-summary text-xs text-muted-foreground mt-1">
+              {{ config?.description || '选择喜欢的歌曲，点击歌名或点歌按钮即可点歌' }}
             </p>
           </div>
           <div
@@ -319,338 +199,419 @@ function getSafeUrl(value?: string) {
           </div>
         </header>
 
-        <p
-          v-if="config?.longDescription"
-          class="long-description text-xs text-muted-foreground leading-relaxed px-2"
+        <div
+          v-if="config?.detailTitle || config?.longDescription"
+          class="px-1 space-y-1"
         >
-          {{ config.longDescription }}
-        </p>
+          <h2
+            v-if="config?.detailTitle"
+            class="text-sm font-semibold text-foreground"
+          >
+            {{ config.detailTitle }}
+          </h2>
+          <p
+            v-if="config?.longDescription"
+            class="long-description text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap m-0"
+          >
+            {{ config.longDescription }}
+          </p>
+        </div>
 
         <main
-          class="song-panel p-5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/80 shadow-xs space-y-4"
+          class="song-panel p-4 sm:p-5 rounded-[var(--vtsuru-page-radius,var(--radius))] bg-card/85 backdrop-blur-md border border-border/80 shadow-xs space-y-4"
         >
-          <div class="filter-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
-            <Input
-              v-model="searchQuery"
-              placeholder="搜索歌名、歌手、语言、标签或备注"
-              class="search-input col-span-1 sm:col-span-2"
-            />
-            <Select
-              :model-value="selectedArtist || 'all'"
-              @update:model-value="selectedArtist = $event === 'all' ? null : String($event)"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="歌手" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部歌手</SelectItem>
-                <SelectItem
-                  v-for="opt in artistOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              :model-value="selectedLanguage || 'all'"
-              @update:model-value="selectedLanguage = $event === 'all' ? null : String($event)"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="语言" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部语言</SelectItem>
-                <SelectItem
-                  v-for="opt in languageOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              :model-value="selectedTag || 'all'"
-              @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="标签" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部标签</SelectItem>
-                <SelectItem
-                  v-for="opt in tagOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <div class="sort-control flex items-center gap-1">
-              <Select
-                :model-value="sortKey || 'default'"
-                @update:model-value="sortKey = $event === 'default' ? null : ($event as SortKey)"
-              >
-                <SelectTrigger class="flex-1">
-                  <SelectValue placeholder="排序" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="opt in sortOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                  >
-                    {{ opt.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 shrink-0 text-muted-foreground"
-                :disabled="!sortKey"
-                :aria-label="sortOrder === 'asc' ? '升序' : '降序'"
-                @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
-              >
-                <component
-                  :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
-                  class="size-4"
-                />
-              </Button>
-            </div>
-          </div>
+          <SongListFilterToolbar
+            v-model:search-keyword="searchKeyword"
+            v-model:selected-artist="selectedArtist"
+            v-model:selected-language="selectedLanguage"
+            v-model:selected-tag="selectedTag"
+            v-model:selected-option="selectedOption"
+            v-model:sort-key="sortKey"
+            v-model:sort-order="sortOrder"
+            v-model:hide-disabled="hideDisabled"
+            :artist-options="artistOptions"
+            :language-options="languageOptions"
+            :tag-options="tagOptions"
+            :total-count="data?.length ?? 0"
+            :filtered-count="filteredSongs.length"
+            :disabled-count="disabledCount"
+            :has-filters="hasFilters"
+            @clear="clearFilters"
+            @random="handleRandomPick"
+            @share="copyShareLink"
+          />
 
-          <div class="result-toolbar flex-between gap-3 text-xs pt-1 border-t border-border/50">
-            <span class="result-count text-muted-foreground font-mono"
-              >{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span
-            >
-            <div class="toolbar-actions flex items-center gap-2">
-              <Button
-                variant="ghost"
-                class="flex items-center gap-1 text-muted-foreground"
-                :disabled="!hasFilters"
-                @click="clearFilters"
-              >
-                <component
-                  :is="ArrowCounterclockwise20Filled"
-                  class="size-3.5"
-                />
-                清空
-              </Button>
-              <Button
-                variant="secondary"
-                @click="randomOrder"
-              >
-                随机一首
-              </Button>
-            </div>
-          </div>
+          <SongPlayer
+            v-if="previewSong"
+            v-model:is-lrc-loading="isLrcLoading"
+            :song="previewSong"
+            @close="previewSong = undefined"
+          />
 
-          <div
-            class="song-table-shell overflow-x-auto"
-            :class="{ 'is-fixed': config?.fixedHeight }"
-          >
+          <Empty
+            v-if="!filteredSongs.length"
+            :description="data?.length ? '没有符合条件的歌曲' : '歌单里还没有歌曲'"
+            class="py-12"
+          />
+
+          <template v-else>
+            <!-- 桌面端表格 -->
             <div
-              class="song-table-scroller"
-              :style="config?.fixedHeight ? 'max-height: 560px; overflow-y: auto;' : undefined"
+              class="song-table-shell hidden md:block overflow-x-auto"
+              :class="{ 'is-fixed': config?.fixedHeight }"
             >
-              <Empty
-                v-if="!filteredAndSortedSongs.length"
-                :description="data?.length ? '没有符合条件的歌曲' : '歌单里还没有歌曲'"
-                class="py-12"
-              />
-              <table
-                v-else
-                class="song-table w-full text-left border-collapse text-xs"
+              <div
+                class="song-table-scroller scrollbar-thin"
+                :style="config?.fixedHeight ? 'max-height: 560px; overflow-y: auto;' : undefined"
               >
-                <thead>
-                  <tr class="border-b border-border/80 text-muted-foreground font-medium">
-                    <th
-                      v-for="column in sortOptions.slice(1)"
-                      :key="column.value"
-                      class="py-2.5 px-3 whitespace-nowrap"
-                    >
-                      <button
-                        type="button"
-                        class="sort-heading flex items-center gap-1 hover:text-foreground cursor-pointer font-medium"
-                        @click="setSort(column.value as SortKey)"
+                <table class="song-table w-full text-left border-collapse text-xs">
+                  <thead class="sticky top-0 z-10 bg-card/95 backdrop-blur">
+                    <tr class="border-b border-border/80 text-muted-foreground font-medium">
+                      <th
+                        v-for="column in tableHeaders"
+                        :key="column.key"
+                        class="py-2.5 px-3 whitespace-nowrap"
+                        :class="column.widthClass"
                       >
-                        {{ column.label.replace('按', '') }}
-                        <component
-                          :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
-                          v-if="sortKey === column.value"
-                          class="size-3"
-                        />
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-border/40">
-                  <tr
-                    v-for="song in visibleItems"
-                    :key="song.key || `${song.name}-${song.author?.join('/')}`"
-                    class="hover:bg-muted/40 transition"
-                    :class="{
-                      'bg-amber-500/5': singingSongKeySet.has(song.key),
-                      'bg-emerald-500/5': queuedSongKeySet.has(song.key),
-                    }"
-                  >
-                    <td class="title-cell py-2 px-3">
-                      <div class="title-content flex items-center gap-1.5 flex-wrap">
-                        <SongStatusBadge
-                          :song-key="song.key"
-                          :singing-keys="singingSongKeySet"
-                          :queued-keys="queuedSongKeySet"
-                          variant="text"
-                        />
-                        <Tooltip :disabled="isSelf">
-                          <TooltipTrigger as-child>
-                            <button
-                              class="song-title-button font-medium text-foreground hover:text-primary transition cursor-pointer text-left"
-                              type="button"
-                              :disabled="isSelf"
-                              @click="requestSong(song)"
-                            >
-                              {{ song.name }}
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-                          </TooltipContent>
-                        </Tooltip>
-                        <a
-                          v-if="getSongLink(song)"
-                          :href="getSongLink(song)"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="打开歌曲链接"
-                          class="text-muted-foreground hover:text-primary p-0.5"
+                        <button
+                          type="button"
+                          class="sort-heading flex items-center gap-1 hover:text-foreground cursor-pointer font-medium"
+                          @click="setSort(column.key)"
                         >
+                          {{ column.label }}
                           <component
-                            :is="SquareArrowForward24Filled"
-                            class="size-3.5"
+                            :is="sortOrder === 'asc' ? ArrowUpNarrowWide : ArrowDownWideNarrow"
+                            v-if="sortKey === column.key"
+                            class="size-3"
                           />
-                        </a>
-                      </div>
-                    </td>
-                    <td class="py-2 px-3">
-                      <span
-                        v-if="song.author?.length"
-                        class="inline-list flex items-center gap-1 flex-wrap"
-                      >
-                        <button
-                          v-for="artist in song.author"
-                          :key="artist"
-                          type="button"
-                          class="hover:text-primary transition cursor-pointer"
-                          :class="{ 'text-primary font-medium': selectedArtist === artist }"
-                          @click="selectedArtist = selectedArtist === artist ? null : artist"
-                        >
-                          {{ artist }}
                         </button>
-                      </span>
-                      <span
-                        v-else
-                        class="muted text-muted-foreground/60"
-                      >
-                        未知
-                      </span>
-                    </td>
-                    <td class="py-2 px-3">
-                      <span class="inline-list flex items-center gap-1 flex-wrap">
-                        <button
-                          v-for="language in song.language"
-                          :key="language"
-                          type="button"
-                          class="hover:text-primary transition cursor-pointer"
-                          :class="{ 'text-primary font-medium': selectedLanguage === language }"
-                          @click="selectedLanguage = selectedLanguage === language ? null : language"
-                        >
-                          {{ language }}
-                        </button>
-                      </span>
-                    </td>
-                    <td class="py-2 px-3">
-                      <div class="tag-list flex items-center gap-1 flex-wrap">
-                        <button
-                          v-for="tag in song.tags"
-                          :key="tag"
-                          type="button"
-                          class="px-1.5 py-0.5 rounded text-[10px] transition cursor-pointer"
-                          :class="
-                            selectedTag === tag
-                              ? 'bg-primary text-primary-foreground font-medium'
-                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                          "
-                          @click="selectedTag = selectedTag === tag ? null : tag"
-                        >
-                          {{ tag }}
-                        </button>
-                      </div>
-                    </td>
-                    <td class="py-2 px-3">
-                      <SongOptionBadges
-                        :options="song.options"
-                        variant="semantic"
-                        empty-text="无限制"
-                      />
-                    </td>
-                    <td class="py-2 px-3">
-                      <span :class="{ 'text-muted-foreground/60': !song.description }">{{
-                        song.description || '无'
-                      }}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      </th>
+                      <th class="py-2.5 px-3 text-right whitespace-nowrap w-24">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-border/40">
+                    <tr
+                      v-for="song in visibleItems"
+                      :key="song.key || `${song.name}-${song.author?.join('/')}`"
+                      class="hover:bg-muted/40 transition"
+                      :class="{
+                        'is-singing': singingSongKeySet.has(song.key),
+                        'is-queued': queuedSongKeySet.has(song.key),
+                        'is-pinned': song.isPinned,
+                        'is-disabled': song.isDisabled,
+                      }"
+                    >
+                      <td class="title-cell py-2 px-3">
+                        <div class="title-content flex items-center gap-1.5 min-w-0">
+                          <Pin
+                            v-if="song.isPinned"
+                            class="size-3 text-primary shrink-0"
+                            aria-label="置顶"
+                          />
+                          <SongStatusBadge
+                            :song-key="song.key"
+                            :singing-keys="singingSongKeySet"
+                            :queued-keys="queuedSongKeySet"
+                            variant="text"
+                          />
+                          <Badge
+                            v-if="song.isDisabled"
+                            variant="secondary"
+                            size="xs"
+                          >
+                            暂不接歌
+                          </Badge>
+                          <div class="min-w-0">
+                            <Tooltip :disabled="isSelf || Boolean(song.isDisabled)">
+                              <TooltipTrigger as-child>
+                                <button
+                                  class="song-title-button font-medium text-foreground hover:text-primary transition cursor-pointer text-left disabled:cursor-default disabled:hover:text-foreground break-words"
+                                  type="button"
+                                  :disabled="isSelf || Boolean(song.isDisabled)"
+                                  @click="requestSong(song)"
+                                >
+                                  {{ song.name }}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
+                              </TooltipContent>
+                            </Tooltip>
+                            <div
+                              v-if="song.translateName"
+                              class="text-[11px] text-muted-foreground truncate max-w-[240px]"
+                            >
+                              {{ song.translateName }}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
 
-              <button
-                v-if="hasMore"
-                ref="loadMoreTrigger"
-                type="button"
-                class="load-more-trigger w-full py-4 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                @click="loadMore"
-              >
-                加载更多
-              </button>
+                      <td class="py-2 px-3">
+                        <span
+                          v-if="song.author?.length"
+                          class="inline-list flex items-center gap-1 flex-wrap"
+                        >
+                          <button
+                            v-for="artist in song.author"
+                            :key="artist"
+                            type="button"
+                            class="hover:text-primary transition cursor-pointer"
+                            :class="{ 'text-primary font-medium': selectedArtist === artist }"
+                            @click="selectedArtist = selectedArtist === artist ? null : artist"
+                          >
+                            {{ artist }}
+                          </button>
+                        </span>
+                        <span
+                          v-else
+                          class="text-muted-foreground/60"
+                        >
+                          未知
+                        </span>
+                      </td>
+
+                      <td class="py-2 px-3">
+                        <span class="inline-list flex items-center gap-1 flex-wrap">
+                          <button
+                            v-for="language in song.language"
+                            :key="language"
+                            type="button"
+                            class="hover:text-primary transition cursor-pointer"
+                            :class="{ 'text-primary font-medium': selectedLanguage === language }"
+                            @click="selectedLanguage = selectedLanguage === language ? null : language"
+                          >
+                            {{ language }}
+                          </button>
+                        </span>
+                      </td>
+
+                      <td class="py-2 px-3">
+                        <div class="tag-list flex items-center gap-1 flex-wrap">
+                          <button
+                            v-for="tag in song.tags"
+                            :key="tag"
+                            type="button"
+                            class="px-1.5 py-0.5 rounded text-[10px] transition cursor-pointer"
+                            :class="
+                              selectedTag === tag
+                                ? 'bg-primary text-primary-foreground font-medium'
+                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            "
+                            @click="selectedTag = selectedTag === tag ? null : tag"
+                          >
+                            {{ tag }}
+                          </button>
+                        </div>
+                      </td>
+
+                      <td class="py-2 px-3">
+                        <SongOptionBadges
+                          :options="song.options"
+                          variant="semantic"
+                          empty-text="无限制"
+                        />
+                      </td>
+
+                      <td class="py-2 px-3">
+                        <span
+                          class="block truncate max-w-[200px]"
+                          :class="{ 'text-muted-foreground/60': !song.description }"
+                          :title="song.description || undefined"
+                        >
+                          {{ song.description || '-' }}
+                        </span>
+                      </td>
+
+                      <td class="py-2 px-3 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                          <Tooltip v-if="getPlayableAudioUrl(song)">
+                            <TooltipTrigger as-child>
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                :disabled="isLrcLoading === song.key"
+                                :aria-label="`试听《${song.name}》`"
+                                @click="previewSong = song"
+                              >
+                                <Play class="size-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>试听</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip v-if="getSongExternalLink(song)">
+                            <TooltipTrigger as-child>
+                              <a
+                                :href="getSongExternalLink(song)!.url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Button
+                                  size="icon-xs"
+                                  variant="ghost"
+                                  :aria-label="getSongExternalLink(song)!.label"
+                                >
+                                  <ExternalLink class="size-3.5" />
+                                </Button>
+                              </a>
+                            </TooltipTrigger>
+                            <TooltipContent>{{ getSongExternalLink(song)!.label }}</TooltipContent>
+                          </Tooltip>
+
+                          <SongRequestButton
+                            :song="song"
+                            :live-request-settings="liveRequestSettings"
+                            :auth-state="requestAuthState"
+                            :loading="requestingKey === song.key"
+                            :hidden="isSelf"
+                            size="tiny"
+                            @request="requestSong"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            <!-- 移动端紧凑列表（确保 360px 零横向溢出） -->
+            <div class="md:hidden space-y-2">
+              <article
+                v-for="song in visibleItems"
+                :key="`m-${song.key || song.name}`"
+                class="p-3 rounded-lg border border-border/70 bg-background/40 space-y-1.5 min-w-0"
+                :class="{
+                  'is-singing': singingSongKeySet.has(song.key),
+                  'is-queued': queuedSongKeySet.has(song.key),
+                  'is-pinned': song.isPinned,
+                  'is-disabled': song.isDisabled,
+                }"
+              >
+                <div class="flex items-start justify-between gap-2 min-w-0">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <Pin
+                        v-if="song.isPinned"
+                        class="size-3 text-primary shrink-0"
+                      />
+                      <span class="font-medium text-xs text-foreground break-words">{{ song.name }}</span>
+                      <SongStatusBadge
+                        :song-key="song.key"
+                        :singing-keys="singingSongKeySet"
+                        :queued-keys="queuedSongKeySet"
+                        variant="tag"
+                      />
+                      <Badge
+                        v-if="song.isDisabled"
+                        variant="secondary"
+                        size="xs"
+                      >
+                        暂不接歌
+                      </Badge>
+                    </div>
+                    <div
+                      v-if="song.translateName"
+                      class="text-[11px] text-muted-foreground truncate mt-0.5"
+                    >
+                      {{ song.translateName }}
+                    </div>
+                    <div class="text-[11px] text-muted-foreground truncate mt-0.5">
+                      {{ song.author?.length ? song.author.join(' / ') : '未知歌手' }}
+                      <template v-if="song.language?.length"> · {{ song.language.join(' / ') }}</template>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-1 shrink-0">
+                    <Button
+                      v-if="getPlayableAudioUrl(song)"
+                      size="icon-xs"
+                      variant="ghost"
+                      :disabled="isLrcLoading === song.key"
+                      :aria-label="`试听《${song.name}》`"
+                      @click="previewSong = song"
+                    >
+                      <Play class="size-3.5" />
+                    </Button>
+                    <a
+                      v-if="getSongExternalLink(song)"
+                      :href="getSongExternalLink(song)!.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        :aria-label="getSongExternalLink(song)!.label"
+                      >
+                        <ExternalLink class="size-3.5" />
+                      </Button>
+                    </a>
+                    <SongRequestButton
+                      :song="song"
+                      :live-request-settings="liveRequestSettings"
+                      :auth-state="requestAuthState"
+                      :loading="requestingKey === song.key"
+                      :hidden="isSelf"
+                      size="tiny"
+                      @request="requestSong"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  v-if="song.tags?.length || song.options"
+                  class="flex flex-wrap items-center gap-1 pt-0.5"
+                >
+                  <Badge
+                    v-for="tag in song.tags"
+                    :key="tag"
+                    :variant="selectedTag === tag ? 'default' : 'secondary'"
+                    size="xs"
+                    class="cursor-pointer"
+                    @click="selectedTag = selectedTag === tag ? null : tag"
+                  >
+                    {{ tag }}
+                  </Badge>
+                  <SongOptionBadges
+                    :options="song.options"
+                    variant="semantic"
+                    size="tiny"
+                  />
+                </div>
+
+                <p
+                  v-if="song.description"
+                  class="text-[11px] text-muted-foreground m-0 line-clamp-2"
+                >
+                  {{ song.description }}
+                </p>
+              </article>
+            </div>
+
+            <button
+              v-if="hasMore"
+              ref="loadMoreTrigger"
+              type="button"
+              class="load-more-trigger w-full py-3 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+              @click="loadMore"
+            >
+              加载更多 ({{ visibleItems.length }} / {{ filteredSongs.length }})
+            </button>
+          </template>
         </main>
       </div>
 
-      <!-- 点歌/随机结果弹窗 -->
-      <Dialog v-model:open="dialogState.open">
-        <DialogContent class="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle class="text-sm">{{ dialogState.title }}</DialogTitle>
-            <DialogDescription class="text-xs whitespace-pre-wrap pt-2">
-              {{ dialogState.content }}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter class="pt-3">
-            <Button
-              v-if="dialogState.negativeText"
-              variant="outline"
-              @click="dialogState.open = false"
-            >
-              {{ dialogState.negativeText }}
-            </Button>
-            <Button
-              @click="
-                () => {
-                  dialogState.onConfirm()
-                  dialogState.open = false
-                }
-              "
-            >
-              {{ dialogState.positiveText }}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SongRandomDialog
+        v-model:open="randomDialogOpen"
+        :song="randomSong"
+        :is-self="isSelf"
+        :live-request-settings="liveRequestSettings"
+        :can-reroll="filteredSongs.filter((s) => !s.isDisabled).length > 1"
+        @reroll="handleRandomPick"
+        @request="requestSong"
+      />
     </section>
   </TooltipProvider>
 </template>

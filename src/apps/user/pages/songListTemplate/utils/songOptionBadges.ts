@@ -16,13 +16,13 @@ export function getSongOptionBadges(options?: SongRequestOption | null): SongOpt
 
   const badges: SongOptionBadge[] = []
   if (options.needJianzhang) {
-    badges.push({ key: 'captain', label: '舰长', type: 'info', color: GetGuardColor(1) })
+    badges.push({ key: 'captain', label: '舰长', type: 'info', color: GetGuardColor(3) })
   }
   if (options.needTidu) {
     badges.push({ key: 'admiral', label: '提督', type: 'warning', color: GetGuardColor(2) })
   }
   if (options.needZongdu) {
-    badges.push({ key: 'governor', label: '总督', type: 'error', color: GetGuardColor(3) })
+    badges.push({ key: 'governor', label: '总督', type: 'error', color: GetGuardColor(1) })
   }
   if ((options.fanMedalMinLevel ?? 0) > 0) {
     badges.push({

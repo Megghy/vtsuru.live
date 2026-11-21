@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import MoreHorizontal24Filled from '@vicons/fluent/es/MoreHorizontal24Filled'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
+import { MoreHorizontal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -13,14 +13,19 @@ import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAddSongModal.vue'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
-import { parseSongListCsv, parsedRowsToSongsInfo } from '@/apps/manage/composables/songListCsv'
+import {
+  buildSongListCsvTemplate,
+  formatSongOptionsForCsv,
+  parseSongListCsv,
+  parsedRowsToSongsInfo,
+} from '@/apps/manage/composables/songListCsv'
 import SongList from '@/components/SongList.vue'
 import { useFilePicker } from '@/composables/useFilePicker'
 import { CURRENT_HOST } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
-import { useMessage } from '@/shared/utils'
-import { objectsToCSV } from '@/shared/utils'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { objectsToCSV, useMessage } from '@/shared/utils'
 
 const message = useMessage()
 const router = useRouter()
@@ -54,11 +59,21 @@ async function getSongs() {
 }
 
 function onSongsAdded(addedSongs: ResponseSongModel[]) {
-  songs.value.push(...addedSongs)
+  songs.value = [...songs.value, ...addedSongs]
+}
+
+function downloadCsvBlob(csvContent: string, fileName: string) {
+  const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
+  const utf8array = new TextEncoder().encode(csvContent)
+  saveAs(new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }), fileName)
 }
 
 function exportData() {
   const source = songs.value
+  if (!source.length) {
+    message.warning('歌单暂无歌曲可导出')
+    return
+  }
   const from = (f: SongPlatform) => {
     switch (f) {
       case SongPlatform.Custom:
@@ -67,6 +82,8 @@ function exportData() {
         return '网易云'
       case SongPlatform.FiveSing:
         return '5sing'
+      case SongPlatform.Kugou:
+        return '酷狗'
       default:
         return '其他'
     }
@@ -74,21 +91,30 @@ function exportData() {
   const csvData = source.map((s) => ({
     id: s.id,
     名称: s.name,
-    翻译名称: s.translateName,
+    翻译名称: s.translateName ?? '',
     作者: s.author?.join('/') ?? '未知',
-    创建于: format(s.createTime, 'yyyy-MM-dd HH:mm:ss'),
-    更新于: format(s.updateTime, 'yyyy-MM-dd HH:mm:ss'),
-    描述: s.description,
+    创建于: s.createTime ? format(s.createTime, 'yyyy-MM-dd HH:mm:ss') : '',
+    更新于: s.updateTime ? format(s.updateTime, 'yyyy-MM-dd HH:mm:ss') : '',
+    描述: s.description ?? '',
     来自: from(s.from),
-    语言: s.language.join(','),
+    语言: s.language?.join(',') ?? '',
     标签: s.tags?.join(',') ?? '',
-    链接: s.url,
+    链接: s.url ?? '',
+    外链: s.externalUrl ?? '',
+    封面: s.cover ?? '',
+    点歌门槛: formatSongOptionsForCsv(s.options),
+    置顶: s.isPinned ? '是' : '否',
+    暂不接歌: s.isDisabled ? '是' : '否',
+    排序: s.sortOrder ?? '',
+    累计被点: s.requestCount ?? 0,
   }))
   const text = objectsToCSV(csvData)
-  const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
-  const utf8array = new TextEncoder().encode(text)
-  const fileName = `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`
-  saveAs(new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }), fileName)
+  const fileName = `歌单_${format(Date.now(), 'yyyy-MM-dd_HH-mm-ss')}_${accountInfo.value?.name || 'export'}.csv`
+  downloadCsvBlob(text, fileName)
+}
+
+function downloadTemplate() {
+  downloadCsvBlob(buildSongListCsvTemplate(), '歌单导入模板.csv')
 }
 
 function handleMoreAction(key: string) {
@@ -101,6 +127,9 @@ function handleMoreAction(key: string) {
       break
     case 'import':
       openCsvPicker()
+      break
+    case 'download-template':
+      downloadTemplate()
       break
     case 'live-request':
       router.push({ name: 'manage-liveRequest' })
@@ -133,7 +162,7 @@ async function importCsvFile(file: File) {
       if (resp.code !== 200) throw new Error(resp.message || '导入失败')
       if (resp.data?.length) added.push(...(resp.data as unknown as ResponseSongModel[]))
     }
-    songs.value.push(...added)
+    songs.value = [...songs.value, ...added]
     message.success(`已导入 ${added.length} 首歌曲`)
   } catch (err) {
     message.error(err instanceof Error ? err.message : String(err))
@@ -149,7 +178,7 @@ onMounted(getSongs)
   <div class="space-y-4 w-full">
     <ManagePageHeader
       title="歌单管理"
-      subtitle="管理你的演唱/翻唱曲目库，支持批量增删改查、从 CSV 导入导出及网易云同步"
+      subtitle="管理你的演唱/翻唱曲目库，支持置顶、暂不接歌、批量编辑、CSV/文本导入及网易云同步"
       :function-type="FunctionTypes.SongList"
       :links="[{ label: '展示页链接', value: songListUrl }]"
     >
@@ -176,10 +205,7 @@ onMounted(getSongs)
                 variant="outline"
                 :loading="isImporting"
               >
-                <component
-                  :is="MoreHorizontal24Filled"
-                  class="h-3.5 w-3.5 mr-1"
-                />
+                <MoreHorizontal class="size-3.5 mr-1" />
                 更多
               </Button>
             </DropdownMenuTrigger>
@@ -187,6 +213,7 @@ onMounted(getSongs)
               <DropdownMenuItem @click="handleMoreAction('template')"> 修改展示模板 </DropdownMenuItem>
               <DropdownMenuItem @click="handleMoreAction('export')"> 导出为 CSV </DropdownMenuItem>
               <DropdownMenuItem @click="handleMoreAction('import')"> 从 CSV 导入 </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('download-template')"> 下载 CSV 导入模板 </DropdownMenuItem>
               <DropdownMenuItem @click="handleMoreAction('live-request')"> 前往点播管理页 </DropdownMenuItem>
               <DropdownMenuItem @click="handleMoreAction('song-list')"> 前往歌单展示页 </DropdownMenuItem>
             </DropdownMenuContent>
@@ -203,13 +230,25 @@ onMounted(getSongs)
 
     <div
       v-if="isLoading"
-      class="text-center py-20 text-xs text-muted-foreground"
+      class="space-y-2.5"
     >
-      正在加载歌单…
+      <div class="flex gap-2">
+        <Skeleton class="h-7 w-20" />
+        <Skeleton class="h-7 w-20" />
+        <Skeleton class="h-7 w-20" />
+      </div>
+      <Skeleton class="h-14 w-full rounded-lg" />
+      <div class="border border-border/80 rounded-lg p-3 space-y-2.5 bg-card">
+        <Skeleton
+          v-for="i in 6"
+          :key="i"
+          class="h-10 w-full"
+        />
+      </div>
     </div>
     <SongList
       v-else
-      :songs="songs"
+      v-model:songs="songs"
       is-self
     />
   </div>

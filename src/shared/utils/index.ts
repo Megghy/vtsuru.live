@@ -309,17 +309,23 @@ export function hexToRgba(hex: string, alpha: number): string | null {
   return null
 }
 
-export function objectsToCSV(arr: any[]) {
-  const array = [Object.keys(arr[0])].concat(arr)
-  return array
-    .map((row) => {
-      return Object.values(row)
-        .map((value) => {
-          return typeof value === 'string' ? JSON.stringify(value) : value
-        })
-        .toString()
-    })
-    .join('\n')
+function escapeCsvCell(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  const raw = String(value)
+  if (/[,"\r\n]/.test(raw)) {
+    return `"${raw.replace(/"/g, '""')}"`
+  }
+  return raw
+}
+
+export function objectsToCSV(arr: Record<string, unknown>[]) {
+  if (!arr.length) return ''
+  const headers = Object.keys(arr[0])
+  const lines = [
+    headers.map(escapeCsvCell).join(','),
+    ...arr.map((row) => headers.map((key) => escapeCsvCell(row[key])).join(',')),
+  ]
+  return lines.join('\n')
 }
 
 export function GetGuardColor(level: number | null | undefined): string {

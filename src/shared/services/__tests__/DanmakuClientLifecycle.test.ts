@@ -220,4 +220,17 @@ describe('open live client heartbeat lifecycle', () => {
     expect(client.authInfo).toBe(authInfo)
     expect(client.state).toBe('disconnected')
   })
+
+  it('sends internal heartbeat every 15s when authInfo has no Code', async () => {
+    mocks.queryGet.mockResolvedValue({ code: 200, message: '', data: 'game-id' })
+
+    const client = new OpenLiveClient({} as AuthInfo)
+    await startOpenLive(client)
+
+    await vi.advanceTimersByTimeAsync(15_000)
+    expect(mocks.queryGet).toHaveBeenCalledTimes(1)
+    expect(mocks.queryPost).toHaveBeenCalledTimes(1) // 仅 /start，未误调 /heartbeat
+
+    client.Stop()
+  })
 })

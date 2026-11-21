@@ -11,12 +11,12 @@ import type { SongRequestOption } from './songRequestOption'
 export interface AddSongModel {
   /**
    * @minLength 0
-   * @maxLength 100
+   * @maxLength 200
    */
   name: string
   /**
    * @minLength 0
-   * @maxLength 100
+   * @maxLength 200
    * @nullable
    */
   translateName?: string | null
@@ -25,13 +25,19 @@ export interface AddSongModel {
   author: string[]
   /**
    * @minLength 0
-   * @maxLength 200
+   * @maxLength 500
    * @nullable
    */
   url?: string | null
   /**
    * @minLength 0
-   * @maxLength 100
+   * @maxLength 500
+   * @nullable
+   */
+  externalUrl?: string | null
+  /**
+   * @minLength 0
+   * @maxLength 250
    * @nullable
    */
   description?: string | null
@@ -40,8 +46,16 @@ export interface AddSongModel {
   /** @nullable */
   tags?: string[] | null
   options?: SongRequestOption
-  /** @nullable */
+  /**
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
   cover?: string | null
   /** @nullable */
   sortOrder?: number | null
+  /** @nullable */
+  isPinned?: boolean | null
+  /** @nullable */
+  isDisabled?: boolean | null
 }

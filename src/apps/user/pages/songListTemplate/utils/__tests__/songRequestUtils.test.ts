@@ -57,7 +57,10 @@ const streamer: ResponseUserInfo = {
   extra: {} as ResponseUserInfo['extra'],
 }
 
-function createSong(options?: Partial<NonNullable<ResponseSongModel['options']>>): ResponseSongModel {
+function createSong(
+  options?: Partial<NonNullable<ResponseSongModel['options']>>,
+  extra?: Partial<ResponseSongModel>,
+): ResponseSongModel {
   return {
     id: 1,
     key: 'song-1',
@@ -78,6 +81,7 @@ function createSong(options?: Partial<NonNullable<ResponseSongModel['options']>>
           ...options,
         }
       : undefined,
+    ...extra,
   }
 }
 
@@ -86,8 +90,8 @@ describe('songRequestUtils', () => {
     vi.useRealTimers()
   })
 
-  it('有大航海或粉丝牌要求的曲目：未绑定 B 站仅复制，已绑定 B 站可网页直点并展示要求', () => {
-    const song = createSong({ needJianzhang: true, fanMedalMinLevel: 10 })
+  it('有大航海要求的曲目：未绑定 B 站仅复制，已绑定 B 站可网页直点并展示要求', () => {
+    const song = createSong({ needJianzhang: true })
 
     const unauthed = canRequestSong(song, streamer, baseSettings, true, false)
     expect(unauthed.canRequest).toBe(false)
@@ -98,9 +102,28 @@ describe('songRequestUtils', () => {
     const authed = canRequestSong(song, streamer, baseSettings, false, true)
     expect(authed).toEqual({ canRequest: true })
     expect(getSongRequestButtonType(song, baseSettings, { isLoggedIn: false, isBiliAuthed: true })).toBe('info')
-    expect(getSongRequestTooltip(song, baseSettings, { isLoggedIn: false, isBiliAuthed: true })).toContain(
-      '要求 舰长 · 粉丝牌≥10级',
-    )
+    expect(getSongRequestTooltip(song, baseSettings, { isLoggedIn: false, isBiliAuthed: true })).toContain('要求 舰长')
+  })
+
+  it('有粉丝牌等级要求的曲目：与后端口径一致，一律引导直播间弹幕点歌并走复制', () => {
+    const song = createSong({ fanMedalMinLevel: 10 })
+
+    const result = canRequestSong(song, streamer, baseSettings, true, true)
+    expect(result.canRequest).toBe(false)
+    expect(result.shouldCopyOnly).toBe(true)
+    expect(result.reason).toContain('粉丝牌 ≥ 10')
+    expect(getSongRequestTooltip(song, baseSettings, { isLoggedIn: true, isBiliAuthed: true })).toContain('粉丝牌 ≥ 10')
+    expect(getSongRequestButtonType(song, baseSettings, { isLoggedIn: true, isBiliAuthed: true })).toBe('warning')
+  })
+
+  it('暂不接歌的曲目直接拒绝点歌且不自动复制', () => {
+    const song = createSong(undefined, { isDisabled: true })
+
+    const result = canRequestSong(song, streamer, baseSettings, true, true)
+    expect(result.canRequest).toBe(false)
+    expect(result.shouldCopyOnly).toBeUndefined()
+    expect(result.reason).toContain('暂未开放')
+    expect(getSongRequestTooltip(song, baseSettings, { isLoggedIn: true, isBiliAuthed: true })).toBe('暂不接歌')
   })
 
   it('有 SC 金额门槛的曲目无论是否绑定 B 站均走复制指令提示', () => {

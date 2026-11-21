@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
+import { Bot } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -10,6 +10,7 @@ import SongListAddSongModalDirectoryTab from '@/apps/manage/components/song-list
 import SongListAddSongModalFileTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalFileTab.vue'
 import SongListAddSongModalFivesingTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalFivesingTab.vue'
 import SongListAddSongModalNeteaseTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalNeteaseTab.vue'
+import SongListAddSongModalTextTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalTextTab.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -41,11 +42,13 @@ const isModalLoading = ref(false)
 const activeTab = ref('custom')
 
 type FooterTabRef =
+  | InstanceType<typeof SongListAddSongModalTextTab>
   | InstanceType<typeof SongListAddSongModalNeteaseTab>
   | InstanceType<typeof SongListAddSongModalFileTab>
   | InstanceType<typeof SongListAddSongModalDirectoryTab>
 
 const customTabRef = ref<InstanceType<typeof SongListAddSongModalCustomTab>>()
+const textTabRef = ref<InstanceType<typeof SongListAddSongModalTextTab>>()
 const neteaseTabRef = ref<InstanceType<typeof SongListAddSongModalNeteaseTab>>()
 const fileTabRef = ref<InstanceType<typeof SongListAddSongModalFileTab>>()
 const directoryTabRef = ref<InstanceType<typeof SongListAddSongModalDirectoryTab>>()
@@ -54,6 +57,8 @@ const footerConfig = computed<{ hint: string; tab: FooterTabRef | null }>(() => 
   switch (activeTab.value) {
     case 'custom':
       return { hint: '填写上方表单后点击添加', tab: null }
+    case 'text':
+      return { hint: '粘贴文本后在右侧勾选待添加曲目', tab: textTabRef.value ?? null }
     case 'netease':
       return { hint: '选择歌曲后添加到歌单', tab: neteaseTabRef.value ?? null }
     case 'file':
@@ -80,7 +85,7 @@ const authors = computed(() => {
   props.songs.forEach((s) => {
     s?.author?.forEach((a) => items.add(a))
   })
-  return [...items].map((t) => ({ label: t, value: t }))
+  return [...items].toSorted((a, b) => a.localeCompare(b, 'zh-CN')).map((t) => ({ label: t, value: t }))
 })
 
 const tags = computed(() => {
@@ -88,7 +93,7 @@ const tags = computed(() => {
   props.songs.forEach((s) => {
     s?.tags?.forEach((t) => items.add(t))
   })
-  return [...items].map((t) => ({ label: t, value: t }))
+  return [...items].toSorted((a, b) => a.localeCompare(b, 'zh-CN')).map((t) => ({ label: t, value: t }))
 })
 
 const languageSelectOption = computed(() => {
@@ -96,7 +101,7 @@ const languageSelectOption = computed(() => {
   props.songs.forEach((s) => {
     s?.language?.forEach((l) => items.add(l))
   })
-  return [...items].map((t) => ({ label: t, value: t }))
+  return [...items].toSorted((a, b) => a.localeCompare(b, 'zh-CN')).map((t) => ({ label: t, value: t }))
 })
 
 function onAdded(songs: ResponseSongModel[]) {
@@ -125,119 +130,136 @@ function openAssistant() {
   <Dialog v-model:open="showModel">
     <DialogContent
       :key="modalRenderKey"
-      class="max-w-4xl max-h-[88vh] flex flex-col p-0"
+      class="max-w-4xl max-h-[88vh] flex flex-col gap-0 p-0 overflow-hidden"
     >
-      <DialogHeader class="p-4 border-b">
+      <DialogHeader class="px-4 py-3.5 border-b shrink-0">
         <DialogTitle class="text-sm">添加歌曲</DialogTitle>
       </DialogHeader>
 
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+      <div class="flex-1 overflow-y-auto p-4">
         <Spin :show="isModalLoading">
-          <Alert
-            size="sm"
-            variant="info"
-          >
-            <div class="flex-between flex-wrap gap-2 w-full">
-              <div class="space-y-0.5">
-                <AlertTitle>也可以使用 VTsuru 助手</AlertTitle>
-                <AlertDescription>
-                  上传歌曲信息截图，或直接粘贴歌曲信息，Agent 会自动识别并生成添加操作。
-                </AlertDescription>
+          <div class="space-y-3">
+            <Alert
+              size="sm"
+              variant="info"
+            >
+              <div class="flex-between flex-wrap gap-2 w-full">
+                <div class="space-y-0.5">
+                  <AlertTitle>也可以使用 VTsuru 助手</AlertTitle>
+                  <AlertDescription>
+                    上传歌曲信息截图，或直接粘贴歌曲信息，Agent 会自动识别并生成添加操作。
+                  </AlertDescription>
+                </div>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="gap-1 shrink-0"
+                  @click="openAssistant"
+                >
+                  <Bot class="size-3.5" />
+                  打开助手
+                </Button>
               </div>
-              <Button
-                size="xs"
-                variant="outline"
-                class="gap-1"
-                @click="openAssistant"
+            </Alert>
+
+            <Tabs
+              v-model="activeTab"
+              class="w-full"
+            >
+              <TabsList class="flex-wrap h-auto">
+                <TabsTrigger value="custom">手动录入</TabsTrigger>
+                <TabsTrigger value="text">文本批量粘贴</TabsTrigger>
+                <TabsTrigger value="netease">网易云歌单</TabsTrigger>
+                <TabsTrigger value="5sing">5sing 搜索</TabsTrigger>
+                <TabsTrigger value="file">表格/CSV 导入</TabsTrigger>
+                <TabsTrigger value="directory">文件夹扫描</TabsTrigger>
+              </TabsList>
+
+              <TabsContent
+                value="custom"
+                class="pt-3"
               >
-                <Bot24Regular class="size-3.5" />
-                打开助手
-              </Button>
-            </div>
-          </Alert>
+                <SongListAddSongModalCustomTab
+                  ref="customTabRef"
+                  :existing-songs="songs"
+                  :authors="authors"
+                  :tags="tags"
+                  :song-select-option="languageSelectOption"
+                  @added="onAdded"
+                  @loading-change="onLoadingChange"
+                  @reset-render="bumpRenderKey"
+                />
+              </TabsContent>
 
-          <Tabs
-            v-model="activeTab"
-            class="w-full"
-          >
-            <TabsList>
-              <TabsTrigger value="custom">手动录入</TabsTrigger>
-              <TabsTrigger value="netease">从网易云歌单导入</TabsTrigger>
-              <TabsTrigger value="5sing">从 5sing 搜索</TabsTrigger>
-              <TabsTrigger value="file">从文件导入</TabsTrigger>
-              <TabsTrigger value="directory">从文件夹读取</TabsTrigger>
-            </TabsList>
+              <TabsContent
+                value="text"
+                class="pt-3"
+              >
+                <SongListAddSongModalTextTab
+                  ref="textTabRef"
+                  :existing-songs="songs"
+                  :tags="tags"
+                  :language-options="languageSelectOption"
+                  @added="onAdded"
+                  @loading-change="onLoadingChange"
+                />
+              </TabsContent>
 
-            <TabsContent
-              value="custom"
-              class="pt-3"
-            >
-              <SongListAddSongModalCustomTab
-                ref="customTabRef"
-                :existing-songs="songs"
-                :authors="authors"
-                :tags="tags"
-                :song-select-option="songSelectOption"
-                @added="onAdded"
-                @loading-change="onLoadingChange"
-                @reset-render="bumpRenderKey"
-              />
-            </TabsContent>
+              <TabsContent
+                value="netease"
+                class="pt-3"
+              >
+                <SongListAddSongModalNeteaseTab
+                  ref="neteaseTabRef"
+                  :existing-songs="songs"
+                  @added="onAdded"
+                  @loading-change="onLoadingChange"
+                />
+              </TabsContent>
 
-            <TabsContent
-              value="netease"
-              class="pt-3"
-            >
-              <SongListAddSongModalNeteaseTab
-                ref="neteaseTabRef"
-                :existing-songs="songs"
-                @added="onAdded"
-                @loading-change="onLoadingChange"
-              />
-            </TabsContent>
+              <TabsContent
+                value="5sing"
+                class="pt-3"
+              >
+                <SongListAddSongModalFivesingTab
+                  :existing-songs="songs"
+                  @added="onAdded"
+                  @loading-change="onLoadingChange"
+                />
+              </TabsContent>
 
-            <TabsContent
-              value="5sing"
-              class="pt-3"
-            >
-              <SongListAddSongModalFivesingTab
-                :existing-songs="songs"
-                @added="onAdded"
-                @loading-change="onLoadingChange"
-              />
-            </TabsContent>
+              <TabsContent
+                value="file"
+                class="pt-3"
+              >
+                <SongListAddSongModalFileTab
+                  ref="fileTabRef"
+                  :existing-songs="songs"
+                  @added="onAdded"
+                  @loading-change="onLoadingChange"
+                />
+              </TabsContent>
 
-            <TabsContent
-              value="file"
-              class="pt-3"
-            >
-              <SongListAddSongModalFileTab
-                ref="fileTabRef"
-                :existing-songs="songs"
-                @added="onAdded"
-                @loading-change="onLoadingChange"
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="directory"
-              class="pt-3"
-            >
-              <SongListAddSongModalDirectoryTab
-                ref="directoryTabRef"
-                :existing-songs="songs"
-                :authors="authors"
-                :tags="tags"
-                :language-select-option="languageSelectOption"
-                @added="onAdded"
-                @loading-change="onLoadingChange"
-              />
-            </TabsContent>
-          </Tabs>
+              <TabsContent
+                value="directory"
+                class="pt-3"
+              >
+                <SongListAddSongModalDirectoryTab
+                  ref="directoryTabRef"
+                  :existing-songs="songs"
+                  :authors="authors"
+                  :tags="tags"
+                  :language-select-option="languageSelectOption"
+                  @added="onAdded"
+                  @loading-change="onLoadingChange"
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         </Spin>
       </div>
 
-      <DialogFooter class="p-3 border-t bg-muted/10 flex-between">
+      <DialogFooter class="px-4 py-3 border-t bg-muted/10 flex-between shrink-0">
         <span class="text-xs text-muted-foreground">{{ footerConfig.hint }}</span>
         <div
           v-if="activeTab === 'custom' && customTabRef"
@@ -251,8 +273,9 @@ function openAssistant() {
             size="xs"
             variant="outline"
             @click="customTabRef.resetAll()"
-            >还原</Button
           >
+            还原
+          </Button>
           <Button
             :disabled="!customTabRef.canAdd || isModalLoading"
             @click="customTabRef.add()"

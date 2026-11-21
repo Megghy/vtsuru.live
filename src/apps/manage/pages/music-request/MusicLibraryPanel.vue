@@ -293,7 +293,7 @@ async function confirmImportNetease() {
       <CardContent class="p-3">
         <ScrollArea
           v-if="filteredOriginMusics.length > 0"
-          class="h-[520px]"
+          class="h-[520px] [&_[data-reka-scroll-area-viewport]>div]:!block"
         >
           <div
             class="hidden sm:grid grid-cols-[2.25rem_minmax(0,1.4fr)_minmax(0,1fr)_4.5rem] items-center gap-3 px-2.5 pb-2 text-xs text-muted-foreground border-b border-border"
@@ -418,7 +418,9 @@ async function confirmImportNetease() {
               </div>
             </div>
 
-            <ScrollArea class="h-64 rounded border border-border p-2 bg-background">
+            <ScrollArea
+              class="h-64 rounded border border-border p-2 bg-background [&_[data-reka-scroll-area-viewport]>div]:!block"
+            >
               <div class="space-y-1.5">
                 <label
                   v-for="song in neteaseSongs"

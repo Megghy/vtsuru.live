@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { Pause, Play } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { FETCH_API } from '@/shared/config'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { Pagination } from '@/shared/ui/pagination'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
-defineProps<{
+const props = defineProps<{
   existingSongs: ResponseSongModel[]
 }>()
 
@@ -22,11 +24,28 @@ const emit = defineEmits<{
 
 const message = useMessage()
 
-const fivesingSearchInput = ref<string>('')
+const fivesingSearchInput = ref('')
 const fivesingResults = ref<ResponseSongModel[]>([])
 const fivesingTotalPageCount = ref(1)
 const fivesingCurrentPage = ref(1)
 const isGettingFivesingSongPlayUrl = ref(0)
+const playingSongId = ref<number | null>(null)
+let audioEl: HTMLAudioElement | null = null
+
+const existingFivesingIds = computed(
+  () => new Set(props.existingSongs.filter((s) => s.from === SongPlatform.FiveSing).map((s) => s.id)),
+)
+
+function stopAudio() {
+  if (audioEl) {
+    audioEl.pause()
+    audioEl.src = ''
+    audioEl = null
+  }
+  playingSongId.value = null
+}
+
+onBeforeUnmount(stopAudio)
 
 function extractTextFromHtml(html: string): string {
   const match = /<em class="keyword">(.*?)<\/em>/.exec(html)
@@ -44,45 +63,68 @@ async function getFivesingSongUrl(song: ResponseSongModel): Promise<string> {
   return ''
 }
 
-async function playFivesingSong(song: ResponseSongModel) {
+async function togglePlayFivesingSong(song: ResponseSongModel) {
+  if (playingSongId.value === song.id) {
+    stopAudio()
+    return
+  }
+
   isGettingFivesingSongPlayUrl.value = song.id
   try {
-    song.url = await getFivesingSongUrl(song)
+    if (!song.url) {
+      song.url = await getFivesingSongUrl(song)
+    }
+    if (!song.url) {
+      message.warning('未获取到可播放伴奏链接')
+      return
+    }
+    stopAudio()
+    audioEl = new Audio(song.url)
+    audioEl.addEventListener('ended', () => {
+      if (playingSongId.value === song.id) playingSongId.value = null
+    })
+    playingSongId.value = song.id
+    await audioEl.play()
   } catch (err) {
-    message.error(`获取歌曲链接失败: ${err}`)
+    message.error(`播放失败: ${err instanceof Error ? err.message : String(err)}`)
+    stopAudio()
   } finally {
     isGettingFivesingSongPlayUrl.value = 0
   }
 }
 
 async function getFivesingSearchList(isRestart = false) {
-  if (!fivesingSearchInput.value) {
+  if (!fivesingSearchInput.value.trim()) {
     message.error('请输入搜索关键词')
     return
   }
 
+  stopAudio()
   emit('loadingChange', true)
   try {
     if (isRestart) fivesingCurrentPage.value = 1
 
-    const searchUrl = `http://search.5sing.kugou.com/home/json?keyword=${fivesingSearchInput.value}&sort=1&page=${fivesingCurrentPage.value}&filter=3`
+    const kw = encodeURIComponent(fivesingSearchInput.value.trim())
+    const searchUrl = `http://search.5sing.kugou.com/home/json?keyword=${kw}&sort=1&page=${fivesingCurrentPage.value}&filter=3`
     const json = await fetch(FETCH_API + searchUrl).then((data) => data.json())
-    if (json.list.length === 0) message.error('搜索结果为空')
+    if (!json.list?.length) {
+      fivesingResults.value = []
+      message.warning('搜索结果为空')
+      return
+    }
 
-    fivesingResults.value = []
-    json.list.forEach((song: any) => {
-      const songInfo = {
-        id: song.songId,
-        name: extractTextFromHtml(song.songName),
-        author: [song.originSinger, song.singer].filter(Boolean),
-      } as ResponseSongModel
-      fivesingResults.value.push(songInfo)
-    })
+    fivesingResults.value = json.list.map(
+      (song: any) =>
+        ({
+          id: song.songId,
+          name: extractTextFromHtml(song.songName),
+          author: [song.originSinger, song.singer].filter(Boolean),
+        }) as ResponseSongModel,
+    )
 
-    fivesingTotalPageCount.value = json.pageInfo.totalPages
-    message.success(`成功获取搜索信息，共 ${json.pageInfo.totalCount} 条`)
+    fivesingTotalPageCount.value = Math.max(1, json.pageInfo?.totalPages ?? 1)
   } catch (err) {
-    message.error(`获取歌单失败: ${err}`)
+    message.error(`搜索失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
     emit('loadingChange', false)
   }
@@ -95,7 +137,7 @@ async function addFivesingSongs(song: ResponseSongModel) {
       try {
         song.url = await getFivesingSongUrl(song)
       } catch {
-        message.error('未能获取到歌曲链接，将留空')
+        message.warning('未能获取到歌曲链接，将留空')
       }
     }
 
@@ -104,7 +146,7 @@ async function addFivesingSongs(song: ResponseSongModel) {
       message.error(`添加失败: ${data.message}`)
       return
     }
-    message.success('已添加歌曲')
+    message.success(`已添加《${song.name}》`)
     emit('added', data.data as unknown as ResponseSongModel[])
   } catch (err) {
     message.error('添加失败')
@@ -120,13 +162,13 @@ async function addFivesingSongs(song: ResponseSongModel) {
     <div class="flex items-center gap-2">
       <Input
         v-model="fivesingSearchInput"
-        placeholder="输入要搜索的歌名"
-        maxlength="15"
+        placeholder="输入要搜索的伴奏或歌名"
+        maxlength="40"
         class="flex-1"
         @keyup.enter="getFivesingSearchList(true)"
       />
       <Button
-        :disabled="!fivesingSearchInput"
+        :disabled="!fivesingSearchInput.trim()"
         @click="getFivesingSearchList(true)"
       >
         搜索
@@ -135,63 +177,72 @@ async function addFivesingSongs(song: ResponseSongModel) {
 
     <div
       v-if="fivesingResults.length > 0"
-      class="border rounded-lg overflow-hidden"
+      class="space-y-3"
     >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>名称</TableHead>
-            <TableHead>作者</TableHead>
-            <TableHead class="w-32 text-center">试听</TableHead>
-            <TableHead class="w-20 text-center">操作</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow
-            v-for="song in fivesingResults"
-            :key="song.id"
-          >
-            <TableCell class="font-medium">{{ song.name }}</TableCell>
-            <TableCell>
-              <div class="flex flex-wrap gap-1">
-                <Tag
-                  v-for="author in song.author"
-                  :key="author"
-                  size="small"
+      <div class="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>名称</TableHead>
+              <TableHead>作者</TableHead>
+              <TableHead class="w-24 text-center">试听</TableHead>
+              <TableHead class="w-24 text-center">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow
+              v-for="song in fivesingResults"
+              :key="song.id"
+            >
+              <TableCell class="font-medium">{{ song.name }}</TableCell>
+              <TableCell>
+                <div class="flex flex-wrap gap-1">
+                  <Badge
+                    v-for="author in song.author"
+                    :key="author"
+                    variant="secondary"
+                    size="xs"
+                  >
+                    {{ author }}
+                  </Badge>
+                </div>
+              </TableCell>
+              <TableCell class="text-center">
+                <Button
+                  size="icon-xs"
+                  :variant="playingSongId === song.id ? 'default' : 'outline'"
+                  :loading="isGettingFivesingSongPlayUrl === song.id"
+                  :aria-label="playingSongId === song.id ? '停止试听' : '试听伴奏'"
+                  @click="togglePlayFivesingSong(song)"
                 >
-                  {{ author }}
-                </Tag>
-              </div>
-            </TableCell>
-            <TableCell class="text-center">
-              <Button
-                v-if="!song.url"
-                size="xs"
-                variant="outline"
-                :disabled="isGettingFivesingSongPlayUrl === song.id"
-                @click="playFivesingSong(song)"
-              >
-                {{ isGettingFivesingSongPlayUrl === song.id ? '获取中...' : '试听' }}
-              </Button>
-              <audio
-                v-else
-                controls
-                class="h-7 w-40 max-w-full"
-              >
-                <source :src="song.url" />
-              </audio>
-            </TableCell>
-            <TableCell class="text-center">
-              <Button
-                size="xs"
-                @click="addFivesingSongs(song)"
-              >
-                添加
-              </Button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+                  <component
+                    :is="playingSongId === song.id ? Pause : Play"
+                    class="size-3.5"
+                  />
+                </Button>
+              </TableCell>
+              <TableCell class="text-center">
+                <Button
+                  size="xs"
+                  :variant="existingFivesingIds.has(song.id) ? 'secondary' : 'default'"
+                  :disabled="existingFivesingIds.has(song.id)"
+                  @click="addFivesingSongs(song)"
+                >
+                  {{ existingFivesingIds.has(song.id) ? '已在歌单' : '添加' }}
+                </Button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+
+      <Pagination
+        v-if="fivesingTotalPageCount > 1"
+        v-model:page="fivesingCurrentPage"
+        :total="fivesingTotalPageCount * 10"
+        :page-size="10"
+        @update:page="getFivesingSearchList(false)"
+      />
     </div>
   </div>
 </template>

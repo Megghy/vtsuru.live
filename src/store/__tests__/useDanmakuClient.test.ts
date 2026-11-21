@@ -291,4 +291,51 @@ describe('useDanmakuClient event sharing', () => {
 
     expect(giftListener).not.toHaveBeenCalled()
   })
+
+  it('waits for Web Lock release before re-electing on connection loss instead of falling back to broadcast', async () => {
+    const heldLocks = new Set<string>()
+    const locksMock = {
+      request: vi.fn(
+        async (
+          name: string,
+          options: { ifAvailable?: boolean },
+          callback: (lock: { name: string } | null) => Promise<void> | void,
+        ) => {
+          if (options?.ifAvailable && heldLocks.has(name)) {
+            return await callback(null)
+          }
+          heldLocks.add(name)
+          try {
+            await callback({ name })
+            // 模拟浏览器 LockManager 在 callback settle 之后才异步释放锁
+            await Promise.resolve()
+          } finally {
+            heldLocks.delete(name)
+          }
+        },
+      ),
+      query: vi.fn(async () => ({
+        held: [...heldLocks].map((name) => ({ name })),
+        pending: [],
+      })),
+    }
+    vi.stubGlobal('navigator', { ...navigator, locks: locksMock })
+
+    const store = await createStore()
+    await store.initOpenlive()
+    expect(store.danmakuClient?.type).toBe('openlive')
+    expect(startMock).toHaveBeenCalledTimes(1)
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    ;(store.danmakuClient as unknown as { onConnectionLost?: () => void }).onConnectionLost?.()
+    await vi.advanceTimersByTimeAsync(0)
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(store.danmakuClient?.type).toBe('openlive')
+    expect(store.connected).toBe(true)
+    expect(startMock).toHaveBeenCalledTimes(2)
+    warnSpy.mockRestore()
+  })
 })

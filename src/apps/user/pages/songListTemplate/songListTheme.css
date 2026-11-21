@@ -12,7 +12,7 @@
   min-width: 0;
 }
 
-/* 传统歌单模板背景与暗色模式模糊/压暗 */
+/* 传统歌单模板背景与暗色模式模糊/压暗（遵循 ARCHITECTURE 阈值：blur 24px，暗色 brightness(0.4) saturate(1.1) + 0.72 遮罩） */
 .traditional-song-list.has-background {
   position: relative;
   isolation: isolate;
@@ -31,9 +31,9 @@
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  filter: blur(20px) saturate(1.2);
+  filter: blur(24px) saturate(1.15);
   transform: translateZ(0);
-  transition: filter 0.3s ease;
+  transition: filter 180ms ease;
 }
 
 .traditional-song-list.has-background::after {
@@ -45,18 +45,18 @@
   background: color-mix(in srgb, var(--background, #ffffff) 60%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  transition: background-color 0.3s ease;
+  transition: background-color 180ms ease;
 }
 
 .dark .traditional-song-list.has-background::before {
-  filter: blur(20px) brightness(0.48) saturate(1.15);
+  filter: blur(24px) brightness(0.4) saturate(1.1);
 }
 
 .dark .traditional-song-list.has-background::after {
-  background: rgba(9, 9, 11, 0.65);
+  background: rgba(9, 9, 11, 0.72);
 }
 
-/* 歌单面板在有背景时使用毛玻璃半透明透景，避免死黑块遮挡背景 */
+/* 歌单面板在有背景时使用毛玻璃半透明透景 */
 .traditional-song-list.has-background .profile-panel,
 .traditional-song-list.has-background .song-panel,
 .page-root.bg-host .traditional-song-list .profile-panel,
@@ -65,4 +65,54 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-color: var(--border) !important;
+}
+
+/* 歌曲状态视觉语义（演唱中 / 排队中 / 置顶 / 暂不接歌） */
+.song-list-surface .is-singing {
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  background-color: color-mix(in srgb, rgba(245, 158, 11, 0.08) 100%, var(--card)) !important;
+}
+
+.song-list-surface .is-queued,
+.song-list-surface .is-active {
+  border-color: rgba(34, 197, 94, 0.45) !important;
+  background-color: color-mix(in srgb, rgba(34, 197, 94, 0.06) 100%, var(--card)) !important;
+}
+
+.song-list-surface .is-pinned {
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.song-list-surface .is-disabled {
+  opacity: 0.6;
+}
+
+/* 模板切换与舞台交互的克制 GPU 过渡（仅 opacity / transform，180ms） */
+.compact-swap-enter-active,
+.compact-swap-leave-active,
+.gallery-swap-enter-active,
+.gallery-swap-leave-active,
+.stage-cover-enter-active,
+.stage-cover-leave-active,
+.stage-meta-enter-active,
+.stage-meta-leave-active {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.compact-swap-enter-from,
+.gallery-swap-enter-from,
+.stage-cover-enter-from,
+.stage-meta-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.compact-swap-leave-to,
+.gallery-swap-leave-to,
+.stage-cover-leave-to,
+.stage-meta-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }

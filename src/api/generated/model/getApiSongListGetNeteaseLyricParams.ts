@@ -9,6 +9,8 @@
 export type GetApiSongListGetNeteaseLyricParams = {
   /**
    * 歌曲Id
+   * @minimum 1
+   * @maximum 9223372036854776000
    */
   id?: number
 }

@@ -27,7 +27,16 @@ const status = computed(() => {
 
 <template>
   <template v-if="status">
-    <Badge v-if="variant === 'tag'" size="xs" class="song-status-badge" :class="[ size === 'tiny' ? 'h-4 px-1' : 'h-4.5 px-1.5', status === 'singing' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' : ' ', ]" variant="success">
+    <Badge
+      v-if="variant === 'tag'"
+      size="xs"
+      class="song-status-badge"
+      :class="[
+        size === 'tiny' ? 'h-4 px-1' : 'h-4.5 px-1.5',
+        status === 'singing' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' : ' ',
+      ]"
+      variant="success"
+    >
       {{ status === 'singing' ? '演唱中' : '排队中' }}
     </Badge>
     <span

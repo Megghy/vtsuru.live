@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CloudAdd20Filled from '@vicons/fluent/es/CloudAdd20Filled'
+import { Ban, Send } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import type { ResponseSongModel, SettingSongRequest } from '@/api/generated/model'
@@ -35,6 +35,7 @@ const emit = defineEmits<{
   request: [song: ResponseSongModel]
 }>()
 
+const isUnavailable = computed(() => props.disabled || Boolean(props.song.isDisabled))
 const tooltip = computed(() => getSongRequestTooltip(props.song, props.liveRequestSettings, props.authState))
 
 const buttonSize = computed(() => {
@@ -49,23 +50,25 @@ const buttonSize = computed(() => {
 
 <template>
   <TooltipProvider v-if="!hidden">
-    <Tooltip :disabled="disabled">
+    <Tooltip>
       <TooltipTrigger as-child>
-        <Button
-          :variant="secondary ? 'secondary' : 'default'"
-          :size="buttonSize"
-          :class="[circle && !label ? 'rounded-full' : '']"
-          :disabled="disabled || loading"
-          :aria-label="`点歌《${song.name}》`"
-          @click="emit('request', song)"
-        >
-          <component
-            :is="CloudAdd20Filled"
-            class="size-3.5"
-            :class="{ 'mr-1': !!label }"
-          />
-          <span v-if="label">{{ label }}</span>
-        </Button>
+        <span class="inline-flex">
+          <Button
+            :variant="secondary ? 'secondary' : 'default'"
+            :size="buttonSize"
+            :class="[circle && !label ? 'rounded-full' : '']"
+            :disabled="isUnavailable || loading"
+            :aria-label="song.isDisabled ? `${song.name} 暂不接歌` : `点歌《${song.name}》`"
+            @click="emit('request', song)"
+          >
+            <component
+              :is="song.isDisabled ? Ban : Send"
+              class="size-3.5"
+              :class="{ 'mr-1': !!label }"
+            />
+            <span v-if="label">{{ song.isDisabled ? '暂不接歌' : label }}</span>
+          </Button>
+        </span>
       </TooltipTrigger>
       <TooltipContent>{{ tooltip }}</TooltipContent>
     </Tooltip>

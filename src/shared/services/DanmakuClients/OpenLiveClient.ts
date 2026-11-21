@@ -12,6 +12,8 @@ import { GuidUtils } from '@/shared/utils'
 
 import BaseDanmakuClient from './BaseDanmakuClient'
 
+const OPEN_LIVE_HEARTBEAT_INTERVAL_MS = 15_000
+
 export default class OpenLiveClient extends BaseDanmakuClient {
   public serverUrl: string = ''
   constructor(auth?: AuthInfo) {
@@ -154,7 +156,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     this.heartbeatTimer = setTimeout(() => {
       this.heartbeatTimer = undefined
       void this.sendHeartbeat(generation)
-    }, 20_000)
+    }, OPEN_LIVE_HEARTBEAT_INTERVAL_MS)
   }
 
   private async sendHeartbeat(generation: number) {
@@ -164,7 +166,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     this.heartbeatController = controller
 
     try {
-      const data = await (this.authInfo
+      const data = await (this.authInfo?.Code
         ? postApiOpenLiveHeartbeat(this.authInfo as any, {
             signal: controller.signal,
           })

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { addSeconds } from 'date-fns'
+import { Settings2, SlidersHorizontal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -23,51 +24,42 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Spin } from '@/shared/ui/spin'
-import { useMessage } from '@/shared/utils'
+import { copyToClipboard, useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import { canRequestSong } from './songListTemplate/utils/songRequestUtils'
 
 import './songListTemplate/songListTheme.css'
 
-// 组件属性
 const props = defineProps<{
   biliInfo: BiliProfile | undefined
-  userInfo: ResponseUserInfo | undefined // 用户信息
-  template?: string | undefined // 模板名称
-  fakeData?: ResponseSongModel[] // 测试数据
+  userInfo: ResponseUserInfo | undefined
+  template?: string | undefined
+  fakeData?: ResponseSongModel[]
 }>()
-// 用户账号信息
+
 const accountInfo = useAccount()
-// 下次点歌时间
 const nextRequestTime = usePersistedStorage('SongList.NextRequestTime', new Date())
-// 点歌冷却时间(秒)
 const minRequestTime = 30
-// 设置弹窗显示状态
 const showSettingModal = ref(false)
 
-// 计算当前使用的模板类型
 const componentType = computed(() => {
   return props.template ?? props.userInfo?.extra?.templateTypes.songlist?.toLowerCase()
 })
 
-// 数据状态
-const currentData = ref<ResponseSongModel[]>([]) // 歌单数据
-const dynamicConfigRef = ref() // 动态配置引用
-const songsActive = ref<SongRequestInfo[]>([]) // 当前点歌列表
+const currentData = ref<ResponseSongModel[]>([])
+const dynamicConfigRef = ref()
+const songsActive = ref<SongRequestInfo[]>([])
 const settings = ref<SettingSongRequest>({
-  // 点歌设置
   allowFromWeb: false,
   allowAnonymousFromWeb: false,
   orderPrefix: '',
 } as SettingSongRequest)
 
-// 加载状态
 const isDataLoading = ref(true)
 const isConfigLoading = ref(true)
 const isLoading = computed(() => isDataLoading.value || isConfigLoading.value)
 
-// 计算属性
 const selectedTemplateConfig = computed(() => {
   if (dynamicConfigRef.value?.Config) {
     return dynamicConfigRef.value?.Config as ConfigItemDefinition[]
@@ -81,10 +73,11 @@ const selectedTemplate = computed(() => {
   return SongListTemplateMap.traditional
 })
 
-const currentConfig = ref({}) // 当前配置
-const message = useMessage() // 消息提示
-const biliAuth = useBiliAuth() // B站授权
+const currentConfig = ref({})
+const message = useMessage()
+const biliAuth = useBiliAuth()
 const isLoggedIn = computed(() => !!accountInfo.value.id)
+const isOwner = computed(() => Boolean(props.userInfo?.id && props.userInfo.id === accountInfo.value.id))
 
 const userPoints = ref<number | null>(null)
 const pendingSong = ref<ResponseSongModel | null>(null)
@@ -128,9 +121,6 @@ async function refreshUserPoints() {
   userPoints.value = typeof pts === 'number' ? pts : null
 }
 
-/**
- * 获取点歌设置和当前点歌列表
- */
 async function getSongRequestInfo() {
   if (!props.userInfo?.id) return { songs: [], setting: settings.value }
 
@@ -152,9 +142,6 @@ async function getSongRequestInfo() {
   return { songs: [], setting: settings.value }
 }
 
-/**
- * 获取歌单数据
- */
 async function getSongs() {
   if (!props.userInfo?.id) {
     isDataLoading.value = false
@@ -181,9 +168,6 @@ async function getSongs() {
   }
 }
 
-/**
- * 获取模板配置
- */
 async function getConfig() {
   if (!selectedTemplate.value?.settingName) {
     isConfigLoading.value = false
@@ -209,28 +193,8 @@ async function getConfig() {
   }
 }
 
-/**
- * 复制文本到剪贴板
- */
-function copyToClipboard(text: string, sendMessage: boolean = true) {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      if (sendMessage) {
-        message.success('复制成功')
-      }
-    })
-    .catch((err) => {
-      console.error('复制失败:', err)
-      message.error('复制失败，请重试')
-    })
-}
-
-/**
- * 点歌处理
- */
 async function requestSong(song: ResponseSongModel) {
-  const orderText = `${settings.value.orderPrefix || ''} ${song.name}`
+  const orderText = `${settings.value.orderPrefix || ''} ${song.name}`.trim()
   const check = canRequestSong(
     song,
     props.userInfo,
@@ -241,7 +205,7 @@ async function requestSong(song: ResponseSongModel) {
   )
 
   if (check.shouldCopyOnly) {
-    copyToClipboard(orderText, false)
+    await copyToClipboard(orderText, false)
     message.info(check.reason)
     return
   }
@@ -251,14 +215,11 @@ async function requestSong(song: ResponseSongModel) {
     return
   }
 
+  pendingSong.value = song
+  usePriorityOnRequest.value = false
   if (basePointCost.value > 0 || settings.value.allowPointPriority) {
-    pendingSong.value = song
-    usePriorityOnRequest.value = false
     void refreshUserPoints()
-    return
   }
-
-  await submitWebSongRequest(song, false)
 }
 
 async function submitWebSongRequest(song: ResponseSongModel, usePriority: boolean) {
@@ -330,7 +291,6 @@ async function priorityExistingSong(item: SongRequestInfo) {
   }
 }
 
-// 监听动态配置变化，重新获取配置
 watch(
   () => dynamicConfigRef.value,
   (newValue) => {
@@ -341,7 +301,6 @@ watch(
   { immediate: false },
 )
 
-// 监听用户ID或B站认证变化，重新加载数据
 watch(
   () => [props.userInfo?.id, biliAuth.isAuthed] as const,
   () => {
@@ -358,11 +317,9 @@ watch(
   },
 )
 
-// 组件挂载时初始化
 onMounted(async () => {
   if (!props.fakeData) {
     try {
-      // 并行加载歌单和点歌设置
       await Promise.all([
         getSongs(),
         getSongRequestInfo().then((info) => {
@@ -380,7 +337,6 @@ onMounted(async () => {
       isDataLoading.value = false
     }
   } else {
-    // 测试模式使用假数据
     currentData.value = props.fakeData || []
     isDataLoading.value = false
   }
@@ -393,12 +349,50 @@ onMounted(async () => {
 
 <template>
   <div class="song-list-surface relative">
-    <!-- 积分点歌与插队状态栏 -->
+    <!-- 主播本人快捷管理条（文档流内联，避免悬浮按钮遮挡内容） -->
     <div
-      v-if="hasPointFeatures"
-      class="max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto px-[clamp(12px,2vw,24px)] pt-3"
+      v-if="isOwner || hasPointFeatures"
+      class="max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto px-[clamp(12px,2vw,24px)] pt-3 space-y-2"
     >
-      <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card/80 px-3 py-2 text-xs">
+      <div
+        v-if="isOwner"
+        class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-card/85 px-3 py-2 text-xs"
+      >
+        <span class="text-muted-foreground">当前正在浏览你的公开歌单展示页</span>
+        <div class="flex items-center gap-2">
+          <RouterLink
+            v-slot="{ navigate }"
+            to="/manage/song-list"
+            custom
+          >
+            <Button
+              variant="outline"
+              size="xs"
+              class="gap-1"
+              @click="navigate"
+            >
+              <SlidersHorizontal class="size-3.5" />
+              管理歌单
+            </Button>
+          </RouterLink>
+          <Button
+            v-if="selectedTemplate?.settingName"
+            variant="secondary"
+            size="xs"
+            class="gap-1"
+            @click="showSettingModal = true"
+          >
+            <Settings2 class="size-3.5" />
+            自定义模板
+          </Button>
+        </div>
+      </div>
+
+      <!-- 积分点歌与插队状态栏 -->
+      <div
+        v-if="hasPointFeatures"
+        class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-card/85 px-3 py-2 text-xs"
+      >
         <div class="flex flex-wrap items-center gap-2">
           <Badge
             v-if="basePointCost > 0"
@@ -463,21 +457,11 @@ onMounted(async () => {
       />
     </Spin>
 
-    <!-- 主播自定义按钮 -->
-    <Button
-      v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id"
-      variant="outline"
-      class="absolute right-8 top-5 z-[1000]"
-      @click="showSettingModal = true"
-    >
-      自定义
-    </Button>
-
-    <!-- 设置弹窗 -->
+    <!-- 模板配置弹窗 -->
     <Dialog v-model:open="showSettingModal">
       <DialogContent class="max-w-[90vw] sm:max-w-[800px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>设置</DialogTitle>
+          <DialogTitle>模板自定义设置</DialogTitle>
         </DialogHeader>
         <DynamicForm
           :key="selectedTemplate?.settingName"
@@ -488,7 +472,7 @@ onMounted(async () => {
       </DialogContent>
     </Dialog>
 
-    <!-- 积分点歌/插队确认弹窗 -->
+    <!-- 统一点歌确认弹窗（免费 / 积分 / 插队均一次确认完成） -->
     <Dialog
       :open="Boolean(pendingSong)"
       @update:open="(v) => !v && (pendingSong = null)"
@@ -498,10 +482,14 @@ onMounted(async () => {
           <DialogTitle>确认在线点歌</DialogTitle>
           <DialogDescription>
             即将点播歌曲《{{ pendingSong?.name }}》
+            <template v-if="pendingSong?.author?.length"> · {{ pendingSong.author.join(' / ') }} </template>
           </DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-3 text-xs">
+        <div
+          v-if="basePointCost > 0 || settings.allowPointPriority"
+          class="space-y-3 text-xs"
+        >
           <div class="flex-between rounded-md border bg-muted/40 px-3 py-2">
             <span class="text-muted-foreground">基础点歌消耗</span>
             <span class="font-medium font-mono">
