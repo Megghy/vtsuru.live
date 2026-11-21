@@ -6,7 +6,7 @@ import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'

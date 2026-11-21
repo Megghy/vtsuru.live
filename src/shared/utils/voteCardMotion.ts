@@ -1,6 +1,6 @@
 import { onScopeDispose, ref, watch } from 'vue'
 
-import type { VoteOBSData } from '@/api/generated/model'
+import { type VoteOBSDataModel, VoteResultMode } from '@/api/vote'
 
 import { getVoteStandings } from './voteStandings'
 
@@ -17,7 +17,7 @@ export function computeRankMoves(previous: Map<number, number>, current: Map<num
 }
 
 /** 数字与胜负同时落位，动画只表现位置变化，避免补间票数与领先提示互相矛盾。 */
-export function useVoteCardMotion(data: () => VoteOBSData | null) {
+export function useVoteCardMotion(data: () => VoteOBSDataModel | null) {
   const moves = ref<Record<number, RankMove>>({})
   const overtaking = ref<number | null>(null)
   let previousRanks = new Map<number, number>()
@@ -42,7 +42,11 @@ export function useVoteCardMotion(data: () => VoteOBSData | null) {
       }
       if (!snapshot?.showResults || snapshot.isEnding) return
 
-      const standings = getVoteStandings(snapshot.options)
+      const standings = getVoteStandings(
+        snapshot.options,
+        snapshot.resultMode ?? VoteResultMode.ByCount,
+        snapshot.winnerByDraw ? snapshot.winnerOption : null,
+      )
       const nextMoves = computeRankMoves(previousRanks, standings.ranks)
       previousRanks = standings.ranks
       const nextLeader = standings.leader?.index

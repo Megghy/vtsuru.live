@@ -4,8 +4,8 @@ import { computed, ref, toRaw, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
-import type { VoteConfig } from '@/api/generated/model'
-import { getApiVoteGetConfig, postApiVoteSaveConfig } from '@/api/generated/bullet-vote/bullet-vote'
+import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { FormField } from '@/shared/ui/form-field'
@@ -16,6 +16,7 @@ import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
 import type { ObsModuleLayer } from '../types'
@@ -160,51 +161,21 @@ function applyLotteryRecommendedSize() {
   toast.success(`已调整为推荐尺寸 ${rec.label}`)
 }
 
-// 5. 弹幕投票后端样式配置
-const voteConfig = ref<VoteConfig | null>(null)
-const loadingVoteConfig = ref(false)
+// 5. 弹幕投票图层尺寸推荐（独立图层设置，不覆盖全局账号配置）
+const voteRecommended = computed(() => {
+  const isBanner =
+    props.layer.module.style === 'duel' && props.layer.module.voteLayout === 'banner'
+  return isBanner
+    ? { width: 860, height: 180, label: '860×180' }
+    : { width: 480, height: 380, label: '480×380' }
+})
 
-async function loadVoteConfig() {
-  if (!account.value?.id) return
-  loadingVoteConfig.value = true
-  try {
-    const res = await getApiVoteGetConfig()
-    if (res.code === 200 && res.data) {
-      voteConfig.value = res.data
-    }
-  } finally {
-    loadingVoteConfig.value = false
-  }
-}
-
-watch(
-  moduleId,
-  (id) => {
-    if (id === 'danmaku-vote' && !voteConfig.value) {
-      void loadVoteConfig()
-    }
-  },
-  { immediate: true },
-)
-
-async function patchVoteConfig(patch: Partial<VoteConfig>) {
-  if (!voteConfig.value) return
-  savingBackend.value = true
-  const prev = structuredClone(toRaw(voteConfig.value))
-  const next = { ...prev, ...patch }
-  voteConfig.value = next
-  try {
-    const res = await postApiVoteSaveConfig(next as any)
-    if (res.code !== 200) {
-      throw new Error(res.message || '保存投票展示设置失败')
-    }
-    toast.success('弹幕投票设置已同步')
-  } catch (err) {
-    voteConfig.value = prev
-    toast.error(err instanceof Error ? err.message : '保存投票展示设置失败')
-  } finally {
-    savingBackend.value = false
-  }
+function applyVoteRecommendedSize() {
+  const rec = voteRecommended.value
+  props.layer.width = rec.width
+  props.layer.height = rec.height
+  store.pushHistory()
+  toast.success(`已调整为推荐尺寸 ${rec.label}`)
 }
 
 function openManagePage() {
@@ -528,7 +499,7 @@ function openManagePage() {
       </Button>
     </template>
 
-    <!-- 4. 弹幕投票：主题 + 选项上限 + 后端展示开关 -->
+    <!-- 4. 弹幕投票：主题 + 形态 + 字体 + 选项上限（图层级独立配置，不污染全局） -->
     <template v-else-if="moduleId === 'danmaku-vote'">
       <FormField label="卡片主题风格">
         <Select
@@ -543,12 +514,45 @@ function openManagePage() {
           <SelectTrigger class="w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="glass">毛玻璃 (Glass)</SelectItem>
-            <SelectItem value="duel">对决横幅 (Duel)</SelectItem>
-            <SelectItem value="minimal">极简 (Minimal)</SelectItem>
-            <SelectItem value="transparent">透明底 (Transparent)</SelectItem>
+            <SelectItem value="duel">红蓝对决 (Duel)</SelectItem>
+            <SelectItem value="minimal">极简深色 (Minimal)</SelectItem>
+            <SelectItem value="light">浅色通透 (Light)</SelectItem>
+            <SelectItem value="transparent">透明无底 (Transparent)</SelectItem>
           </SelectContent>
         </Select>
       </FormField>
+
+      <FormField
+        v-if="(layer.module.style || 'glass') === 'duel'"
+        label="对决布局形态"
+        description="双选项时可切换为顶部长条横幅"
+      >
+        <ToggleGroup
+          type="single"
+          :model-value="layer.module.voteLayout || 'auto'"
+          class="w-full grid grid-cols-3"
+          @update:model-value="
+            (v) => {
+              if (!v) return
+              layer.module.voteLayout = v as 'auto' | 'card' | 'banner'
+              store.pushHistory()
+            }
+          "
+        >
+          <ToggleGroupItem value="auto">自动</ToggleGroupItem>
+          <ToggleGroupItem value="card">卡片</ToggleGroupItem>
+          <ToggleGroupItem value="banner">横幅</ToggleGroupItem>
+        </ToggleGroup>
+      </FormField>
+
+      <Button
+        variant="outline"
+        class="w-full"
+        @click="applyVoteRecommendedSize"
+      >
+        <Maximize2 class="size-3.5" />
+        <span>适配推荐尺寸 ({{ voteRecommended.label }})</span>
+      </Button>
 
       <FormField label="最多显示选项数">
         <NumberField
@@ -566,30 +570,40 @@ function openManagePage() {
         />
       </FormField>
 
-      <template v-if="voteConfig">
-        <Separator />
-        <SettingRow
-          variant="none"
-          title="实时显示票数与进度"
-        >
-          <Switch
-            :disabled="savingBackend || loadingVoteConfig"
-            :model-value="voteConfig.showResults !== false"
-            @update:model-value="(v) => patchVoteConfig({ showResults: v })"
-          />
-        </SettingRow>
+      <FormField
+        label="图层字体（可选）"
+        description="留空时沿用投票管理页全局字体"
+      >
+        <GoogleFontPicker
+          :model-value="layer.module.voteFontFamily || ''"
+          :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
+          placeholder="沿用全局字体"
+          @update:model-value="
+            (v) => {
+              layer.module.voteFontFamily = v || ''
+              store.pushHistory()
+            }
+          "
+        />
+      </FormField>
 
-        <SettingRow
-          variant="none"
-          title="卡片圆角样式"
-        >
-          <Switch
-            :disabled="savingBackend || loadingVoteConfig"
-            :model-value="voteConfig.roundedCorners !== false"
-            @update:model-value="(v) => patchVoteConfig({ roundedCorners: v })"
-          />
-        </SettingRow>
-      </template>
+      <Separator />
+
+      <SettingRow
+        variant="none"
+        title="本图层显示实时票数"
+        description="关闭时仅在本场景隐藏实时票数"
+      >
+        <Switch
+          :model-value="layer.module.voteShowResults !== false"
+          @update:model-value="
+            (v) => {
+              layer.module.voteShowResults = v
+              store.pushHistory()
+            }
+          "
+        />
+      </SettingRow>
     </template>
 
     <!-- 5. 提问箱展示：弹出带实时画面的样式设置弹窗 -->

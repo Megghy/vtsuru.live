@@ -13,6 +13,7 @@ import { cookie } from '@/api/auth'
 import { getApiVtsuruVersion } from '@/api/generated/vtsuru/vtsuru'
 import router from '@/app/router'
 import { isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
+import { identifyAnalyticsUser, initAnalytics } from '@/shared/services/analytics'
 import { setSentryUser } from '@/shared/services/sentry'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -152,7 +153,8 @@ async function devAutoLogin() {
 }
 
 async function InitOther() {
-  // 并发初始化 HyperDX 与本地 TTS，不阻塞账号鉴权请求
+  // 并发初始化分析、HyperDX 与本地 TTS，不阻塞账号鉴权请求
+  void initAnalytics()
   const hyperdxPromise = initHyperDX()
   void InitTTS()
   await devAutoLogin()
@@ -172,6 +174,7 @@ async function InitOther() {
   const useAuth = useBiliAuth()
   if (account.value.id) {
     setSentryUser(account.value)
+    identifyAnalyticsUser(account.value)
     void hyperdxPromise.then(() => {
       const HyperDX = (window as any).__HyperDX__
       HyperDX?.setGlobalAttributes({

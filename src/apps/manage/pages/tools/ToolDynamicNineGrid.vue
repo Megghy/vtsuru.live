@@ -6,7 +6,7 @@ import { computed, onUnmounted, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 
 import { useFilePicker } from '@/composables/useFilePicker'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { NumberField } from '@/shared/ui/number-field'

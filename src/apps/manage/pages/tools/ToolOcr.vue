@@ -3,7 +3,7 @@ import { useClipboard, useDropZone, useEventListener, useFileDialog } from '@vue
 import { nextTick, ref } from 'vue'
 
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'

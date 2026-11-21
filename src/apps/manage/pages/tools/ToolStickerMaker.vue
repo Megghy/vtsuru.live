@@ -11,7 +11,7 @@ import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/component
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'

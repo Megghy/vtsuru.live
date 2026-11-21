@@ -5,7 +5,7 @@ import JSZip from 'jszip'
 import { computed, ref } from 'vue'
 
 import { formatFileSize } from '@/apps/manage/composables/formatters'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ImagePreview } from '@/shared/ui/image-preview'

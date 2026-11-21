@@ -2,17 +2,16 @@ import { type MaybeRefOrGetter, onScopeDispose, toValue, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
-import type { ResponseVoteSession, VoteConfig } from '@/api/generated/model'
-import { getVoteConfig, tryVoteEvent } from '@/api/vote'
+import { getVoteConfig, tryVoteEvent, type VoteConfigModel, type VoteSessionModel } from '@/api/vote'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface UseVoteDanmakuBridgeOptions {
-  config?: MaybeRefOrGetter<VoteConfig | undefined>
+  config?: MaybeRefOrGetter<VoteConfigModel | undefined>
   enabled?: MaybeRefOrGetter<boolean>
-  onUpdate?: (status: string, session: ResponseVoteSession | null) => void
+  onUpdate?: (status: string, session: VoteSessionModel | null) => void
 }
 
-function isPotentialVoteMessage(message: string, session: ResponseVoteSession, config?: VoteConfig): boolean {
+function isPotentialVoteMessage(message: string, session: VoteSessionModel, config?: VoteConfigModel): boolean {
   const clean = message.trim()
   if (!clean) return false
 
@@ -21,7 +20,10 @@ function isPotentialVoteMessage(message: string, session: ResponseVoteSession, c
   const lower = clean.toLowerCase()
 
   if (voteEndCommand && lower === voteEndCommand.toLowerCase()) return true
-  if (voteCommand && lower.startsWith(voteCommand.toLowerCase())) return true
+  if (voteCommand && lower.startsWith(voteCommand.toLowerCase())) {
+    // 只发命令词本身不转发，避免无效请求
+    return clean.slice(voteCommand.length).trim().length > 0
+  }
 
   if (/^\d+$/.test(clean)) {
     const idx = Number(clean)
@@ -35,17 +37,17 @@ function isPotentialVoteMessage(message: string, session: ResponseVoteSession, c
  * 当未运行桌面端/Web EventFetcher 时，通过网页端已连接的弹幕客户端将投票事件上报给服务端。
  */
 export function useVoteDanmakuBridge(
-  session: MaybeRefOrGetter<ResponseVoteSession | null | undefined>,
+  session: MaybeRefOrGetter<VoteSessionModel | null | undefined>,
   options: UseVoteDanmakuBridgeOptions = {},
 ) {
   const accountInfo = useAccount()
   const client = useDanmakuClient()
 
-  let fallbackConfig: VoteConfig | undefined
+  let fallbackConfig: VoteConfigModel | undefined
   let loadedSessionId: number | undefined
   let configLoading: Promise<void> | undefined
 
-  function resolveConfig(): VoteConfig | undefined {
+  function resolveConfig(): VoteConfigModel | undefined {
     return toValue(options.config) ?? fallbackConfig
   }
 
@@ -74,7 +76,7 @@ export function useVoteDanmakuBridge(
     { immediate: true },
   )
 
-  function shouldForward(): ResponseVoteSession | null {
+  function shouldForward(): VoteSessionModel | null {
     if (toValue(options.enabled) === false) return null
     if (accountInfo.value?.eventFetcherState?.online) return null
 
@@ -109,7 +111,7 @@ export function useVoteDanmakuBridge(
 
   function onPaidEvent(event: EventModel) {
     const current = shouldForward()
-    if (!current) return
+    if (!current || current.isPaused) return
 
     const cfg = resolveConfig()
     if (!cfg?.allowGiftVoting) return

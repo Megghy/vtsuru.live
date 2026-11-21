@@ -104,7 +104,7 @@ export const OBS_MODULE_LIST: ObsModuleMeta[] = [
     description: '实时弹幕投票选项进度条',
     defaultWidth: 480,
     defaultHeight: 380,
-    managePath: '/manage/danmaku-vote',
+    managePath: '/manage/vote',
   },
 ]
 
@@ -225,6 +225,10 @@ export interface ObsModuleLayer extends ObsSceneLayerBase {
     danmujiPinned?: boolean
     danmujiAutoHide?: number
     danmujiPinnedMinPrice?: number
+    /** 弹幕投票专属：布局形态、独立字体与实时票数覆盖 */
+    voteLayout?: 'auto' | 'card' | 'banner'
+    voteFontFamily?: string
+    voteShowResults?: boolean
   }
 }
 
@@ -741,7 +745,7 @@ export function createObsModuleLayer(
     opacity: 1,
     visible: true,
     locked: false,
-    borderRadius: moduleId === 'question-display' ? 20 : 0,
+    borderRadius: moduleId === 'question-display' || moduleId === 'danmaku-vote' ? 20 : 0,
     disableShadow: false,
     module: {
       moduleId,
@@ -749,6 +753,7 @@ export function createObsModuleLayer(
       lotteryMode: 'card',
       speedMultiplier: 1,
       maxDisplay: 6,
+      voteLayout: 'auto',
       danmujiPreset: 'classic',
       danmujiFontSize: 18,
       danmujiOpacity: 1,

@@ -5,7 +5,7 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'

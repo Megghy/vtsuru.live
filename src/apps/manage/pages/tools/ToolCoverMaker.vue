@@ -13,7 +13,7 @@ import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/component
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { markFontUsed, useLocalFonts } from '@/composables/useLocalFonts'
 import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { FormField } from '@/shared/ui/form-field'

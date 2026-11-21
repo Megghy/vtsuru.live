@@ -1,6 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
 
+import { trackPageView } from '@/shared/services/analytics'
 import { isStaleChunkMessage, reloadOnStaleChunk } from '@/shared/services/staleChunkReload'
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
@@ -197,9 +198,10 @@ router.beforeEach((to, from) => {
     }
   }
 })
-router.afterEach(() => {
+router.afterEach((to) => {
   const loadingBar = useLoadingBarStore().loadingBar
   loadingBar?.finish()
+  trackPageView(to)
 })
 router.onError((error) => {
   const message = error instanceof Error ? error.message : String(error)

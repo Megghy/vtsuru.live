@@ -71,8 +71,17 @@ const directComponentProps = computed(() => {
         token: effectiveToken.value || undefined,
         theme: mod.style || undefined,
         position: 'fill',
+        layout: mod.voteLayout || 'auto',
         max: mod.maxDisplay ?? 6,
         inlineMode: true,
+        previewMode: props.mode === 'edit',
+        borderRadiusOverride:
+          props.layer.maskShape && props.layer.maskShape !== 'none'
+            ? 0
+            : Math.max(0, props.layer.borderRadius ?? 20),
+        fontFamilyOverride: mod.voteFontFamily || undefined,
+        showResultsOverride: typeof mod.voteShowResults === 'boolean' ? mod.voteShowResults : null,
+        disableShadow: !!props.layer.disableShadow,
       }
     case 'question-display':
       return {

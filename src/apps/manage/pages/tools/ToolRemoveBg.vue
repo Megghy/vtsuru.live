@@ -5,7 +5,7 @@ import { saveAs } from 'file-saver'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useRemoveBg } from '@/composables/useRemoveBg'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { FormField } from '@/shared/ui/form-field'

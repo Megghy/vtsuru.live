@@ -91,6 +91,7 @@
     "onnxruntime-web": "^1.30.0",
     "openai": "^7.42.0",
     "pinia": "^4.1.0",
+    "posthog-js": "^1.453.2",
     "protobufjs": "^8.8.1",
     "qrcode.vue": "^3.11.0",
     "reka-ui": "^2.11.0",

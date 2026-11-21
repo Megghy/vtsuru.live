@@ -112,14 +112,24 @@ let moveable: Moveable | null = null
 let moveableContainerEl: HTMLElement | null = null
 let activeDragLayerId: string | null = null
 let dragChanged = false
+let isMoveableTransforming = false
 
-// 整组联动缩放快照（避免拖动缩放时产生累计四舍五入漂移）
-let activeGroupResize: {
-  groupId: string
+// 多选状态下按下已选图层或 .moveable-area：若拖动则整体移动，若原地轻点则在 pointerup 收敛为单选/清空
+let pendingMultiSelectClick: {
+  pointerId: number
+  clientX: number
+  clientY: number
+  pickedId: string | null
+  nextEditingGroupId: string | null
+} | null = null
+
+// 整组联动缩放快照（支持单选与多选同时缩放多个组，避免拖动缩放产生累计四舍五入漂移）
+interface GroupResizeEntry {
   startWidth: number
   startHeight: number
   snapshot: SubtreeScaleSnapshot
-} | null = null
+}
+const activeGroupResizes = new Map<string, GroupResizeEntry>()
 
 const editingGroupBreadcrumb = computed(() => {
   if (!store.editingGroupId) return []
@@ -270,6 +280,7 @@ function syncMoveable() {
       if (!id) return
       const layer = store.doc.layers[id]
       if (!layer) return
+      isMoveableTransforming = true
       activeDragLayerId = id
       dragChanged = false
       set([layer.x, layer.y])
@@ -289,6 +300,7 @@ function syncMoveable() {
     })
 
     moveable.on('dragEnd', () => {
+      isMoveableTransforming = false
       if (dragChanged) store.pushHistory()
       dragChanged = false
       activeDragLayerId = null
@@ -302,17 +314,16 @@ function syncMoveable() {
       if (!id) return
       const layer = store.doc.layers[id]
       if (!layer) return
+      isMoveableTransforming = true
       activeDragLayerId = id
       dragChanged = false
+      activeGroupResizes.clear()
       if (layer.type === 'group' && layer.group.scaleChildren !== false) {
-        activeGroupResize = {
-          groupId: id,
+        activeGroupResizes.set(id, {
           startWidth: Math.max(1, layer.width),
           startHeight: Math.max(1, layer.height),
           snapshot: captureGroupSubtreeScaleSnapshot(store.doc, id),
-        }
-      } else {
-        activeGroupResize = null
+        })
       }
       if (dragStart) dragStart.set([layer.x, layer.y])
     })
@@ -336,16 +347,18 @@ function syncMoveable() {
       el.style.height = `${nh}px`
       el.style.transform = `translate3d(${nx}px, ${ny}px, 0) rotate(${layer.rotation}deg)`
 
-      if (activeGroupResize && activeGroupResize.groupId === id) {
-        const scaleX = nw / activeGroupResize.startWidth
-        const scaleY = nh / activeGroupResize.startHeight
-        applyGroupSubtreeScale(store.doc, activeGroupResize.snapshot, scaleX, scaleY)
+      const groupResize = activeGroupResizes.get(id)
+      if (groupResize) {
+        const scaleX = nw / groupResize.startWidth
+        const scaleY = nh / groupResize.startHeight
+        applyGroupSubtreeScale(store.doc, groupResize.snapshot, scaleX, scaleY)
       }
       dragChanged = true
     })
 
     moveable.on('resizeEnd', () => {
-      activeGroupResize = null
+      isMoveableTransforming = false
+      activeGroupResizes.clear()
       if (dragChanged) store.pushHistory()
       dragChanged = false
       activeDragLayerId = null
@@ -357,6 +370,7 @@ function syncMoveable() {
       if (!id) return
       const layer = store.doc.layers[id]
       if (!layer) return
+      isMoveableTransforming = true
       activeDragLayerId = id
       dragChanged = false
       set(layer.rotation)
@@ -374,6 +388,7 @@ function syncMoveable() {
     })
 
     moveable.on('rotateEnd', () => {
+      isMoveableTransforming = false
       if (dragChanged) store.pushHistory()
       dragChanged = false
       activeDragLayerId = null
@@ -381,6 +396,7 @@ function syncMoveable() {
 
     // 多选拖拽
     moveable.on('dragGroupStart', ({ events }) => {
+      isMoveableTransforming = true
       dragChanged = false
       for (const ev of events) {
         const id = (ev.target as HTMLElement).dataset.layerId
@@ -390,6 +406,7 @@ function syncMoveable() {
     })
 
     moveable.on('dragGroup', ({ events }) => {
+      pendingMultiSelectClick = null
       for (const ev of events) {
         const id = (ev.target as HTMLElement).dataset.layerId
         const layer = id ? store.doc.layers[id] : undefined
@@ -404,6 +421,104 @@ function syncMoveable() {
     })
 
     moveable.on('dragGroupEnd', () => {
+      isMoveableTransforming = false
+      if (dragChanged) store.pushHistory()
+      dragChanged = false
+    })
+
+    // 多选缩放
+    moveable.on('resizeGroupStart', ({ events, inputEvent }) => {
+      const domEv = inputEvent as MouseEvent | PointerEvent | undefined
+      if (domEv) syncRatioLockKey(Boolean(domEv.shiftKey || domEv.ctrlKey))
+      isMoveableTransforming = true
+      pendingMultiSelectClick = null
+      dragChanged = false
+      activeGroupResizes.clear()
+      for (const ev of events) {
+        const id = (ev.target as HTMLElement).dataset.layerId
+        const layer = id ? store.doc.layers[id] : undefined
+        if (!layer) continue
+        if (layer.type === 'group' && layer.group.scaleChildren !== false) {
+          activeGroupResizes.set(id!, {
+            startWidth: Math.max(1, layer.width),
+            startHeight: Math.max(1, layer.height),
+            snapshot: captureGroupSubtreeScaleSnapshot(store.doc, id!),
+          })
+        }
+        if (ev.dragStart) ev.dragStart.set([layer.x, layer.y])
+      }
+    })
+
+    moveable.on('resizeGroup', ({ events, inputEvent }) => {
+      const domEv = inputEvent as MouseEvent | PointerEvent | undefined
+      if (domEv) syncRatioLockKey(Boolean(domEv.shiftKey || domEv.ctrlKey))
+      for (const ev of events) {
+        const id = (ev.target as HTMLElement).dataset.layerId
+        const layer = id ? store.doc.layers[id] : undefined
+        if (!layer) continue
+        const nw = Math.max(24, Math.round(ev.width))
+        const nh = Math.max(24, Math.round(ev.height))
+        const nx = Math.round(ev.drag.beforeTranslate[0])
+        const ny = Math.round(ev.drag.beforeTranslate[1])
+        layer.width = nw
+        layer.height = nh
+        layer.x = nx
+        layer.y = ny
+        ev.target.style.width = `${nw}px`
+        ev.target.style.height = `${nh}px`
+        ev.target.style.transform = `translate3d(${nx}px, ${ny}px, 0) rotate(${layer.rotation}deg)`
+        const groupResize = activeGroupResizes.get(id!)
+        if (groupResize) {
+          applyGroupSubtreeScale(
+            store.doc,
+            groupResize.snapshot,
+            nw / groupResize.startWidth,
+            nh / groupResize.startHeight,
+          )
+        }
+        dragChanged = true
+      }
+    })
+
+    moveable.on('resizeGroupEnd', () => {
+      isMoveableTransforming = false
+      activeGroupResizes.clear()
+      if (dragChanged) store.pushHistory()
+      dragChanged = false
+    })
+
+    // 多选旋转
+    moveable.on('rotateGroupStart', ({ events }) => {
+      isMoveableTransforming = true
+      pendingMultiSelectClick = null
+      dragChanged = false
+      for (const ev of events) {
+        const id = (ev.target as HTMLElement).dataset.layerId
+        const layer = id ? store.doc.layers[id] : undefined
+        if (!layer) continue
+        ev.set(layer.rotation)
+        if (ev.dragStart) ev.dragStart.set([layer.x, layer.y])
+      }
+    })
+
+    moveable.on('rotateGroup', ({ events }) => {
+      for (const ev of events) {
+        const id = (ev.target as HTMLElement).dataset.layerId
+        const layer = id ? store.doc.layers[id] : undefined
+        if (!layer) continue
+        const nr = Math.round(ev.beforeRotate % 360)
+        const nx = Math.round(ev.drag.beforeTranslate[0])
+        const ny = Math.round(ev.drag.beforeTranslate[1])
+        layer.rotation = nr
+        layer.x = nx
+        layer.y = ny
+        ev.target.style.transform = `translate3d(${nx}px, ${ny}px, 0) rotate(${nr}deg)`
+        dragChanged = true
+      }
+    })
+
+    moveable.on('rotateGroupEnd', () => {
+      isMoveableTransforming = false
       if (dragChanged) store.pushHistory()
       dragChanged = false
     })
@@ -440,12 +555,16 @@ watch(
     () => store.zoom,
     () => store.doc.canvas.width,
     () => store.doc.canvas.height,
-    () => {
-      const l = store.selectedLayer
-      return l ? `${l.x}:${l.y}:${l.width}:${l.height}:${l.rotation}:${l.locked}:${l.visible}` : ''
-    },
+    () =>
+      store.selectedLayerIds
+        .map((id) => {
+          const l = store.doc.layers[id]
+          return l ? `${id}:${l.x}:${l.y}:${l.width}:${l.height}:${l.rotation}:${l.locked}:${l.visible}` : id
+        })
+        .join('|'),
   ],
   async () => {
+    if (isMoveableTransforming) return
     await nextTick()
     syncMoveable()
   },
@@ -461,6 +580,15 @@ function isMoveableHandleTarget(target: EventTarget | null): boolean {
     target.closest('.moveable-control') ||
       target.closest('.moveable-rotation-control') ||
       target.closest('.moveable-line'),
+  )
+}
+
+function isMoveableAreaTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return Boolean(
+    target.closest('.moveable-area') ||
+      target.closest('.moveable-area-pieces') ||
+      target.closest('.moveable-area-piece'),
   )
 }
 
@@ -539,7 +667,22 @@ function handleCanvasSelectPointerDown(e: PointerEvent) {
     }
   }
 
+  const onMoveableArea = isMoveableAreaTarget(e.target)
+  const isMultiSelected = store.selectedLayerIds.length > 1
+  const hasToggleModifier = Boolean(e.shiftKey || e.ctrlKey || e.metaKey)
+
   if (scopedTargets.length === 0) {
+    // 多选状态下按在 Moveable 多选拖拽区内部缝隙时，放行给 Moveable 整体拖动；若未拖动则在 pointerup 清空选中
+    if (isMultiSelected && onMoveableArea && !hasToggleModifier) {
+      pendingMultiSelectClick = {
+        pointerId: e.pointerId,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        pickedId: null,
+        nextEditingGroupId: null,
+      }
+      return
+    }
     // 空白区域左键拖拽启动框选多选；轻点则清空选中
     marquee.value = {
       active: true,
@@ -548,7 +691,7 @@ function handleCanvasSelectPointerDown(e: PointerEvent) {
       startY: e.clientY,
       curX: e.clientX,
       curY: e.clientY,
-      additive: Boolean(e.shiftKey || e.ctrlKey || e.metaKey),
+      additive: hasToggleModifier,
       baseIds: [...store.selectedLayerIds],
       pointerId: e.pointerId,
     }
@@ -564,7 +707,7 @@ function handleCanvasSelectPointerDown(e: PointerEvent) {
   const picked =
     scopedTargets.find((t) => t.hasSolidHit || store.selectedLayerIds.includes(t.targetId)) ?? scopedTargets[0]
 
-  if (e.shiftKey || e.ctrlKey || e.metaKey) {
+  if (hasToggleModifier) {
     if (store.selectedLayerIds.includes(picked.targetId)) {
       store.selectedLayerIds = store.selectedLayerIds.filter((id) => id !== picked.targetId)
     } else {
@@ -573,6 +716,18 @@ function handleCanvasSelectPointerDown(e: PointerEvent) {
     store.editingGroupId = picked.nextEditingGroupId
     store.editingScope = isLayerInGlobalScope(store.doc, picked.targetId) ? 'global' : 'scene'
     e.stopPropagation()
+    return
+  }
+
+  // 多选状态下按在已选成员或 Moveable 多选拖拽区上：放行给 Moveable 直接整体拖动，原地轻点则在 pointerup 切换为单选
+  if (isMultiSelected && (store.selectedLayerIds.includes(picked.targetId) || onMoveableArea)) {
+    pendingMultiSelectClick = {
+      pointerId: e.pointerId,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      pickedId: picked.targetId,
+      nextEditingGroupId: picked.nextEditingGroupId,
+    }
     return
   }
 
@@ -720,6 +875,15 @@ function updateMarqueeSelection() {
 }
 
 function onViewportPointerMove(e: PointerEvent) {
+  if (pendingMultiSelectClick && pendingMultiSelectClick.pointerId === e.pointerId) {
+    if (
+      Math.abs(e.clientX - pendingMultiSelectClick.clientX) >= 4 ||
+      Math.abs(e.clientY - pendingMultiSelectClick.clientY) >= 4
+    ) {
+      pendingMultiSelectClick = null
+    }
+  }
+
   if (marquee.value.active) {
     if (marquee.value.pointerId !== null && e.pointerId !== marquee.value.pointerId) return
     marquee.value.curX = e.clientX
@@ -744,6 +908,21 @@ function onViewportPointerMove(e: PointerEvent) {
 }
 
 function stopPanning(e?: PointerEvent) {
+  if (pendingMultiSelectClick && (!e || pendingMultiSelectClick.pointerId === e.pointerId)) {
+    const pending = pendingMultiSelectClick
+    pendingMultiSelectClick = null
+    if (e?.type === 'pointerup') {
+      if (pending.pickedId) {
+        store.selectedLayerIds = [pending.pickedId]
+        store.editingGroupId = pending.nextEditingGroupId
+        store.editingScope = isLayerInGlobalScope(store.doc, pending.pickedId) ? 'global' : 'scene'
+      } else {
+        store.selectedLayerIds = []
+        store.editingGroupId = null
+      }
+    }
+  }
+
   if (marquee.value.active && (!e || marquee.value.pointerId === null || e.pointerId === marquee.value.pointerId)) {
     if (marquee.value.pointerId !== null && viewportRef.value?.hasPointerCapture(marquee.value.pointerId)) {
       viewportRef.value.releasePointerCapture(marquee.value.pointerId)

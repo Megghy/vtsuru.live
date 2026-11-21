@@ -25,6 +25,7 @@ import type { FunctionTypes } from '@/api/generated/model'
 import type { PrepareAccountBiliAuthResponse } from '@/api/generated/model/prepareAccountBiliAuthResponse'
 import type { ResponseAccountInfo } from '@/api/generated/model/responseAccountInfo'
 import type { TempResponseAloginModel } from '@/api/generated/model/tempResponseAloginModel'
+import { identifyAnalyticsUser, resetAnalyticsUser } from '@/shared/services/analytics'
 import { persistedRemoveItem } from '@/shared/storage/persist'
 import { message } from '@/shared/utils'
 
@@ -44,6 +45,7 @@ function suppressDevAutoLogin() {
 export function logoutAccount() {
   suppressDevAutoLogin()
   stopUpdateAccountLoop()
+  resetAnalyticsUser()
   cookie.value = undefined
   ACCOUNT.value = {} as ResponseAccountInfo
   broadcastAuthSync({ type: 'logout' })
@@ -242,6 +244,7 @@ export type AccountSession = TempResponseAloginModel
 export function applyAccountSession(session: AccountSession) {
   isHandlingUnauthorized = false
   ACCOUNT.value = session.account
+  identifyAnalyticsUser(session.account)
   const nextCookie = { cookie: session.token, refreshDate: Date.now() }
   cookie.value = nextCookie
   broadcastAuthSync({ type: 'cookie-updated', cookie: nextCookie })

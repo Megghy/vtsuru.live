@@ -1,43 +1,71 @@
 <script setup lang="ts">
-import ArrowLeft24Filled from '@vicons/fluent/es/ArrowLeft24Filled'
-import ArrowRight24Filled from '@vicons/fluent/es/ArrowRight24Filled'
-import Ribbon24Filled from '@vicons/fluent/es/Ribbon24Filled'
+import { ArrowLeft, ArrowRight, Award, Dices } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import type { VoteOptionDto } from '@/api/generated/model'
-import type { VoteStandings } from '@/shared/utils/voteStandings'
+import type { VoteOptionDtoModel } from '@/api/vote'
+import { formatContribution, type VoteStandings } from '@/shared/utils/voteStandings'
 
 const props = defineProps<{
   banner: boolean
-  left: VoteOptionDto
-  right: VoteOptionDto
+  left: VoteOptionDtoModel
+  right: VoteOptionDtoModel
   standings: VoteStandings
   showResults: boolean
   isEnding: boolean
+  isPaused?: boolean
+  winnerByDraw?: boolean
   overtaking: number | null
+  leftColor?: string
+  rightColor?: string
 }>()
 
 const sides = computed(() => [props.left, props.right])
-const leftRatio = computed(() => (props.standings.total > 0 ? props.left.count / props.standings.total : 0.5))
+const duelCssVars = computed(() => {
+  const vars: Record<string, string> = {}
+  if (props.leftColor?.trim()) vars['--vote-left'] = props.leftColor.trim()
+  if (props.rightColor?.trim()) vars['--vote-right'] = props.rightColor.trim()
+  return vars
+})
+
+function scoreOf(option: VoteOptionDtoModel) {
+  return props.standings.useContribution ? (option.contribution ?? 0) : option.count
+}
+
+const totalScore = computed(() =>
+  props.standings.useContribution ? props.standings.totalContribution : props.standings.total,
+)
+
+const leftRatio = computed(() => (totalScore.value > 0 ? scoreOf(props.left) / totalScore.value : 0.5))
+
 const leaderSide = computed(() => {
   if (!props.showResults || !props.standings.leader) return null
   return props.standings.leader.index === props.left.index ? 'left' : 'right'
 })
+
 const statusLabel = computed(() => {
+  if (props.isPaused && !props.isEnding) return '已暂停'
   if (!props.showResults) return '结果未公开'
   if (!props.standings.total) return props.isEnding ? '无人投票' : '等待投票'
   if (!leaderSide.value) return props.isEnding ? '平票结束' : '平票'
-  return `${props.isEnding ? '胜出' : '领先'} ${props.standings.gap} 票`
+  if (props.isEnding && (props.winnerByDraw || props.standings.hasOverrideWinner)) {
+    return '抽签胜出'
+  }
+  const gapText = props.standings.useContribution
+    ? formatContribution(props.standings.gap)
+    : `${props.standings.gap} 票`
+  return `${props.isEnding ? '胜出' : '领先'} ${gapText}`
 })
+
 const statusDetail = computed(() =>
   leaderSide.value ? `${props.standings.leader!.text}，${statusLabel.value}` : statusLabel.value,
 )
 
-function isLeader(option: VoteOptionDto) {
+function isLeader(option: VoteOptionDtoModel) {
   return props.showResults && props.standings.leader?.index === option.index
 }
-function percent(option: VoteOptionDto) {
-  return props.standings.total > 0 ? `${((option.count / props.standings.total) * 100).toFixed(1)}%` : '0.0%'
+
+function percent(option: VoteOptionDtoModel) {
+  return totalScore.value > 0 ? `${((scoreOf(option) / totalScore.value) * 100).toFixed(1)}%` : '0.0%'
 }
 </script>
 
@@ -45,6 +73,7 @@ function percent(option: VoteOptionDto) {
   <section
     class="duel-comparison"
     :class="{ 'is-banner': banner }"
+    :style="duelCssVars"
   >
     <div class="duel-scoreboard">
       <div
@@ -72,23 +101,41 @@ function percent(option: VoteOptionDto) {
             v-if="isLeader(option)"
             class="duel-leader-badge"
           >
-            <Ribbon24Filled
-              v-if="isEnding"
+            <Dices
+              v-if="isEnding && (winnerByDraw || standings.hasOverrideWinner)"
               class="vote-icon"
-            />{{ isEnding ? '胜出' : '领先' }}
+            />
+            <Award
+              v-else-if="isEnding"
+              class="vote-icon"
+            />
+            {{ isEnding ? (winnerByDraw || standings.hasOverrideWinner ? '抽签胜出' : '胜出') : '领先' }}
           </span>
         </div>
         <div
           v-if="showResults"
           class="duel-stats"
         >
-          <span class="duel-votes"
-            ><span
+          <span
+            v-if="standings.useContribution"
+            class="duel-votes"
+          >
+            <span
+              :key="option.contribution"
+              class="vote-number"
+              >{{ formatContribution(option.contribution) }}</span
+            ><small>{{ option.count }}票</small>
+          </span>
+          <span
+            v-else
+            class="duel-votes"
+          >
+            <span
               :key="option.count"
               class="vote-number"
               >{{ option.count }}</span
-            ><small>票</small></span
-          >
+            ><small>票</small>
+          </span>
           <span class="duel-percent">{{ percent(option) }}</span>
         </div>
       </div>
@@ -99,12 +146,12 @@ function percent(option: VoteOptionDto) {
         :aria-label="statusDetail"
       >
         <div class="duel-status-label">
-          <ArrowLeft24Filled
+          <ArrowLeft
             v-if="leaderSide === 'left'"
             class="vote-icon direction-icon"
           />
           <strong>{{ statusLabel }}</strong>
-          <ArrowRight24Filled
+          <ArrowRight
             v-if="leaderSide === 'right'"
             class="vote-icon direction-icon"
           />
@@ -128,7 +175,7 @@ function percent(option: VoteOptionDto) {
       <!-- 中线固定在 50%，分界与填充使用未舍入的真实比例。零票仅显示中性轨道。 -->
       <div
         class="duel-track"
-        :class="{ 'has-votes': standings.total > 0 }"
+        :class="{ 'has-votes': totalScore > 0 }"
         aria-hidden="true"
       >
         <div
@@ -151,8 +198,8 @@ function percent(option: VoteOptionDto) {
 
 <style scoped>
 .duel-comparison {
-  --vote-left: #93c5fd;
-  --vote-right: #fca5a5;
+  --vote-left: #60a5fa;
+  --vote-right: #f87171;
   display: grid;
   gap: 12px;
 }
@@ -171,7 +218,7 @@ function percent(option: VoteOptionDto) {
   padding: 8px 10px;
   border: 1px solid transparent;
   border-radius: 8px;
-  background: rgb(255 255 255 / 3%);
+  background: rgb(255 255 255 / 4%);
 }
 .side-left {
   grid-area: left;
@@ -183,7 +230,7 @@ function percent(option: VoteOptionDto) {
 }
 .duel-side.is-leading {
   border-color: var(--side-color);
-  background: color-mix(in srgb, var(--side-color) 13%, transparent);
+  background: color-mix(in srgb, var(--side-color) 14%, transparent);
 }
 .duel-side.is-winner {
   border-color: #fcd34d;
@@ -200,39 +247,39 @@ function percent(option: VoteOptionDto) {
   justify-content: flex-end;
 }
 .duel-index {
-  font-size: 12px;
+  font-size: calc(12px * var(--vote-font-scale, 1));
   color: var(--side-color);
 }
 .duel-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: calc(14px * var(--vote-font-scale, 1));
   font-weight: 650;
 }
 .duel-leader-badge {
   display: inline-flex;
   align-items: center;
   flex: none;
-  gap: 2px;
+  gap: 3px;
   border-radius: 4px;
   padding: 2px 5px;
   color: #101827;
   background: var(--side-color);
-  font-size: 10px;
+  font-size: calc(10px * var(--vote-font-scale, 1));
   font-weight: 800;
 }
 .is-winner .duel-leader-badge {
   background: #fcd34d;
 }
 .duel-votes {
-  font-size: 24px;
+  font-size: calc(24px * var(--vote-font-scale, 1));
   font-weight: 750;
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
 }
 .duel-votes small {
-  font-size: 11px;
+  font-size: calc(11px * var(--vote-font-scale, 1));
   font-weight: 500;
   margin-left: 4px;
 }
@@ -241,8 +288,8 @@ function percent(option: VoteOptionDto) {
   font-weight: 850;
 }
 .duel-percent {
-  font-size: 12px;
-  color: #cbd5e1;
+  font-size: calc(12px * var(--vote-font-scale, 1));
+  color: var(--vote-text-muted, #cbd5e1);
   font-variant-numeric: tabular-nums;
 }
 .duel-stats {
@@ -254,8 +301,8 @@ function percent(option: VoteOptionDto) {
   grid-area: status;
   position: relative;
   text-align: center;
-  color: #cbd5e1;
-  font-size: 13px;
+  color: var(--vote-text-muted, #cbd5e1);
+  font-size: calc(13px * var(--vote-font-scale, 1));
   font-variant-numeric: tabular-nums;
 }
 .duel-status.left {
@@ -277,8 +324,8 @@ function percent(option: VoteOptionDto) {
   flex: none;
 }
 .direction-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .duel-overtake {
   position: absolute;
@@ -310,11 +357,11 @@ function percent(option: VoteOptionDto) {
   opacity: 1;
 }
 .duel-fill.side-left {
-  background: #60a5fa;
+  background: var(--vote-left);
   transform-origin: left;
 }
 .duel-fill.side-right {
-  background: #f87171;
+  background: var(--vote-right);
   transform-origin: right;
 }
 .duel-midline {
@@ -357,10 +404,10 @@ function percent(option: VoteOptionDto) {
     order: 1;
   }
   .is-banner .duel-votes {
-    font-size: 22px;
+    font-size: calc(22px * var(--vote-font-scale, 1));
   }
   .is-banner .duel-percent {
-    font-size: 11px;
+    font-size: calc(11px * var(--vote-font-scale, 1));
   }
 }
 @container vote-card (max-width: 520px) {
@@ -392,7 +439,7 @@ function percent(option: VoteOptionDto) {
     max-width: calc(100% - 24px);
   }
   .duel-votes {
-    font-size: 21px;
+    font-size: calc(21px * var(--vote-font-scale, 1));
   }
   .duel-overtake {
     position: static;

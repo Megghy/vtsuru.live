@@ -7,7 +7,7 @@ import JSZip from 'jszip'
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 
 import { formatDuration, formatFileSize } from '@/apps/manage/composables/formatters'
-import { trackManageToolSuccess } from '@/shared/services/umami'
+import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
