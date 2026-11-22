@@ -53,7 +53,7 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      draft.value = normalizeVoteConfig(structuredClone(props.config))
+      draft.value = normalizeVoteConfig(props.config)
       defaultOptionsText.value = (draft.value.defaultOptions ?? []).join('\n')
     }
   },
@@ -150,6 +150,14 @@ function handleSave() {
 
             <SettingRow
               variant="compact"
+              title="允许直接发送序号或选项投票"
+              description="开启后观众无需带命令前缀，直接发序号或选项文本即可计票；关闭则必须带命令前缀防误触"
+            >
+              <Switch v-model="draft.allowDirectVote" />
+            </SettingRow>
+
+            <SettingRow
+              variant="compact"
               title="允许观众自由提名新选项"
               description="观众发送「命令词 + 新内容」时自动新增选项"
             >
@@ -175,7 +183,14 @@ function handleSave() {
             <Separator />
 
             <div class="grid gap-3 sm:grid-cols-2">
-              <FormField label="弹幕投票命令前缀" description="观众发送「前缀 + 选项/序号」可触发">
+              <FormField
+                label="弹幕投票命令前缀"
+                :description="
+                  draft.allowDirectVote
+                    ? '带前缀投票或自由提名新选项时使用（如「投票 1」）'
+                    : '已关闭直接投票，观众必须发送「前缀 + 序号/选项」才计票'
+                "
+              >
                 <Input v-model="draft.voteCommand" maxlength="20" placeholder="投票" />
               </FormField>
 

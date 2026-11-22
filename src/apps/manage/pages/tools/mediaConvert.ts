@@ -29,6 +29,7 @@ export const formatMap = new Map(formats.map((f) => [f.value, f]))
 
 export interface ConvertSettings {
   format: OutputFormat
+  streamCopy: boolean
   // 视频编码
   videoCodec: VideoCodec
   videoPreset: string
@@ -70,8 +71,9 @@ export interface ConvertSettings {
 export function defaultSettings(): ConvertSettings {
   return {
     format: 'mp4',
+    streamCopy: false,
     videoCodec: 'h264',
-    videoPreset: 'medium',
+    videoPreset: 'veryfast',
     rateMode: 'crf',
     videoCrf: 28,
     targetSizeMb: 10,
@@ -118,26 +120,57 @@ export const presets: (Preset & { videoOnly?: boolean })[] = [
     label: '压到最小',
     desc: 'H.264 高压缩，限制 720p',
     videoOnly: true,
-    patch: { format: 'mp4', videoCrf: 30, videoMaxWidth: 1280, videoFps: 30, audioBitrate: 96 },
+    patch: { format: 'mp4', streamCopy: false, videoCrf: 30, videoMaxWidth: 1280, videoFps: 30, audioBitrate: 96 },
+  },
+  {
+    key: 'remux',
+    label: '无损快剪',
+    desc: '不重编码流拷贝，秒速截取片段或重封装 MP4',
+    videoOnly: true,
+    patch: {
+      format: 'mp4',
+      streamCopy: true,
+      videoMaxWidth: null,
+      videoFps: null,
+      rotate: 0,
+      flipH: false,
+      flipV: false,
+      brightness: 0,
+      contrast: 1,
+      saturation: 1,
+      sharpen: false,
+      deinterlace: false,
+      speed: 1,
+      videoFadeIn: 0,
+      videoFadeOut: 0,
+      sampleRate: null,
+      channelMode: 'keep',
+      volume: 100,
+      loudnorm: false,
+      audioFadeIn: 0,
+      audioFadeOut: 0,
+      highpass: null,
+      lowpass: null,
+    },
   },
   {
     key: 'mp3',
     label: '提取 MP3',
     desc: '从视频/音频提取 192k 音轨',
-    patch: { format: 'mp3', audioBitrate: 192, keepMetadata: true },
+    patch: { format: 'mp3', streamCopy: false, audioBitrate: 192, keepMetadata: true },
   },
   {
     key: 'gif',
     label: '转 GIF',
     desc: '480px / 15fps 动图',
     videoOnly: true,
-    patch: { format: 'gif', gifWidth: 480, gifFps: 15, gifLoop: true },
+    patch: { format: 'gif', streamCopy: false, gifWidth: 480, gifFps: 15, gifLoop: true },
   },
   {
     key: 'normalize',
     label: '响度标准化',
     desc: '统一音量，转 M4A',
-    patch: { format: 'm4a', loudnorm: true, volume: 100, audioBitrate: 192 },
+    patch: { format: 'm4a', streamCopy: false, loudnorm: true, volume: 100, audioBitrate: 192 },
   },
 ]
 
@@ -161,11 +194,50 @@ function trimArgs(trim: TrimRange): { pre: string[]; post: string[] } {
 }
 
 // 截取/倍速后的有效输出时长，用于目标体积码率计算和淡出定位。
-function effectiveDuration(srcDuration: number, trim: TrimRange, speed: number): number {
+export function effectiveDuration(srcDuration: number, trim: TrimRange, speed: number): number {
   const start = positive(trim.start)
   const end = positive(trim.end)
   const span = end > start ? end - start : srcDuration - start
   return Math.max(0.1, span / (speed || 1))
+}
+
+export function hasVideoFilters(s: ConvertSettings): boolean {
+  return (
+    s.videoMaxWidth !== null ||
+    s.videoFps !== null ||
+    s.rotate !== 0 ||
+    s.flipH ||
+    s.flipV ||
+    s.brightness !== 0 ||
+    s.contrast !== 1 ||
+    s.saturation !== 1 ||
+    s.sharpen ||
+    s.deinterlace ||
+    s.speed !== 1 ||
+    s.videoFadeIn > 0 ||
+    s.videoFadeOut > 0
+  )
+}
+
+export function hasAudioFilters(s: ConvertSettings): boolean {
+  return (
+    s.speed !== 1 ||
+    s.sampleRate !== null ||
+    s.channelMode !== 'keep' ||
+    s.loudnorm ||
+    s.volume !== 100 ||
+    s.audioFadeIn > 0 ||
+    s.audioFadeOut > 0 ||
+    s.highpass !== null ||
+    s.lowpass !== null
+  )
+}
+
+export function canStreamCopy(s: ConvertSettings): boolean {
+  if (!s.streamCopy) return false
+  const fmt = formatMap.get(s.format)
+  if (!fmt || fmt.kind !== 'video') return false
+  return !hasVideoFilters(s) && !hasAudioFilters(s)
 }
 
 // atempo 单次仅支持 0.5~2.0，超出范围串联多段。
@@ -234,7 +306,7 @@ function applyAudioCodec(args: string[], s: ConvertSettings, outDuration: number
 }
 
 // 目标体积 → 视频码率(kbps)：扣除音频占用，留 3% 容器余量。
-function targetVideoBitrate(s: ConvertSettings, outDuration: number): number {
+export function targetVideoBitrate(s: ConvertSettings, outDuration: number): number {
   const totalKbit = s.targetSizeMb * 8192
   const audioKbit = s.format === 'wav' ? 0 : s.audioBitrate * outDuration
   const videoKbit = (totalKbit - audioKbit) * 0.97
@@ -243,7 +315,7 @@ function targetVideoBitrate(s: ConvertSettings, outDuration: number): number {
 
 function applyVideoCodec(args: string[], s: ConvertSettings, outDuration: number) {
   if (s.format === 'webm') {
-    args.push('-c:v', 'libvpx-vp9')
+    args.push('-c:v', 'libvpx-vp9', '-deadline', 'good', '-cpu-used', '4', '-row-mt', '1')
     if (s.rateMode === 'targetSize') args.push('-b:v', `${targetVideoBitrate(s, outDuration)}k`)
     else args.push('-crf', String(s.videoCrf), '-b:v', '0')
     return
@@ -306,6 +378,9 @@ export function buildCommands(
   if (fmt.kind === 'audio') {
     args.push('-vn')
     applyAudioCodec(args, s, outDuration)
+  } else if (canStreamCopy(s)) {
+    args.push('-map', '0:v:0', '-map', '0:a?', '-c', 'copy')
+    if (s.format === 'mp4') args.push('-movflags', '+faststart')
   } else {
     args.push('-map', '0:v:0', '-map', '0:a?')
     const vf = videoFilterChain(s, s.videoMaxWidth, s.videoFps, outDuration)

@@ -15,8 +15,8 @@ function isPotentialVoteMessage(message: string, session: VoteSessionModel, conf
   const clean = message.trim()
   if (!clean) return false
 
-  const voteCommand = config?.voteCommand?.trim() || '投票'
-  const voteEndCommand = config?.voteEndCommand?.trim() || '结束投票'
+  const voteCommand = (config ? config.voteCommand : '投票')?.trim() ?? ''
+  const voteEndCommand = (config ? config.voteEndCommand : '结束投票')?.trim() ?? ''
   const lower = clean.toLowerCase()
 
   if (voteEndCommand && lower === voteEndCommand.toLowerCase()) return true
@@ -24,6 +24,8 @@ function isPotentialVoteMessage(message: string, session: VoteSessionModel, conf
     // 只发命令词本身不转发，避免无效请求
     return clean.slice(voteCommand.length).trim().length > 0
   }
+
+  if (config?.allowDirectVote === false && voteCommand) return false
 
   if (/^\d+$/.test(clean)) {
     const idx = Number(clean)

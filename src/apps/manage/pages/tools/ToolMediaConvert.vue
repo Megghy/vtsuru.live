@@ -4,7 +4,9 @@ import { fetchFile } from '@ffmpeg/util'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import { Cpu, Film, Music, Zap } from 'lucide-vue-next'
+import { ConversionCanceledError } from 'mediabunny'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 import { formatDuration, formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/analytics'
@@ -24,13 +26,30 @@ import { Tag } from '@/shared/ui/tag'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 
-import { buildCommands, defaultSettings, formatMap, formats, positive, presets, type Rotate } from './mediaConvert'
+import {
+  buildCommands,
+  canStreamCopy,
+  defaultSettings,
+  formatMap,
+  formats,
+  positive,
+  presets,
+  type Rotate,
+} from './mediaConvert'
 import MediaTrimmer from './MediaTrimmer.vue'
+import {
+  type AccelerationCapability,
+  type ConvertEngine,
+  detectAccelerationCapability,
+  getWebCodecsFallbackReason,
+  startWebCodecsConvert,
+  type WebCodecsTask,
+} from './webcodecsConvert'
 
 const message = useMessage()
 const ffmpeg = new FFmpeg()
 const ffmpegCoreVersion = '0.12.10'
-const ffmpegCoreBaseURL = `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${ffmpegCoreVersion}/dist/umd`
+const ffmpegCoreBaseURL = `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${ffmpegCoreVersion}/dist/esm`
 const ffmpegCoreURLs = {
   coreURL: `${ffmpegCoreBaseURL}/ffmpeg-core.js`,
   wasmURL: `${ffmpegCoreBaseURL}/ffmpeg-core.wasm`,
@@ -57,6 +76,8 @@ interface MediaItem {
   outputName: string
   outputSize: number
   outputUrl: string
+  engine: ConvertEngine | null
+  elapsedMs: number | null
   error: string
 }
 
@@ -74,14 +95,23 @@ const processing = ref(false)
 const currentItem = ref<MediaItem | null>(null)
 const processedCount = ref(0)
 const lastLog = ref('')
+const acceleration = ref<AccelerationCapability>('none')
 
 let canceled = false
+let activeWebCodecsTask: WebCodecsTask | null = null
+
+onMounted(() => {
+  void detectAccelerationCapability().then((cap) => {
+    acceleration.value = cap
+  })
+})
 
 const dropZoneRef = ref<HTMLElement>()
 const { isOverDropZone } = useDropZone(dropZoneRef, { onDrop: (files) => files && addFiles(files) })
 const { open: openFilePicker, onChange } = useFileDialog({
   accept: 'audio/*,video/*,.mkv,.flac,.opus,.ogg,.webm',
   multiple: true,
+  reset: true,
 })
 onChange((files) => files && addFiles(Array.from(files)))
 
@@ -150,9 +180,21 @@ const needsVideoSource = computed(() => selectedFormat.value.kind !== 'audio')
 const invalidItems = computed(() => (needsVideoSource.value ? items.value.filter((i) => !i.isVideo) : []))
 const canProcess = computed(() => pendingItems.value.length > 0 && !processing.value && !loadingCore.value)
 
+const isStreamCopyActive = computed(() => canStreamCopy(settings))
+const webCodecsFallbackReason = computed(() => getWebCodecsFallbackReason(settings))
+
+const accelerationLabel = computed(() => {
+  if (acceleration.value === 'hardware') return 'GPU 硬件加速'
+  if (acceleration.value === 'software') return 'WebCodecs 原生加速'
+  return 'FFmpeg 软解'
+})
+
 const statusText = computed(() => {
-  if (loadingCore.value) return '正在加载 FFmpeg 核心，首次使用会稍慢'
+  if (loadingCore.value) return '正在按需加载 FFmpeg 软解核心，首次使用会稍慢'
   if (processing.value && currentItem.value) return `正在处理：${currentItem.value.file.name}`
+  if (isStreamCopyActive.value) return '无损流拷贝模式：不重新编码，秒速出片'
+  if (webCodecsFallbackReason.value) return `${webCodecsFallbackReason.value}，所有处理均在本地完成`
+  if (acceleration.value === 'hardware') return '优先使用浏览器 WebCodecs GPU 硬件加速，不支持时自动回退 FFmpeg'
   return '所有处理都在浏览器本地完成，不会上传文件'
 })
 
@@ -197,6 +239,8 @@ function addFiles(files: File[]) {
       outputName: '',
       outputSize: 0,
       outputUrl: '',
+      engine: null,
+      elapsedMs: null,
       error: '',
     }
     items.value.push(item)
@@ -270,7 +314,6 @@ async function processAll() {
   processedCount.value = 0
   lastLog.value = ''
   try {
-    await loadCore()
     for (const item of queue) {
       if (canceled) break
       await processOne(item)
@@ -290,7 +333,7 @@ async function processAll() {
       message[failed ? 'warning' : 'success'](failed ? `处理完成，${failed} 个文件失败` : '全部处理完成')
     }
   } catch (error) {
-    if (!canceled) message.error(`FFmpeg 执行失败：${error instanceof Error ? error.message : error}`)
+    if (!canceled) message.error(`处理失败：${error instanceof Error ? error.message : error}`)
   } finally {
     processing.value = false
     currentItem.value = null
@@ -303,15 +346,27 @@ async function cancelAll() {
     currentItem.value.status = 'pending'
     currentItem.value.progress = 0
   }
-  ffmpeg.terminate()
+  const task = activeWebCodecsTask
+  activeWebCodecsTask = null
+  await task?.cancel().catch(() => undefined)
+  if (ffmpeg.loaded) ffmpeg.terminate()
 }
 
-async function processOne(item: MediaItem) {
-  resetOutput(item)
-  item.status = 'processing'
-  item.progress = 1
-  item.error = ''
-  currentItem.value = item
+function finalizeItem(item: MediaItem, blob: Blob, engine: ConvertEngine, startedAt: number) {
+  item.outputBlob = blob
+  item.outputKind = selectedFormat.value.kind
+  item.outputName = `${baseName(item.file.name)}.${settings.format}`
+  item.outputSize = blob.size
+  item.outputUrl = URL.createObjectURL(blob)
+  item.engine = engine
+  item.elapsedMs = Math.max(1, Math.round(performance.now() - startedAt))
+  item.progress = 100
+  item.status = 'done'
+}
+
+async function processWithFfmpeg(item: MediaItem, startedAt: number) {
+  await loadCore()
+  if (canceled) return
 
   const ext = fileExtension(item.file.name)
   const inputName = `input-${item.id}.${ext}`
@@ -338,19 +393,48 @@ async function processOne(item: MediaItem) {
     const data = (await ffmpeg.readFile(outputName)) as Uint8Array
     const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer
     const blob = new Blob([buffer], { type: selectedFormat.value.mime })
-    item.outputBlob = blob
-    item.outputKind = selectedFormat.value.kind
-    item.outputName = `${baseName(item.file.name)}.${settings.format}`
-    item.outputSize = blob.size
-    item.outputUrl = URL.createObjectURL(blob)
-    item.progress = 100
-    item.status = 'done'
-  } catch (error) {
-    if (canceled) return
-    item.status = 'error'
-    item.error = error instanceof Error ? error.message : String(error)
+    finalizeItem(item, blob, 'ffmpeg', startedAt)
   } finally {
     if (!canceled) for (const path of written) await ffmpeg.deleteFile(path).catch(() => undefined)
+  }
+}
+
+async function processOne(item: MediaItem) {
+  resetOutput(item)
+  item.status = 'processing'
+  item.progress = 1
+  item.error = ''
+  currentItem.value = item
+  const startedAt = performance.now()
+
+  try {
+    lastLog.value = webCodecsFallbackReason.value ? '使用 FFmpeg 处理中…' : '正在使用 WebCodecs 加速处理…'
+    const task = startWebCodecsConvert({
+      file: item.file,
+      settings: { ...settings },
+      trim: { start: item.trimStart, end: item.trimEnd },
+      srcDuration: item.duration ?? 0,
+      onProgress: (p) => {
+        item.progress = Math.max(1, Math.min(99, Math.round(p * 100)))
+      },
+    })
+    activeWebCodecsTask = task
+    const fastResult = await task.promise
+    activeWebCodecsTask = null
+
+    if (canceled) return
+    if (fastResult) {
+      finalizeItem(item, fastResult.blob, fastResult.engine, startedAt)
+      return
+    }
+
+    lastLog.value = '回退到 FFmpeg 软解处理…'
+    await processWithFfmpeg(item, startedAt)
+  } catch (error) {
+    activeWebCodecsTask = null
+    if (canceled || error instanceof ConversionCanceledError) return
+    item.status = 'error'
+    item.error = error instanceof Error ? error.message : String(error)
   }
 }
 
@@ -390,6 +474,8 @@ function resetOutput(item: MediaItem) {
   item.outputName = ''
   item.outputSize = 0
   item.outputUrl = ''
+  item.engine = null
+  item.elapsedMs = null
 }
 
 function fileExtension(name: string) {
@@ -423,8 +509,22 @@ function statusVariant(item: MediaItem): 'secondary' | 'destructive' | 'default'
 function statusLabel(item: MediaItem) {
   return { done: '完成', error: '失败', processing: '处理中', pending: '待处理' }[item.status]
 }
+function engineLabel(engine: ConvertEngine) {
+  return {
+    'webcodecs-hw': 'GPU 硬件加速',
+    'webcodecs-sw': 'WebCodecs 原生',
+    'webcodecs-copy': '无损直出',
+    ffmpeg: 'FFmpeg 软解',
+  }[engine]
+}
+function formattedElapsed(ms: number | null) {
+  if (ms == null) return ''
+  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
+}
 
 onBeforeUnmount(() => {
+  canceled = true
+  void activeWebCodecsTask?.cancel().catch(() => undefined)
   clearAll()
   if (ffmpeg.loaded) ffmpeg.terminate()
 })
@@ -435,15 +535,31 @@ onBeforeUnmount(() => {
     <Card>
       <CardHeader class="flex flex-row items-center justify-between pb-4">
         <CardTitle class="text-base">音视频转换与压缩</CardTitle>
-        <span class="text-xs text-muted-foreground"> 浏览器本地处理 </span>
+        <div class="flex items-center gap-2">
+          <Tag
+            size="small"
+            :variant="acceleration === 'hardware' ? 'default' : 'secondary'"
+            class="inline-flex items-center gap-1"
+          >
+            <Zap
+              v-if="acceleration !== 'none'"
+              class="size-3"
+            />
+            <Cpu
+              v-else
+              class="size-3"
+            />
+            {{ accelerationLabel }}
+          </Tag>
+        </div>
       </CardHeader>
 
       <CardContent>
         <div class="flex flex-col gap-4">
           <Alert>
             <AlertDescription>
-              支持视频压缩、转
-              GIF、提取音频、格式互转与片段截取。全程在浏览器本地完成，不上传文件；大文件会占用较多内存和 CPU。
+              支持视频压缩、无损快剪、转 GIF、提取音频、格式互转与片段截取。常规视频/音频转换优先使用浏览器 WebCodecs
+              硬件加速，复杂滤镜与 GIF/MP3 自动回退 FFmpeg 本地处理，不上传文件。
             </AlertDescription>
           </Alert>
 
@@ -502,21 +618,31 @@ onBeforeUnmount(() => {
 
             <Tabs default-value="audio">
               <TabsList class="w-full grid grid-cols-5">
-                <TabsTrigger v-if="selectedFormat.kind === 'video'" value="video" >
+                <TabsTrigger
+                  v-if="selectedFormat.kind === 'video'"
+                  value="video"
+                >
                   编码
                 </TabsTrigger>
-                <TabsTrigger v-if="selectedFormat.kind === 'gif'" value="gif" >
+                <TabsTrigger
+                  v-if="selectedFormat.kind === 'gif'"
+                  value="gif"
+                >
                   GIF
                 </TabsTrigger>
-                <TabsTrigger v-if="selectedFormat.kind !== 'audio'" value="picture" >
+                <TabsTrigger
+                  v-if="selectedFormat.kind !== 'audio'"
+                  value="picture"
+                >
                   画面
                 </TabsTrigger>
-                <TabsTrigger v-if="selectedFormat.kind !== 'audio'" value="speed" >
+                <TabsTrigger
+                  v-if="selectedFormat.kind !== 'audio'"
+                  value="speed"
+                >
                   速度
                 </TabsTrigger>
-                <TabsTrigger value="audio" >
-                  音频
-                </TabsTrigger>
+                <TabsTrigger value="audio"> 音频 </TabsTrigger>
               </TabsList>
 
               <!-- 视频编码 -->
@@ -525,139 +651,154 @@ onBeforeUnmount(() => {
                 value="video"
                 class="space-y-3 pt-2"
               >
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  <FormField
-                    v-if="settings.format === 'mp4'"
-                    label="编码器"
-                    class="min-w-0"
-                  >
-                    <Select v-model="settings.videoCodec">
-                      <SelectTrigger class="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          v-for="opt in videoCodecOptions"
-                          :key="opt.value"
-                          :value="opt.value"
-                        >
-                          {{ opt.label }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormField>
-                  <FormField
-                    label="最大宽度"
-                    class="min-w-0"
-                  >
-                    <Select
-                      :model-value="settings.videoMaxWidth === null ? 'null' : String(settings.videoMaxWidth)"
-                      @update:model-value="(v) => (settings.videoMaxWidth = v === 'null' ? null : Number(v))"
+                <SettingRow
+                  title="无损直出（流拷贝）"
+                  description="不重新编码，秒速截取或重封装；若启用了缩放/帧率/滤镜则自动转为编码模式"
+                  variant="compact"
+                >
+                  <Switch
+                    :checked="settings.streamCopy"
+                    @update:checked="(v) => (settings.streamCopy = v)"
+                  />
+                </SettingRow>
+                <div
+                  v-if="!isStreamCopyActive"
+                  class="space-y-3"
+                >
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <FormField
+                      v-if="settings.format === 'mp4'"
+                      label="编码器"
+                      class="min-w-0"
                     >
-                      <SelectTrigger class="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          v-for="opt in videoMaxWidthOptions"
-                          :key="String(opt.value)"
-                          :value="String(opt.value)"
-                        >
-                          {{ opt.label }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormField>
-                  <FormField
-                    label="帧率"
-                    class="min-w-0"
-                  >
-                    <Select
-                      :model-value="settings.videoFps === null ? 'null' : String(settings.videoFps)"
-                      @update:model-value="(v) => (settings.videoFps = v === 'null' ? null : Number(v))"
+                      <Select v-model="settings.videoCodec">
+                        <SelectTrigger class="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem
+                            v-for="opt in videoCodecOptions"
+                            :key="opt.value"
+                            :value="opt.value"
+                          >
+                            {{ opt.label }}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+                    <FormField
+                      label="最大宽度"
+                      class="min-w-0"
                     >
-                      <SelectTrigger class="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          v-for="opt in videoFpsOptions"
-                          :key="String(opt.value)"
-                          :value="String(opt.value)"
-                        >
-                          {{ opt.label }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <Select
+                        :model-value="settings.videoMaxWidth === null ? 'null' : String(settings.videoMaxWidth)"
+                        @update:model-value="(v) => (settings.videoMaxWidth = v === 'null' ? null : Number(v))"
+                      >
+                        <SelectTrigger class="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem
+                            v-for="opt in videoMaxWidthOptions"
+                            :key="String(opt.value)"
+                            :value="String(opt.value)"
+                          >
+                            {{ opt.label }}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+                    <FormField
+                      label="帧率"
+                      class="min-w-0"
+                    >
+                      <Select
+                        :model-value="settings.videoFps === null ? 'null' : String(settings.videoFps)"
+                        @update:model-value="(v) => (settings.videoFps = v === 'null' ? null : Number(v))"
+                      >
+                        <SelectTrigger class="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem
+                            v-for="opt in videoFpsOptions"
+                            :key="String(opt.value)"
+                            :value="String(opt.value)"
+                          >
+                            {{ opt.label }}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+                    <FormField
+                      v-if="settings.format === 'mp4'"
+                      label="编码速度（越慢压缩越好）"
+                      class="min-w-0"
+                    >
+                      <Select v-model="settings.videoPreset">
+                        <SelectTrigger class="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem
+                            v-for="opt in videoPresetOptions"
+                            :key="opt.value"
+                            :value="opt.value"
+                          >
+                            {{ opt.label }}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+                  </div>
+
+                  <div class="flex justify-center mt-2">
+                    <ToggleGroup
+                      type="single"
+                      :model-value="settings.rateMode"
+                      @update:model-value="
+                        (val) => {
+                          if (val) settings.rateMode = val as any
+                        }
+                      "
+                    >
+                      <ToggleGroupItem value="crf"> 画质优先 (CRF) </ToggleGroupItem>
+                      <ToggleGroupItem value="targetSize"> 目标体积 </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+
+                  <FormField
+                    v-if="settings.rateMode === 'crf'"
+                    label="视频质量 CRF"
+                    :extra="settings.videoCrf"
+                    description="越小画质越高、体积越大"
+                  >
+                    <Slider
+                      :model-value="[settings.videoCrf]"
+                      :min="18"
+                      :max="36"
+                      :step="1"
+                      @update:model-value="
+                        (val) => {
+                          if (val?.[0] !== undefined) settings.videoCrf = val[0]
+                        }
+                      "
+                    />
                   </FormField>
                   <FormField
-                    v-if="settings.format === 'mp4'"
-                    label="编码速度（越慢压缩越好）"
-                    class="min-w-0"
+                    v-else
+                    label="目标体积（每个文件，MB）"
+                    description="按文件时长自动计算码率，适配 B 站群文件 / 动态大小限制"
+                    class="max-w-[280px]"
                   >
-                    <Select v-model="settings.videoPreset">
-                      <SelectTrigger class="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          v-for="opt in videoPresetOptions"
-                          :key="opt.value"
-                          :value="opt.value"
-                        >
-                          {{ opt.label }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <NumberField
+                      v-model="settings.targetSizeMb"
+                      :min="1"
+                      :max="2000"
+                      :step="1"
+                    />
                   </FormField>
                 </div>
-
-                <div class="flex justify-center mt-2">
-                  <ToggleGroup
-                    type="single"
-                    :model-value="settings.rateMode"
-                    @update:model-value="(val) => { if (val) settings.rateMode = val as any }"
-                  >
-                    <ToggleGroupItem value="crf">
-                      画质优先 (CRF)
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="targetSize">
-                      目标体积
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-
-                <FormField
-                  v-if="settings.rateMode === 'crf'"
-                  label="视频质量 CRF"
-                  :extra="settings.videoCrf"
-                  description="越小画质越高、体积越大"
-                >
-                  <Slider
-                    :model-value="[settings.videoCrf]"
-                    :min="18"
-                    :max="36"
-                    :step="1"
-                    @update:model-value="
-                      (val) => {
-                        if (val?.[0] !== undefined) settings.videoCrf = val[0]
-                      }
-                    "
-                  />
-                </FormField>
-                <FormField
-                  v-else
-                  label="目标体积（每个文件，MB）"
-                  description="按文件时长自动计算码率，适配 B 站群文件 / 动态大小限制"
-                  class="max-w-[280px]"
-                >
-                  <NumberField
-                    v-model="settings.targetSizeMb"
-                    :min="1"
-                    :max="2000"
-                    :step="1"
-                  />
-                </FormField>
               </TabsContent>
 
               <!-- GIF -->
@@ -1196,12 +1337,14 @@ onBeforeUnmount(() => {
                   :src="item.poster"
                   alt=""
                 />
-                <span
+                <Film
+                  v-else-if="item.isVideo"
+                  class="size-5 text-muted-foreground"
+                />
+                <Music
                   v-else
-                  class="thumb-icon"
-                >
-                  {{ item.isVideo ? '🎬' : '🎵' }}
-                </span>
+                  class="size-5 text-muted-foreground"
+                />
               </div>
 
               <div class="item-main">
@@ -1217,6 +1360,15 @@ onBeforeUnmount(() => {
                     :variant="statusVariant(item)"
                   >
                     {{ statusLabel(item) }}
+                  </Tag>
+                  <Tag
+                    v-if="item.engine"
+                    size="small"
+                    :variant="item.engine === 'ffmpeg' ? 'outline' : 'secondary'"
+                    class="tabular-nums"
+                  >
+                    {{ engineLabel(item.engine)
+                    }}<template v-if="item.elapsedMs"> · {{ formattedElapsed(item.elapsedMs) }}</template>
                   </Tag>
                 </div>
 
@@ -1254,7 +1406,12 @@ onBeforeUnmount(() => {
                   {{ item.error }}
                 </span>
 
-                <Button size="xs" variant="ghost" class="trim-toggle px-1.5 text-muted-foreground" @click="item.expanded = !item.expanded">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="trim-toggle px-1.5 text-muted-foreground"
+                  @click="item.expanded = !item.expanded"
+                >
                   {{ item.expanded ? '收起预览/截取' : '预览 / 截取片段' }}
                 </Button>
 
@@ -1438,10 +1595,6 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.thumb-icon {
-  font-size: 24px;
 }
 
 .item-main {

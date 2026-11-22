@@ -59,6 +59,7 @@ export interface VoteTemplateItem {
 }
 
 export interface VoteConfigModel extends Omit<VoteConfig, 'voteResultMode'> {
+  allowDirectVote: boolean
   multiVoteMode: VoteMultiMode
   maxCustomOptions: number
   giftVoteStep: number
@@ -151,6 +152,7 @@ export function createDefaultVoteConfig(): VoteConfigModel {
     voteDurationSeconds: 60,
     voteCommand: '投票',
     voteEndCommand: '结束投票',
+    allowDirectVote: true,
     voteTitle: '观众投票',
     allowMultipleVotes: false,
     multiVoteMode: VoteMultiMode.Single,
@@ -189,17 +191,22 @@ export function createDefaultVoteConfig(): VoteConfigModel {
 export function normalizeVoteConfig(raw?: Partial<VoteConfigModel> | null): VoteConfigModel {
   const base = createDefaultVoteConfig()
   const merged = { ...base, ...raw }
+  merged.allowDirectVote = raw?.allowDirectVote ?? true
   if (raw?.multiVoteMode === undefined && raw?.allowMultipleVotes) {
     merged.multiVoteMode = VoteMultiMode.MultiUnlimited
   }
   merged.allowMultipleVotes =
     merged.multiVoteMode === VoteMultiMode.MultiOncePerOption || merged.multiVoteMode === VoteMultiMode.MultiUnlimited
-  if (!Array.isArray(merged.defaultOptions) || merged.defaultOptions.length < 2) {
-    merged.defaultOptions = ['选项1', '选项2']
-  }
-  if (!Array.isArray(merged.templates)) {
-    merged.templates = []
-  }
+  merged.defaultOptions =
+    Array.isArray(merged.defaultOptions) && merged.defaultOptions.length >= 2
+      ? [...merged.defaultOptions]
+      : ['选项1', '选项2']
+  merged.templates = Array.isArray(merged.templates)
+    ? merged.templates.map((tpl) => ({
+        ...tpl,
+        options: Array.isArray(tpl.options) ? [...tpl.options] : [],
+      }))
+    : []
   return merged
 }
 

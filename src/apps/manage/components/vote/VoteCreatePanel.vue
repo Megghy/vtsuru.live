@@ -208,7 +208,12 @@ defineExpose({ fillFromHistory })
           <div>
             <CardTitle class="text-sm font-semibold">发起新投票</CardTitle>
             <CardDescription class="text-xs">
-              观众发送序号、选项文本或「{{ config.voteCommand || '投票' }} 选项」即可参与
+              <template v-if="config.allowDirectVote || !config.voteCommand?.trim()">
+                观众发送序号、选项文本或「{{ config.voteCommand || '投票' }} 选项」即可参与
+              </template>
+              <template v-else>
+                观众发送「{{ config.voteCommand }} 序号」或「{{ config.voteCommand }} 选项」即可参与
+              </template>
             </CardDescription>
           </div>
           <div class="flex flex-wrap items-center gap-1">
