@@ -266,6 +266,8 @@ export function cloneLayerSubtree(
 export function resolveCommonParentForGrouping(doc: ObsSceneDocument, layerIds: string[]): ParentContainerRef | null {
   const uniqueIds = [...new Set(layerIds)].filter((id) => Boolean(doc.layers[id]))
   if (uniqueIds.length < 2) return null
+  // obs-source 仅允许置于子场景顶层作为 Z 轴切分边界，不能编入分组
+  if (uniqueIds.some((id) => doc.layers[id]?.type === 'obs-source')) return null
   const firstParent = findParentContainer(doc, uniqueIds[0])
   if (!firstParent) return null
   for (let i = 1; i < uniqueIds.length; i++) {
@@ -365,6 +367,7 @@ export function moveLayerIntoGroupInDoc(
   const targetGroup = doc.layers[targetGroupId]
   const layer = doc.layers[layerId]
   if (!targetGroup || targetGroup.type !== 'group' || !layer) return false
+  if (layer.type === 'obs-source') return false
   if (isDescendantOf(doc, layerId, targetGroupId)) return false
 
   const oldParent = findParentContainer(doc, layerId)
@@ -415,6 +418,7 @@ export function moveLayerToContainerInDoc(
 
   const layer = doc.layers[layerId]
   if (!layer) return false
+  if (layer.type === 'obs-source' && targetScope === 'global') return false
   const oldParent = findParentContainer(doc, layerId)
   if (!oldParent) return false
 

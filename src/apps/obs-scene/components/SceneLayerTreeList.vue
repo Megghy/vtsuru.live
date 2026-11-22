@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   Box,
+  Camera,
   ChevronDown,
   ChevronRight,
   Eye,
@@ -10,18 +11,22 @@ import {
   FolderOpen,
   FolderOutput,
   GalleryHorizontalEnd,
+  Gamepad2,
   Globe,
   GripVertical,
   Image as ImageIcon,
   Images,
+  Layers,
   Lock,
   MessageSquareText,
   MoveHorizontal,
   Puzzle,
+  Sparkles,
   Trash2,
   Type,
   Ungroup,
   Unlock,
+  UserRound,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -90,6 +95,12 @@ function getLayerTypeIcon(layer: ObsSceneLayer) {
       return Puzzle
     case 'obs-module':
       return MessageSquareText
+    case 'obs-source':
+      if (layer.obsSource.role === 'vts') return Sparkles
+      if (layer.obsSource.role === 'avatar') return UserRound
+      if (layer.obsSource.role === 'game') return Gamepad2
+      if (layer.obsSource.role === 'camera') return Camera
+      return Layers
     case 'marquee':
       return layer.marquee.mode === 'image' ? GalleryHorizontalEnd : MoveHorizontal
     case 'slideshow':
@@ -117,6 +128,10 @@ function getLayerSubtitle(layer: ObsSceneLayer): string {
   }
   if (layer.type === 'obs-module') {
     return getObsModuleById(layer.module.moduleId)?.name ?? layer.module.moduleId
+  }
+  if (layer.type === 'obs-source') {
+    const tag = layer.obsSource.controller.type === 'vts' ? 'VTS' : 'OBS'
+    return layer.obsSource.sourceName ? `${tag} · ${layer.obsSource.sourceName}` : `${tag} · 未绑定本地源`
   }
   if (layer.type === 'marquee') {
     return layer.marquee.mode === 'image' ? '图片走马灯' : '文字走马灯'
@@ -214,7 +229,13 @@ function toggleLayerLock(layer: ObsSceneLayer) {
         <component
           :is="getLayerTypeIcon(layer)"
           class="w-3.5 h-3.5 shrink-0"
-          :class="layer.type === 'group' ? 'text-amber-500' : 'text-primary/80'"
+          :class="
+            layer.type === 'group'
+              ? 'text-amber-500'
+              : layer.type === 'obs-source'
+                ? 'text-violet-500'
+                : 'text-primary/80'
+          "
         />
 
         <div class="flex-1 min-w-0">

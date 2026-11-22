@@ -31,6 +31,7 @@ const props = defineProps<{
   referenceItems?: RpcObsSceneItemRef[]
   referenceCanvasSize?: { width: number; height: number }
   showReferenceOverlay?: boolean
+  sourcePreviews?: Record<string, string>
 }>()
 
 const store = useObsSceneEditorStore()
@@ -1127,6 +1128,7 @@ onBeforeUnmount(() => {
         :reference-items="props.referenceItems"
         :reference-canvas-size="props.referenceCanvasSize"
         :show-reference-overlay="props.showReferenceOverlay"
+        :source-previews="props.sourcePreviews"
       />
     </div>
 

@@ -445,8 +445,9 @@ export const useObsSceneEditorStore = defineStore('obsSceneEditor', () => {
   // ---- 图层操作 ----
 
   function addLayer(layer: ObsSceneLayer, scope: 'scene' | 'global' = editingScope.value) {
+    const resolvedScope = layer.type === 'obs-source' ? 'scene' : scope
     doc.value.layers[layer.id] = layer
-    if (scope === 'global') {
+    if (resolvedScope === 'global') {
       doc.value.globalLayerIds.push(layer.id)
       editingScope.value = 'global'
     } else if (activeScene.value) {
@@ -519,7 +520,12 @@ export const useObsSceneEditorStore = defineStore('obsSceneEditor', () => {
   }
 
   function moveLayerScope(layerId: string, toScope: 'scene' | 'global') {
-    if (!doc.value.layers[layerId] || !activeScene.value) return
+    const targetLayer = doc.value.layers[layerId]
+    if (!targetLayer || !activeScene.value) return
+    if (targetLayer.type === 'obs-source' && toScope === 'global') {
+      toast.warning('本地 OBS 源图层仅支持放在子场景顶层')
+      return
+    }
     // 若图层原本在组内，先移出组再切换作用域，避免悬空引用
     while (getParentGroupId(doc.value, layerId)) {
       if (!moveLayerOutOfGroupInDoc(doc.value, layerId)) break
@@ -645,6 +651,11 @@ export const useObsSceneEditorStore = defineStore('obsSceneEditor', () => {
   }
 
   function moveLayerToContainer(layerId: string, targetGroupId: string | null, insertIndex?: number) {
+    const layer = doc.value.layers[layerId]
+    if (layer?.type === 'obs-source' && targetGroupId) {
+      toast.warning('本地 OBS 源图层不能移入分组，需保持在子场景顶层以参与 Z 轴分层')
+      return
+    }
     const ok = moveLayerToContainerInDoc(doc.value, layerId, editingScope.value, targetGroupId, insertIndex)
     if (!ok) return
     if (targetGroupId) {

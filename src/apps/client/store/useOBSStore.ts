@@ -4,11 +4,17 @@ import { ref } from 'vue'
 
 import {
   fetchObsSceneItems,
+  fetchObsSourceScreenshot,
   fetchObsVideoCanvasSize,
+  syncObsSceneLayout,
   upsertObsBrowserSource,
 } from '@/shared/obs/obsWebsocketScene'
 import type {
   RpcObsSceneItemsResult,
+  RpcObsSourceScreenshotParams,
+  RpcObsSourceScreenshotResult,
+  RpcObsSyncSceneLayoutParams,
+  RpcObsSyncSceneLayoutResult,
   RpcObsUpsertBrowserSourceParams,
   RpcObsUpsertBrowserSourceResult,
 } from '@/shared/rpc/contract'
@@ -599,6 +605,24 @@ export const useOBSStore = defineStore('obs', () => {
     return upsertObsBrowserSource(obs, params)
   }
 
+  async function getSourceScreenshot(
+    params: RpcObsSourceScreenshotParams,
+  ): Promise<RpcObsSourceScreenshotResult> {
+    if (!obs || !obsConnected.value) {
+      return { ok: false, message: 'OBS 未连接' }
+    }
+    return fetchObsSourceScreenshot(obs, params)
+  }
+
+  async function syncSceneLayout(
+    params: RpcObsSyncSceneLayoutParams,
+  ): Promise<RpcObsSyncSceneLayoutResult> {
+    if (!obs || !obsConnected.value) {
+      return { ok: false, message: 'OBS 未连接，请先在客户端中连接 OBS WebSocket' }
+    }
+    return syncObsSceneLayout(obs, params)
+  }
+
   // 保存场景配置
   async function saveSceneConfig() {
     try {
@@ -696,6 +720,8 @@ export const useOBSStore = defineStore('obs', () => {
     getVideoCanvasSize,
     getSceneItems,
     upsertBrowserSource,
+    getSourceScreenshot,
+    syncSceneLayout,
     saveSceneConfig,
     loadSceneConfig,
     loadObsConfig,

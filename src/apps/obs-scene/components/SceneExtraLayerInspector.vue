@@ -21,6 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
 import type { MarqueeImageItem, MarqueeLayer, SlideshowLayer } from '../types'
 import { createShortId } from '../types'
+import SceneHelpTip from './SceneHelpTip.vue'
 
 const props = defineProps<{
   layer: MarqueeLayer | SlideshowLayer
@@ -126,7 +127,10 @@ function removeImageItem(id: string) {
     v-if="marqueeLayer"
     class="space-y-3"
   >
-    <div class="text-xs font-semibold text-foreground">走马灯设置</div>
+    <div class="flex items-center gap-1 text-xs font-semibold text-foreground">
+      <span>走马灯设置</span>
+      <SceneHelpTip text="支持多条文字公告或图片贴纸无缝循环滚动，适合直播间底部公告栏与赞助展示。" />
+    </div>
 
     <FormField label="内容类型">
       <ToggleGroup
@@ -437,7 +441,10 @@ function removeImageItem(id: string) {
     v-else-if="slideshowLayer"
     class="space-y-3"
   >
-    <div class="text-xs font-semibold text-foreground">图片轮播设置</div>
+    <div class="flex items-center gap-1 text-xs font-semibold text-foreground">
+      <span>图片轮播设置</span>
+      <SceneHelpTip text="按设定间隔自动循环播放多张海报或活动宣传图，支持淡入与滑动切换动画。" />
+    </div>
 
     <div class="grid grid-cols-2 gap-2">
       <FormField

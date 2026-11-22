@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import {
   Box,
+  Camera,
   Copy,
   Film,
   FolderPlus,
   GalleryHorizontalEnd,
+  Gamepad2,
   Globe,
   Group,
   Image as ImageIcon,
@@ -19,6 +21,7 @@ import {
   Trash2,
   Type,
   Ungroup,
+  UserRound,
 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
@@ -40,12 +43,13 @@ import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
-import type { ObsModuleId } from '../types'
+import type { ObsModuleId, ObsSourceRole } from '../types'
 import {
   createIframeLayer,
   createImageLayer,
   createMarqueeLayer,
   createObsModuleLayer,
+  createObsSourceLayer,
   createShapeLayer,
   createSlideshowLayer,
   createTextLayer,
@@ -54,6 +58,7 @@ import {
   formatCleanWidgetName,
   OBS_MODULE_LIST,
 } from '../types'
+import SceneHelpTip from './SceneHelpTip.vue'
 import SceneLayerTreeList from './SceneLayerTreeList.vue'
 
 const props = defineProps<{
@@ -95,6 +100,10 @@ function addObsModule(moduleId: ObsModuleId) {
   store.addLayer(createObsModuleLayer(moduleId, store.doc.canvas))
 }
 
+function addObsSource(role: ObsSourceRole) {
+  store.addLayer(createObsSourceLayer(role, store.doc.canvas), 'scene')
+}
+
 function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slideshow' | 'shape' | 'image' | 'video' | 'iframe') {
   const c = store.doc.canvas
   if (kind === 'text') store.addLayer(createTextLayer(c))
@@ -117,6 +126,11 @@ function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slides
           <Sparkles class="w-3.5 h-3.5 text-primary" />
           <span>子场景</span>
           <Badge variant="secondary">{{ store.doc.sceneOrder.length }}</Badge>
+          <SceneHelpTip
+            side="right"
+            compact
+            text="可在同一项目里建多个子场景（如杂谈、游戏、歌回），支持过渡动效切换，也可绑定本地 OBS 场景自动跟随切场。"
+          />
         </div>
         <Button variant="ghost" size="xs" class="shrink-0 whitespace-nowrap" title="新建子场景" @click="store.addScene()">
           <Plus class="w-3.5 h-3.5" />
@@ -207,10 +221,15 @@ function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slides
 
     <!-- 下半区：图层列表（场景层 / 全局常驻层） -->
     <div class="flex-1 flex flex-col min-h-0">
-      <div class="flex-between px-3 py-2 border-b border-border gap-2">
-        <div class="flex items-center gap-1.5 text-xs font-semibold text-foreground whitespace-nowrap shrink-0">
+      <div class="flex-between px-2.5 py-2 border-b border-border gap-1">
+        <div class="flex items-center gap-1 text-xs font-semibold text-foreground whitespace-nowrap shrink-0">
           <Layers class="w-3.5 h-3.5 text-primary" />
           <span>图层</span>
+          <SceneHelpTip
+            side="right"
+            compact
+            text="列表越靠上显示在越前面（Z 轴越高）。可拖拽调序或拖入分组；本地模型/采集源放在顶层以自动切分前后景。"
+          />
         </div>
 
         <div class="flex items-center gap-1 shrink-0">
@@ -227,12 +246,40 @@ function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slides
 
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="default" size="xs" class="shrink-0 whitespace-nowrap">
+              <Button
+                variant="default"
+                size="xs"
+                class="shrink-0 whitespace-nowrap px-2"
+                title="添加图层、本地模型或直播组件"
+              >
                 <Plus class="w-3.5 h-3.5" />
-                <span>添加元素</span>
+                <span>添加</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-60 max-h-[72vh] overflow-y-auto scrollbar-thin">
+              <DropdownMenuLabel>本地源 / VTuber 模型 (OBS)</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem @select="addObsSource('vts')">
+                  <Sparkles class="w-3.5 h-3.5 mr-2 text-violet-500" />
+                  <span class="flex-1 truncate">VTube Studio 皮套</span>
+                  <span class="text-[10px] text-muted-foreground">VTS 联动</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="addObsSource('avatar')">
+                  <UserRound class="w-3.5 h-3.5 mr-2 text-violet-500" />
+                  <span class="flex-1 truncate">其他 VTuber 模型</span>
+                  <span class="text-[10px] text-muted-foreground">Spout2/透明</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="addObsSource('game')">
+                  <Gamepad2 class="w-3.5 h-3.5 mr-2 text-violet-500" />
+                  <span class="flex-1 truncate">游戏 / 窗口捕获</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="addObsSource('camera')">
+                  <Camera class="w-3.5 h-3.5 mr-2 text-violet-500" />
+                  <span class="flex-1 truncate">摄像头 / 采集卡</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+
+              <DropdownMenuSeparator />
               <DropdownMenuLabel>常用创意与媒体</DropdownMenuLabel>
               <DropdownMenuGroup>
                 <DropdownMenuItem @select="store.addEmptyGroup()">
@@ -310,16 +357,22 @@ function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slides
       </div>
 
       <div class="px-2 pt-2 space-y-1.5">
-        <Tabs v-model="store.editingScope" class="w-full">
-          <TabsList class="w-full grid grid-cols-2">
-            <TabsTrigger value="scene">
-              当前场景 ({{ store.activeScene?.layerIds.length ?? 0 }})
-            </TabsTrigger>
-            <TabsTrigger value="global">
-              全局常驻 ({{ store.doc.globalLayerIds.length }})
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div class="flex items-center gap-1.5">
+          <Tabs v-model="store.editingScope" class="flex-1 min-w-0">
+            <TabsList class="w-full grid grid-cols-2">
+              <TabsTrigger value="scene" class="px-1.5">
+                当前场景 ({{ store.activeScene?.layerIds.length ?? 0 }})
+              </TabsTrigger>
+              <TabsTrigger value="global" class="px-1.5">
+                全局常驻 ({{ store.doc.globalLayerIds.length }})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <SceneHelpTip
+            side="right"
+            text="当前场景：仅在对应子场景显示&#10;全局常驻：跨所有子场景始终置顶且切场不卸载，适合放弹幕机、台标或固定挂件"
+          />
+        </div>
 
         <!-- 分组快捷操作条：多选同级图层时一键编组，选中组时一键解组 -->
         <div
@@ -351,7 +404,7 @@ function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slides
 
       <ScrollArea class="flex-1">
         <div v-if="currentRootLayerIds.length === 0" class="px-4 py-8 text-center text-xs text-muted-foreground">
-          {{ store.editingScope === 'global' ? '暂无全局常驻图层' : '当前场景暂无图层，点击右上角「添加元素」开始排版' }}
+          {{ store.editingScope === 'global' ? '暂无全局常驻图层' : '当前场景暂无图层，点击右上角「添加」开始排版' }}
         </div>
 
         <SceneLayerTreeList

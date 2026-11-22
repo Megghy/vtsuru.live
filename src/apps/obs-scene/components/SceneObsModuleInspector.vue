@@ -21,6 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
 import type { ObsModuleLayer } from '../types'
 import { getObsModuleById } from '../types'
+import SceneHelpTip from './SceneHelpTip.vue'
 
 const props = defineProps<{
   layer: ObsModuleLayer
@@ -187,7 +188,10 @@ function openManagePage() {
 <template>
   <section class="space-y-3">
     <div class="flex-between gap-2">
-      <span class="text-xs font-semibold text-foreground">站内直播组件</span>
+      <div class="flex items-center gap-1">
+        <span class="text-xs font-semibold text-foreground">站内直播组件</span>
+        <SceneHelpTip text="直接内嵌 VTsuru 实时互动模块，播出时自动连接实时推送，无需在 OBS 逐个添加独立浏览器源。" />
+      </div>
       <Badge
         variant="outline"
         class="truncate max-w-[130px]"

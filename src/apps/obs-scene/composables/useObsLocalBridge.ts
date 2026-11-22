@@ -4,15 +4,23 @@ import { computed, onUnmounted, ref } from 'vue'
 
 import {
   fetchObsSceneItems,
+  fetchObsSourceScreenshot,
   fetchObsVideoCanvasSize,
+  syncObsSceneLayout,
   upsertObsBrowserSource,
 } from '@/shared/obs/obsWebsocketScene'
 import type { RpcClient } from '@/shared/rpc/client'
 import { connectLocalFetcher, probeLocalFetcher } from '@/shared/rpc/client'
 import type {
   RpcObsSceneItemRef,
+  RpcObsSourceScreenshotParams,
+  RpcObsSourceScreenshotResult,
+  RpcObsSyncSceneLayoutParams,
+  RpcObsSyncSceneLayoutResult,
   RpcObsUpsertBrowserSourceParams,
   RpcObsUpsertBrowserSourceResult,
+  RpcVtsSceneActionParams,
+  RpcVtsStatus,
 } from '@/shared/rpc/contract'
 
 export type ObsBridgeTransport = 'disconnected' | 'client-rpc' | 'direct-ws'
@@ -40,6 +48,9 @@ export function useObsLocalBridge() {
   const referenceSceneName = ref('')
   const referenceItems = ref<RpcObsSceneItemRef[]>([])
   const loadingReferences = ref(false)
+  const sourcePreviews = ref<Record<string, string>>({})
+  const vtsStatus = ref<RpcVtsStatus | null>(null)
+  const vtsConnected = computed(() => Boolean(vtsStatus.value?.connected))
 
   let rpcClient: RpcClient | null = null
   let directObs: OBSWebSocket | null = null
@@ -65,12 +76,16 @@ export function useObsLocalBridge() {
     transport.value = 'disconnected'
     scenes.value = []
     currentScene.value = ''
+    vtsStatus.value = null
   }
 
   async function disconnect() {
     if (rpcClient) {
       try {
-        await rpcClient.rpc.obsUnsubscribeEvents().catch(() => {})
+        await Promise.all([
+          rpcClient.rpc.obsUnsubscribeEvents().catch(() => {}),
+          rpcClient.rpc.vtsUnsubscribeEvents().catch(() => {}),
+        ])
       } finally {
         rpcClient.close()
         rpcClient = null
@@ -106,6 +121,9 @@ export function useObsLocalBridge() {
             baseWidth.value = status.baseWidth
             baseHeight.value = status.baseHeight
           },
+          onVtsStatusChanged: (status) => {
+            vtsStatus.value = status
+          },
         },
         () => {
           rpcClient = null
@@ -122,6 +140,15 @@ export function useObsLocalBridge() {
       currentScene.value = status.currentScene
       baseWidth.value = status.baseWidth
       baseHeight.value = status.baseHeight
+
+      // 兼容旧版本桌面客户端：VTS RPC 接口探测失败时不阻断 OBS 桥接
+      try {
+        await client.rpc.vtsSubscribeEvents()
+        vtsStatus.value = await client.rpc.vtsGetStatus()
+      } catch {
+        vtsStatus.value = null
+      }
+
       if (!status.connected) {
         error.value = '已连上桌面客户端，但客户端尚未连接 OBS WebSocket'
       }
@@ -271,6 +298,62 @@ export function useObsLocalBridge() {
     return { ok: false, message: '未建立有效连接' }
   }
 
+  async function captureSourceScreenshot(
+    params: RpcObsSourceScreenshotParams,
+  ): Promise<RpcObsSourceScreenshotResult> {
+    if (!connected.value) return { ok: false, message: 'OBS 未连接' }
+    const res =
+      transport.value === 'client-rpc' && rpcClient
+        ? await rpcClient.rpc.obsGetSourceScreenshot(params)
+        : directObs
+          ? await fetchObsSourceScreenshot(directObs, params)
+          : { ok: false, message: '未建立有效连接' }
+
+    if (res.ok && res.imageData) {
+      sourcePreviews.value = {
+        ...sourcePreviews.value,
+        [params.sourceName.trim()]: res.imageData,
+      }
+    }
+    return res
+  }
+
+  async function syncSceneLayoutToObs(
+    params: RpcObsSyncSceneLayoutParams,
+  ): Promise<RpcObsSyncSceneLayoutResult> {
+    if (!connected.value) return { ok: false, message: 'OBS 未连接' }
+    if (transport.value === 'client-rpc' && rpcClient) {
+      return rpcClient.rpc.obsSyncSceneLayout(params)
+    }
+    if (transport.value === 'direct-ws' && directObs) {
+      return syncObsSceneLayout(directObs, params)
+    }
+    return { ok: false, message: '未建立有效连接' }
+  }
+
+  async function refreshVtsStatus(): Promise<RpcVtsStatus | null> {
+    if (transport.value !== 'client-rpc' || !rpcClient) return null
+    try {
+      vtsStatus.value = await rpcClient.rpc.vtsGetStatus()
+      return vtsStatus.value
+    } catch {
+      return null
+    }
+  }
+
+  async function runVtsSceneAction(
+    params: RpcVtsSceneActionParams,
+  ): Promise<{ ok: boolean; message?: string }> {
+    if (transport.value !== 'client-rpc' || !rpcClient) {
+      return { ok: false, message: '请先运行并连接 VTsuru 桌面客户端以联动 VTube Studio' }
+    }
+    try {
+      return await rpcClient.rpc.vtsRunSceneAction(params)
+    } catch (err) {
+      return { ok: false, message: err instanceof Error ? err.message : String(err) }
+    }
+  }
+
   const transportLabel = computed(() => {
     if (transport.value === 'client-rpc') return connected.value ? '客户端 RPC 已连接' : '客户端未连 OBS'
     if (transport.value === 'direct-ws') return connected.value ? '浏览器直连 OBS' : '直连已断开'
@@ -298,6 +381,9 @@ export function useObsLocalBridge() {
     referenceSceneName,
     referenceItems,
     loadingReferences,
+    sourcePreviews,
+    vtsStatus,
+    vtsConnected,
     connectViaClientRpc,
     connectDirect,
     connectAuto,
@@ -307,6 +393,10 @@ export function useObsLocalBridge() {
     refreshSceneItems,
     clearReferenceItems,
     pushOverlayToObs,
+    captureSourceScreenshot,
+    syncSceneLayoutToObs,
+    refreshVtsStatus,
+    runVtsSceneAction,
     onObsSceneChanged,
   }
 }

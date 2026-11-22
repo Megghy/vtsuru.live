@@ -68,6 +68,84 @@ export interface RpcObsUpsertBrowserSourceResult {
   message?: string
 }
 
+export interface RpcObsSourceScreenshotParams {
+  sourceName: string
+  width?: number
+  height?: number
+}
+
+export interface RpcObsSourceScreenshotResult {
+  ok: boolean
+  imageData?: string
+  message?: string
+}
+
+export type RpcObsSceneLayoutItem =
+  | {
+      kind: 'browser-slot'
+      sourceName: string
+      url: string
+      width: number
+      height: number
+    }
+  | {
+      kind: 'obs-source'
+      sourceName: string
+      visible: boolean
+      applyTransform: boolean
+      x: number
+      y: number
+      width: number
+      height: number
+      rotation: number
+      crop?: {
+        top: number
+        right: number
+        bottom: number
+        left: number
+      }
+    }
+
+export interface RpcObsSyncSceneLayoutParams {
+  sceneName: string
+  canvasWidth: number
+  canvasHeight: number
+  /** bottom -> top 顺序 */
+  items: RpcObsSceneLayoutItem[]
+  /** 跨子场景保留但当前子场景为空的浏览器源（如需要自动补建但不销毁） */
+  unusedBrowserSlots?: Array<{
+    sourceName: string
+    url: string
+    width: number
+    height: number
+  }>
+}
+
+export interface RpcObsSyncSceneLayoutResult {
+  ok: boolean
+  message?: string
+  warnings?: string[]
+  syncedCount?: number
+}
+
+export interface RpcVtsStatus {
+  connected: boolean
+  modelName: string | null
+  presets: Array<{ id: string; name: string }>
+  expressions: Array<{ file: string; name: string; active: boolean }>
+  hotkeys: Array<{ hotkeyID: string; name: string; type: string }>
+  macros: Array<{ id: string; name: string }>
+  obsLinkEnabled: boolean
+}
+
+export interface RpcVtsSceneActionParams {
+  presetId?: string
+  expressionFile?: string
+  expressionActive?: boolean
+  hotkeyId?: string
+  macroId?: string
+}
+
 /**
  * ServerFunctions —— 由 Tauri 客户端实现, 供外部网页调用。
  * 加接口就在这里加一行, 两端自动获得类型提示。
@@ -91,8 +169,16 @@ export interface ServerFunctions {
   obsSwitchScene: (sceneName: string) => Promise<{ ok: boolean; message?: string }>
   obsGetSceneItems: (sceneName?: string) => Promise<RpcObsSceneItemsResult>
   obsUpsertBrowserSource: (params: RpcObsUpsertBrowserSourceParams) => Promise<RpcObsUpsertBrowserSourceResult>
+  obsGetSourceScreenshot: (params: RpcObsSourceScreenshotParams) => Promise<RpcObsSourceScreenshotResult>
+  obsSyncSceneLayout: (params: RpcObsSyncSceneLayoutParams) => Promise<RpcObsSyncSceneLayoutResult>
   obsSubscribeEvents: () => Promise<{ ok: true }>
   obsUnsubscribeEvents: () => Promise<{ ok: true }>
+
+  /** VTube Studio 状态与切场动作代理接口 */
+  vtsGetStatus: () => Promise<RpcVtsStatus>
+  vtsRunSceneAction: (params: RpcVtsSceneActionParams) => Promise<{ ok: boolean; message?: string }>
+  vtsSubscribeEvents: () => Promise<{ ok: true }>
+  vtsUnsubscribeEvents: () => Promise<{ ok: true }>
 }
 
 /**
@@ -106,10 +192,17 @@ export interface ClientFunctions {
   onObsSceneChanged?: (sceneName: string) => void
   /** OBS 连接/场景列表状态变化推送 */
   onObsStatusChanged?: (status: RpcObsStatus) => void
+  /** VTS 连接/模型/预设列表变化推送 */
+  onVtsStatusChanged?: (status: RpcVtsStatus) => void
 }
 
 /** birpc eventNames: 声明为单向事件的方法 (调用即发, 不等 round-trip) */
-export const CLIENT_EVENT_NAMES = ['onDanmakuEvent', 'onObsSceneChanged', 'onObsStatusChanged'] as const
+export const CLIENT_EVENT_NAMES = [
+  'onDanmakuEvent',
+  'onObsSceneChanged',
+  'onObsStatusChanged',
+  'onVtsStatusChanged',
+] as const
 
 /** 本地 RPC 服务监听端口 (须与 Rust rpc_server.rs 的 RPC_PORT 保持一致) */
 export const RPC_PORT = 29304

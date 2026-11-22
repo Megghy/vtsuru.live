@@ -11,7 +11,14 @@ import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
-import type { DanmakuEventName, RpcObsStatus, ServerFunctions } from '@/shared/rpc/contract'
+import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import type {
+  DanmakuEventName,
+  RpcObsStatus,
+  RpcVtsSceneActionParams,
+  RpcVtsStatus,
+  ServerFunctions,
+} from '@/shared/rpc/contract'
 import { DANMAKU_EVENT_NAMES } from '@/shared/rpc/contract'
 import type { RpcConnection } from '@/shared/rpc/server'
 import { startRpcServer } from '@/shared/rpc/server'
@@ -47,13 +54,62 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
 
   // 每个连接订阅的事件集合
   const subscriptions = new Map<string, Set<DanmakuEventName>>()
-  // 订阅了 OBS 场景事件的连接集合
+  // 订阅了 OBS / VTS 场景事件的连接集合
   const obsSubscribers = new Set<string>()
+  const vtsSubscribers = new Set<string>()
   // connId -> rpc 句柄 (用于推送)
   const conns = new Map<string, RpcConnection>()
 
   const danmakuClient = useDanmakuClient()
   const obsStore = useOBSStore()
+  const vtsStore = useVtsStore()
+
+  function buildVtsStatus(): RpcVtsStatus {
+    return {
+      connected: vtsStore.connected,
+      modelName: vtsStore.currentModelName,
+      presets: vtsStore.presets.map((p) => ({ id: p.id, name: p.name })),
+      expressions: vtsStore.expressions.map((e) => ({ file: e.file, name: e.name, active: e.active })),
+      hotkeys: vtsStore.hotkeys.map((h) => ({ hotkeyID: h.hotkeyID, name: h.name, type: h.type })),
+      macros: vtsStore.macros.map((m) => ({ id: m.id, name: m.name })),
+      obsLinkEnabled: Boolean(vtsStore.obsLinkConfig.enabled),
+    }
+  }
+
+  function pushVtsStatusChanged() {
+    if (vtsSubscribers.size === 0) return
+    const status = buildVtsStatus()
+    for (const connId of vtsSubscribers) {
+      try {
+        conns.get(connId)?.rpc.onVtsStatusChanged?.(status)
+      } catch (error) {
+        console.error(`[FetcherRpcServer] 推送 VTS 状态失败 (${connId}):`, error)
+      }
+    }
+  }
+
+  async function runVtsSceneAction(params: RpcVtsSceneActionParams): Promise<{ ok: boolean; message?: string }> {
+    if (!vtsStore.connected) {
+      return { ok: false, message: 'VTube Studio 未连接，请先在桌面客户端中连接 VTS' }
+    }
+    try {
+      if (params.presetId) {
+        await vtsStore.applyPreset(params.presetId)
+      }
+      if (params.expressionFile) {
+        await vtsStore.setExpression(params.expressionFile, params.expressionActive !== false)
+      }
+      if (params.hotkeyId) {
+        await vtsStore.triggerHotkey(params.hotkeyId)
+      }
+      if (params.macroId) {
+        await vtsStore.runMacro(params.macroId)
+      }
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, message: err instanceof Error ? err.message : String(err) }
+    }
+  }
 
   async function buildObsStatus(): Promise<RpcObsStatus> {
     const size = obsStore.obsConnected
@@ -106,6 +162,21 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
     [() => obsStore.obsConnected, () => obsStore.obsScenes.join('\0')],
     () => {
       void pushObsStatusChanged()
+    },
+  )
+
+  watch(
+    [
+      () => vtsStore.connected,
+      () => vtsStore.currentModelName,
+      () => vtsStore.presets.length,
+      () => vtsStore.expressions.length,
+      () => vtsStore.hotkeys.length,
+      () => vtsStore.macros.length,
+      () => vtsStore.obsLinkConfig.enabled,
+    ],
+    () => {
+      pushVtsStatusChanged()
     },
   )
 
@@ -181,6 +252,13 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
         return obsStore.upsertBrowserSource(params)
       },
 
+      obsGetSourceScreenshot: async (params) => obsStore.getSourceScreenshot(params),
+
+      obsSyncSceneLayout: async (params) => {
+        requireWrite()
+        return obsStore.syncSceneLayout(params)
+      },
+
       obsSubscribeEvents: async () => {
         obsSubscribers.add(conn.connId)
         setSubscribed(conn.connId, true)
@@ -189,7 +267,26 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
 
       obsUnsubscribeEvents: async () => {
         obsSubscribers.delete(conn.connId)
-        if (!subscriptions.has(conn.connId)) setSubscribed(conn.connId, false)
+        if (!subscriptions.has(conn.connId) && !vtsSubscribers.has(conn.connId)) setSubscribed(conn.connId, false)
+        return { ok: true }
+      },
+
+      vtsGetStatus: async () => buildVtsStatus(),
+
+      vtsRunSceneAction: async (params) => {
+        requireWrite()
+        return runVtsSceneAction(params)
+      },
+
+      vtsSubscribeEvents: async () => {
+        vtsSubscribers.add(conn.connId)
+        setSubscribed(conn.connId, true)
+        return { ok: true }
+      },
+
+      vtsUnsubscribeEvents: async () => {
+        vtsSubscribers.delete(conn.connId)
+        if (!subscriptions.has(conn.connId) && !obsSubscribers.has(conn.connId)) setSubscribed(conn.connId, false)
         return { ok: true }
       },
     }
@@ -218,6 +315,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
         conns.delete(connId)
         subscriptions.delete(connId)
         obsSubscribers.delete(connId)
+        vtsSubscribers.delete(connId)
         connections.value = connections.value.filter((c) => c.connId !== connId)
         info(`[RPC] 外部连接断开: ${connId}`)
       },
@@ -232,6 +330,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
     conns.clear()
     subscriptions.clear()
     obsSubscribers.clear()
+    vtsSubscribers.clear()
     connections.value = []
     running.value = false
     warn('[RPC] 开放接口服务已停止')

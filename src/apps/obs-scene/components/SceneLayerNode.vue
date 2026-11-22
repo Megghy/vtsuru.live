@@ -19,6 +19,7 @@ const props = defineProps<{
   selectedLayerIds?: string[]
   editingGroupId?: string | null
   interactionMode: 'select' | 'interact'
+  sourcePreviews?: Record<string, string>
 }>()
 
 const isVisible = computed(() => {
@@ -111,6 +112,7 @@ const shouldPassThroughPointer = computed(() => {
         :selected-layer-ids="selectedLayerIds"
         :editing-group-id="editingGroupId"
         :interaction-mode="interactionMode"
+        :source-previews="sourcePreviews"
       />
     </template>
     <div
@@ -123,6 +125,7 @@ const shouldPassThroughPointer = computed(() => {
         :owner-user-id="ownerUserId"
         :auth-token="authToken"
         :mode="mode"
+        :source-previews="sourcePreviews"
       />
     </div>
   </div>

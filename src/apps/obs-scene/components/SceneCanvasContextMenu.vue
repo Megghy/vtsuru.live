@@ -126,6 +126,7 @@ const primaryParentGroupId = computed(() => {
 // 收集当前作用域内可供移入的目标分组列表
 const availableTargetGroups = computed(() => {
   if (props.selectedLayerIds.length === 0) return []
+  if (props.selectedLayerIds.some((id) => props.doc.layers[id]?.type === 'obs-source')) return []
   const firstId = props.selectedLayerIds[0]
   const inGlobal = isLayerInGlobalScope(props.doc, firstId)
   const rootIds = inGlobal

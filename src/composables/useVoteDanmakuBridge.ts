@@ -11,7 +11,11 @@ export interface UseVoteDanmakuBridgeOptions {
   onUpdate?: (status: string, session: VoteSessionModel | null) => void
 }
 
-function isPotentialVoteMessage(message: string, session: VoteSessionModel, config?: VoteConfigModel): boolean {
+export function isPotentialVoteMessage(
+  message: string,
+  session: VoteSessionModel,
+  config?: VoteConfigModel,
+): boolean {
   const clean = message.trim()
   if (!clean) return false
 
@@ -27,9 +31,11 @@ function isPotentialVoteMessage(message: string, session: VoteSessionModel, conf
 
   if (config?.allowDirectVote === false && voteCommand) return false
 
+  const optionCount = session.options?.length ?? 0
   if (/^\d+$/.test(clean)) {
     const idx = Number(clean)
-    if (idx >= 1 && idx <= (session.options?.length ?? 0)) return true
+    if (idx >= 1 && idx <= optionCount) return true
+    if (/^([1-9])\1+$/.test(clean) && Number(clean[0]) <= optionCount) return true
   }
 
   return (session.options ?? []).some((opt) => opt.text.trim().toLowerCase() === lower)

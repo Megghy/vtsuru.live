@@ -11,6 +11,7 @@ export type ObsSceneTransition = 'none' | 'fade' | 'slide-up' | 'scale'
 export type ObsSceneLayerType =
   | 'vtsuru-widget'
   | 'obs-module'
+  | 'obs-source'
   | 'marquee'
   | 'slideshow'
   | 'image'
@@ -19,6 +20,8 @@ export type ObsSceneLayerType =
   | 'shape'
   | 'iframe'
   | 'group'
+export type ObsSourceRole = 'vts' | 'avatar' | 'game' | 'camera' | 'generic'
+export type ObsSourcePositionMode = 'obs-transform' | 'vts-preset'
 export type WidgetConfigMode = 'shared' | 'isolated'
 export type ObsModuleId =
   | 'danmuji'
@@ -287,6 +290,96 @@ export interface IframeLayer extends ObsSceneLayerBase {
   }
 }
 
+export interface ObsSourceVtsController {
+  type: 'vts'
+  /** obs-transform: 由画布框同步 OBS 源 Transform；vts-preset: OBS 源保持全屏，切场走 VTS 机位缓动 */
+  positionMode: ObsSourcePositionMode
+  presetId?: string
+  expressionFile?: string
+  expressionActive?: boolean
+  hotkeyId?: string
+  macroId?: string
+}
+
+export type ObsSourceController = { type: 'none' } | ObsSourceVtsController
+
+export interface ObsSourceLayer extends ObsSceneLayerBase {
+  type: 'obs-source'
+  obsSource: {
+    role: ObsSourceRole
+    /** 绑定的本地 OBS 源名称 */
+    sourceName: string
+    /** 编辑态离线立绘/参考图 URL */
+    referenceImageUrl?: string
+    /** 是否将画布裁剪同步到 OBS 源 */
+    syncCrop?: boolean
+    /** 可选软件控制联动（如 VTube Studio，预留其他模型软件适配器扩展） */
+    controller: ObsSourceController
+  }
+}
+
+export interface ObsSourceRolePreset {
+  role: ObsSourceRole
+  label: string
+  defaultName: string
+  description: string
+  defaultWidth: number
+  defaultHeight: number
+  defaultController: ObsSourceController['type']
+}
+
+export const OBS_SOURCE_ROLE_PRESETS: ObsSourceRolePreset[] = [
+  {
+    role: 'vts',
+    label: 'VTube Studio 皮套',
+    defaultName: 'VTube Studio 皮套',
+    description: '本地 Spout2 / 透明采集源，支持切场联动 VTS 机位、表情与热键',
+    defaultWidth: 960,
+    defaultHeight: 1080,
+    defaultController: 'vts',
+  },
+  {
+    role: 'avatar',
+    label: '其他 VTuber 模型',
+    defaultName: 'VTuber 模型',
+    description: '兼容 Warudo / VSeeFace / PrprLive / Veadotube / NDI 等任意皮套源',
+    defaultWidth: 960,
+    defaultHeight: 1080,
+    defaultController: 'none',
+  },
+  {
+    role: 'game',
+    label: '游戏 / 窗口捕获',
+    defaultName: '游戏画面',
+    description: 'OBS 游戏捕获、窗口捕获或采集卡画面，支持夹心分层排版',
+    defaultWidth: 1600,
+    defaultHeight: 900,
+    defaultController: 'none',
+  },
+  {
+    role: 'camera',
+    label: '摄像头 / 视频采集',
+    defaultName: '摄像头',
+    description: 'OBS 视频采集设备或虚拟摄像头画面',
+    defaultWidth: 480,
+    defaultHeight: 270,
+    defaultController: 'none',
+  },
+  {
+    role: 'generic',
+    label: '通用 OBS 本地源',
+    defaultName: 'OBS 本地源',
+    description: '任意本地 OBS 场景源代理占位层',
+    defaultWidth: 800,
+    defaultHeight: 600,
+    defaultController: 'none',
+  },
+]
+
+export function getObsSourceRolePreset(role: ObsSourceRole): ObsSourceRolePreset {
+  return OBS_SOURCE_ROLE_PRESETS.find((item) => item.role === role) ?? OBS_SOURCE_ROLE_PRESETS[OBS_SOURCE_ROLE_PRESETS.length - 1]
+}
+
 export interface GroupLayer extends ObsSceneLayerBase {
   type: 'group'
   group: {
@@ -304,6 +397,7 @@ export interface GroupLayer extends ObsSceneLayerBase {
 export type ObsSceneLayer =
   | VtsuruWidgetLayer
   | ObsModuleLayer
+  | ObsSourceLayer
   | MarqueeLayer
   | SlideshowLayer
   | ImageLayer
@@ -426,6 +520,34 @@ export function normalizeGamepadParams(raw?: Partial<GamepadWidgetParams>): Game
   }
 }
 
+function normalizeObsSourceRole(raw: unknown): ObsSourceRole {
+  if (raw === 'vts' || raw === 'avatar' || raw === 'game' || raw === 'camera' || raw === 'generic') {
+    return raw
+  }
+  return 'generic'
+}
+
+function normalizeObsSourceController(raw: unknown, role: ObsSourceRole): ObsSourceController {
+  if (raw && typeof raw === 'object' && (raw as { type?: unknown }).type === 'vts') {
+    const vts = raw as Partial<ObsSourceVtsController>
+    return {
+      type: 'vts',
+      positionMode: vts.positionMode === 'vts-preset' ? 'vts-preset' : 'obs-transform',
+      presetId: typeof vts.presetId === 'string' && vts.presetId.trim() ? vts.presetId.trim() : undefined,
+      expressionFile: typeof vts.expressionFile === 'string' && vts.expressionFile.trim() ? vts.expressionFile.trim() : undefined,
+      expressionActive: vts.expressionActive !== false,
+      hotkeyId: typeof vts.hotkeyId === 'string' && vts.hotkeyId.trim() ? vts.hotkeyId.trim() : undefined,
+      macroId: typeof vts.macroId === 'string' && vts.macroId.trim() ? vts.macroId.trim() : undefined,
+    }
+  }
+  if (raw && typeof raw === 'object' && (raw as { type?: unknown }).type === 'none') {
+    return { type: 'none' }
+  }
+  return role === 'vts'
+    ? { type: 'vts', positionMode: 'obs-transform', expressionActive: true }
+    : { type: 'none' }
+}
+
 export function normalizeSceneDocument(raw: unknown): ObsSceneDocument {
   const fallback = createDefaultSceneDocument()
   if (!raw || typeof raw !== 'object') return fallback
@@ -458,6 +580,20 @@ export function normalizeSceneDocument(raw: unknown): ObsSceneDocument {
             gamepadParams: normalizeGamepadParams(normalized.widget.gamepadParams),
           }
         }
+        if (normalized.type === 'obs-source') {
+          const rawObsSource = (normalized as Partial<ObsSourceLayer>).obsSource
+          const role = normalizeObsSourceRole(rawObsSource?.role)
+          normalized.obsSource = {
+            role,
+            sourceName: typeof rawObsSource?.sourceName === 'string' ? rawObsSource.sourceName.trim() : '',
+            referenceImageUrl:
+              typeof rawObsSource?.referenceImageUrl === 'string' && rawObsSource.referenceImageUrl.trim()
+                ? rawObsSource.referenceImageUrl.trim()
+                : undefined,
+            syncCrop: rawObsSource?.syncCrop !== false,
+            controller: normalizeObsSourceController(rawObsSource?.controller, role),
+          }
+        }
         if (normalized.type === 'group') {
           const rawGroup = normalized.group
           normalized.group = {
@@ -475,13 +611,14 @@ export function normalizeSceneDocument(raw: unknown): ObsSceneDocument {
   }
 
   // 保证树结构单一归属与无环：先清理所有组的非法/重复/环引用子节点，再从顶层列表剔除已归属子树的节点
+  // obs-source 仅允许位于子场景顶层（作为 Z 轴切片边界），不允许放入分组内部或全局常驻层
   const claimedAsChild = new Set<string>()
   const sanitizeGroupChildren = (groupId: string, ancestors: Set<string>) => {
     const node = layers[groupId]
     if (!node || node.type !== 'group') return
     const nextIds: string[] = []
     for (const cid of node.group.childIds) {
-      if (!layers[cid] || ancestors.has(cid) || claimedAsChild.has(cid)) continue
+      if (!layers[cid] || layers[cid].type === 'obs-source' || ancestors.has(cid) || claimedAsChild.has(cid)) continue
       claimedAsChild.add(cid)
       nextIds.push(cid)
       if (layers[cid].type === 'group') {
@@ -533,7 +670,7 @@ export function normalizeSceneDocument(raw: unknown): ObsSceneDocument {
       : sceneOrder[0]
 
   const globalLayerIds = Array.isArray(obj.globalLayerIds)
-    ? [...new Set(obj.globalLayerIds.filter((lid) => Boolean(layers[lid]) && !claimedAsChild.has(lid)))]
+    ? [...new Set(obj.globalLayerIds.filter((lid) => Boolean(layers[lid]) && layers[lid].type !== 'obs-source' && !claimedAsChild.has(lid)))]
     : []
 
   return {
@@ -837,6 +974,50 @@ export function createSlideshowLayer(canvas: { width: number; height: number }):
   }
 }
 
+export function createObsSourceLayer(
+  role: ObsSourceRole,
+  canvas: { width: number; height: number },
+  options?: {
+    sourceName?: string
+    name?: string
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+    rotation?: number
+  },
+): ObsSourceLayer {
+  const preset = getObsSourceRolePreset(role)
+  const width = Math.min(options?.width ?? preset.defaultWidth, canvas.width)
+  const height = Math.min(options?.height ?? preset.defaultHeight, canvas.height)
+  const defaultX = role === 'vts' || role === 'avatar' ? Math.round((canvas.width - width) / 2) : Math.round((canvas.width - width) / 2)
+  const defaultY = role === 'vts' || role === 'avatar' ? Math.max(0, canvas.height - height) : Math.round((canvas.height - height) / 2)
+  return {
+    id: createShortId('obs'),
+    name: options?.name?.trim() || options?.sourceName?.trim() || preset.defaultName,
+    type: 'obs-source',
+    x: options?.x !== undefined ? Math.round(options.x) : defaultX,
+    y: options?.y !== undefined ? Math.round(options.y) : defaultY,
+    width: Math.max(48, Math.round(width)),
+    height: Math.max(48, Math.round(height)),
+    rotation: Math.round(options?.rotation ?? 0),
+    opacity: 1,
+    visible: true,
+    locked: false,
+    borderRadius: 0,
+    disableShadow: false,
+    obsSource: {
+      role,
+      sourceName: options?.sourceName?.trim() ?? '',
+      syncCrop: true,
+      controller:
+        preset.defaultController === 'vts'
+          ? { type: 'vts', positionMode: 'obs-transform', expressionActive: true }
+          : { type: 'none' },
+    },
+  }
+}
+
 export function createGroupLayer(
   name: string,
   rect: { x: number; y: number; width: number; height: number },
@@ -875,13 +1056,22 @@ export function documentRequiresAuthToken(doc: ObsSceneDocument): boolean {
   return false
 }
 
-export function buildObsScenePlayerUrl(shareKey: string, origin?: string, authToken?: string): string {
+export function buildObsScenePlayerUrl(
+  shareKey: string,
+  origin?: string,
+  authToken?: string,
+  slot?: string | number,
+): string {
   const host = origin || (typeof window !== 'undefined' ? window.location.origin : '')
-  const base = `${host}/obs/scene?key=${encodeURIComponent(shareKey)}`
+  const params = new URLSearchParams()
+  params.set('key', shareKey)
   if (authToken && authToken.trim()) {
-    return `${base}&token=${encodeURIComponent(authToken.trim())}`
+    params.set('token', authToken.trim())
   }
-  return base
+  if (slot !== undefined && slot !== null && String(slot).trim() !== '') {
+    params.set('slot', String(slot).trim())
+  }
+  return `${host}/obs/scene?${params.toString()}`
 }
 
 export function isSafeHttpUrl(raw: string): boolean {

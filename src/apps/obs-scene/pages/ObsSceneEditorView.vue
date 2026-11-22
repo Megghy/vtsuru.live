@@ -24,7 +24,7 @@ import {
   Undo2,
   Upload,
 } from 'lucide-vue-next'
-import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
@@ -48,13 +48,16 @@ import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 import DanmujiConfigModal from '../components/DanmujiConfigModal.vue'
 import ObsLinkDialog from '../components/ObsLinkDialog.vue'
+import ObsSourceSetupGuideDialog from '../components/ObsSourceSetupGuideDialog.vue'
 import QuestionDisplayConfigModal from '../components/QuestionDisplayConfigModal.vue'
 import SceneCanvasViewport from '../components/SceneCanvasViewport.vue'
+import SceneHelpTip from '../components/SceneHelpTip.vue'
 import SceneInspector from '../components/SceneInspector.vue'
 import SceneLeftSidebar from '../components/SceneLeftSidebar.vue'
 import { useObsLocalBridge } from '../composables/useObsLocalBridge'
 import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
 import { buildObsScenePlayerUrl, documentRequiresAuthToken } from '../types'
+import { buildSyncLayoutParamsForScene, documentHasObsSources } from '../utils/sceneSlices'
 
 const account = useAccount()
 const store = useObsSceneEditorStore()
@@ -65,6 +68,8 @@ const viewportRef = ref<InstanceType<typeof SceneCanvasViewport> | null>(null)
 const leftSidebarOpen = ref(true)
 const rightSidebarOpen = ref(true)
 const obsLinkDialogOpen = ref(false)
+const setupGuideOpen = ref(false)
+const setupGuideTab = ref<'obs-layout' | 'model-capture'>('obs-layout')
 const createDialogOpen = ref(false)
 const newProjectName = ref('')
 const jsonDialogOpen = ref(false)
@@ -111,12 +116,22 @@ const configDrawerComponent = computed(() => {
   return loader ? defineAsyncComponent(loader) : null
 })
 
+const authTokenForPlayer = computed(() =>
+  documentRequiresAuthToken(store.doc) ? account.value.token : undefined,
+)
+
+const hasObsSources = computed(() => documentHasObsSources(store.doc))
+
 const playerUrl = computed(() => {
   const key = store.currentProject?.shareKey
   if (!key) return ''
-  const token = documentRequiresAuthToken(store.doc) ? account.value.token : undefined
-  return buildObsScenePlayerUrl(key, undefined, token)
+  return buildObsScenePlayerUrl(key, undefined, authTokenForPlayer.value)
 })
+
+function openSetupGuide(tab: 'obs-layout' | 'model-capture' = 'obs-layout') {
+  setupGuideTab.value = tab
+  setupGuideOpen.value = true
+}
 
 const currentProjectIdModel = computed({
   get: () => (store.currentProject ? String(store.currentProject.id) : ''),
@@ -145,6 +160,10 @@ function openDanmujiConfigModal(layerId: string) {
 
 async function handleCopyPlayerUrl() {
   if (!playerUrl.value) return
+  if (hasObsSources.value) {
+    openSetupGuide('obs-layout')
+    return
+  }
   await copy(playerUrl.value)
   copiedUrl.value = true
   toast.success('已复制 OBS 浏览器源地址（建议分辨率与画布一致）')
@@ -201,6 +220,92 @@ async function handleSwitchObsScene(obsSceneName: string) {
   const res = await obsBridge.switchObsScene(obsSceneName)
   if (!res.ok) toast.error(res.message || '切换本地 OBS 场景失败')
 }
+
+async function handleRefreshObsSources() {
+  if (!obsBridge.connected.value) {
+    toast.warning('请先连接本地 OBS')
+    return
+  }
+  try {
+    const items = await obsBridge.refreshSceneItems()
+    toast.success(`已刷新「${obsBridge.referenceSceneName.value}」的 ${items.length} 个本地源`)
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : '拉取 OBS 源列表失败')
+  }
+}
+
+async function handleCaptureSourcePreview(sourceName: string) {
+  if (!obsBridge.connected.value) {
+    toast.warning('请先连接本地 OBS 后抓取预览')
+    return
+  }
+  const res = await obsBridge.captureSourceScreenshot({ sourceName })
+  if (res.ok) {
+    toast.success(`已刷新「${sourceName}」透明预览图`)
+  } else {
+    toast.error(res.message || '抓取 OBS 源快照失败')
+  }
+}
+
+async function handleSyncLayoutToObs() {
+  if (!obsBridge.connected.value) {
+    toast.warning('请先连接本地 OBS')
+    return
+  }
+  const shareKey = store.currentProject?.shareKey
+  if (!shareKey || !store.currentProject?.hasPublished) {
+    toast.warning('请先点击「发布生效」，再同步分层布局到 OBS')
+    return
+  }
+  const targetScene = store.activeScene?.obsSceneBinding || obsBridge.currentScene.value
+  if (!targetScene) {
+    toast.error('未获取到目标 OBS 场景')
+    return
+  }
+  const params = buildSyncLayoutParamsForScene({
+    doc: store.doc,
+    sceneId: store.doc.activeSceneId,
+    obsSceneName: targetScene,
+    baseSourceName: `VTsuru - ${store.currentProject.name}`,
+    shareKey,
+    authToken: authTokenForPlayer.value,
+  })
+  const res = await obsBridge.syncSceneLayoutToObs(params)
+  if (res.ok) {
+    toast.success(res.message || '已同步分层布局到 OBS')
+    if (res.warnings?.length) toast.warning(res.warnings.join('；'))
+  } else {
+    toast.error(res.message || '同步分层布局失败')
+  }
+}
+
+async function handleTestVtsAction(layerId: string) {
+  const layer = store.doc.layers[layerId]
+  if (!layer || layer.type !== 'obs-source' || layer.obsSource.controller.type !== 'vts') return
+  const ctrl = layer.obsSource.controller
+  const res = await obsBridge.runVtsSceneAction({
+    presetId: ctrl.presetId,
+    expressionFile: ctrl.expressionFile,
+    expressionActive: ctrl.expressionActive,
+    hotkeyId: ctrl.hotkeyId,
+    macroId: ctrl.macroId,
+  })
+  if (res.ok) {
+    toast.success('已触发 VTube Studio 联动动作')
+  } else {
+    toast.error(res.message || '触发 VTS 动作失败')
+  }
+}
+
+// 连接本地 OBS 后静默预拉当前场景源列表，确保右侧 OBS 源绑定下拉即开即用
+watch(
+  () => [obsBridge.connected.value, obsBridge.currentScene.value] as const,
+  ([isConn, sceneName]) => {
+    if (isConn && sceneName) {
+      void obsBridge.refreshSceneItems(sceneName).catch(() => {})
+    }
+  },
+)
 
 onMounted(async () => {
   try {
@@ -289,6 +394,10 @@ onMounted(async () => {
             <span>交互</span>
           </ToggleGroupItem>
         </ToggleGroup>
+        <SceneHelpTip
+          side="bottom"
+          text="编辑模式：拖拽、缩放、旋转与框选图层&#10;交互模式：点击穿透到组件内部（测试弹幕机、网页源交互）"
+        />
 
         <Button
           :variant="store.showGrid ? 'secondary' : 'ghost'"
@@ -326,7 +435,7 @@ onMounted(async () => {
         <Button variant="outline" size="xs" :disabled="!playerUrl" @click="handleCopyPlayerUrl">
           <Check v-if="copiedUrl" class="w-3.5 h-3.5 text-emerald-500" />
           <Copy v-else class="w-3.5 h-3.5" />
-          <span>OBS 源链接</span>
+          <span>{{ hasObsSources ? '分层源指引' : 'OBS 源链接' }}</span>
         </Button>
         <Button variant="ghost" size="xs" title="新标签页预览播出页" @click="handleOpenPlayerPreview">
           <ExternalLink class="w-3.5 h-3.5" />
@@ -334,10 +443,17 @@ onMounted(async () => {
 
         <Separator orientation="vertical" class="h-5 mx-1" />
 
-        <label class="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none mr-1">
-          <Switch v-model="store.autoLivePublish" />
-          <span>实时同步</span>
-        </label>
+        <div class="flex items-center gap-1 mr-1">
+          <label class="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none">
+            <Switch v-model="store.autoLivePublish" />
+            <span>实时同步</span>
+          </label>
+          <SceneHelpTip
+            side="bottom"
+            compact
+            text="开启后每次修改会在约 1.5 秒后自动发布并热更新 OBS 浏览器源，无需手动点「发布生效」。"
+          />
+        </div>
 
         <Button variant="outline" size="xs" :disabled="store.savingDraft" @click="store.saveDraftNow()">
           <Save class="w-3.5 h-3.5" />
@@ -348,6 +464,11 @@ onMounted(async () => {
           <Rocket class="w-3.5 h-3.5" />
           <span>{{ store.publishing ? '发布中' : store.hasUnpublishedChanges ? '发布生效' : `已发布 v${store.currentProject?.publishedVersion ?? 0}` }}</span>
         </Button>
+        <SceneHelpTip
+          side="bottom"
+          compact
+          text="「存草稿」仅保存在编辑器内；点击「发布生效」后，OBS 中的浏览器源才会同步最新画面。"
+        />
 
         <Button
           variant="ghost"
@@ -377,15 +498,25 @@ onMounted(async () => {
           :reference-items="obsBridge.referenceItems.value"
           :reference-canvas-size="{ width: obsBridge.baseWidth.value, height: obsBridge.baseHeight.value }"
           :show-reference-overlay="obsBridge.showReferenceOverlay.value"
+          :source-previews="obsBridge.sourcePreviews.value"
         />
       </main>
 
       <aside v-show="rightSidebarOpen" class="w-[272px] shrink-0 h-full overflow-hidden">
         <SceneInspector
           :obs-scenes="obsBridge.scenes.value"
+          :obs-connected="obsBridge.connected.value"
+          :obs-scene-items="obsBridge.referenceItems.value"
+          :vts-status="obsBridge.vtsStatus.value"
           @open-widget-config="openWidgetConfigDrawer"
           @open-question-display-config="openQuestionDisplayConfigModal"
           @open-danmuji-config="openDanmujiConfigModal"
+          @refresh-obs-sources="handleRefreshObsSources"
+          @capture-source-preview="handleCaptureSourcePreview"
+          @sync-layout-to-obs="handleSyncLayoutToObs"
+          @test-vts-action="handleTestVtsAction"
+          @open-obs-link="obsLinkDialogOpen = true"
+          @open-setup-guide="openSetupGuide"
         />
       </aside>
     </div>
@@ -394,10 +525,32 @@ onMounted(async () => {
     <ObsLinkDialog
       v-model:open="obsLinkDialogOpen"
       :bridge="obsBridge"
+      :doc="store.doc"
+      :share-key="store.currentProject?.shareKey || ''"
+      :auth-token="authTokenForPlayer"
       :player-url="playerUrl"
       :project-name="store.currentProject?.name || 'OBS 场景'"
       :canvas-width="store.doc.canvas.width"
       :canvas-height="store.doc.canvas.height"
+      @open-setup-guide="openSetupGuide"
+    />
+
+    <!-- 本地模型 / OBS 分层接入步骤指引弹窗 -->
+    <ObsSourceSetupGuideDialog
+      v-model:open="setupGuideOpen"
+      :default-tab="setupGuideTab"
+      :doc="store.doc"
+      :project-name="store.currentProject?.name || 'OBS 场景'"
+      :share-key="store.currentProject?.shareKey || ''"
+      :auth-token="authTokenForPlayer"
+      :has-published="Boolean(store.currentProject?.hasPublished)"
+      :has-unpublished-changes="store.hasUnpublishedChanges"
+      :obs-connected="obsBridge.connected.value"
+      :vts-connected="obsBridge.vtsConnected.value"
+      :publishing="store.publishing"
+      @open-obs-link="setupGuideOpen = false; obsLinkDialogOpen = true"
+      @publish-now="store.publishNow()"
+      @sync-layout-to-obs="handleSyncLayoutToObs"
     />
 
     <!-- 新建场景项目弹窗 -->

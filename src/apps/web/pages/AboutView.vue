@@ -5,13 +5,17 @@ import LogoGithub from '@vicons/ionicons5/es/LogoGithub'
 import ServerOutline from '@vicons/ionicons5/es/ServerOutline'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { BookOpen } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
+import { getCurrentAPIUrl } from '@/shared/config/api'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
+
+const apiDocsUrl = computed(() => new URL('swagger/index.html', getCurrentAPIUrl()).toString())
 
 // 获取编译时间
 const buildTime = computed(() => {
@@ -140,7 +144,7 @@ const timelineData: TimelineRecord[] = [
                 Megghy
               </a>
             </div>
-            <div class="flex items-center gap-4 text-xs mt-1">
+            <div class="flex flex-wrap items-center justify-center gap-4 text-xs mt-1">
               <a
                 href="https://github.com/Megghy/vtsuru.live"
                 target="_blank"
@@ -152,6 +156,15 @@ const timelineData: TimelineRecord[] = [
                   class="size-3.5"
                 />
                 <span>源代码仓库</span>
+              </a>
+              <a
+                :href="apiDocsUrl"
+                target="_blank"
+                rel="noreferrer"
+                class="flex items-center gap-1 text-muted-foreground hover:text-foreground transition"
+              >
+                <BookOpen class="size-3.5" />
+                <span>接口文档</span>
               </a>
               <a
                 href="https://stats.uptimerobot.com/vGKZv8uhVC"

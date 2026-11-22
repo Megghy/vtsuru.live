@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import { useClipboard } from '@vueuse/core'
 import {
   CheckCircle2,
+  Copy,
   Eye,
+  Layers,
   LayoutGrid,
   Link2,
   Plug,
   RefreshCw,
   Send,
+  Sparkles,
   Unplug,
 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
@@ -29,10 +33,20 @@ import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 import type { useObsLocalBridge } from '../composables/useObsLocalBridge'
+import type { ObsSceneDocument } from '../types'
+import { buildObsScenePlayerUrl } from '../types'
+import {
+  buildSceneCompositionPlan,
+  buildSlotBrowserSourceName,
+  buildSyncLayoutParamsForScene,
+} from '../utils/sceneSlices'
 
 const props = defineProps<{
   open: boolean
   bridge: ReturnType<typeof useObsLocalBridge>
+  doc: ObsSceneDocument
+  shareKey: string
+  authToken?: string
   playerUrl: string
   projectName: string
   canvasWidth: number
@@ -41,11 +55,28 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
+  openSetupGuide: [tab: 'obs-layout' | 'model-capture']
 }>()
 
+const { copy } = useClipboard()
 const targetSceneName = ref('')
 const sourceName = ref('')
 const pushingSource = ref(false)
+
+const compositionPlan = computed(() => buildSceneCompositionPlan(props.doc, props.doc.activeSceneId))
+const isSlicedMode = computed(() => compositionPlan.value.mode === 'sliced')
+const stackTopToBottom = computed(() => compositionPlan.value.activeStack.toReversed())
+const resolvedBaseSourceName = computed(() => sourceName.value.trim() || `VTsuru - ${props.projectName}`)
+
+const slotUrlList = computed(() => {
+  if (!props.shareKey) return []
+  return compositionPlan.value.slots.map((slot) => ({
+    key: slot.key,
+    label: slot.label,
+    sourceName: buildSlotBrowserSourceName(resolvedBaseSourceName.value, slot, compositionPlan.value.mode),
+    url: buildObsScenePlayerUrl(props.shareKey, undefined, props.authToken, slot.slotParam),
+  }))
+})
 
 watch(
   () => [props.open, props.bridge.currentScene.value, props.projectName] as const,
@@ -62,6 +93,11 @@ watch(
 )
 
 const isConnected = computed(() => props.bridge.connected.value)
+
+async function handleCopySlotUrl(url: string, label: string) {
+  await copy(url)
+  toast.success(`已复制「${label}」浏览器源链接`)
+}
 
 async function handleConnectClient() {
   const ok = await props.bridge.connectViaClientRpc()
@@ -91,7 +127,7 @@ async function handlePullReferences() {
 }
 
 async function handlePushToObs() {
-  if (!props.playerUrl) {
+  if (!props.playerUrl || !props.shareKey) {
     toast.error('请先发布场景后再添加到 OBS')
     return
   }
@@ -102,9 +138,30 @@ async function handlePushToObs() {
   }
   pushingSource.value = true
   try {
+    if (isSlicedMode.value) {
+      const params = buildSyncLayoutParamsForScene({
+        doc: props.doc,
+        sceneId: props.doc.activeSceneId,
+        obsSceneName: scene,
+        baseSourceName: resolvedBaseSourceName.value,
+        shareKey: props.shareKey,
+        authToken: props.authToken,
+      })
+      const res = await props.bridge.syncSceneLayoutToObs(params)
+      if (res.ok) {
+        toast.success(res.message || '已同步分层布局到 OBS')
+        if (res.warnings?.length) {
+          toast.warning(res.warnings.join('；'))
+        }
+      } else {
+        toast.error(res.message || '同步分层布局到 OBS 失败')
+      }
+      return
+    }
+
     const res = await props.bridge.pushOverlayToObs({
       sceneName: scene,
-      sourceName: sourceName.value.trim() || `VTsuru - ${props.projectName}`,
+      sourceName: resolvedBaseSourceName.value,
       url: props.playerUrl,
       width: props.canvasWidth,
       height: props.canvasHeight,
@@ -212,7 +269,15 @@ async function handlePushToObs() {
             <div class="flex items-center gap-2">
               <Button class="flex-1" :disabled="pushingSource" @click="handlePushToObs">
                 <Send class="w-3.5 h-3.5" />
-                <span>{{ pushingSource ? '写入中...' : '一键添加到 / 更新 OBS 源' }}</span>
+                <span>
+                  {{
+                    pushingSource
+                      ? '写入中...'
+                      : isSlicedMode
+                        ? `一键同步分层布局（${compositionPlan.slots.length} 浏览器源 + ${compositionPlan.activeObsSources.length} 本地源）`
+                        : '一键添加到 / 更新 OBS 源'
+                  }}
+                </span>
               </Button>
               <Button
                 variant="secondary"
@@ -222,6 +287,63 @@ async function handlePushToObs() {
                 <LayoutGrid class="w-3.5 h-3.5" />
                 <span>拉取底图参考框</span>
               </Button>
+            </div>
+
+            <!-- 多段切片预览：当场景包含 VTS / 游戏等本地源时清晰展示 OBS 夹心顺序 -->
+            <div
+              v-if="isSlicedMode"
+              class="rounded-lg border border-border bg-muted/25 p-2.5 space-y-2"
+            >
+              <div class="flex-between">
+                <span class="text-xs font-medium text-foreground flex items-center gap-1.5">
+                  <Layers class="w-3.5 h-3.5 text-violet-500" />
+                  <span>OBS 夹心层级编排（从顶到底）</span>
+                </span>
+                <Badge v-if="bridge.vtsConnected.value" variant="secondary">
+                  <Sparkles class="w-3 h-3 mr-1 text-emerald-500" />
+                  VTS 已连
+                </Badge>
+              </div>
+
+              <div class="space-y-1">
+                <div
+                  v-for="(entry, idx) in stackTopToBottom"
+                  :key="entry.kind === 'obs-source' ? `obs-${entry.layerId}` : `slot-${entry.slotKey}-${idx}`"
+                  class="flex-between gap-2 rounded px-2 py-1 text-xs"
+                  :class="
+                    entry.kind === 'obs-source'
+                      ? 'bg-violet-500/12 border border-violet-500/30 text-foreground'
+                      : 'bg-background/80 border border-border text-muted-foreground'
+                  "
+                >
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <Sparkles v-if="entry.kind === 'obs-source'" class="w-3.5 h-3.5 text-violet-500 shrink-0" />
+                    <Layers v-else class="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                    <span class="truncate font-medium">
+                      {{
+                        entry.kind === 'obs-source'
+                          ? `本地源：${entry.layer.obsSource.sourceName || '未绑定'} (${entry.layer.name})`
+                          : `${resolvedBaseSourceName} [${entry.label}] (${entry.layerIds.length} 层)`
+                      }}
+                    </span>
+                  </div>
+                  <Button
+                    v-if="entry.kind === 'browser-slot'"
+                    variant="ghost"
+                    size="xs"
+                    class="shrink-0"
+                    title="复制此切片浏览器源链接"
+                    @click="
+                      () => {
+                        const target = slotUrlList.find((s) => s.key === entry.slotKey)
+                        if (target) void handleCopySlotUrl(target.url, target.label)
+                      }
+                    "
+                  >
+                    <Copy class="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -255,6 +377,30 @@ async function handlePushToObs() {
             </SettingRow>
           </div>
         </template>
+
+        <!-- 未连接 OBS 但含本地源时，直接提供免 WebSocket 手动分层配置入口 -->
+        <div
+          v-else-if="isSlicedMode"
+          class="rounded-lg border border-border bg-muted/25 p-3 flex-between gap-2 flex-wrap"
+        >
+          <div class="text-xs text-muted-foreground leading-relaxed flex-1 min-w-[200px]">
+            <strong class="text-foreground font-medium">
+              {{
+                compositionPlan.activeObsSources.length > 0
+                  ? `当前子场景包含 ${compositionPlan.activeObsSources.length} 个本地模型/采集源`
+                  : `本项目已启用 ${compositionPlan.slots.length} 个分层槽位`
+              }}
+            </strong>，即使不连接 OBS WebSocket 也可以按顺序手动添加分层浏览器源。
+          </div>
+          <Button
+            variant="secondary"
+            size="xs"
+            @click="emit('update:open', false); emit('openSetupGuide', 'obs-layout')"
+          >
+            <Layers class="size-3.5" />
+            <span>查看分层链接与步骤</span>
+          </Button>
+        </div>
       </div>
     </DialogContent>
   </Dialog>

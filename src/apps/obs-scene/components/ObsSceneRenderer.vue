@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import type { RpcObsSceneItemRef } from '@/shared/rpc/contract'
 
 import type { ObsSceneDocument, ObsSceneLayer } from '../types'
+import { resolveSlotRenderLayerIds } from '../utils/sceneSlices'
 import SceneLayerNode from './SceneLayerNode.vue'
 
 const props = withDefaults(
@@ -13,6 +14,8 @@ const props = withDefaults(
     authToken?: string
     mode?: 'edit' | 'preview' | 'live'
     activeSceneOverride?: string
+    /** 直播态多段切片槽位（如 '0' | '1' | 'global'），不传则兼容全量渲染 */
+    slot?: string
     layerVisibilityOverride?: Record<string, boolean>
     selectedLayerIds?: string[]
     editingGroupId?: string | null
@@ -21,6 +24,7 @@ const props = withDefaults(
     referenceItems?: RpcObsSceneItemRef[]
     referenceCanvasSize?: { width: number; height: number }
     showReferenceOverlay?: boolean
+    sourcePreviews?: Record<string, string>
   }>(),
   {
     mode: 'live',
@@ -40,15 +44,24 @@ const currentSceneId = computed(() => {
 
 const activeScene = computed(() => props.doc.scenes[currentSceneId.value] ?? null)
 
+const resolvedLayerIds = computed(() => {
+  if (props.mode === 'live' && props.slot) {
+    return resolveSlotRenderLayerIds(props.doc, currentSceneId.value, props.slot)
+  }
+  return {
+    sceneLayerIds: activeScene.value?.layerIds ?? [],
+    globalLayerIds: props.doc.globalLayerIds,
+  }
+})
+
 const sceneLayers = computed<ObsSceneLayer[]>(() => {
-  if (!activeScene.value) return []
-  return activeScene.value.layerIds
+  return resolvedLayerIds.value.sceneLayerIds
     .map((id) => props.doc.layers[id])
     .filter((l): l is ObsSceneLayer => Boolean(l))
 })
 
 const globalLayers = computed<ObsSceneLayer[]>(() => {
-  return props.doc.globalLayerIds
+  return resolvedLayerIds.value.globalLayerIds
     .map((id) => props.doc.layers[id])
     .filter((l): l is ObsSceneLayer => Boolean(l))
 })
@@ -119,6 +132,7 @@ function getReferenceStyle(item: RpcObsSceneItemRef) {
           :selected-layer-ids="selectedLayerIds"
           :editing-group-id="editingGroupId"
           :interaction-mode="interactionMode"
+          :source-previews="sourcePreviews"
         />
       </div>
     </Transition>
@@ -137,6 +151,7 @@ function getReferenceStyle(item: RpcObsSceneItemRef) {
       :selected-layer-ids="selectedLayerIds"
       :editing-group-id="editingGroupId"
       :interaction-mode="interactionMode"
+      :source-previews="sourcePreviews"
     />
   </div>
 </template>

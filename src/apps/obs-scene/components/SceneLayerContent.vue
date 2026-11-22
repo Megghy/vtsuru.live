@@ -8,6 +8,7 @@ import { isSafeHttpUrl } from '../types'
 import { buildMaskShapePath } from '../utils/maskShapes'
 import SceneMarqueeLayer from './SceneMarqueeLayer.vue'
 import SceneObsModuleLayer from './SceneObsModuleLayer.vue'
+import SceneObsSourceLayer from './SceneObsSourceLayer.vue'
 import SceneSlideshowLayer from './SceneSlideshowLayer.vue'
 import SceneWidgetLayer from './SceneWidgetLayer.vue'
 
@@ -16,6 +17,7 @@ const props = defineProps<{
   ownerUserId?: number
   authToken?: string
   mode: 'edit' | 'preview' | 'live'
+  sourcePreviews?: Record<string, string>
 }>()
 
 useGoogleFont(computed(() => (props.layer.type === 'text' ? props.layer.text.fontFamily : undefined)))
@@ -72,6 +74,13 @@ function getShapeStyle(layer: Extract<ObsSceneLayer, { type: 'shape' }>) {
     :owner-user-id="ownerUserId"
     :auth-token="authToken"
     :mode="mode"
+  />
+
+  <SceneObsSourceLayer
+    v-else-if="layer.type === 'obs-source'"
+    :layer="layer"
+    :mode="mode"
+    :source-previews="sourcePreviews"
   />
 
   <SceneMarqueeLayer
