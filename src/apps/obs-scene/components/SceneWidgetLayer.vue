@@ -19,6 +19,7 @@ const widgetComponents: Record<string, ReturnType<typeof defineAsyncComponent>> 
   wheel: defineAsyncComponent(() => import('@/apps/obs-store/components/wheel/WheelDisplay.vue')),
   subtitle: defineAsyncComponent(() => import('@/apps/obs-store/components/subtitle/SubtitleDisplay.vue')),
   keycast: defineAsyncComponent(() => import('@/apps/obs-store/components/keycast/KeycastDisplay.vue')),
+  'typing-cat': defineAsyncComponent(() => import('@/apps/obs-store/components/typing-cat/TypingCatDisplay.vue')),
   gamepad: defineAsyncComponent(() => import('@/apps/obs-store/components/gamepads/GamepadDisplay.vue')),
   pngtuber: defineAsyncComponent(() => import('./PngtuberSceneWidget.vue')),
 }

@@ -6,6 +6,7 @@ import { keycastComponent } from './items/keycast'
 import { plannedComponents } from './items/planned'
 import { pngtuberComponent } from './items/pngtuber'
 import { subtitleComponent } from './items/subtitle'
+import { typingCatComponent } from './items/typingCat'
 import { wheelComponent } from './items/wheel'
 import type { ObsCategory, ObsComponentDefinition, ObsComponentStatus } from './types'
 
@@ -19,6 +20,7 @@ export * from './types'
 export const obsComponentList: ObsComponentDefinition[] = [
   gamepadComponent,
   keycastComponent,
+  typingCatComponent,
   counterComponent,
   clockComponent,
   goalComponent,

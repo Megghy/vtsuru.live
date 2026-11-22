@@ -349,6 +349,7 @@ export const BRIDGE_WIDGET_IDS = new Set([
   'wheel',
   'subtitle',
   'keycast',
+  'typing-cat',
   'pngtuber',
 ])
 

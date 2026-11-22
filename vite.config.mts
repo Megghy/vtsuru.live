@@ -212,6 +212,11 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/]@zumer[\\/]snapdom[\\/]/,
               priority: -20,
             },
+            {
+              name: 'three-vendor',
+              test: /[\\/]node_modules[\\/]three[\\/]/,
+              priority: -20,
+            },
           ],
         },
       },

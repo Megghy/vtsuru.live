@@ -31,6 +31,36 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 14,
+    date: '2026.11.22',
+    items: [
+      {
+        type: 'new',
+        title: '新增 OBS 组件：小猫打字',
+        content: [
+          ['OBS 组件库新增 3D 透明背景「小猫打字 (Typing Cat)」挂件，跟随键盘敲击与鼠标操作实时伸爪拍键、点亮键帽并弹出按键标签，同时支持接入 OBS 场景编辑器'],
+          ['内置奶牛猫、橘猫、狸花猫、三花猫、白猫、蓝灰猫 6 种花色与 5 套键鼠配色主题，支持各身体部位独立改色（含异瞳）、头戴耳机/项圈/眼镜/皇冠 3D 配饰、19 项体型比例微调、镜头视角调节以及配置文件快捷导入导出'],
+          ['支持左手鼠标、隐私盲打、实时 KPM 手速计数、高速狂敲眯眼并甩尾巴打字、打哈欠/舔爪/扑击/猫面包揣手待机、按住摸头互动、闲置打盹、自主打字演示以及直播间弹幕/礼物/舰长事件联动反应'],
+          [
+            '入口：',
+            () =>
+              h(
+                NoteButton,
+                {
+                  text: true,
+                  tag: 'a',
+                  href: '/manage/obs-store?component=typing-cat',
+                  target: '_blank',
+                  type: 'info',
+                },
+                () => '小猫打字控制台',
+              ),
+          ],
+        ],
+      },
+    ],
+  },
+  {
     ver: 13,
     date: '2026.11.21',
     items: [

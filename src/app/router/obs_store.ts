@@ -156,5 +156,23 @@ export default {
         forceReload: true,
       },
     },
+    {
+      path: 'typing-cat-manage',
+      name: 'obs-store-typing-cat-manage',
+      component: async () => import('@/apps/obs-store/components/typing-cat/TypingCatViewer.vue'),
+      meta: {
+        title: '小猫打字控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'typing-cat',
+      name: 'obs-store-typing-cat-display',
+      component: async () => import('@/apps/obs-store/components/typing-cat/TypingCatDisplay.vue'),
+      meta: {
+        title: '小猫打字',
+        forceReload: true,
+      },
+    },
   ],
 }
