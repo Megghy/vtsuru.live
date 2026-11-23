@@ -16,6 +16,7 @@ import type { OrgContext } from './useOrgContext'
 export function useOrgStreamers(ctx: OrgContext) {
   const streamers = ref<OrgStreamerItem[]>([])
   const loading = ref(false)
+  const error = ref<string | null>(null)
   const includeAll = ref(false)
   const search = ref('')
 
@@ -25,13 +26,24 @@ export function useOrgStreamers(ctx: OrgContext) {
     return streamers.value.filter((s) => s.streamer.name.toLowerCase().includes(q) || String(s.streamer.id).includes(q))
   })
 
+  const activeCount = computed(() => streamers.value.filter((s) => s.status === 1).length)
+
   const options = computed<StreamerOption[]>(() =>
-    streamers.value.map((s) => ({ label: s.streamer.name, value: s.streamer.id })),
+    streamers.value
+      .filter((s) => s.status === 1)
+      .map((s) => ({ label: s.streamer.name, value: s.streamer.id })),
+  )
+
+  const pointManagedOptions = computed<StreamerOption[]>(() =>
+    streamers.value
+      .filter((s) => s.status === 1 && s.allowPointManage !== false)
+      .map((s) => ({ label: s.streamer.name, value: s.streamer.id })),
   )
 
   async function load() {
     if (!ctx.orgId.value) return
     loading.value = true
+    error.value = null
     try {
       const includeAllParam = ctx.isOrgAdmin.value ? includeAll.value : false
       streamers.value = unwrapOk(
@@ -41,7 +53,9 @@ export function useOrgStreamers(ctx: OrgContext) {
         '加载主播失败',
       )
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '加载主播失败')
+      const msg = err instanceof Error ? err.message : '加载主播失败'
+      error.value = msg
+      toast.error(msg)
     } finally {
       loading.value = false
     }
@@ -55,14 +69,14 @@ export function useOrgStreamers(ctx: OrgContext) {
         })) as any,
         '移除失败',
       )
-      toast.success('移除成功')
+      toast.success('已移除该主播')
       await load()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '移除失败')
     }
   }
 
-  return { streamers, loading, includeAll, search, filtered, options, load, remove }
+  return { streamers, loading, error, includeAll, search, filtered, activeCount, options, pointManagedOptions, load, remove }
 }
 
 export type OrgStreamersStore = ReturnType<typeof useOrgStreamers>
@@ -89,9 +103,9 @@ export function useStreamerDetail(ctx: OrgContext) {
   const lives = ref<OrgStreamerDetailModel['lives']>([])
   const page = ref(1)
   const pageSize = ref(20)
+  const days = ref(180)
   const hasMore = ref(false)
 
-  const editStatus = ref<number | null>(null)
   const editNote = ref('')
   const saving = ref(false)
 
@@ -113,15 +127,19 @@ export function useStreamerDetail(ctx: OrgContext) {
     try {
       const data = unwrapOk(
         await getApiOrgOrgIdStreamersStreamerUserIdDetail(ctx.orgId.value, selectedId.value, {
+          days: days.value,
           page: page.value,
           pageSize: pageSize.value,
         }),
         '加载失败',
-      )
+      ) as OrgStreamerDetailModel
       detail.value = data
       lives.value = page.value === 1 ? data.lives || [] : [...lives.value, ...(data.lives || [])]
-      hasMore.value = (data.lives?.length || 0) >= pageSize.value
-      editStatus.value = data.status
+      if (typeof data.totalLives === 'number') {
+        hasMore.value = lives.value.length < data.totalLives
+      } else {
+        hasMore.value = (data.lives?.length || 0) >= pageSize.value
+      }
       editNote.value = data.note || ''
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '加载失败')
@@ -136,23 +154,42 @@ export function useStreamerDetail(ctx: OrgContext) {
     await load(false)
   }
 
-  async function save(onSaved?: () => Promise<void> | void) {
+  async function saveNote(onSaved?: () => Promise<void> | void) {
     if (!ctx.isOrgAdmin.value || !selectedId.value || !ctx.orgId.value) return
     saving.value = true
     try {
       unwrapOk(
         (await postApiOrgOrgIdStreamerUpdate(ctx.orgId.value, {
           targetStreamerUserId: selectedId.value,
-          status: (editStatus.value ?? undefined) as never,
           note: editNote.value,
         })) as any,
         '保存失败',
       )
-      toast.success('已保存')
+      toast.success('备注已保存')
       await onSaved?.()
       await load(true)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '保存失败')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function removeFromOrg(onSaved?: () => Promise<void> | void) {
+    if (!ctx.isOrgAdmin.value || !selectedId.value || !ctx.orgId.value) return
+    saving.value = true
+    try {
+      unwrapOk(
+        (await postApiOrgOrgIdStreamerRemove(ctx.orgId.value, {
+          targetStreamerUserId: selectedId.value,
+        })) as any,
+        '移除失败',
+      )
+      toast.success('已解除该主播绑定')
+      await onSaved?.()
+      await load(true)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '移除失败')
     } finally {
       saving.value = false
     }
@@ -165,13 +202,14 @@ export function useStreamerDetail(ctx: OrgContext) {
     detail,
     lives,
     page,
+    days,
     hasMore,
-    editStatus,
     editNote,
     saving,
     open,
     load,
     loadMore,
-    save,
+    saveNote,
+    removeFromOrg,
   }
 }

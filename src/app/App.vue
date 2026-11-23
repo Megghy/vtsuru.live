@@ -25,7 +25,7 @@ const route = useRoute()
 const layout = computed(() => {
   if (route.path.startsWith('/user') || route.name === 'user' || route.path.startsWith('/@')) {
     return 'user'
-  } else if (route.path.startsWith('/manage')) {
+  } else if (route.path.startsWith('/manage') || (route.path.startsWith('/org') && !route.path.startsWith('/org/join'))) {
     return 'manage'
   } else if (route.path.startsWith('/open-live')) {
     return 'open-live'

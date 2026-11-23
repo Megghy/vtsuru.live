@@ -117,7 +117,6 @@ async function rejectOrgInvite(item: any) {
     await notificationStore.markRead([item.id])
     popoverOpen.value = false
     message.success(type === 'member' ? `已拒绝加入：${resp.data.orgName}` : `已拒绝授权：${resp.data.orgName}`)
-    if (type === 'member') router.push({ name: 'org-detail', params: { orgId: resp.data.orgId } })
   } catch (err) {
     message.error(err instanceof Error ? err.message : '操作失败')
   }

@@ -171,10 +171,6 @@ function getStatusVariant(row: ResponsePointOrder2OwnerModel): 'default' | 'seco
 
 function openDetail(row: ResponsePointOrder2OwnerModel) {
   if (row.type === GoodsTypes.Service) {
-    if (props.orgId) {
-      toast.info('组织订单暂不支持查看服务需求，请在主播账号下处理')
-      return
-    }
     serviceDetail.value = row
     showServiceDetail.value = true
     return
@@ -286,10 +282,10 @@ function formatRelativeTime(time: number) {
 
     <template v-else>
       <!-- 桌面端表格 -->
-      <div class="hidden md:block rounded-lg border border-border/80 overflow-hidden bg-card text-xs">
+      <div class="hidden md:block rounded-lg border border-border/80 overflow-x-auto scrollbar-thin bg-card text-xs">
         <Table>
           <TableHeader>
-            <TableRow class="hover:bg-transparent border-b border-border/80">
+            <TableRow class="hover:bg-transparent border-b border-border/80 whitespace-nowrap">
               <TableHead class="w-10 py-2.5 px-3">
                 <Checkbox
                   :checked="isAllSelected"
@@ -692,6 +688,7 @@ function formatRelativeTime(time: number) {
       v-if="serviceDetail"
       v-model:show="showServiceDetail"
       :order="serviceDetail"
+      :org-id="props.orgId"
       role="owner"
       @updated="(updated) => Object.assign(serviceDetail!, updated)"
     />

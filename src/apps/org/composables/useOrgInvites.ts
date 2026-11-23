@@ -8,18 +8,20 @@ import {
   postApiOrgOrgIdInvitesStreamer,
 } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
-import { toast } from '@/shared/utils'
+import { copyToClipboard, toast } from '@/shared/utils'
 
 import type { OrgInviteMemberListItem, OrgInviteStreamerListItem } from '../types'
 import type { OrgContext } from './useOrgContext'
 
 type InviteKind = 'member' | 'streamer'
 
-interface CreateInvitePayload {
+export interface CreateInvitePayload {
   role?: number
   targetUserId?: number | null
   targetStreamerUserId?: number | null
   expireDays?: number | null
+  maxUses?: number | null
+  allowPointManage?: boolean
 }
 
 /** 成员/主播邀请逻辑统一封装，kind 决定接口路径与字段 */
@@ -59,6 +61,16 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
           : await postApiOrgOrgIdInvitesStreamer(ctx.orgId.value, payload as never)
       const data = unwrapOk(resp, '生成邀请失败')
       lastUrl.value = data.joinUrl
+      if (data.joinUrl) {
+        try {
+          await copyToClipboard(data.joinUrl)
+          toast.success('邀请链接已生成并复制到剪贴板')
+        } catch {
+          toast.success('邀请链接已生成')
+        }
+      } else {
+        toast.success('邀请已发送')
+      }
       await load()
       return data.joinUrl
     } catch (err) {

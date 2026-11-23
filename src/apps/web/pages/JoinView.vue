@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CheckCircle2 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -7,6 +8,7 @@ import type { OrgInvitePreviewModel } from '@/api/generated/model'
 import {
   getApiOrgInvitePreview,
   postApiOrgInviteMemberAccept,
+  postApiOrgInviteMemberReject,
   postApiOrgInviteStreamerAccept,
   postApiOrgInviteStreamerReject,
 } from '@/api/generated/org/org'
@@ -22,6 +24,11 @@ import { toast } from '@/shared/utils'
 import '@/apps/web/styles/web-page.css'
 
 type JoinType = 'member' | 'streamer'
+type ExtendedPreview = OrgInvitePreviewModel & {
+  orgDescription?: string | null
+  allowPointManage?: boolean | null
+  maxUses?: number | null
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -38,10 +45,11 @@ const token = computed<string>(() => String(route.query.token || '').trim())
 
 const isBusy = ref(false)
 const done = ref(false)
+const doneMessage = ref('已完成')
 const doneOrgName = ref<string>('')
 
 const previewLoading = ref(false)
-const preview = ref<OrgInvitePreviewModel | null>(null)
+const preview = ref<ExtendedPreview | null>(null)
 const previewError = ref<string>('')
 
 const canOperate = computed(() => Boolean(preview.value) && !previewLoading.value && !previewError.value)
@@ -83,7 +91,7 @@ async function loadPreview() {
       token: token.value,
     })
     if (resp.code === 200) {
-      preview.value = resp.data
+      preview.value = resp.data as ExtendedPreview
       return
     }
 
@@ -109,11 +117,10 @@ async function acceptMember() {
   if (!isValid.value || joinType.value !== 'member') return
   isBusy.value = true
   try {
-    const resp = await postApiOrgInviteMemberAccept({
-      token: token.value,
-    })
+    const resp = await postApiOrgInviteMemberAccept({ token: token.value })
     if (resp.code === 200) {
       done.value = true
+      doneMessage.value = '已加入组织'
       doneOrgName.value = resp.data.orgName
       toast.success(`已加入组织: ${resp.data.orgName}`)
       router.replace({ name: 'org-detail', params: { orgId: resp.data.orgId } })
@@ -127,15 +134,34 @@ async function acceptMember() {
   }
 }
 
+async function rejectMember() {
+  if (!isValid.value || joinType.value !== 'member') return
+  isBusy.value = true
+  try {
+    const resp = await postApiOrgInviteMemberReject({ token: token.value })
+    if (resp.code === 200) {
+      done.value = true
+      doneMessage.value = '已拒绝加入邀请'
+      doneOrgName.value = resp.data.orgName
+      toast.success(`已拒绝加入: ${resp.data.orgName}`)
+    } else {
+      toast.error(resp.message || '操作失败')
+    }
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : '操作失败')
+  } finally {
+    isBusy.value = false
+  }
+}
+
 async function acceptStreamer() {
   if (!isValid.value || joinType.value !== 'streamer') return
   isBusy.value = true
   try {
-    const resp = await postApiOrgInviteStreamerAccept({
-      token: token.value,
-    })
+    const resp = await postApiOrgInviteStreamerAccept({ token: token.value })
     if (resp.code === 200) {
       done.value = true
+      doneMessage.value = '已完成主播授权'
       doneOrgName.value = resp.data.orgName
       toast.success(`已授权组织: ${resp.data.orgName}`)
     } else {
@@ -152,11 +178,10 @@ async function rejectStreamer() {
   if (!isValid.value || joinType.value !== 'streamer') return
   isBusy.value = true
   try {
-    const resp = await postApiOrgInviteStreamerReject({
-      token: token.value,
-    })
+    const resp = await postApiOrgInviteStreamerReject({ token: token.value })
     if (resp.code === 200) {
       done.value = true
+      doneMessage.value = '已拒绝授权邀请'
       doneOrgName.value = resp.data.orgName
       toast.success(`已拒绝授权: ${resp.data.orgName}`)
     } else {
@@ -173,17 +198,19 @@ async function rejectStreamer() {
 <template>
   <main class="web-page web-page--md py-10 px-4 max-w-lg mx-auto">
     <Card>
-      <CardHeader class="pb-3 border-b border-border/50">
-        <CardTitle class="text-lg">加入 / 授权</CardTitle>
+      <CardHeader class="p-4 border-b border-border/60">
+        <CardTitle class="text-base">
+          {{ joinType === 'streamer' ? '主播数据授权邀请' : '加入组织邀请' }}
+        </CardTitle>
       </CardHeader>
-      <CardContent class="pt-5 space-y-4 text-sm">
+      <CardContent class="p-4 space-y-4 text-xs">
         <template v-if="!isValid">
           <Alert variant="destructive">
             <AlertTitle>无效链接</AlertTitle>
             <AlertDescription>缺少必要参数：type / token</AlertDescription>
           </Alert>
           <div class="text-xs text-muted-foreground p-2.5 rounded bg-muted/40 font-mono">
-            链接格式：/join?type=member|streamer&token=...
+            链接格式：/org/join?type=member|streamer&amp;token=...
           </div>
         </template>
 
@@ -191,7 +218,13 @@ async function rejectStreamer() {
           <Alert class="bg-primary/5 border-primary/20 text-foreground">
             <AlertDescription>
               <template v-if="joinType === 'member'"> 你正在通过邀请链接加入组织成为成员。 </template>
-              <template v-else> 你正在通过邀请链接授权组织读取你的直播数据。 </template>
+              <template v-else>
+                你正在通过邀请链接授权组织{{
+                  preview?.allowPointManage === false
+                    ? '读取你的直播与分析数据（不含积分/订单代管）。'
+                    : '读取你的直播数据并代管积分规则与订单。你可随时在「组织管理」页调整或撤销授权。'
+                }}
+              </template>
             </AlertDescription>
           </Alert>
 
@@ -199,7 +232,7 @@ async function rejectStreamer() {
 
           <div
             v-if="previewLoading"
-            class="py-8 flex justify-center items-center"
+            class="py-8 flex-center"
           >
             <Spin />
           </div>
@@ -212,19 +245,46 @@ async function rejectStreamer() {
           <template v-else-if="preview">
             <dl class="grid grid-cols-[80px_1fr] gap-y-2 text-xs">
               <dt class="text-muted-foreground">组织</dt>
-              <dd class="font-medium text-foreground">{{ preview.orgName }} (ID: {{ preview.orgId }})</dd>
+              <dd class="font-medium text-foreground">
+                {{ preview.orgName }} <span class="text-muted-foreground font-mono">(ID: {{ preview.orgId }})</span>
+              </dd>
+
+              <template v-if="preview.orgDescription">
+                <dt class="text-muted-foreground">简介</dt>
+                <dd class="text-muted-foreground">{{ preview.orgDescription }}</dd>
+              </template>
 
               <dt class="text-muted-foreground">到期时间</dt>
-              <dd class="text-foreground">{{ formatDate(preview.expiresAt) }}</dd>
+              <dd class="text-foreground font-mono tabular-nums">{{ formatDate(preview.expiresAt) }}</dd>
 
               <dt class="text-muted-foreground">邀请人</dt>
-              <dd class="text-foreground">{{ preview.createdByUserName || `User ${preview.createdByUserId}` }}</dd>
+              <dd class="text-foreground">{{ preview.createdByUserName || `UID ${preview.createdByUserId}` }}</dd>
 
               <template v-if="preview.type === 'member'">
                 <dt class="text-muted-foreground">加入角色</dt>
                 <dd>
-                  <Badge variant="secondary" size="sm">
+                  <Badge
+                    variant="secondary"
+                    size="xs"
+                  >
                     {{ roleLabel(preview.role) }}
+                  </Badge>
+                </dd>
+              </template>
+
+              <template v-else>
+                <dt class="text-muted-foreground">授权范围</dt>
+                <dd>
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                    :class="
+                      preview.allowPointManage === false
+                        ? 'text-muted-foreground'
+                        : 'text-amber-600 border-amber-500/30 bg-amber-500/10'
+                    "
+                  >
+                    {{ preview.allowPointManage === false ? '仅读取直播数据' : '直播数据 + 积分/订单代管' }}
                   </Badge>
                 </dd>
               </template>
@@ -252,45 +312,62 @@ async function rejectStreamer() {
 
           <template v-else>
             <template v-if="done">
-              <div class="py-6 flex-col-center text-center gap-2">
-                <div
-                  class="size-10 rounded-full bg-emerald-500/10 text-emerald-500 flex-center text-lg font-bold"
-                >
-                  ✓
+              <div class="py-6 flex-col-center text-center gap-3">
+                <div class="size-10 rounded-full bg-emerald-500/10 text-emerald-500 flex-center">
+                  <CheckCircle2 class="size-5" />
                 </div>
-                <h3 class="text-base font-semibold">已完成</h3>
-                <p
-                  v-if="doneOrgName"
-                  class="text-xs text-muted-foreground"
-                >
-                  组织：{{ doneOrgName }}
-                </p>
+                <div class="space-y-1">
+                  <h3 class="text-sm font-semibold m-0">{{ doneMessage }}</h3>
+                  <p
+                    v-if="doneOrgName"
+                    class="text-xs text-muted-foreground m-0"
+                  >
+                    组织：{{ doneOrgName }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    @click="router.push({ name: 'org-index' })"
+                  >
+                    查看组织管理
+                  </Button>
+                  <Button @click="router.push({ name: 'manage-index' })"> 返回控制台 </Button>
+                </div>
               </div>
             </template>
             <template v-else-if="canOperate">
               <div
                 v-if="joinType === 'member'"
-                class="pt-2"
+                class="flex gap-2.5 pt-1"
               >
                 <Button
-                  class="w-full"
+                  class="flex-1"
                   :disabled="isBusy"
                   @click="acceptMember"
                 >
                   {{ isBusy ? '加入中...' : '确认加入' }}
                 </Button>
+                <Button
+                  variant="outline"
+                  class="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                  :disabled="isBusy"
+                  @click="rejectMember"
+                >
+                  {{ isBusy ? '处理中...' : '拒绝邀请' }}
+                </Button>
               </div>
 
               <div
                 v-else
-                class="flex gap-3 pt-2"
+                class="flex gap-2.5 pt-1"
               >
                 <Button
                   class="flex-1"
                   :disabled="isBusy"
                   @click="acceptStreamer"
                 >
-                  {{ isBusy ? '处理中...' : '授权' }}
+                  {{ isBusy ? '处理中...' : '确认授权' }}
                 </Button>
                 <Button
                   variant="destructive"
@@ -298,7 +375,7 @@ async function rejectStreamer() {
                   :disabled="isBusy"
                   @click="rejectStreamer"
                 >
-                  {{ isBusy ? '处理中...' : '拒绝' }}
+                  {{ isBusy ? '处理中...' : '拒绝授权' }}
                 </Button>
               </div>
             </template>

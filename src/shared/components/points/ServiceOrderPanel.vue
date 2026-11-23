@@ -20,6 +20,8 @@ import {
   updateOwnerServiceOrder,
   updateUserServiceOrder,
 } from '@/api/point-service'
+import { unwrapOk } from '@/api/query'
+import { postOrgServiceOrderUpdate } from '@/apps/org/api'
 import type { ServiceField, ServiceOrderData } from '@/api/point-service'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
@@ -40,6 +42,7 @@ const props = defineProps<{
   show: boolean
   order?: ServiceOrder
   role: Role
+  orgId?: number
 }>()
 
 const emit = defineEmits<{
@@ -184,6 +187,11 @@ function syncForm(data?: ServiceOrderData) {
 
 async function load() {
   if (!props.order || props.order.type !== GoodsTypes.Service) return
+  if (props.orgId) {
+    current.value = props.order
+    syncForm(props.order.serviceData)
+    return
+  }
   loading.value = true
   loadError.value = undefined
   try {
@@ -220,14 +228,17 @@ async function applyOwner(status?: PointOrderStatus) {
   actionLoading.value = true
   try {
     const appointmentTs = appointmentAt.value ? Math.floor(new Date(appointmentAt.value).getTime() / 1000) : undefined
-    const updated = await updateOwnerServiceOrder({
+    const payload = {
       orderId: current.value.id,
       ...(status === undefined ? {} : { status }),
       ...(reason.value.trim() ? { reason: reason.value.trim() } : {}),
       ...(appointmentTs ? { appointmentAt: appointmentTs } : {}),
       ...(deliveryUrl.value.trim() ? { deliveryUrl: deliveryUrl.value.trim() } : {}),
       ...(note.value.trim() ? { message: note.value.trim() } : {}),
-    })
+    }
+    const updated = props.orgId
+      ? unwrapOk(await postOrgServiceOrderUpdate(props.orgId, payload), '更新服务订单失败')
+      : await updateOwnerServiceOrder(payload)
     current.value = updated
     syncForm(updated.serviceData)
     note.value = ''

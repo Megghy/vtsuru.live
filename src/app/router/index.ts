@@ -61,6 +61,14 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: '/org/join',
+    name: 'org-join',
+    component: async () => import('@/apps/web/pages/JoinView.vue'),
+    meta: {
+      title: '加入组织',
+    },
+  },
+  {
     path: '/org',
     name: 'org-index',
     component: async () => import('@/apps/org/pages/OrgIndexView.vue'),

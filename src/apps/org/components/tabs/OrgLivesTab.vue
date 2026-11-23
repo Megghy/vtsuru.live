@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import ChatbubblesOutline from '@vicons/ionicons5/es/ChatbubblesOutline'
-import DownloadOutline from '@vicons/ionicons5/es/DownloadOutline'
-import PeopleOutline from '@vicons/ionicons5/es/PeopleOutline'
-import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
-import TimeOutline from '@vicons/ionicons5/es/TimeOutline'
-import WalletOutline from '@vicons/ionicons5/es/WalletOutline'
+import { Clock, Download, MessageSquare, Search, Users, Wallet } from 'lucide-vue-next'
 import { format } from 'date-fns'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -18,38 +14,62 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
+import { useOrgContext } from '../../composables/useOrgContext'
 import { injectOrgLives } from '../../composables/useOrgLives'
 import { injectOrgStreamers } from '../../composables/useOrgStreamers'
 import { exportCsv, withImageSize } from '../../utils'
 
-const { loading, view, streamerFilter, sortKey, search, load } = injectOrgLives()
+const ctx = useOrgContext()
+const { loading, error, view, streamerFilter, sortKey, rangeDays, search, load } = injectOrgLives()
 const { options: streamerOptions } = injectOrgStreamers()
 
-const sortOptions = [
-  { label: '按时间', value: 'startAt' },
-  { label: '按营收', value: 'income' },
-  { label: '按互动', value: 'interaction' },
-  { label: '按弹幕', value: 'danmaku' },
-]
+const sortOptions = computed(() => {
+  const base = [{ label: '按时间', value: 'startAt' }]
+  if (ctx.canViewRevenue.value) base.push({ label: '按营收', value: 'income' })
+  base.push({ label: '按互动', value: 'interaction' }, { label: '按弹幕', value: 'danmaku' })
+  return base
+})
 
 const streamerSelectOptions = computed(() => [{ label: '全部主播', value: 0 }, ...streamerOptions.value])
 
 function exportLives() {
+  const headers = ctx.canViewRevenue.value
+    ? ['主播', '标题', '分区', '开始时间', '营收', '互动', '弹幕', '点赞']
+    : ['主播', '标题', '分区', '开始时间', '互动', '弹幕', '点赞']
   exportCsv(
-    `直播记录_${Date.now()}.csv`,
-    ['主播', '标题', '分区', '开始时间', '营收', '互动', '弹幕', '点赞'],
-    view.value.map(({ streamer, live }) => [
-      streamer.name,
-      live.title,
-      `${live.parentArea}/${live.area}`,
-      new Date(live.startAt).toLocaleString(),
-      live.totalIncomeWithGuard.toFixed(2),
-      live.interactionCount,
-      live.danmakusCount,
-      live.likeCount,
-    ]),
+    `直播记录_近${rangeDays.value}天_${Date.now()}.csv`,
+    headers,
+    view.value.map(({ streamer, live }) =>
+      ctx.canViewRevenue.value
+        ? [
+            streamer.name,
+            live.title,
+            `${live.parentArea}/${live.area}`,
+            new Date(live.startAt).toLocaleString(),
+            live.totalIncomeWithGuard.toFixed(2),
+            live.interactionCount,
+            live.danmakusCount,
+            live.likeCount,
+          ]
+        : [
+            streamer.name,
+            live.title,
+            `${live.parentArea}/${live.area}`,
+            new Date(live.startAt).toLocaleString(),
+            live.interactionCount,
+            live.danmakusCount,
+            live.likeCount,
+          ],
+    ),
   )
 }
+
+watch(
+  () => ctx.refreshTick.value,
+  () => {
+    void load(true, rangeDays.value)
+  },
+)
 
 onMounted(() => load())
 </script>
@@ -59,16 +79,13 @@ onMounted(() => load())
     <div class="space-y-3.5 text-xs">
       <!-- 搜索与筛选工具栏 -->
       <div class="flex items-center gap-2 flex-wrap">
-        <div class="relative w-52">
+        <div class="relative w-52 max-w-full">
           <Input
             v-model="search"
-            placeholder="搜索标题/主播"
-            class="pl-7"
+            placeholder="搜索标题 / 主播"
+            class="pl-8"
           />
-          <component
-            :is="SearchOutline"
-            class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
-          />
+          <Search class="size-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         <Select
@@ -86,6 +103,21 @@ onMounted(() => load())
             >
               {{ opt.label }}
             </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          :model-value="String(rangeDays)"
+          @update:model-value="load(true, Number($event))"
+        >
+          <SelectTrigger class="w-28">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7">近 7 天</SelectItem>
+            <SelectItem value="30">近 30 天</SelectItem>
+            <SelectItem value="60">近 60 天</SelectItem>
+            <SelectItem value="180">近 180 天</SelectItem>
           </SelectContent>
         </Select>
 
@@ -109,23 +141,36 @@ onMounted(() => load())
 
         <Button
           variant="outline"
-          class="gap-1"
+          class="gap-1.5"
           :disabled="view.length === 0"
           @click="exportLives"
         >
-          <component
-            :is="DownloadOutline"
-            class="size-3.5"
-          />
+          <Download class="size-3.5" />
           导出 CSV
         </Button>
 
-        <span class="text-[11px] text-muted-foreground ml-auto">共 {{ view.length }} 场</span>
+        <span class="text-[11px] text-muted-foreground font-mono tabular-nums ml-auto">共 {{ view.length }} 场</span>
       </div>
 
+      <Alert
+        v-if="error"
+        variant="destructive"
+      >
+        <AlertDescription class="flex-between gap-2">
+          <span>{{ error }}</span>
+          <Button
+            variant="outline"
+            size="xs"
+            @click="load(true, rangeDays)"
+          >
+            重试
+          </Button>
+        </AlertDescription>
+      </Alert>
+
       <div
-        v-if="loading"
-        class="py-12 flex justify-center"
+        v-else-if="loading"
+        class="py-12 flex-center"
       >
         <Spin />
       </div>
@@ -144,7 +189,7 @@ onMounted(() => load())
         <Card
           v-for="item in view"
           :key="item.live.liveId"
-          class="/80 overflow-hidden flex flex-col hover:border-primary/50 transition-colors"
+          class="overflow-hidden flex flex-col hover:border-primary/50 transition-colors"
         >
           <!-- 封面大图 -->
           <div class="h-36 overflow-hidden relative bg-muted/40">
@@ -175,10 +220,7 @@ onMounted(() => load())
               v-else
               class="w-full h-full flex-center text-muted-foreground"
             >
-              <component
-                :is="TimeOutline"
-                class="size-10"
-              />
+              <Clock class="size-8 opacity-50" />
             </div>
 
             <!-- 状态标签 -->
@@ -230,44 +272,36 @@ onMounted(() => load())
               </Tooltip>
 
               <div class="flex-between gap-2 text-[11px] text-muted-foreground mt-1.5">
-                <span>{{ item.live.parentArea }} / {{ item.live.area }}</span>
-                <span>
+                <span class="truncate">{{ item.live.parentArea }} / {{ item.live.area }}</span>
+                <span class="whitespace-nowrap font-mono tabular-nums">
                   {{ format(item.live.startAt, 'MM-dd HH:mm') }}
-                  <template v-if="item.live.stopAt"> - {{ format(item.live.stopAt, 'HH:mm') }} </template>
-                  <template v-else> - Now </template>
+                  <template v-if="item.live.stopAt"> - {{ format(item.live.stopAt, 'HH:mm') }}</template>
+                  <template v-else-if="!item.live.isFinish"> - 直播中</template>
                 </span>
               </div>
             </div>
 
-            <div class="pt-2 border-t border-border/60 flex-between text-[11px] text-muted-foreground">
+            <div class="pt-2 border-t border-border/60 flex-between text-[11px] text-muted-foreground font-mono tabular-nums">
               <span
+                v-if="ctx.canViewRevenue.value"
                 class="inline-flex items-center gap-1"
                 title="营收"
               >
-                <component
-                  :is="WalletOutline"
-                  class="size-3"
-                />
-                {{ item.live.totalIncomeWithGuard.toFixed(0) }}
+                <Wallet class="size-3" />
+                ¥{{ item.live.totalIncomeWithGuard.toFixed(0) }}
               </span>
               <span
                 class="inline-flex items-center gap-1"
                 title="互动"
               >
-                <component
-                  :is="PeopleOutline"
-                  class="size-3"
-                />
+                <Users class="size-3" />
                 {{ item.live.interactionCount }}
               </span>
               <span
                 class="inline-flex items-center gap-1"
                 title="弹幕"
               >
-                <component
-                  :is="ChatbubblesOutline"
-                  class="size-3"
-                />
+                <MessageSquare class="size-3" />
                 {{ item.live.danmakusCount }}
               </span>
             </div>

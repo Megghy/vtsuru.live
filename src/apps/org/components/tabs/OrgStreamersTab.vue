@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
+import { Search, Trash2 } from 'lucide-vue-next'
 import { format } from 'date-fns'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 
 import { useFollowingStates } from '@/api/following'
 import FollowButton from '@/components/common/FollowButton.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
 
@@ -19,20 +20,32 @@ import { useOrgContext } from '../../composables/useOrgContext'
 import { useOrgInvites } from '../../composables/useOrgInvites'
 import { injectOrgStreamers, useStreamerDetail } from '../../composables/useOrgStreamers'
 import type { OrgInviteStreamerListItem } from '../../types'
-import { streamerStatusLabel } from '../../utils'
+import { streamerStatusBadgeClass, streamerStatusLabel } from '../../utils'
 import OrgInviteManager from '../OrgInviteManager.vue'
 import OrgStreamerDetailDrawer from '../OrgStreamerDetailDrawer.vue'
 import OrgUserAvatar from '../OrgUserAvatar.vue'
 
 const ctx = useOrgContext()
 const { isOrgAdmin } = ctx
-const { loading, includeAll, search, filtered, load, remove } = injectOrgStreamers()
+const { loading, error, includeAll, search, filtered, load, remove } = injectOrgStreamers()
 const follows = useFollowingStates(() => filtered.value.map((s) => s.streamer.id))
 const invites = useOrgInvites<OrgInviteStreamerListItem>(ctx, 'streamer')
 const detail = useStreamerDetail(ctx)
 
+watch(isOrgAdmin, (admin) => {
+  if (admin && invites.invites.value.length === 0) void invites.load()
+})
+
+watch(
+  () => ctx.refreshTick.value,
+  () => {
+    void load()
+    if (isOrgAdmin.value) void invites.load()
+  },
+)
+
 onMounted(() => {
-  if (isOrgAdmin.value) invites.load()
+  if (isOrgAdmin.value) void invites.load()
 })
 
 async function onSaved() {
@@ -41,17 +54,7 @@ async function onSaved() {
 </script>
 
 <template>
-  <div
-    v-if="loading"
-    class="py-12 flex justify-center"
-  >
-    <Spin />
-  </div>
-
-  <div
-    v-else
-    class="space-y-3.5 text-xs"
-  >
+  <div class="space-y-4 text-xs">
     <OrgInviteManager
       v-if="isOrgAdmin"
       kind="streamer"
@@ -65,45 +68,66 @@ async function onSaved() {
 
     <!-- 工具栏 -->
     <div class="flex-between gap-3 flex-wrap">
-      <div class="relative w-56">
+      <div class="relative w-60 max-w-full">
         <Input
           v-model="search"
-          placeholder="搜索主播名称或ID"
-          class="pl-7"
+          placeholder="搜索主播名称或 ID"
+          class="pl-8"
         />
-        <component
-          :is="SearchOutline"
-          class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
-        />
+        <Search class="size-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
       </div>
 
-      <div
+      <SettingRow
         v-if="isOrgAdmin"
-        class="flex items-center gap-2"
+        title="包含非授权状态"
+        variant="none"
+        class="gap-2"
       >
-        <span class="text-xs text-muted-foreground">包含非 Active 状态</span>
         <Switch v-model:checked="includeAll" />
-      </div>
+      </SettingRow>
+    </div>
+
+    <Alert
+      v-if="error"
+      variant="destructive"
+    >
+      <AlertDescription class="flex-between gap-2">
+        <span>{{ error }}</span>
+        <Button
+          variant="outline"
+          size="xs"
+          @click="load"
+        >
+          重试
+        </Button>
+      </AlertDescription>
+    </Alert>
+
+    <div
+      v-else-if="loading && filtered.length === 0"
+      class="py-12 flex-center"
+    >
+      <Spin />
     </div>
 
     <div
-      v-if="filtered.length === 0"
+      v-else-if="filtered.length === 0"
       class="py-10"
     >
-      <Empty description="暂无主播" />
+      <Empty description="暂无匹配主播" />
     </div>
 
     <!-- 主播列表 -->
     <Card
       v-else
-      class="/80 overflow-hidden"
+      class="overflow-hidden"
     >
       <CardContent class="p-0">
         <div class="divide-y divide-border/60">
           <div
             v-for="s in filtered"
             :key="s.streamer.id"
-            class="p-3 flex-between gap-3 hover:bg-muted/30 transition-colors cursor-pointer select-none"
+            class="p-3.5 flex-between gap-3 flex-wrap hover:bg-muted/30 transition-colors cursor-pointer select-none"
             @click="detail.open(s.streamer.id)"
           >
             <div class="flex items-center gap-3 min-w-0">
@@ -117,15 +141,16 @@ async function onSaved() {
 
               <OrgUserAvatar
                 :face-url="s.streamer.faceUrl"
-                :size="42"
+                :size="40"
               />
 
               <div class="min-w-0 flex flex-col gap-0.5">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap">
                   <strong class="font-medium text-foreground text-sm truncate">{{ s.streamer.name }}</strong>
                   <Badge
-                    variant="secondary"
+                    variant="outline"
                     size="xs"
+                    :class="streamerStatusBadgeClass(s.status)"
                   >
                     {{ streamerStatusLabel(s.status) }}
                   </Badge>
@@ -138,42 +163,55 @@ async function onSaved() {
                         : 'text-muted-foreground border-border/60'
                     "
                   >
-                    {{ s.streamer.isBiliAuthed ? '已绑定B站' : '未绑定' }}
+                    {{ s.streamer.isBiliAuthed ? '已绑定 B 站' : '未绑定' }}
+                  </Badge>
+                  <Badge
+                    v-if="s.status === 1 && s.allowPointManage === false"
+                    variant="outline"
+                    size="xs"
+                    class="text-muted-foreground"
+                  >
+                    仅直播数据
                   </Badge>
                 </div>
-                <span class="text-[11px] text-muted-foreground font-mono">ID: {{ s.streamer.id }}</span>
+                <div class="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
+                  <span class="font-mono tabular-nums">ID: {{ s.streamer.id }}</span>
+                  <span
+                    v-if="s.note"
+                    class="truncate max-w-xs"
+                  >
+                    · {{ s.note }}
+                  </span>
+                </div>
               </div>
             </div>
 
             <div class="flex items-center gap-3 shrink-0">
-              <div class="text-[11px] text-muted-foreground text-right space-y-0.5">
+              <div class="text-[11px] text-muted-foreground font-mono tabular-nums text-right space-y-0.5">
                 <div>加入: {{ format(s.addedAt, 'yyyy-MM-dd') }}</div>
                 <div v-if="s.respondedAt">响应: {{ format(s.respondedAt, 'yyyy-MM-dd') }}</div>
               </div>
 
               <div
-                v-if="isOrgAdmin"
+                v-if="isOrgAdmin && s.status === 1"
                 @click.stop
               >
                 <Popconfirm
-                  title="确定要移除该主播吗？"
+                  :title="`确定解除主播「${s.streamer.name}」的绑定吗？解除后如需恢复须重新发起邀请。`"
                   positive-text="确认移除"
                   negative-text="取消"
                   @positive-click="remove(s.streamer.id)"
                 >
                   <template #trigger>
                     <Button
-                      size="xs"
+                      size="icon-xs"
                       variant="ghost"
-                      class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                      class="rounded-full text-destructive hover:bg-destructive/10"
+                      aria-label="移除主播"
                     >
-                      <component
-                        :is="TrashOutline"
-                        class="size-3.5"
-                      />
+                      <Trash2 class="size-3.5" />
                     </Button>
                   </template>
-                  确定要移除该主播吗？
                 </Popconfirm>
               </div>
             </div>

@@ -24,14 +24,16 @@ export function useOrgLives(ctx: OrgContext) {
   const lives = ref<OrgLiveItem[]>([])
   const loading = ref(false)
   const loaded = ref(false)
+  const error = ref<string | null>(null)
 
-  const streamerFilter = ref<number | null>(null)
+  const streamerFilter = ref<number>(0)
   const sortKey = ref<LiveSortKey>('startAt')
+  const rangeDays = ref<number>(60)
   const search = ref('')
 
   const view = computed(() => {
     let list = lives.value
-    if (streamerFilter.value) list = list.filter((i) => i.streamer.id === streamerFilter.value)
+    if (streamerFilter.value > 0) list = list.filter((i) => i.streamer.id === streamerFilter.value)
     if (search.value) {
       const q = search.value.toLowerCase()
       list = list.filter((i) => i.live.title.toLowerCase().includes(q) || i.streamer.name.toLowerCase().includes(q))
@@ -50,9 +52,12 @@ export function useOrgLives(ctx: OrgContext) {
     })
   })
 
-  const ranking = computed<StreamerRankItem[]>(() => {
+  function computeRanking(days?: number): StreamerRankItem[] {
+    const cutoffMs = days ? Date.now() - days * 86_400_000 : 0
     const map = new Map<number, StreamerRankItem>()
     for (const { streamer, live } of lives.value) {
+      const startMs = live.startAt > 1e11 ? live.startAt : live.startAt * 1000
+      if (cutoffMs && startMs < cutoffMs) continue
       const cur = map.get(streamer.id) ?? {
         id: streamer.id,
         name: streamer.name,
@@ -69,23 +74,55 @@ export function useOrgLives(ctx: OrgContext) {
       map.set(streamer.id, cur)
     }
     return [...map.values()]
-  })
+  }
 
-  async function load(force = false) {
+  const ranking = computed<StreamerRankItem[]>(() => computeRanking())
+
+  function reset() {
+    lives.value = []
+    loaded.value = false
+    error.value = null
+    streamerFilter.value = 0
+  }
+
+  async function load(force = false, days = rangeDays.value) {
     if (!ctx.orgId.value) return
-    if (loaded.value && !force) return
+    if (loaded.value && !force && days === rangeDays.value) return
+    rangeDays.value = days
     loading.value = true
+    error.value = null
     try {
-      lives.value = unwrapOk((await getApiOrgOrgIdLives(ctx.orgId.value)) as any, '加载直播记录失败')
+      const nowMs = Date.now()
+      const fromMs = nowMs - days * 86_400_000
+      lives.value = unwrapOk(
+        (await getApiOrgOrgIdLives(ctx.orgId.value, { from: fromMs, to: nowMs })) as any,
+        '加载直播记录失败',
+      )
       loaded.value = true
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '加载直播记录失败')
+      const msg = err instanceof Error ? err.message : '加载直播记录失败'
+      error.value = msg
+      toast.error(msg)
     } finally {
       loading.value = false
     }
   }
 
-  return { lives, loading, loaded, streamerFilter, sortKey, search, view, ranking, load }
+  return {
+    lives,
+    loading,
+    loaded,
+    error,
+    streamerFilter,
+    sortKey,
+    rangeDays,
+    search,
+    view,
+    ranking,
+    computeRanking,
+    reset,
+    load,
+  }
 }
 
 export type OrgLivesStore = ReturnType<typeof useOrgLives>

@@ -33,8 +33,12 @@ vi.mock('@/shared/utils', () => ({
   toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }))
 
+vi.mock('@/apps/org/api', () => ({
+  getOrgPointGoodsPaged: vi.fn(async () => ({ code: 200, data: [] })),
+}))
+
 vi.mock('@/apps/org/composables/useOrgContext', () => ({
-  useOrgContext: () => ({ orgId: computed(() => 1) }),
+  useOrgContext: () => ({ orgId: computed(() => 1), refreshTick: ref(0) }),
 }))
 
 vi.mock('@/apps/org/composables/useOrgStreamers', () => ({
@@ -43,10 +47,15 @@ vi.mock('@/apps/org/composables/useOrgStreamers', () => ({
       { label: '主播10', value: 10 },
       { label: '主播20', value: 20 },
     ]),
+    pointManagedOptions: ref([
+      { label: '主播10', value: 10 },
+      { label: '主播20', value: 20 },
+    ]),
   }),
 }))
 
 import OrgPointManage from '@/apps/org/components/OrgPointManage.vue'
+import { AlertDialog } from '@/shared/ui/alert-dialog'
 import { FormField } from '@/shared/ui/form-field'
 import { Select } from '@/shared/ui/select'
 
@@ -81,6 +90,14 @@ const uiStubs = {
   Badge: { template: '<span><slot /></span>' },
   Alert: { template: '<div><slot /></div>' },
   AlertDescription: { template: '<div><slot /></div>' },
+  AlertDialog: { props: ['open'], emits: ['update:open'], template: '<div v-if="open"><slot /></div>' },
+  AlertDialogContent: { template: '<div><slot /></div>' },
+  AlertDialogHeader: { template: '<div><slot /></div>' },
+  AlertDialogTitle: { template: '<div><slot /></div>' },
+  AlertDialogDescription: { template: '<div><slot /></div>' },
+  AlertDialogFooter: { template: '<div><slot /></div>' },
+  AlertDialogCancel: { template: '<button><slot /></button>' },
+  AlertDialogAction: { template: '<button><slot /></button>' },
   Dialog: { template: '<div><slot /></div>' },
   DialogContent: { template: '<div><slot /></div>' },
   DialogHeader: { template: '<div><slot /></div>' },
@@ -150,7 +167,6 @@ describe('PointSettings (org mode & concurrency guards)', () => {
       }),
     )
 
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const wrapper = mount(OrgPointManage, {
       global: { stubs: uiStubs },
     })
@@ -173,7 +189,16 @@ describe('PointSettings (org mode & concurrency guards)', () => {
     selectStub.vm.$emit('update:modelValue', '20')
     await flushPromises()
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1)
+    // 弹出确认对话框，尚未切换主播
+    const confirmDialog = wrapper.findComponent(AlertDialog)
+    expect(confirmDialog.props('open')).toBe(true)
+    expect(getDetailMock).not.toHaveBeenCalled()
+    expect(selectStub.props('modelValue')).toBe('10')
+
+    // 取消确认：关闭对话框并保留草稿
+    confirmDialog.vm.$emit('update:open', false)
+    await flushPromises()
+    expect(confirmDialog.props('open')).toBe(false)
     expect(getDetailMock).not.toHaveBeenCalled()
     expect(selectStub.props('modelValue')).toBe('10')
     expect(keywordField()?.props('modelValue')).toBe('已编辑未保存')

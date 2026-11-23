@@ -3,33 +3,32 @@ import { format } from 'date-fns'
 
 import { Empty } from '@/shared/ui/empty'
 
-interface AuditLog {
-  id: number
-  action: string
-  detail: string
-  createdAt: number
-  userId: number
-  userName?: string
-}
+import type { OrgAuditItem } from '../types'
 
 const ACTION_LABELS: Record<string, string> = {
+  'org.create': '创建组织',
+  'org.update': '更新组织信息',
   'org.rename': '重命名组织',
   'org.dissolve': '解散组织',
   'org.transfer-owner': '移交所有权',
   'org.member-leave': '成员退出',
-  'org.member-remove': '移除成员',
+  'org.member-remove': '移出成员',
   'org.member-role-update': '调整成员角色',
+  'org.member-permission-update': '调整成员营收权限',
   'org.member-invite': '成员邀请',
   'org.member-joined': '成员加入',
   'org.member-rejected': '成员拒绝邀请',
   'org.streamer-invite': '主播邀请',
   'org.streamer-joined': '主播授权',
-  'org.streamer-rejected': '主播拒绝',
-  'org.streamer-remove': '移除主播',
-  'org.streamer-update': '更新主播',
+  'org.streamer-rejected': '主播拒绝授权',
+  'org.streamer-remove': '解除主播绑定',
+  'org.streamer-update': '更新主播信息',
+  'org.streamer-revoke-self': '主播主动撤销授权',
+  'org.streamer-permission-update': '主播调整代管权限',
   'org.invite-revoke': '撤销邀请',
   'points.orders.update-status': '更新订单状态',
   'points.orders.update-express': '更新快递信息',
+  'points.orders.service-update': '处理服务订单',
   'points.settings.update': '更新积分规则',
 }
 
@@ -37,7 +36,7 @@ function actionLabel(action: string): string {
   return ACTION_LABELS[action] ?? action
 }
 
-defineProps<{ logs: AuditLog[] }>()
+defineProps<{ logs: OrgAuditItem[] }>()
 </script>
 
 <template>
@@ -54,25 +53,25 @@ defineProps<{ logs: AuditLog[] }>()
     <div
       v-for="log in logs"
       :key="log.id"
-      class="p-3 flex items-start justify-between gap-3 hover:bg-muted/30 transition-colors"
+      class="p-3 flex items-start justify-between gap-3 flex-wrap hover:bg-muted/30 transition-colors"
     >
       <div class="min-w-0 flex-1 space-y-0.5">
         <strong class="font-medium text-foreground text-xs block">
           {{ actionLabel(log.action) }}
         </strong>
         <p class="text-[11px] text-muted-foreground break-all m-0">
-          {{ log.detail }}
+          {{ log.detail || '-' }}
           <span
             v-if="log.action !== actionLabel(log.action)"
-            class="opacity-60"
+            class="opacity-60 font-mono"
           >
             · {{ log.action }}</span
           >
         </p>
       </div>
 
-      <div class="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
-        {{ log.userName || `用户${log.userId}` }} · {{ format(log.createdAt, 'yyyy-MM-dd HH:mm') }}
+      <div class="text-[11px] text-muted-foreground whitespace-nowrap shrink-0 font-mono tabular-nums">
+        {{ log.userName || `UID ${log.userId}` }} · {{ format(log.createdAt, 'yyyy-MM-dd HH:mm') }}
       </div>
     </div>
   </div>

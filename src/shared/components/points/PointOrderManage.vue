@@ -399,12 +399,6 @@ onMounted(async () => {
       <Spin />
     </div>
 
-    <Empty
-      v-else-if="orders.length === 0"
-      description="暂无订单"
-      class="py-12"
-    />
-
     <template v-else>
       <!-- 快捷状态队列 Pills -->
       <div class="flex-between gap-2 flex-wrap">
