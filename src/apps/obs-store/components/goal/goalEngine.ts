@@ -1,6 +1,6 @@
 import { EventDataTypes, GuardLevel } from '@/api/generated/model'
 
-import type { GoalState } from './types'
+import type { GoalMilestone, GoalState } from './types'
 
 export interface GoalIncomingEvent {
   type: EventDataTypes
@@ -8,6 +8,8 @@ export interface GoalIncomingEvent {
   priceYuan: number
   guardLevel?: GuardLevel
   num?: number
+  /** 礼物名称（用于单品礼物计数匹配） */
+  giftName?: string
 }
 
 export interface GoalPatchResult {
@@ -32,6 +34,20 @@ export function formatCountdownClock(ms: number): string {
   return [hours, minutes, seconds].map((n) => String(n).padStart(2, '0')).join(':')
 }
 
+/** 返回按目标值升序排列的有效里程碑 */
+export function getSortedMilestones(milestones?: GoalMilestone[]): GoalMilestone[] {
+  if (!milestones?.length) return []
+  return milestones
+    .filter((m) => Number.isFinite(m.target) && m.target > 0 && m.label.trim().length > 0)
+    .toSorted((a, b) => a.target - b.target)
+}
+
+/** 获取下一个尚未达成的里程碑 */
+export function getNextMilestone(current: number, milestones?: GoalMilestone[]): GoalMilestone | null {
+  const sorted = getSortedMilestones(milestones)
+  return sorted.find((m) => current < m.target) ?? null
+}
+
 /** 根据传入直播事件计算 Goal / Subathon 状态增量 */
 export function computeGoalEventDelta(
   state: GoalState,
@@ -50,6 +66,16 @@ export function computeGoalEventDelta(
       (event.type === EventDataTypes.Gift || event.type === EventDataTypes.SC || event.type === EventDataTypes.Guard)
     ) {
       addedProgress = Number(priceYuan.toFixed(2))
+    } else if (state.metric === 'gift_count' && event.type === EventDataTypes.Gift) {
+      const keyword = state.targetGiftName?.trim().toLowerCase()
+      const name = (event.giftName ?? '').toLowerCase()
+      if (!keyword || name.includes(keyword)) {
+        addedProgress = count
+      }
+    } else if (state.metric === 'likes' && event.type === EventDataTypes.Like) {
+      addedProgress = count
+    } else if (state.metric === 'fans' && event.type === EventDataTypes.Follow) {
+      addedProgress = count
     }
   }
 

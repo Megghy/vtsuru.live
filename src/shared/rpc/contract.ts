@@ -128,6 +128,49 @@ export interface RpcObsSyncSceneLayoutResult {
   syncedCount?: number
 }
 
+export interface RpcObsFilterCapabilities {
+  filterKinds: string[]
+  hasShaderFilter: boolean
+  hasCompositeBlur: boolean
+  canStageLocalAssets: boolean
+}
+
+export interface RpcObsManagedFilterItem {
+  filterName: string
+  filterKind: string
+  enabled: boolean
+  settings: Record<string, unknown>
+}
+
+export interface RpcObsSyncFiltersParams {
+  /** 目标 OBS 源名（可以是场景名，也可以是单个输入源名） */
+  sourceName: string
+  managedPrefix?: string
+  filters: RpcObsManagedFilterItem[]
+}
+
+export interface RpcObsSyncFiltersResult {
+  ok: boolean
+  message?: string
+  appliedCount?: number
+  warnings?: string[]
+}
+
+export interface RpcObsStageFilterAssetParams {
+  /** 期望文件名（自动清理并限定扩展名：.cube/.png/.shader/.effect/.hlsl） */
+  fileName: string
+  /** 文本内容（.cube / .shader） */
+  content?: string
+  /** 远程 URL（二进制 .png / .cube / .shader 等，客户端下载并落盘） */
+  url?: string
+}
+
+export interface RpcObsStageFilterAssetResult {
+  ok: boolean
+  localPath?: string
+  message?: string
+}
+
 export interface RpcVtsStatus {
   connected: boolean
   modelName: string | null
@@ -171,6 +214,9 @@ export interface ServerFunctions {
   obsUpsertBrowserSource: (params: RpcObsUpsertBrowserSourceParams) => Promise<RpcObsUpsertBrowserSourceResult>
   obsGetSourceScreenshot: (params: RpcObsSourceScreenshotParams) => Promise<RpcObsSourceScreenshotResult>
   obsSyncSceneLayout: (params: RpcObsSyncSceneLayoutParams) => Promise<RpcObsSyncSceneLayoutResult>
+  obsGetFilterCapabilities: () => Promise<RpcObsFilterCapabilities>
+  obsSyncSourceFilters: (params: RpcObsSyncFiltersParams) => Promise<RpcObsSyncFiltersResult>
+  obsStageFilterAsset: (params: RpcObsStageFilterAssetParams) => Promise<RpcObsStageFilterAssetResult>
   obsSubscribeEvents: () => Promise<{ ok: true }>
   obsUnsubscribeEvents: () => Promise<{ ok: true }>
 

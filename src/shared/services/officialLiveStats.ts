@@ -86,7 +86,7 @@ export async function fetchOfficialLiveStats(roomId: number, uid?: number): Prom
   }
 
   // 2. 客户端原生兜底（仅在 Tauri 桌面端环境下）
-  if (isTauri) {
+  if (isTauri()) {
     try {
       const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http')
 

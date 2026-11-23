@@ -20,7 +20,7 @@ import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { uploadObsSceneAsset } from '@/api/obs-scene'
-import type { RpcObsSceneItemRef, RpcVtsStatus } from '@/shared/rpc/contract'
+import type { RpcObsFilterCapabilities, RpcObsSceneItemRef, RpcVtsStatus } from '@/shared/rpc/contract'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -37,12 +37,14 @@ import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
 import type { ObsSourceLayer, ObsSourcePositionMode, ObsSourceRole } from '../types'
 import { OBS_SOURCE_ROLE_PRESETS } from '../types'
 import SceneHelpTip from './SceneHelpTip.vue'
+import SceneObsNativeFilterPanel from './SceneObsNativeFilterPanel.vue'
 
 const props = defineProps<{
   layer: ObsSourceLayer
   obsConnected: boolean
   obsSceneItems: RpcObsSceneItemRef[]
   vtsStatus: RpcVtsStatus | null
+  filterCapabilities?: RpcObsFilterCapabilities
   hasPublished?: boolean
   hasUnpublishedChanges?: boolean
   publishing?: boolean
@@ -52,6 +54,8 @@ const emit = defineEmits<{
   refreshObsSources: []
   capturePreview: [sourceName: string]
   syncLayoutToObs: []
+  syncSourceFilters: [layerId: string]
+  refreshFilterCapabilities: []
   testVtsAction: [layerId: string]
   openObsLink: []
   publishNow: []
@@ -686,5 +690,20 @@ async function handleUploadRefImage(e: Event) {
         </div>
       </section>
     </template>
+
+    <!-- 4. 该本地源专属的 OBS 原生像素级滤镜 -->
+    <Separator />
+    <SceneObsNativeFilterPanel
+      scope="source"
+      :target-name="layer.obsSource.sourceName || undefined"
+      :model-value="layer.obsSource.filters"
+      :obs-connected="obsConnected"
+      :filter-capabilities="filterCapabilities"
+      @update:model-value="(val) => { layer.obsSource.filters = val }"
+      @commit="commitHistory"
+      @sync-now="emit('syncSourceFilters', layer.id)"
+      @refresh-capabilities="emit('refreshFilterCapabilities')"
+      @open-obs-link="emit('openObsLink')"
+    />
   </div>
 </template>

@@ -19,6 +19,7 @@ import {
   postApiScheduleUpdate,
 } from '@/api/generated/schedule/schedule'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import FanScheduleCalendarStrip from '@/apps/manage/components/FanScheduleCalendarStrip.vue'
 import ScheduleView from '@/apps/user/pages/ScheduleView.vue'
 import BiliLiveReservePanel from '@/components/BiliLiveReservePanel.vue'
 import ScheduleList from '@/components/ScheduleList.vue'
@@ -849,6 +850,8 @@ onMounted(() => {
       @refresh="refreshBiliReserve"
       @update:auto-sync="setBiliReserveAutoSync"
     />
+
+    <FanScheduleCalendarStrip />
 
     <div
       v-if="isLoading"

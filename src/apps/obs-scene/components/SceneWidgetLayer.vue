@@ -22,6 +22,24 @@ const widgetComponents: Record<string, ReturnType<typeof defineAsyncComponent>> 
   'typing-cat': defineAsyncComponent(() => import('@/apps/obs-store/components/typing-cat/TypingCatDisplay.vue')),
   gamepad: defineAsyncComponent(() => import('@/apps/obs-store/components/gamepads/GamepadDisplay.vue')),
   pngtuber: defineAsyncComponent(() => import('./PngtuberSceneWidget.vue')),
+  'alert-box': defineAsyncComponent(() => import('@/apps/obs-store/components/alert-box/AlertBoxDisplay.vue')),
+  'live-hud': defineAsyncComponent(() => import('@/apps/obs-store/components/live-hud/LiveHudDisplay.vue')),
+  'gift-board': defineAsyncComponent(() => import('@/apps/obs-store/components/gift-board/GiftBoardDisplay.vue')),
+  schedule: defineAsyncComponent(() => import('@/apps/obs-store/components/schedule/ScheduleDisplay.vue')),
+  'point-showcase': defineAsyncComponent(
+    () => import('@/apps/obs-store/components/point-showcase/PointShowcaseDisplay.vue'),
+  ),
+  'video-collect': defineAsyncComponent(
+    () => import('@/apps/obs-store/components/video-collect/VideoCollectDisplay.vue'),
+  ),
+  'now-playing': defineAsyncComponent(() => import('@/apps/obs-store/components/now-playing/NowPlayingDisplay.vue')),
+  checklist: defineAsyncComponent(() => import('@/apps/obs-store/components/checklist/ChecklistDisplay.vue')),
+  'song-picker': defineAsyncComponent(() => import('@/apps/obs-store/components/song-picker/SongPickerDisplay.vue')),
+  'mystery-box': defineAsyncComponent(() => import('@/apps/obs-store/components/mystery-box/MysteryBoxDisplay.vue')),
+  'emote-hype': defineAsyncComponent(() => import('@/apps/obs-store/components/emote-hype/EmoteHypeDisplay.vue')),
+  'voice-avatars': defineAsyncComponent(
+    () => import('@/apps/obs-store/components/voice-avatars/VoiceAvatarsDisplay.vue'),
+  ),
 }
 
 const definition = computed(() => getObsComponentById(props.layer.widget.componentId))

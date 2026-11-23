@@ -12,6 +12,8 @@ import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 import DanmakuPanel from '../components/DanmakuPanel.vue'
 import DashboardToolbar from '../components/DashboardToolbar.vue'
+import FanAlertStrip from '../components/FanAlertStrip.vue'
+import FanTodayReminderDialog from '../components/FanTodayReminderDialog.vue'
 import ItemContextMenu from '../components/ItemContextMenu.vue'
 import PaidPanel from '../components/PaidPanel.vue'
 import SaveImageModal from '../components/SaveImageModal.vue'
@@ -37,9 +39,19 @@ const panes = computed(() =>
     .map((id) => ({ id, blurred: layout.value.hidden.includes(id) })),
 )
 
+/** 按当前可见面板权重归一化为 100%，避免显隐切换后尺寸总和漂移 */
+const paneSizes = computed(() => {
+  const weights = panes.value.map((p) => Math.max(12, layout.value.sizes[p.id] || 25))
+  const total = weights.reduce((sum, w) => sum + w, 0) || 100
+  return weights.map((w) => Math.round((w / total) * 1000) / 10)
+})
+
 function onResized({ panes: sizes }: { panes: { size: number }[] }) {
+  const totalWeight = panes.value.reduce((sum, p) => sum + Math.max(12, layout.value.sizes[p.id] || 25), 0) || 100
   panes.value.forEach((pane, index) => {
-    if (sizes[index]) layout.value.sizes[pane.id] = Math.round(sizes[index].size * 10) / 10
+    if (sizes[index]) {
+      layout.value.sizes[pane.id] = Math.round((sizes[index].size / 100) * totalWeight * 10) / 10
+    }
   })
 }
 
@@ -57,10 +69,16 @@ const PANEL_KEYS = Object.fromEntries(PANEL_IDS.map((id, index) => [`Digit${inde
   PanelId
 >
 
-// 客户端内页面被 KeepAlive 缓存，离开时停用快捷键
+// 客户端内页面被 KeepAlive 缓存，离开时停用快捷键与后台轮询
 let active = true
-onActivated(() => (active = true))
-onDeactivated(() => (active = false))
+onActivated(() => {
+  active = true
+  dashboard.resumePolling()
+})
+onDeactivated(() => {
+  active = false
+  dashboard.pausePolling()
+})
 
 useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   if (!active) return
@@ -122,6 +140,7 @@ onUnmounted(() => void dashboard.stop())
     </div>
     <template v-else>
       <DashboardToolbar />
+      <FanAlertStrip />
       <Splitpanes
         class="flex-1 min-h-0 dash-split"
         :horizontal="layout.vertical"
@@ -130,9 +149,9 @@ onUnmounted(() => void dashboard.stop())
         @splitter-dblclick="resetSizes"
       >
         <Pane
-          v-for="pane in panes"
+          v-for="(pane, idx) in panes"
           :key="pane.id"
-          :size="layout.sizes[pane.id]"
+          :size="paneSizes[idx]"
           :min-size="12"
         >
           <DanmakuPanel
@@ -155,6 +174,7 @@ onUnmounted(() => void dashboard.stop())
       <SaveImageModal />
       <SettingsDrawer />
       <ShortcutsModal />
+      <FanTodayReminderDialog />
     </template>
   </div>
 </template>

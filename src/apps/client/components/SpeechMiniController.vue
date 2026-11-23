@@ -17,7 +17,9 @@ const route = useRoute()
 const speechService = useSpeechService()
 const { speechState, speakQueue, isPaused } = speechService
 
-const isActive = computed(() => speechState.canSpeech && route.name !== 'client-read-danmaku')
+const isActive = computed(
+  () => speechState.canSpeech && route.name !== 'client-read-danmaku' && route.name !== 'client-live-dashboard',
+)
 const queueCount = computed(() => speakQueue.value.length)
 
 function goToPage() {

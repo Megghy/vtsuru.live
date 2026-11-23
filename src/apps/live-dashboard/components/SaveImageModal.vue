@@ -6,10 +6,11 @@ import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
-import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
 import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
@@ -132,7 +133,7 @@ const copy = () =>
             </div>
           </div>
         </div>
-        <div class="image-dialog__options flex flex-col gap-2.5">
+        <div class="flex flex-col gap-2">
           <FormField
             label="宽度"
             :extra="`${options.width}px`"
@@ -145,30 +146,42 @@ const copy = () =>
               @update:model-value="(val) => val && (options.width = val[0])"
             />
           </FormField>
-          <label class="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox v-model:checked="options.showMedal" />
-            粉丝勋章
-          </label>
-          <label class="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox v-model:checked="options.blurName" />
-            模糊用户名
-          </label>
-          <label class="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox v-model:checked="options.blurAvatar" />
-            模糊头像
-          </label>
-          <label class="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox v-model:checked="options.ignoreRead" />
-            忽略已读状态
-          </label>
-          <label class="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox v-model:checked="options.watermark" />
-            水印
-          </label>
-          <label class="flex items-center gap-2 text-xs cursor-pointer">
-            <Checkbox v-model:checked="options.padding" />
-            额外留白
-          </label>
+          <SettingRow
+            variant="none"
+            title="粉丝勋章"
+          >
+            <Switch v-model="options.showMedal" />
+          </SettingRow>
+          <SettingRow
+            variant="none"
+            title="模糊用户名"
+          >
+            <Switch v-model="options.blurName" />
+          </SettingRow>
+          <SettingRow
+            variant="none"
+            title="模糊头像"
+          >
+            <Switch v-model="options.blurAvatar" />
+          </SettingRow>
+          <SettingRow
+            variant="none"
+            title="忽略已读状态"
+          >
+            <Switch v-model="options.ignoreRead" />
+          </SettingRow>
+          <SettingRow
+            variant="none"
+            title="水印"
+          >
+            <Switch v-model="options.watermark" />
+          </SettingRow>
+          <SettingRow
+            variant="none"
+            title="额外留白"
+          >
+            <Switch v-model="options.padding" />
+          </SettingRow>
           <div class="flex items-center gap-1 mt-1">
             <Button
               v-for="mode in ['transparent', 'white', 'black'] as const"
@@ -183,7 +196,7 @@ const copy = () =>
         </div>
       </div>
       <DialogFooter>
-        <div class="image-dialog__buttons flex justify-end gap-2 w-full">
+        <div class="flex justify-end gap-2 w-full">
           <Button
             v-if="canCopy"
             variant="outline"

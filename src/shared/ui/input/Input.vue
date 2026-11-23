@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core'
-import type { HTMLAttributes } from 'vue'
+import { type HTMLAttributes, ref } from 'vue'
 
 import { cn } from '@/shared/utils/cn'
 
@@ -34,10 +34,18 @@ const sizeClasses: Record<string, string> = {
   xs: 'h-control-xs px-2 py-0.5 text-xs',
   lg: 'h-control-lg px-4 py-2 text-base',
 }
+const inputRef = ref<HTMLInputElement | null>(null)
+
+defineExpose({
+  el: inputRef,
+  focus: (options?: FocusOptions) => inputRef.value?.focus(options),
+  blur: () => inputRef.value?.blur(),
+})
 </script>
 
 <template>
   <input
+    ref="inputRef"
     v-model="modelValue"
     :type="type"
     :placeholder="placeholder"

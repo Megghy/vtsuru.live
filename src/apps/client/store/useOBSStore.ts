@@ -2,6 +2,7 @@ import OBSWebSocket, { EventSubscription } from 'obs-websocket-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import { fetchObsFilterCapabilities, syncObsSourceFilters } from '@/shared/obs/obsWebsocketFilters'
 import {
   fetchObsSceneItems,
   fetchObsSourceScreenshot,
@@ -10,9 +11,12 @@ import {
   upsertObsBrowserSource,
 } from '@/shared/obs/obsWebsocketScene'
 import type {
+  RpcObsFilterCapabilities,
   RpcObsSceneItemsResult,
   RpcObsSourceScreenshotParams,
   RpcObsSourceScreenshotResult,
+  RpcObsSyncFiltersParams,
+  RpcObsSyncFiltersResult,
   RpcObsSyncSceneLayoutParams,
   RpcObsSyncSceneLayoutResult,
   RpcObsUpsertBrowserSourceParams,
@@ -623,6 +627,20 @@ export const useOBSStore = defineStore('obs', () => {
     return syncObsSceneLayout(obs, params)
   }
 
+  async function getFilterCapabilities(): Promise<RpcObsFilterCapabilities> {
+    if (!obs || !obsConnected.value) {
+      return { filterKinds: [], hasShaderFilter: false, hasCompositeBlur: false, canStageLocalAssets: true }
+    }
+    return fetchObsFilterCapabilities(obs, true)
+  }
+
+  async function syncSourceFilters(params: RpcObsSyncFiltersParams): Promise<RpcObsSyncFiltersResult> {
+    if (!obs || !obsConnected.value) {
+      return { ok: false, message: 'OBS 未连接，请先在客户端中连接 OBS WebSocket' }
+    }
+    return syncObsSourceFilters(obs, params)
+  }
+
   // 保存场景配置
   async function saveSceneConfig() {
     try {
@@ -722,6 +740,8 @@ export const useOBSStore = defineStore('obs', () => {
     upsertBrowserSource,
     getSourceScreenshot,
     syncSceneLayout,
+    getFilterCapabilities,
+    syncSourceFilters,
     saveSceneConfig,
     loadSceneConfig,
     loadObsConfig,

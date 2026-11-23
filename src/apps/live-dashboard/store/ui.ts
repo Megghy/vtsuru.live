@@ -23,7 +23,17 @@ export const useDashboardUi = defineStore('LiveDashboardUi', () => {
   const settingsOpen = ref(false)
   const shortcutsOpen = ref(false)
   const searchFocusTick = ref(0)
+  const replyDraft = ref('')
+  const composerFocusTick = ref(0)
   const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
+
+  function insertReplyTarget(uname: string) {
+    const mention = `@${uname} `
+    if (!replyDraft.value.startsWith(mention)) {
+      replyDraft.value = `${mention}${replyDraft.value}`.slice(0, 40)
+    }
+    composerFocusTick.value++
+  }
 
   function openUserMenu(event: DashboardEvent, e: MouseEvent) {
     contextMenu.value = null
@@ -50,8 +60,11 @@ export const useDashboardUi = defineStore('LiveDashboardUi', () => {
     settingsOpen,
     shortcutsOpen,
     searchFocusTick,
+    replyDraft,
+    composerFocusTick,
     openUserMenu,
     openContextMenu,
+    insertReplyTarget,
     toggleTheme,
   }
 })

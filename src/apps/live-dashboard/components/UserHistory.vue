@@ -108,12 +108,8 @@ function describe(e: DashboardEvent) {
         <TabsTrigger value="all"> 全部 </TabsTrigger>
         <TabsTrigger value="message"> 弹幕 </TabsTrigger>
         <TabsTrigger value="sc"> SC </TabsTrigger>
-        <TabsTrigger value="gift" >
-          礼物
-        </TabsTrigger>
-        <TabsTrigger value="interaction" >
-          互动
-        </TabsTrigger>
+        <TabsTrigger value="gift"> 礼物 </TabsTrigger>
+        <TabsTrigger value="interaction"> 互动 </TabsTrigger>
       </TabsList>
     </Tabs>
     <div class="max-h-[240px] overflow-y-auto grid gap-0.5 content-start">

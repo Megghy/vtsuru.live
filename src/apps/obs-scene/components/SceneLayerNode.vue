@@ -74,11 +74,13 @@ const containerStyle = computed(() => {
 const shouldBlockInnerPointer = computed(() => {
   if (props.mode === 'edit' && props.interactionMode === 'select') return true
   if (props.mode === 'live' && props.layer.type === 'iframe' && !props.layer.iframe.interactable) return true
+  if (props.mode === 'live' && props.layer.type === 'vfx') return true
   return false
 })
 
-// 编辑态下锁定图层自动点击穿透，避免大背景图或装饰框遮挡下层选择
+// 编辑态下锁定图层自动点击穿透，避免大背景图、滤镜层或装饰框遮挡下层选择
 const shouldPassThroughPointer = computed(() => {
+  if (props.mode === 'live' && props.layer.type === 'vfx') return true
   return props.mode === 'edit' && props.interactionMode === 'select' && isEffectivelyLocked.value
 })
 </script>

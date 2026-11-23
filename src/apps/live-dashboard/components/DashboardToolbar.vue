@@ -1,26 +1,34 @@
 <script setup lang="ts">
-import ArrowClockwise16Regular from '@vicons/fluent/es/ArrowClockwise16Regular'
-import Board16Regular from '@vicons/fluent/es/Board16Regular'
-import BookmarkAdd24Regular from '@vicons/fluent/es/BookmarkAdd24Regular'
-import Dismiss16Regular from '@vicons/fluent/es/Dismiss16Regular'
-import Eye16Regular from '@vicons/fluent/es/Eye16Regular'
-import EyeOff16Regular from '@vicons/fluent/es/EyeOff16Regular'
-import History24Regular from '@vicons/fluent/es/History24Regular'
-import Keyboard20Regular from '@vicons/fluent/es/Keyboard20Regular'
-import Search16Regular from '@vicons/fluent/es/Search16Regular'
-import Settings16Regular from '@vicons/fluent/es/Settings16Regular'
-import WeatherMoon16Regular from '@vicons/fluent/es/WeatherMoon16Regular'
-import WeatherSunny16Regular from '@vicons/fluent/es/WeatherSunny16Regular'
-import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
-import { computed, ref, watch } from 'vue'
+import {
+  BookmarkPlus,
+  Cake,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  History,
+  Keyboard,
+  LayoutGrid,
+  Moon,
+  Radio,
+  RefreshCw,
+  Search,
+  Settings,
+  Shield,
+  ShieldOff,
+  Sun,
+  X,
+} from 'lucide-vue-next'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
-import { isTauri } from '@/shared/config'
+import { CURRENT_HOST, isTauri } from '@/shared/config'
+import { useFanPrivacy } from '@/shared/composables/useFanPrivacy'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
@@ -31,13 +39,18 @@ import { useDashboardUi } from '../store/ui'
 import { useLiveDashboard } from '../store/useLiveDashboard'
 import IconAction from './IconAction.vue'
 import LayoutMenu from './LayoutMenu.vue'
+import SpeechStatusPill from './SpeechStatusPill.vue'
+
+const ClientLiveQuickControl = defineAsyncComponent(() => import('./ClientLiveQuickControl.vue'))
 
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
+const { privacyMode, togglePrivacyMode } = useFanPrivacy()
+const inTauri = isTauri()
 const stats = computed(() => dashboard.stats)
 const officialStats = computed(() => dashboard.officialStats)
 const client = computed(() => dashboard.client)
-const searchInputRef = ref<HTMLInputElement | null>(null)
+const searchInputRef = ref<{ focus: () => void } | null>(null)
 const reconnecting = ref(false)
 
 const activeToolbarKeys = computed({
@@ -120,8 +133,19 @@ function applyCustomRange() {
   }
 }
 
-function openInNewWindow() {
-  window.open('/live-dashboard', '_blank', 'noopener,noreferrer')
+async function openInNewWindow() {
+  if (inTauri) {
+    const { openUrl } = await import('@tauri-apps/plugin-opener')
+    await openUrl(`${CURRENT_HOST}live-dashboard`)
+  } else {
+    window.open('/live-dashboard', '_blank', 'noopener,noreferrer')
+  }
+}
+
+function onStatsWheel(e: WheelEvent) {
+  const el = e.currentTarget as HTMLElement | null
+  if (!el || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+  el.scrollLeft += e.deltaY
 }
 
 const SEARCH_HELP = [
@@ -133,15 +157,15 @@ const SEARCH_HELP = [
 </script>
 
 <template>
-  <header class="relative flex items-center gap-3 h-11 px-2.5 border-b border-border bg-card shrink-0 min-w-0 text-sm">
+  <header
+    class="relative flex items-center gap-2.5 h-11 px-2.5 border-b border-border bg-card shrink-0 min-w-0 text-sm"
+  >
     <div class="flex items-center gap-1.5 shrink-0">
-      <div class="relative w-[180px]">
+      <div class="relative w-[176px]">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Search16Regular
-                class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground cursor-help"
-              />
+              <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground cursor-help" />
             </TooltipTrigger>
             <TooltipContent class="space-y-0.5">
               <div
@@ -159,7 +183,7 @@ const SEARCH_HELP = [
           ref="searchInputRef"
           v-model="dashboard.search"
           placeholder="搜索（Ctrl+F）"
-          class="toolbar__search-input pl-8 pr-6"
+          class="pl-8 pr-6"
         />
 
         <Button
@@ -170,7 +194,7 @@ const SEARCH_HELP = [
           aria-label="清除搜索"
           @click="dashboard.search = ''"
         >
-          <Dismiss16Regular class="size-3" />
+          <X class="size-3" />
         </Button>
       </div>
 
@@ -180,13 +204,13 @@ const SEARCH_HELP = [
           <Button
             size="xs"
             :variant="range ? 'default' : 'ghost'"
-            class="toolbar__history-btn gap-1"
+            class="gap-1"
           >
-            <History24Regular class="size-3.5" />
-            <span>{{ range ? '已选历史' : '历史回溯' }}</span>
-            <Dismiss16Regular
+            <History class="size-3.5" />
+            <span class="hidden lg:inline">{{ range ? '已选历史' : '历史回溯' }}</span>
+            <X
               v-if="range"
-              class="size-3 ml-1 hover:text-destructive"
+              class="size-3 ml-0.5 hover:text-destructive"
               @click.stop="range = null"
             />
           </Button>
@@ -256,6 +280,30 @@ const SEARCH_HELP = [
         </PopoverContent>
       </Popover>
 
+      <TooltipProvider v-if="!range">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="xs"
+              :variant="dashboard.onlyCurrentSession ? 'secondary' : 'ghost'"
+              :class="dashboard.onlyCurrentSession ? 'text-primary' : 'text-muted-foreground'"
+              class="gap-1 px-1.5"
+              @click="dashboard.onlyCurrentSession = !dashboard.onlyCurrentSession"
+            >
+              <Radio class="size-3.5" />
+              <span class="hidden xl:inline">仅看本场</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {{
+              dashboard.onlyCurrentSession
+                ? '当前仅显示本次统计开始后的事件，点击恢复历史'
+                : '过滤历史缓存，仅显示本次统计开始后的新事件'
+            }}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
       <Tag
         v-if="dashboard.userFilter"
         closable
@@ -269,8 +317,9 @@ const SEARCH_HELP = [
     <VueDraggable
       v-model="activeToolbarKeys"
       :animation="150"
-      class="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto no-scrollbar"
+      class="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto scrollbar-thin py-0.5"
       ghost-class="stat-ghost"
+      @wheel.prevent="onStatsWheel"
     >
       <template
         v-for="key in activeToolbarKeys"
@@ -454,12 +503,15 @@ const SEARCH_HELP = [
           </span>
         </div>
 
-        <!-- Top Payers -->
-        <template v-else-if="key === 'topPayers'">
+        <!-- Top Payers（单节点包裹，避免 Sortable 索引错位） -->
+        <div
+          v-else-if="key === 'topPayers'"
+          class="flex items-center gap-1 shrink-0 cursor-grab select-none active:cursor-grabbing"
+        >
           <div
             v-for="payer in stats.topPayers"
             :key="payer.userKey"
-            class="flex items-center gap-1.5 py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none"
+            class="flex items-center gap-1.5 py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0"
             :title="payer.uname"
           >
             <img
@@ -477,11 +529,14 @@ const SEARCH_HELP = [
               }}</span>
             </div>
           </div>
-        </template>
+        </div>
       </template>
     </VueDraggable>
 
     <div class="flex items-center gap-1 shrink-0">
+      <ClientLiveQuickControl v-if="inTauri" />
+      <SpeechStatusPill />
+
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
@@ -509,7 +564,7 @@ const SEARCH_HELP = [
             class="gap-1 px-2 text-muted-foreground hover:text-foreground"
             title="记录直播高光打点 (快捷键 Alt+M)"
           >
-            <BookmarkAdd24Regular class="size-4" />
+            <BookmarkPlus class="size-3.5" />
             <span class="hidden sm:inline">打点</span>
             <Badge
               v-if="dashboard.markers.length > 0"
@@ -542,13 +597,13 @@ const SEARCH_HELP = [
               打点
             </Button>
           </div>
-          <label
-            v-if="isTauri()"
-            class="flex items-center gap-2 cursor-pointer text-muted-foreground"
+          <SettingRow
+            v-if="inTauri"
+            variant="none"
+            title="同时保存 OBS 回放缓存片段"
           >
-            <Checkbox v-model:checked="markerSaveReplay" />
-            <span>同时保存 OBS 回放缓存片段</span>
-          </label>
+            <Switch v-model="markerSaveReplay" />
+          </SettingRow>
           <div
             v-if="dashboard.markers.length > 0"
             class="max-h-40 overflow-y-auto scrollbar-thin space-y-1 border-t pt-2"
@@ -574,7 +629,7 @@ const SEARCH_HELP = [
                 class="text-muted-foreground hover:text-destructive shrink-0"
                 @click="dashboard.removeMarker(m.id)"
               >
-                <Dismiss16Regular class="size-3.5" />
+                <X class="size-3.5" />
               </button>
             </div>
           </div>
@@ -587,13 +642,31 @@ const SEARCH_HELP = [
         </PopoverContent>
       </Popover>
 
+      <Button
+        v-if="dashboard.fans.todayReminders.length > 0"
+        variant="ghost"
+        size="xs"
+        class="gap-1 text-amber-600 dark:text-amber-400"
+        aria-label="今日粉丝特别日提醒"
+        :title="`今日有 ${dashboard.fans.todayReminders.length} 条粉丝生日或纪念日`"
+        @click="dashboard.fans.todayReminderDialogOpen = true"
+      >
+        <Cake class="size-3.5" />
+        <span class="hidden lg:inline">今日 {{ dashboard.fans.todayReminders.length }}</span>
+      </Button>
       <IconAction
-        :icon="ArrowClockwise16Regular"
+        :icon="privacyMode ? ShieldOff : Shield"
+        :tip="privacyMode ? '防露屏模式已开启（点击关闭）' : '开启防露屏模式（隐藏粉丝生日/备注/消费金额）'"
+        :active="privacyMode"
+        @click="togglePrivacyMode"
+      />
+      <IconAction
+        :icon="RefreshCw"
         tip="重新连接弹幕源"
         @click="reconnect"
       />
       <IconAction
-        :icon="dashboard.settings.hideRead ? EyeOff16Regular : Eye16Regular"
+        :icon="dashboard.settings.hideRead ? EyeOff : Eye"
         :tip="dashboard.settings.hideRead ? '显示已读项 (Alt+R)' : '隐藏已读项 (Alt+R)'"
         :active="dashboard.settings.hideRead"
         @click="dashboard.settings.hideRead = !dashboard.settings.hideRead"
@@ -603,11 +676,10 @@ const SEARCH_HELP = [
         <PopoverTrigger as-child>
           <Button
             variant="ghost"
-            size="xs"
-            class="w-7 p-0"
+            size="icon-xs"
             aria-label="布局"
           >
-            <Board16Regular class="size-4 text-muted-foreground" />
+            <LayoutGrid class="size-3.5 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -619,22 +691,22 @@ const SEARCH_HELP = [
       </Popover>
 
       <IconAction
-        :icon="isDarkMode ? WeatherSunny16Regular : WeatherMoon16Regular"
+        :icon="isDarkMode ? Sun : Moon"
         tip="切换深色 / 浅色 (Alt+D)"
         @click="ui.toggleTheme()"
       />
       <IconAction
-        :icon="Keyboard20Regular"
+        :icon="Keyboard"
         tip="快捷键 (?)"
         @click="ui.shortcutsOpen = true"
       />
       <IconAction
-        :icon="OpenOutline"
-        tip="在新窗口中独立打开"
+        :icon="ExternalLink"
+        :tip="inTauri ? '在浏览器中独立打开' : '在新窗口中独立打开'"
         @click="openInNewWindow"
       />
       <IconAction
-        :icon="Settings16Regular"
+        :icon="Settings"
         tip="设置"
         @click="ui.settingsOpen = true"
       />

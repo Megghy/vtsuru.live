@@ -2,6 +2,7 @@ import { useStorage } from '@vueuse/core'
 import OBSWebSocket from 'obs-websocket-js'
 import { computed, onUnmounted, ref } from 'vue'
 
+import { fetchObsFilterCapabilities, syncObsSourceFilters } from '@/shared/obs/obsWebsocketFilters'
 import {
   fetchObsSceneItems,
   fetchObsSourceScreenshot,
@@ -12,9 +13,14 @@ import {
 import type { RpcClient } from '@/shared/rpc/client'
 import { connectLocalFetcher, probeLocalFetcher } from '@/shared/rpc/client'
 import type {
+  RpcObsFilterCapabilities,
   RpcObsSceneItemRef,
   RpcObsSourceScreenshotParams,
   RpcObsSourceScreenshotResult,
+  RpcObsStageFilterAssetParams,
+  RpcObsStageFilterAssetResult,
+  RpcObsSyncFiltersParams,
+  RpcObsSyncFiltersResult,
   RpcObsSyncSceneLayoutParams,
   RpcObsSyncSceneLayoutResult,
   RpcObsUpsertBrowserSourceParams,
@@ -51,6 +57,12 @@ export function useObsLocalBridge() {
   const sourcePreviews = ref<Record<string, string>>({})
   const vtsStatus = ref<RpcVtsStatus | null>(null)
   const vtsConnected = computed(() => Boolean(vtsStatus.value?.connected))
+  const filterCapabilities = ref<RpcObsFilterCapabilities>({
+    filterKinds: [],
+    hasShaderFilter: false,
+    hasCompositeBlur: false,
+    canStageLocalAssets: false,
+  })
 
   let rpcClient: RpcClient | null = null
   let directObs: OBSWebSocket | null = null
@@ -77,6 +89,12 @@ export function useObsLocalBridge() {
     scenes.value = []
     currentScene.value = ''
     vtsStatus.value = null
+    filterCapabilities.value = {
+      filterKinds: [],
+      hasShaderFilter: false,
+      hasCompositeBlur: false,
+      canStageLocalAssets: false,
+    }
   }
 
   async function disconnect() {
@@ -151,6 +169,8 @@ export function useObsLocalBridge() {
 
       if (!status.connected) {
         error.value = '已连上桌面客户端，但客户端尚未连接 OBS WebSocket'
+      } else {
+        void refreshFilterCapabilities()
       }
       return true
     } catch (err) {
@@ -195,7 +215,7 @@ export function useObsLocalBridge() {
       transport.value = 'direct-ws'
       connected.value = true
 
-      const [size] = await Promise.all([fetchObsVideoCanvasSize(obs), refreshDirectScenes()])
+      const [size] = await Promise.all([fetchObsVideoCanvasSize(obs), refreshDirectScenes(), refreshFilterCapabilities()])
       baseWidth.value = size.baseWidth
       baseHeight.value = size.baseHeight
       return true
@@ -331,6 +351,49 @@ export function useObsLocalBridge() {
     return { ok: false, message: '未建立有效连接' }
   }
 
+  async function refreshFilterCapabilities(): Promise<RpcObsFilterCapabilities> {
+    if (transport.value === 'client-rpc' && rpcClient) {
+      try {
+        filterCapabilities.value = await rpcClient.rpc.obsGetFilterCapabilities()
+      } catch {
+        filterCapabilities.value = {
+          filterKinds: [],
+          hasShaderFilter: false,
+          hasCompositeBlur: false,
+          canStageLocalAssets: false,
+        }
+      }
+      return filterCapabilities.value
+    }
+    if (transport.value === 'direct-ws' && directObs) {
+      filterCapabilities.value = await fetchObsFilterCapabilities(directObs, false)
+      return filterCapabilities.value
+    }
+    return filterCapabilities.value
+  }
+
+  async function syncSourceFiltersToObs(params: RpcObsSyncFiltersParams): Promise<RpcObsSyncFiltersResult> {
+    if (!connected.value) return { ok: false, message: 'OBS 未连接' }
+    if (transport.value === 'client-rpc' && rpcClient) {
+      return rpcClient.rpc.obsSyncSourceFilters(params)
+    }
+    if (transport.value === 'direct-ws' && directObs) {
+      return syncObsSourceFilters(directObs, params)
+    }
+    return { ok: false, message: '未建立有效连接' }
+  }
+
+  async function stageFilterAssetToClient(params: RpcObsStageFilterAssetParams): Promise<RpcObsStageFilterAssetResult> {
+    if (transport.value === 'client-rpc' && rpcClient) {
+      try {
+        return await rpcClient.rpc.obsStageFilterAsset(params)
+      } catch (err) {
+        return { ok: false, message: err instanceof Error ? err.message : '客户端版本暂不支持滤镜资产落盘' }
+      }
+    }
+    return { ok: false, message: '需要运行并连接 VTsuru 桌面客户端才能自动落盘 LUT / Shader 文件' }
+  }
+
   async function refreshVtsStatus(): Promise<RpcVtsStatus | null> {
     if (transport.value !== 'client-rpc' || !rpcClient) return null
     try {
@@ -384,6 +447,7 @@ export function useObsLocalBridge() {
     sourcePreviews,
     vtsStatus,
     vtsConnected,
+    filterCapabilities,
     connectViaClientRpc,
     connectDirect,
     connectAuto,
@@ -395,6 +459,9 @@ export function useObsLocalBridge() {
     pushOverlayToObs,
     captureSourceScreenshot,
     syncSceneLayoutToObs,
+    refreshFilterCapabilities,
+    syncSourceFiltersToObs,
+    stageFilterAssetToClient,
     refreshVtsStatus,
     runVtsSceneAction,
     onObsSceneChanged,

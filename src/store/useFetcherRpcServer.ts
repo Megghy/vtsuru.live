@@ -10,6 +10,7 @@ import { useAccount } from '@/api/account'
 // server/health 的传输由 Rust rpc_server.rs 负责, 本 store 只提供 ServerFunctions 实现。
 import type { EventModel } from '@/api/client-types'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
+import { stageObsFilterAssetLocally } from '@/apps/client/utils/obsFilterAssetStager'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type {
@@ -257,6 +258,18 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
       obsSyncSceneLayout: async (params) => {
         requireWrite()
         return obsStore.syncSceneLayout(params)
+      },
+
+      obsGetFilterCapabilities: async () => obsStore.getFilterCapabilities(),
+
+      obsSyncSourceFilters: async (params) => {
+        requireWrite()
+        return obsStore.syncSourceFilters(params)
+      },
+
+      obsStageFilterAsset: async (params) => {
+        requireWrite()
+        return stageObsFilterAssetLocally(params)
       },
 
       obsSubscribeEvents: async () => {

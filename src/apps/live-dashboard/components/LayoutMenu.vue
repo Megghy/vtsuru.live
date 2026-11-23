@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ReOrderDotsVertical16Regular from '@vicons/fluent/es/ReOrderDotsVertical16Regular'
+import { GripVertical } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -34,10 +34,7 @@ function toggle(id: PanelId, visible: boolean) {
         :key="id"
         class="flex items-center gap-1.5 py-1 px-1.5 border border-border rounded-md"
       >
-        <component
-          :is="ReOrderDotsVertical16Regular"
-          class="layout-menu-handle h-4 w-4 cursor-grab text-muted-foreground"
-        />
+        <GripVertical class="layout-menu-handle size-3.5 cursor-grab text-muted-foreground" />
         <span>{{ PANEL_TITLES[id] }}</span>
         <span class="ml-auto text-[11px] text-muted-foreground">Alt+{{ PANEL_IDS.indexOf(id) + 1 }}</span>
         <Switch

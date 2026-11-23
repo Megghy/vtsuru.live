@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
-import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
-import Filter16Regular from '@vicons/fluent/es/Filter16Regular'
-import Image16Regular from '@vicons/fluent/es/Image16Regular'
-import Person16Regular from '@vicons/fluent/es/Person16Regular'
-import PersonProhibited16Regular from '@vicons/fluent/es/PersonProhibited16Regular'
-import Speaker216Regular from '@vicons/fluent/es/Speaker216Regular'
-import TextQuote16Regular from '@vicons/fluent/es/TextQuote16Regular'
-import Translate16Regular from '@vicons/fluent/es/Translate16Regular'
+import {
+  AtSign,
+  Ban,
+  BookmarkPlus,
+  Check,
+  Copy,
+  Filter,
+  Image as ImageIcon,
+  Languages,
+  Quote,
+  User,
+  Volume2,
+} from 'lucide-vue-next'
 import type { Component } from 'vue'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 
 import { EventDataTypes } from '@/api/generated/model'
+import { isTauri } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { copyToClipboard } from '@/shared/utils'
 
@@ -22,6 +27,7 @@ import { useLiveDashboard } from '../store/useLiveDashboard'
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
 const actions = useEventActions()
+const inTauri = isTauri()
 
 const menu = computed(() => ui.contextMenu)
 
@@ -42,30 +48,55 @@ const items = computed<MenuItem[]>(() => {
     {
       key: 'read',
       label: dashboard.isRead(event) ? '标为未读' : '标为已读',
-      icon: Checkmark16Regular,
+      icon: Check,
       run: () => dashboard.toggleRead(event),
     },
-    { key: 'user', label: '用户信息', icon: Person16Regular, run: () => (ui.userMenu = { event, x, y }) },
-    { key: 'filter', label: '筛选该用户', icon: Filter16Regular, run: () => dashboard.filterByUser(event, event.key) },
+    {
+      key: 'reply',
+      label: '@TA 回复',
+      icon: AtSign,
+      run: () => ui.insertReplyTarget(event.uname),
+      show: inTauri && !!event.uname,
+    },
+    { key: 'user', label: '粉丝档案', icon: User, run: () => (ui.userMenu = { event, x, y }) },
+    {
+      key: 'remember',
+      label: '记住这一条',
+      icon: BookmarkPlus,
+      run: () => dashboard.fans.rememberEvent(event),
+      show: !!(event.ouid || event.uid > 0),
+    },
+    { key: 'filter', label: '筛选该用户', icon: Filter, run: () => dashboard.filterByUser(event, event.key) },
     {
       key: 'translate',
       label: '翻译为中文',
-      icon: Translate16Regular,
+      icon: Languages,
       run: async () => actions.translate(event),
       show: hasText && !event.emoji,
     },
-    { key: 'speak', label: '朗读', icon: Speaker216Regular, run: async () => actions.speak(event) },
-    { key: 'copy', label: '复制内容', icon: TextQuote16Regular, run: () => copyToClipboard(event.msg), show: hasText },
-    { key: 'copy-name', label: '复制用户名', icon: Copy16Regular, run: () => copyToClipboard(event.uname) },
-    { key: 'image', label: '保存为图片', icon: Image16Regular, run: () => (ui.imageTarget = event) },
+    { key: 'speak', label: '朗读', icon: Volume2, run: async () => actions.speak(event) },
+    { key: 'copy', label: '复制内容', icon: Quote, run: () => copyToClipboard(event.msg), show: hasText },
+    { key: 'copy-name', label: '复制用户名', icon: Copy, run: () => copyToClipboard(event.uname) },
+    { key: 'image', label: '保存为图片', icon: ImageIcon, run: () => (ui.imageTarget = event) },
     {
       key: 'block',
       label: actions.isBlocked(event) ? '移出黑名单' : '拉黑',
-      icon: PersonProhibited16Regular,
+      icon: Ban,
       run: () => actions.toggleBlock(event),
       show: !!event.ouid,
     },
   ].filter((item) => item.show !== false)
+})
+
+const menuStyle = computed(() => {
+  if (!menu.value) return {}
+  const estHeight = items.value.length * 32 + 16
+  const maxX = typeof window !== 'undefined' ? Math.max(8, window.innerWidth - 176) : menu.value.x
+  const maxY = typeof window !== 'undefined' ? Math.max(8, window.innerHeight - estHeight) : menu.value.y
+  return {
+    left: `${Math.max(8, Math.min(menu.value.x, maxX))}px`,
+    top: `${Math.max(8, Math.min(menu.value.y, maxY))}px`,
+  }
 })
 
 function close() {
@@ -98,7 +129,7 @@ onUnmounted(() => {
   <div
     v-if="menu"
     class="item-context-menu fixed z-50 min-w-[160px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-    :style="{ left: `${menu.x}px`, top: `${menu.y}px` }"
+    :style="menuStyle"
   >
     <Button
       v-for="item in items"
@@ -111,7 +142,7 @@ onUnmounted(() => {
     >
       <component
         :is="item.icon"
-        class="size-4 shrink-0"
+        class="size-3.5 shrink-0"
       />
       <span>{{ item.label }}</span>
     </Button>

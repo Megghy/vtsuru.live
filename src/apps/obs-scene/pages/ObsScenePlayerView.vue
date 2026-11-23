@@ -20,6 +20,7 @@ import {
   extractSceneVtsActions,
   isPrimaryPlayerSlot,
 } from '../utils/sceneSlices'
+import { documentHasAnyObsNativeFilters, syncActiveSceneObsNativeFilters } from '../vfx/obsFilterSync'
 
 const route = useRoute()
 const shareKey = computed(() => (firstQueryValue(route.query.key) ?? '').trim().toLowerCase())
@@ -64,7 +65,9 @@ async function ensureLocalRpcClient(): Promise<RpcClient | null> {
 async function syncLiveSceneToLocalClient(targetSceneId: string, triggerVtsActions: boolean) {
   const currentDoc = doc.value
   if (!currentDoc || !shareKey.value) return
-  if (!documentHasObsSources(currentDoc)) return
+  const hasObsSources = documentHasObsSources(currentDoc)
+  const hasObsFilters = documentHasAnyObsNativeFilters(currentDoc)
+  if (!hasObsSources && !hasObsFilters) return
 
   const plan = buildSceneCompositionPlan(currentDoc, targetSceneId)
   if (!isPrimaryPlayerSlot(plan, slotParam.value)) return
@@ -76,22 +79,42 @@ async function syncLiveSceneToLocalClient(targetSceneId: string, triggerVtsActio
   const client = await ensureLocalRpcClient()
   if (!client) return
 
-  // 1. 若本地 OBS 已连，同步当前子场景的分层顺序与原生源 Transform
+  // 1. 若本地 OBS 已连，同步当前子场景的分层顺序、原生源 Transform 与原生画面滤镜
   try {
     const obsStatus = await client.rpc.obsGetStatus()
     if (obsStatus.connected) {
       const targetObsScene =
         currentDoc.scenes[targetSceneId]?.obsSceneBinding?.trim() || obsStatus.currentScene
       if (targetObsScene) {
-        const params = buildSyncLayoutParamsForScene({
-          doc: currentDoc,
-          sceneId: targetSceneId,
-          obsSceneName: targetObsScene,
-          baseSourceName: `VTsuru - ${projectName.value}`,
-          shareKey: shareKey.value,
-          authToken: authToken.value || undefined,
-        })
-        await client.rpc.obsSyncSceneLayout(params)
+        if (hasObsSources) {
+          const params = buildSyncLayoutParamsForScene({
+            doc: currentDoc,
+            sceneId: targetSceneId,
+            obsSceneName: targetObsScene,
+            baseSourceName: `VTsuru - ${projectName.value}`,
+            shareKey: shareKey.value,
+            authToken: authToken.value || undefined,
+          })
+          await client.rpc.obsSyncSceneLayout(params)
+        }
+        if (hasObsFilters) {
+          const capabilities = await client.rpc.obsGetFilterCapabilities().catch(() => ({
+            filterKinds: [],
+            hasShaderFilter: false,
+            hasCompositeBlur: false,
+            canStageLocalAssets: false,
+          }))
+          await syncActiveSceneObsNativeFilters({
+            doc: currentDoc,
+            sceneId: targetSceneId,
+            obsSceneName: targetObsScene,
+            executor: {
+              capabilities,
+              syncSourceFilters: (p) => client.rpc.obsSyncSourceFilters(p),
+              stageFilterAsset: (p) => client.rpc.obsStageFilterAsset(p),
+            },
+          })
+        }
       }
     }
   } catch {

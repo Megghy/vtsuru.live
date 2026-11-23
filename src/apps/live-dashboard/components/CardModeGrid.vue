@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import EyeOff16Regular from '@vicons/fluent/es/EyeOff16Regular'
+import { EyeOff } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -40,10 +40,11 @@ const victim = computed(() => grid.value.nextVictim())
             variant="ghost"
             size="xs"
             class="h-auto p-0 min-w-0 max-w-full justify-start text-muted-foreground text-[0.8em] font-normal"
+            :class="{ '!text-[var(--brand)] font-medium': dashboard.fans.getInlineMeta(card.display).hasProfile }"
             data-user-trigger
             @click.stop="ui.openUserMenu(card.display, $event)"
           >
-            <span class="truncate">{{ card.display.uname }}</span>
+            <span class="truncate">{{ dashboard.fans.getInlineMeta(card.display).nickname || card.display.uname }}</span>
           </Button>
           <Popover v-if="card.count > 1">
             <PopoverTrigger as-child>
@@ -75,10 +76,7 @@ const victim = computed(() => grid.value.nextVictim())
             aria-label="隐藏这条弹幕"
             @click="grid.hide(index)"
           >
-            <component
-              :is="EyeOff16Regular"
-              class="size-3"
-            />
+            <EyeOff class="size-3" />
           </Button>
         </div>
         <div class="mt-1 font-semibold wrap-anywhere">

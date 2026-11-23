@@ -4,14 +4,17 @@ import type { GamepadType } from '@/types/gamepad'
 
 import type { ObsLayerMaskShape } from './utils/maskShapes'
 import { normalizeMaskShape } from './utils/maskShapes'
+import type { ObsNativeFilterConfig, VfxLayerConfig, VfxLayerMode, VfxPresetId } from './vfx/types'
+import { createDefaultVfxConfig, normalizeObsNativeFilterConfig, normalizeVfxConfig } from './vfx/types'
 
-export type { ObsLayerMaskShape }
+export type { ObsLayerMaskShape, ObsNativeFilterConfig, VfxLayerConfig, VfxLayerMode, VfxPresetId }
 
 export type ObsSceneTransition = 'none' | 'fade' | 'slide-up' | 'scale'
 export type ObsSceneLayerType =
   | 'vtsuru-widget'
   | 'obs-module'
   | 'obs-source'
+  | 'vfx'
   | 'marquee'
   | 'slideshow'
   | 'image'
@@ -315,7 +318,14 @@ export interface ObsSourceLayer extends ObsSceneLayerBase {
     syncCrop?: boolean
     /** 可选软件控制联动（如 VTube Studio，预留其他模型软件适配器扩展） */
     controller: ObsSourceController
+    /** 可选 OBS 原生像素滤镜（调色 / 锐化 / 3D LUT / obs-shaderfilter），直接作用于该本地源 */
+    filters?: ObsNativeFilterConfig
   }
+}
+
+export interface VfxLayer extends ObsSceneLayerBase {
+  type: 'vfx'
+  vfx: VfxLayerConfig
 }
 
 export interface ObsSourceRolePreset {
@@ -398,6 +408,7 @@ export type ObsSceneLayer =
   | VtsuruWidgetLayer
   | ObsModuleLayer
   | ObsSourceLayer
+  | VfxLayer
   | MarqueeLayer
   | SlideshowLayer
   | ImageLayer
@@ -413,6 +424,8 @@ export interface ObsSceneItem {
   layerIds: string[]
   transition: ObsSceneTransition
   obsSceneBinding?: string
+  /** 可选 OBS 场景全局原生像素滤镜（作用于目标 OBS 场景整体，切子场景自动联动） */
+  obsFilters?: ObsNativeFilterConfig
 }
 
 export interface ObsSceneDocument {
@@ -445,6 +458,18 @@ export const BRIDGE_WIDGET_IDS = new Set([
   'keycast',
   'typing-cat',
   'pngtuber',
+  'alert-box',
+  'live-hud',
+  'gift-board',
+  'schedule',
+  'point-showcase',
+  'video-collect',
+  'now-playing',
+  'checklist',
+  'song-picker',
+  'mystery-box',
+  'emote-hype',
+  'voice-avatars',
 ])
 
 export function isBridgeWidget(componentId: string): boolean {
@@ -592,7 +617,11 @@ export function normalizeSceneDocument(raw: unknown): ObsSceneDocument {
                 : undefined,
             syncCrop: rawObsSource?.syncCrop !== false,
             controller: normalizeObsSourceController(rawObsSource?.controller, role),
+            filters: normalizeObsNativeFilterConfig(rawObsSource?.filters),
           }
+        }
+        if (normalized.type === 'vfx') {
+          normalized.vfx = normalizeVfxConfig((normalized as Partial<VfxLayer>).vfx)
         }
         if (normalized.type === 'group') {
           const rawGroup = normalized.group
@@ -650,6 +679,7 @@ export function normalizeSceneDocument(raw: unknown): ObsSceneDocument {
             ? sc.transition
             : 'fade',
         obsSceneBinding: typeof sc.obsSceneBinding === 'string' ? sc.obsSceneBinding : undefined,
+        obsFilters: normalizeObsNativeFilterConfig(sc.obsFilters),
       }
     }
   }
@@ -1015,6 +1045,38 @@ export function createObsSourceLayer(
           ? { type: 'vts', positionMode: 'obs-transform', expressionActive: true }
           : { type: 'none' },
     },
+  }
+}
+
+export function createVfxLayer(
+  canvas: { width: number; height: number },
+  mode: VfxLayerMode = 'preset',
+  presetId: VfxPresetId = 'vignette',
+): VfxLayer {
+  const isMedia = mode === 'media'
+  const width = isMedia ? Math.min(960, canvas.width) : canvas.width
+  const height = isMedia ? Math.min(540, canvas.height) : canvas.height
+  const vfx = createDefaultVfxConfig(mode, presetId)
+  const nameMap: Record<VfxLayerMode, string> = {
+    preset: '画面滤镜',
+    shader: '自定义 Shader 滤镜',
+    media: 'VFX 特效素材',
+  }
+  return {
+    id: createShortId('vfx'),
+    name: nameMap[mode],
+    type: 'vfx',
+    x: Math.round((canvas.width - width) / 2),
+    y: Math.round((canvas.height - height) / 2),
+    width,
+    height,
+    rotation: 0,
+    opacity: 1,
+    visible: true,
+    locked: false,
+    borderRadius: 0,
+    disableShadow: false,
+    vfx,
   }
 }
 

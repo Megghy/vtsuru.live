@@ -10,6 +10,7 @@ import SceneMarqueeLayer from './SceneMarqueeLayer.vue'
 import SceneObsModuleLayer from './SceneObsModuleLayer.vue'
 import SceneObsSourceLayer from './SceneObsSourceLayer.vue'
 import SceneSlideshowLayer from './SceneSlideshowLayer.vue'
+import SceneVfxLayer from './SceneVfxLayer.vue'
 import SceneWidgetLayer from './SceneWidgetLayer.vue'
 
 const props = defineProps<{
@@ -81,6 +82,12 @@ function getShapeStyle(layer: Extract<ObsSceneLayer, { type: 'shape' }>) {
     :layer="layer"
     :mode="mode"
     :source-previews="sourcePreviews"
+  />
+
+  <SceneVfxLayer
+    v-else-if="layer.type === 'vfx'"
+    :layer="layer"
+    :mode="mode"
   />
 
   <SceneMarqueeLayer

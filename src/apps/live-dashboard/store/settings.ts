@@ -96,6 +96,8 @@ export interface DashboardSettings {
   }
   hideRead: boolean
   cardMode: boolean
+  /** 列表模式下合并连续重复弹幕 */
+  collapseRepeated: boolean
   card: { size: number; autoHide: boolean; autoHideThreshold: number; autoHideSeconds: number }
   sort: Record<'sc' | 'gift', PanelSort>
   paidReadFilter: Record<'sc' | 'gift', PaidReadFilter>
@@ -134,6 +136,7 @@ const DEFAULT_SETTINGS: DashboardSettings = {
   layout: DEFAULT_LAYOUT,
   hideRead: false,
   cardMode: false,
+  collapseRepeated: false,
   card: { size: 24, autoHide: false, autoHideThreshold: 10, autoHideSeconds: 60 },
   sort: { sc: 'time', gift: 'time' },
   paidReadFilter: { sc: 'all', gift: 'all' },

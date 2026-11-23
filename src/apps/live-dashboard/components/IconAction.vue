@@ -12,10 +12,16 @@ defineEmits<{ click: [MouseEvent] }>()
   <TooltipProvider :delay-duration="400">
     <Tooltip>
       <TooltipTrigger as-child>
-        <Button variant="ghost" size="icon-xs" :class="active ? 'text-primary' : 'text-muted-foreground'" :aria-label="tip" @click="$emit('click', $event)">
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          :class="active ? 'text-primary' : 'text-muted-foreground'"
+          :aria-label="tip"
+          @click="$emit('click', $event)"
+        >
           <component
             :is="icon"
-            class="h-4 w-4"
+            class="size-3.5"
           />
         </Button>
       </TooltipTrigger>

@@ -1,24 +1,28 @@
 <script setup lang="ts">
+import { Cake, History, Star } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { EventDataTypes } from '@/api/generated/model'
+import { useFanPrivacy } from '@/shared/composables/useFanPrivacy'
 import { Button } from '@/shared/ui/button'
 
 import { avatarUrl, formatClock } from '../core/format'
-import type { DashboardEvent } from '../core/types'
 import { userKeyOf } from '../core/types'
 import { useDashboardUi } from '../store/ui'
+import type { DanmakuDisplayEvent } from '../store/useLiveDashboard'
 import { useLiveDashboard } from '../store/useLiveDashboard'
 import EventBadges from './EventBadges.vue'
 import EventMessage from './EventMessage.vue'
 
-const props = defineProps<{ event: DashboardEvent; compact?: boolean; ignoreRead?: boolean }>()
+const props = defineProps<{ event: DanmakuDisplayEvent; compact?: boolean; ignoreRead?: boolean }>()
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
+const { privacyMode } = useFanPrivacy()
 const settings = computed(() => dashboard.settings)
 
 const read = computed(() => !props.ignoreRead && dashboard.readKeys.has(props.event.key))
-const hasNote = computed(() => dashboard.notes.map.has(userKeyOf(props.event)))
+const fanMeta = computed(() => dashboard.fans.getInlineMeta(props.event))
+const hasNote = computed(() => fanMeta.value.hasProfile || dashboard.notes.map.has(userKeyOf(props.event)))
 
 const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
   [EventDataTypes.Enter]: '进入直播间',
@@ -54,16 +58,60 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
           :event="event"
           :show-medal="settings.showMedal"
         />
+        <Star
+          v-if="fanMeta.isStarred"
+          class="size-3 fill-amber-400 text-amber-500 shrink-0"
+          title="重点粉丝"
+        />
         <Button
           variant="link"
           size="xs"
           class="dm-name h-auto p-0 font-semibold text-inherit"
           :class="{ '!text-[var(--brand)]': hasNote }"
+          :title="fanMeta.pronunciation ? `读音：${fanMeta.pronunciation}` : undefined"
           data-user-trigger
           @click.stop="ui.openUserMenu(event, $event)"
         >
-          {{ event.uname || '匿名用户' }}
+          <template v-if="fanMeta.nickname">
+            <span>{{ fanMeta.nickname }}</span>
+            <span
+              v-if="event.uname && event.uname !== fanMeta.nickname"
+              class="ml-1 font-normal opacity-65 text-[0.85em]"
+              >({{ event.uname }})</span
+            >
+          </template>
+          <template v-else>{{ event.uname || '匿名用户' }}</template>
         </Button>
+        <span
+          v-if="fanMeta.isBirthdayToday && !privacyMode"
+          class="inline-flex items-center gap-0.5 rounded px-1 py-0.2 bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[0.75em] font-medium"
+          title="今天过生日"
+        >
+          <Cake class="size-3" />
+          生日
+        </span>
+        <span
+          v-if="fanMeta.dormantDays !== null"
+          class="inline-flex items-center gap-0.5 rounded px-1 py-0.2 bg-brand-soft text-brand text-[0.75em] font-medium tabular-nums"
+          :title="`老粉久别重逢，距上次出现已 ${fanMeta.dormantDays} 天`"
+        >
+          <History class="size-3" />
+          {{ fanMeta.dormantDays }}天未见
+        </span>
+        <span
+          v-if="fanMeta.renamedFrom"
+          class="rounded px-1 py-0.2 bg-muted text-muted-foreground text-[0.75em]"
+          :title="`此前昵称：${fanMeta.renamedFrom}`"
+        >
+          曾:{{ fanMeta.renamedFrom }}
+        </span>
+        <span
+          v-for="tag in fanMeta.tags"
+          :key="tag"
+          class="rounded px-1 py-0.2 bg-muted text-muted-foreground text-[0.75em] leading-tight"
+        >
+          {{ tag }}
+        </span>
         <span
           v-if="compact"
           class="text-muted-foreground"
@@ -83,6 +131,13 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
           :msg="event.msg"
           :emoji="event.emoji"
         />
+        <span
+          v-if="(event.repeatCount ?? 1) > 1"
+          class="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded-full bg-muted text-[11px] font-semibold text-muted-foreground tabular-nums"
+          title="连续重复次数"
+        >
+          ×{{ event.repeatCount }}
+        </span>
         <div
           v-if="ui.translations.has(event.key)"
           class="mt-0.5 pt-0.5 border-t border-dashed border-border text-[0.9em] font-normal text-muted-foreground"

@@ -1,3 +1,4 @@
+import { useIntervalFn } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, shallowRef, triggerRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -10,6 +11,7 @@ import { fetchOfficialLiveStats, officialLiveStats } from '@/shared/services/off
 import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
+import { pruneArchive } from '../core/archive'
 import { CardGrid } from '../core/cardGrid'
 import type { LiveHighlightMarker } from '../core/db'
 import { dashboardDB } from '../core/db'
@@ -18,6 +20,7 @@ import type { DashboardEvent } from '../core/types'
 import { normalizeEvent, panelOf, userKeyOf } from '../core/types'
 import { filterByPaidReadMode, useDashboardSettings } from './settings'
 import { useDashboardStats } from './stats'
+import { useFanProfiles } from './fanProfiles'
 import { useUserNotes } from './userNotes'
 
 const MAX_MESSAGES = 3000
@@ -43,11 +46,18 @@ export interface UserFilter {
   contextKey?: string
 }
 
+export interface DanmakuDisplayEvent extends DashboardEvent {
+  repeatCount?: number
+}
+
+const QUESTION_RE = /[?？@＠]|^(?:请问|怎么|为什么|啥|什么|谁|哪里|哪个|多少|几|吗|呢|能不能|可以|是不是)/
+
 export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const client = useDanmakuClient()
   const account = useAccount()
   const settings = useDashboardSettings()
   const notes = useUserNotes()
+  const fans = useFanProfiles()
 
   // 列表只做追加/裁剪，条目字段不可变；已读与删除状态单独用响应式 Set 承载，避免整表重渲染
   const messages = shallowRef<DashboardEvent[]>([])
@@ -61,6 +71,10 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const historyEvents = shallowRef<DashboardEvent[] | null>(null)
   const search = ref('')
   const userFilter = ref<UserFilter | null>(null)
+  const onlyCurrentSession = ref(false)
+  const questionOnly = ref(false)
+  /** 共享 30s 相对时间时钟，避免每张卡片独立创建定时器 */
+  const minuteNow = ref(Date.now())
   /** 请求面板滚动到指定事件（转至上下文） */
   const scrollTarget = ref<string>()
   const cardGrid = reactive(new CardGrid(settings.value.card.size))
@@ -68,6 +82,13 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const officialOnline = ref<number | null>(null)
   const markers = ref<LiveHighlightMarker[]>([])
   let officialTimer: ReturnType<typeof setInterval> | undefined
+  const minuteClock = useIntervalFn(
+    () => {
+      minuteNow.value = Date.now()
+    },
+    30_000,
+    { immediate: false },
+  )
 
   const pageLoadedAt = Date.now()
   let pendingWrites = new Map<string, DashboardEvent>()
@@ -134,6 +155,9 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     else append(paid, event, MAX_PAID)
     stats.record(event)
     queueWrite(event)
+    if (event.time > pageLoadedAt) {
+      fans.evaluateRealtimeTriggers(event)
+    }
 
     // 弹幕打点指令识别（例如 !mark 精彩五杀）
     const markPrefix = settings.value.highlight.danmakuMarkPrefix?.trim()
@@ -159,18 +183,30 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
       interaction: [],
       paid: [],
     }
+    known.clear()
+    readKeys.clear()
+    deletedKeys.clear()
     for (const event of events) {
       const panel = panelOf(event.type)
       buckets[panel === 'danmaku' || panel === 'interaction' ? panel : 'paid'].push(event)
-      known.add(event.key)
       if (event.read) addBoundedKey(readKeys, event.key)
       if (event.deleted) addBoundedKey(deletedKeys, event.key)
     }
     messages.value = buckets.danmaku.slice(-MAX_MESSAGES)
     interactions.value = buckets.interaction.slice(-MAX_INTERACTIONS)
     paid.value = buckets.paid.slice(-MAX_PAID)
+    for (const list of [messages.value, interactions.value, paid.value]) {
+      for (const event of list) known.add(event.key)
+    }
+    cardGrid.clear()
     for (const event of messages.value) cardGrid.ingest(event, settings.value.card)
     markers.value = (await dashboardDB.markers.where('time').aboveOrEqual(since).sortBy('time')).toReversed()
+  }
+
+  async function reloadArchive() {
+    await flushWrites()
+    await loadRecent()
+    if (historyRange.value) await setHistoryRange(historyRange.value)
   }
 
   async function addMarker(
@@ -219,18 +255,36 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     if (started) return
     started = true
     await Promise.all([loadRecent(), notes.load()])
+    void fans.load()
+    void pruneArchive(Math.max(settings.value.historyHours, 168)).catch(() => {})
     client.onEvent('all', ingest)
     await client.ensureOpenlive()
-    await refreshOfficialStats()
-    officialTimer = setInterval(() => void refreshOfficialStats(), 15_000)
+    resumePolling()
+  }
+
+  function pausePolling() {
+    if (officialTimer) clearInterval(officialTimer)
+    officialTimer = undefined
+    stats.pause()
+    minuteClock.pause()
+  }
+
+  function resumePolling() {
+    if (!started) return
+    stats.resume()
+    minuteNow.value = Date.now()
+    minuteClock.resume()
+    if (!officialTimer) {
+      void refreshOfficialStats()
+      officialTimer = setInterval(() => void refreshOfficialStats(), 15_000)
+    }
   }
 
   async function stop() {
     if (!started) return
     started = false
     client.offEvent('all', ingest)
-    if (officialTimer) clearInterval(officialTimer)
-    officialTimer = undefined
+    pausePolling()
     if (flushTimer) {
       clearTimeout(flushTimer)
       flushTimer = undefined
@@ -299,8 +353,10 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const basePredicate = computed(() => {
     const searchPredicate = createSearchPredicate(search.value, (event) => notes.get(userKeyOf(event))?.note)
     const user = userFilter.value?.userKey
-    if (!searchPredicate && !user) return undefined
+    const sessionSince = onlyCurrentSession.value && !historyRange.value ? stats.since.value : undefined
+    if (!searchPredicate && !user && sessionSince === undefined) return undefined
     return (event: DashboardEvent) =>
+      (sessionSince === undefined || event.time >= sessionSince) &&
       (!user || userKeyOf(event) === user) &&
       (!searchPredicate || searchPredicate(event))
   })
@@ -309,9 +365,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     const base = basePredicate.value
     const hideRead = settings.value.hideRead
     if (!base && !hideRead) return undefined
-    return (event: DashboardEvent) =>
-      (!hideRead || !readKeys.has(event.key)) &&
-      (!base || base(event))
+    return (event: DashboardEvent) => (!hideRead || !readKeys.has(event.key)) && (!base || base(event))
   })
 
   const source = computed(() => {
@@ -340,7 +394,24 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const sortPaid = (list: DashboardEvent[], sort: 'time' | 'price') =>
     list.toSorted(sort === 'price' ? (a, b) => b.price - a.price || b.time - a.time : (a, b) => b.time - a.time)
 
-  const danmakuList = computed(() => applyFilter(source.value.messages))
+  const danmakuList = computed<DanmakuDisplayEvent[]>(() => {
+    let list = applyFilter(source.value.messages)
+    if (questionOnly.value) {
+      list = list.filter((e) => !e.emoji && QUESTION_RE.test(e.msg.trim()))
+    }
+    if (!settings.value.collapseRepeated || list.length <= 1) return list
+    const collapsed: DanmakuDisplayEvent[] = []
+    for (const item of list) {
+      const text = item.emoji ? '' : item.msg.trim()
+      const prev = collapsed[collapsed.length - 1]
+      if (text && prev && !prev.emoji && prev.msg.trim() === text) {
+        collapsed[collapsed.length - 1] = { ...item, repeatCount: (prev.repeatCount ?? 1) + 1 }
+      } else {
+        collapsed.push(item)
+      }
+    }
+    return collapsed
+  })
   const interactionList = computed(() => applyFilter(source.value.interactions))
   const scBaseList = computed(() =>
     applyBaseFilter(source.value.paid.filter((e) => e.type === EventDataTypes.SC && !deletedKeys.has(e.key))),
@@ -370,6 +441,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   return {
     settings,
     notes,
+    fans,
     stats,
     officialOnline,
     officialStats: officialLiveStats,
@@ -379,6 +451,9 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     cardGrid,
     search,
     userFilter,
+    onlyCurrentSession,
+    questionOnly,
+    minuteNow,
     scrollTarget,
     historyRange,
     danmakuList,
@@ -388,6 +463,9 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     unreadCounts,
     start,
     stop,
+    pausePolling,
+    resumePolling,
+    reloadArchive,
     ingest,
     isRead,
     setRead,

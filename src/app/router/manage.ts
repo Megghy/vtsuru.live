@@ -109,6 +109,16 @@ const manageRoute: RouteRecordRaw = {
       },
     },
     {
+      path: 'fans',
+      name: 'manage-fans',
+      component: async () => import('@/apps/manage/pages/fan/FanProfileManageView.vue'),
+      meta: {
+        title: '粉丝档案',
+        keepAlive: true,
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'video-collect',
       name: 'manage-videoCollect',
       component: async () => import('@/apps/manage/pages/video-collect/VideoCollectManageView.vue'),

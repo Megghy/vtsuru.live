@@ -1,6 +1,12 @@
 export type GoalMode = 'goal' | 'subathon' | 'combo'
-export type GoalMetric = 'guard' | 'amount' | 'manual'
+export type GoalMetric = 'guard' | 'amount' | 'gift_count' | 'fans' | 'likes' | 'manual'
 export type GoalTheme = 'minimal' | 'card' | 'neon' | 'glass'
+
+export interface GoalMilestone {
+  id: string
+  target: number
+  label: string
+}
 
 export interface GoalState {
   title: string
@@ -10,6 +16,13 @@ export interface GoalState {
   current: number
   target: number
   unit: string
+  /** 单品礼物计数模式下的礼物名称关键词（留空则统计全部礼物个数） */
+  targetGiftName: string
+  /** 阶段里程碑节点 */
+  milestones: GoalMilestone[]
+  showMilestones: boolean
+  /** OBS 侧已登录时是否直接订阅本地弹幕流作为保活补充 */
+  directTrackOnObs: boolean
   /** 耐久加钟结束时间戳 (ms) */
   countdownEndAt: number
   /** 暂停时的剩余毫秒数 */
@@ -46,6 +59,14 @@ export const DEFAULT_GOAL_STATE: GoalState = {
   current: 0,
   target: 30,
   unit: '舰',
+  targetGiftName: '小花花',
+  milestones: [
+    { id: 'ms-1', target: 10, label: '解锁歌回加场' },
+    { id: 'ms-2', target: 20, label: '解锁新服装展示' },
+    { id: 'ms-3', target: 30, label: '解锁限定舰长礼' },
+  ],
+  showMilestones: true,
+  directTrackOnObs: false,
   countdownEndAt: 0,
   pausedRemainingMs: 3600 * 1000,
   countdownPaused: true,

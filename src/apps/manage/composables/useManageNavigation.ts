@@ -22,6 +22,7 @@ import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
 import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
 import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
 import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
+import { Users } from 'lucide-vue-next'
 import { computed, type Component, type Ref } from 'vue'
 
 import type { ResponseAccountInfo } from '@/api/generated/model'
@@ -206,6 +207,15 @@ export function useManageNavigation(accountInfo: Ref<ResponseAccountInfo | null 
         group: 'common',
       },
 
+      {
+        key: 'manage-fans',
+        label: '粉丝档案',
+        description: '粉丝称呼手记、AI 画像与生日提醒',
+        icon: Users,
+        to: { name: 'manage-fans' },
+        disabled: emailDisabled,
+        group: 'data',
+      },
       {
         key: 'manage-event',
         label: '舰长和SC',

@@ -4,6 +4,8 @@ import { computed } from 'vue'
 
 import type { ObsSourceLayer } from '../types'
 import { getObsSourceRolePreset } from '../types'
+import { buildObsNativeFilterPreviewCss } from '../vfx/presets'
+import { hasActiveObsNativeFilters } from '../vfx/types'
 
 const props = defineProps<{
   layer: ObsSourceLayer
@@ -30,6 +32,9 @@ const isVtsPresetMode = computed(() => {
   const ctrl = props.layer.obsSource.controller
   return ctrl.type === 'vts' && ctrl.positionMode === 'vts-preset'
 })
+
+const sourceFilterPreviewCss = computed(() => buildObsNativeFilterPreviewCss(props.layer.obsSource.filters))
+const hasNativeFilters = computed(() => hasActiveObsNativeFilters(props.layer.obsSource.filters))
 
 const roleIcon = computed(() => {
   switch (props.layer.obsSource.role) {
@@ -62,6 +67,7 @@ const roleIcon = computed(() => {
       :alt="layer.name"
       draggable="false"
       class="w-full h-full object-contain select-none"
+      :style="{ filter: sourceFilterPreviewCss }"
     />
 
     <div
@@ -102,6 +108,12 @@ const roleIcon = computed(() => {
         class="inline-flex items-center rounded bg-emerald-600/85 px-1.5 py-0.5 text-[11px] font-medium text-white shadow-sm"
       >
         OBS 快照
+      </span>
+      <span
+        v-if="hasNativeFilters"
+        class="inline-flex items-center rounded bg-amber-600/90 px-1.5 py-0.5 text-[11px] font-medium text-white shadow-sm"
+      >
+        原生滤镜
       </span>
     </div>
   </div>

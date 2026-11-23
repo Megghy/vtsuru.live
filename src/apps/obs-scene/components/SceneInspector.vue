@@ -25,7 +25,7 @@ import { controllerBodies } from '@/apps/obs-store/data/gamepadConfigs'
 import { getObsComponentById } from '@/apps/obs-store/registry'
 import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { SYSTEM_CHINESE_FONT_OPTIONS } from '@/shared/questionDisplayPresets'
-import type { RpcObsSceneItemRef, RpcVtsStatus } from '@/shared/rpc/contract'
+import type { RpcObsFilterCapabilities, RpcObsSceneItemRef, RpcVtsStatus } from '@/shared/rpc/contract'
 import type { GamepadType } from '@/types/gamepad'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Badge } from '@/shared/ui/badge'
@@ -52,13 +52,16 @@ import SceneExtraLayerInspector from './SceneExtraLayerInspector.vue'
 import SceneHelpTip from './SceneHelpTip.vue'
 import SceneMaskShapePicker from './SceneMaskShapePicker.vue'
 import SceneObsModuleInspector from './SceneObsModuleInspector.vue'
+import SceneObsNativeFilterPanel from './SceneObsNativeFilterPanel.vue'
 import SceneObsSourceInspector from './SceneObsSourceInspector.vue'
+import SceneVfxInspector from './SceneVfxInspector.vue'
 
 const props = defineProps<{
   obsScenes: string[]
   obsConnected?: boolean
   obsSceneItems?: RpcObsSceneItemRef[]
   vtsStatus?: RpcVtsStatus | null
+  filterCapabilities?: RpcObsFilterCapabilities
 }>()
 
 const emit = defineEmits<{
@@ -68,6 +71,9 @@ const emit = defineEmits<{
   refreshObsSources: []
   captureSourcePreview: [sourceName: string]
   syncLayoutToObs: []
+  syncSceneFilters: []
+  syncSourceFilters: [layerId: string]
+  refreshFilterCapabilities: []
   testVtsAction: [layerId: string]
   openObsLink: []
   openSetupGuide: [tab: 'obs-layout' | 'model-capture']
@@ -91,6 +97,7 @@ const maskShapeSummary = computed(() => {
 })
 const obsModuleLayer = computed(() => (layer.value?.type === 'obs-module' ? layer.value : null))
 const obsSourceLayer = computed(() => (layer.value?.type === 'obs-source' ? layer.value : null))
+const vfxLayer = computed(() => (layer.value?.type === 'vfx' ? layer.value : null))
 const extraLayer = computed(() =>
   layer.value && (layer.value.type === 'marquee' || layer.value.type === 'slideshow')
     ? layer.value
@@ -426,6 +433,22 @@ function updateSceneTransition(val: unknown) {
             />
           </FormField>
         </section>
+
+        <template v-if="activeScene">
+          <Separator />
+          <SceneObsNativeFilterPanel
+            scope="scene"
+            :target-name="activeScene.obsSceneBinding || undefined"
+            :model-value="activeScene.obsFilters"
+            :obs-connected="Boolean(props.obsConnected)"
+            :filter-capabilities="props.filterCapabilities"
+            @update:model-value="(val) => { activeScene!.obsFilters = val }"
+            @commit="store.pushHistory()"
+            @sync-now="emit('syncSceneFilters')"
+            @refresh-capabilities="emit('refreshFilterCapabilities')"
+            @open-obs-link="emit('openObsLink')"
+          />
+        </template>
       </div>
 
       <!-- 选中单图层属性面板 -->
@@ -603,16 +626,25 @@ function updateSceneTransition(val: unknown) {
           :obs-connected="Boolean(props.obsConnected)"
           :obs-scene-items="props.obsSceneItems ?? []"
           :vts-status="props.vtsStatus ?? null"
+          :filter-capabilities="props.filterCapabilities"
           :has-published="Boolean(store.currentProject?.hasPublished)"
           :has-unpublished-changes="store.hasUnpublishedChanges"
           :publishing="store.publishing"
           @refresh-obs-sources="emit('refreshObsSources')"
           @capture-preview="emit('captureSourcePreview', $event)"
           @sync-layout-to-obs="emit('syncLayoutToObs')"
+          @sync-source-filters="emit('syncSourceFilters', $event)"
+          @refresh-filter-capabilities="emit('refreshFilterCapabilities')"
           @test-vts-action="emit('testVtsAction', $event)"
           @open-obs-link="emit('openObsLink')"
           @publish-now="store.publishNow()"
           @open-setup-guide="emit('openSetupGuide', $event)"
+        />
+
+        <!-- 画面滤镜与 VFX 特效层 -->
+        <SceneVfxInspector
+          v-else-if="vfxLayer"
+          :layer="vfxLayer"
         />
 
         <!-- 走马灯 / 图片轮播 -->

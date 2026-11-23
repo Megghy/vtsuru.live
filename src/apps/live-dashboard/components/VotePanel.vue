@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { openUrl } from '@tauri-apps/plugin-opener'
 import { useIntervalFn, useNow } from '@vueuse/core'
 import { Dices, ExternalLink, Pause, Play, Square, Timer } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
@@ -101,10 +100,14 @@ function create() {
   })
 }
 
-function openManage() {
+async function openManage() {
   const url = `${CURRENT_HOST}manage/vote`
-  if (isTauri()) void openUrl(url)
-  else window.open(url, '_blank')
+  if (isTauri()) {
+    const { openUrl } = await import('@tauri-apps/plugin-opener')
+    await openUrl(url)
+  } else {
+    window.open(url, '_blank')
+  }
 }
 </script>
 
@@ -169,9 +172,7 @@ function openManage() {
             <template v-if="standings.useContribution">
               {{ formatContribution(option.contribution) }} · {{ option.count }}票
             </template>
-            <template v-else>
-              {{ option.count }} · {{ Math.round(option.percentage) }}%
-            </template>
+            <template v-else> {{ option.count }} · {{ Math.round(option.percentage) }}% </template>
           </span>
         </div>
 
@@ -274,7 +275,11 @@ function openManage() {
           <span class="mr-auto text-amber-600 dark:text-amber-400">当前平票</span>
           <Popconfirm @positive-click="vote.tiebreakDraw(session.id)">
             <template #trigger>
-              <Button size="xs" variant="secondary" :disabled="busy">
+              <Button
+                size="xs"
+                variant="secondary"
+                :disabled="busy"
+              >
                 <Dices class="size-3" />抽签结算
               </Button>
             </template>
@@ -282,7 +287,11 @@ function openManage() {
           </Popconfirm>
           <Popconfirm @positive-click="vote.tiebreakOvertime(60)">
             <template #trigger>
-              <Button size="xs" variant="outline" :disabled="busy">
+              <Button
+                size="xs"
+                variant="outline"
+                :disabled="busy"
+              >
                 <Timer class="size-3" />加时 60s
               </Button>
             </template>
@@ -329,7 +338,11 @@ function openManage() {
           </div>
           <Select
             :model-value="String(multiVoteMode)"
-            @update:model-value="(v) => { multiVoteMode = Number(v) as VoteMultiMode }"
+            @update:model-value="
+              (v) => {
+                multiVoteMode = Number(v) as VoteMultiMode
+              }
+            "
           >
             <SelectTrigger class="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>

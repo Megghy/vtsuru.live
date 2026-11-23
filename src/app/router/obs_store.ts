@@ -174,5 +174,221 @@ export default {
         forceReload: true,
       },
     },
+    {
+      path: 'alert-box-manage',
+      name: 'obs-store-alert-box-manage',
+      component: async () => import('@/apps/obs-store/components/alert-box/AlertBoxViewer.vue'),
+      meta: {
+        title: '事件播报弹窗控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'alert-box',
+      name: 'obs-store-alert-box-display',
+      component: async () => import('@/apps/obs-store/components/alert-box/AlertBoxDisplay.vue'),
+      meta: {
+        title: '事件播报弹窗',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'live-hud-manage',
+      name: 'obs-store-live-hud-manage',
+      component: async () => import('@/apps/obs-store/components/live-hud/LiveHudViewer.vue'),
+      meta: {
+        title: '直播间状态看板控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'live-hud',
+      name: 'obs-store-live-hud-display',
+      component: async () => import('@/apps/obs-store/components/live-hud/LiveHudDisplay.vue'),
+      meta: {
+        title: '直播间状态看板',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'gift-board-manage',
+      name: 'obs-store-gift-board-manage',
+      component: async () => import('@/apps/obs-store/components/gift-board/GiftBoardViewer.vue'),
+      meta: {
+        title: '本场感谢榜与舰长墙控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'gift-board',
+      name: 'obs-store-gift-board-display',
+      component: async () => import('@/apps/obs-store/components/gift-board/GiftBoardDisplay.vue'),
+      meta: {
+        title: '本场感谢榜与舰长墙',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'schedule-manage',
+      name: 'obs-store-schedule-manage',
+      component: async () => import('@/apps/obs-store/components/schedule/ScheduleViewer.vue'),
+      meta: {
+        title: '直播日程表挂件控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'schedule',
+      name: 'obs-store-schedule-display',
+      component: async () => import('@/apps/obs-store/components/schedule/ScheduleDisplay.vue'),
+      meta: {
+        title: '直播日程表挂件',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'point-showcase-manage',
+      name: 'obs-store-point-showcase-manage',
+      component: async () => import('@/apps/obs-store/components/point-showcase/PointShowcaseViewer.vue'),
+      meta: {
+        title: '积分商城与签到榜控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'point-showcase',
+      name: 'obs-store-point-showcase-display',
+      component: async () => import('@/apps/obs-store/components/point-showcase/PointShowcaseDisplay.vue'),
+      meta: {
+        title: '积分商城与签到榜',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'video-collect-manage',
+      name: 'obs-store-video-collect-manage',
+      component: async () => import('@/apps/obs-store/components/video-collect/VideoCollectViewer.vue'),
+      meta: {
+        title: '视频征集投稿角标控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'video-collect',
+      name: 'obs-store-video-collect-display',
+      component: async () => import('@/apps/obs-store/components/video-collect/VideoCollectDisplay.vue'),
+      meta: {
+        title: '视频征集投稿角标',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'now-playing-manage',
+      name: 'obs-store-now-playing-manage',
+      component: async () => import('@/apps/obs-store/components/now-playing/NowPlayingViewer.vue'),
+      meta: {
+        title: '正在播放音乐与歌词条控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'now-playing',
+      name: 'obs-store-now-playing-display',
+      component: async () => import('@/apps/obs-store/components/now-playing/NowPlayingDisplay.vue'),
+      meta: {
+        title: '正在播放音乐与歌词条',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'checklist-manage',
+      name: 'obs-store-checklist-manage',
+      component: async () => import('@/apps/obs-store/components/checklist/ChecklistViewer.vue'),
+      meta: {
+        title: '直播话题与待办清单控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'checklist',
+      name: 'obs-store-checklist-display',
+      component: async () => import('@/apps/obs-store/components/checklist/ChecklistDisplay.vue'),
+      meta: {
+        title: '直播话题与待办清单',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'song-picker-manage',
+      name: 'obs-store-song-picker-manage',
+      component: async () => import('@/apps/obs-store/components/song-picker/SongPickerViewer.vue'),
+      meta: {
+        title: '曲库展示与盲抽翻牌控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'song-picker',
+      name: 'obs-store-song-picker-display',
+      component: async () => import('@/apps/obs-store/components/song-picker/SongPickerDisplay.vue'),
+      meta: {
+        title: '曲库展示与盲抽翻牌',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'mystery-box-manage',
+      name: 'obs-store-mystery-box-manage',
+      component: async () => import('@/apps/obs-store/components/mystery-box/MysteryBoxViewer.vue'),
+      meta: {
+        title: '盲盒拆盒与盈亏统计控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'mystery-box',
+      name: 'obs-store-mystery-box-display',
+      component: async () => import('@/apps/obs-store/components/mystery-box/MysteryBoxDisplay.vue'),
+      meta: {
+        title: '盲盒拆盒与盈亏统计',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'emote-hype-manage',
+      name: 'obs-store-emote-hype-manage',
+      component: async () => import('@/apps/obs-store/components/emote-hype/EmoteHypeViewer.vue'),
+      meta: {
+        title: '氛围热度槽与表情喷泉控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'emote-hype',
+      name: 'obs-store-emote-hype-display',
+      component: async () => import('@/apps/obs-store/components/emote-hype/EmoteHypeDisplay.vue'),
+      meta: {
+        title: '氛围热度槽与表情喷泉',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'voice-avatars-manage',
+      name: 'obs-store-voice-avatars-manage',
+      component: async () => import('@/apps/obs-store/components/voice-avatars/VoiceAvatarsViewer.vue'),
+      meta: {
+        title: '极简连麦语音头像控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'voice-avatars',
+      name: 'obs-store-voice-avatars-display',
+      component: async () => import('@/apps/obs-store/components/voice-avatars/VoiceAvatarsDisplay.vue'),
+      meta: {
+        title: '极简连麦语音头像',
+        forceReload: true,
+      },
+    },
   ],
 }

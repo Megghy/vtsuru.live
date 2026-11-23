@@ -1,12 +1,24 @@
+import { alertBoxComponent } from './items/alertBox'
+import { checklistComponent } from './items/checklist'
 import { clockComponent } from './items/clock'
 import { counterComponent } from './items/counter'
+import { emoteHypeComponent } from './items/emoteHype'
 import { gamepadComponent } from './items/gamepad'
+import { giftBoardComponent } from './items/giftBoard'
 import { goalComponent } from './items/goal'
 import { keycastComponent } from './items/keycast'
+import { liveHudComponent } from './items/liveHud'
+import { mysteryBoxComponent } from './items/mysteryBox'
+import { nowPlayingComponent } from './items/nowPlaying'
 import { plannedComponents } from './items/planned'
 import { pngtuberComponent } from './items/pngtuber'
+import { pointShowcaseComponent } from './items/pointShowcase'
+import { scheduleComponent } from './items/schedule'
+import { songPickerComponent } from './items/songPicker'
 import { subtitleComponent } from './items/subtitle'
 import { typingCatComponent } from './items/typingCat'
+import { videoCollectComponent } from './items/videoCollect'
+import { voiceAvatarsComponent } from './items/voiceAvatars'
 import { wheelComponent } from './items/wheel'
 import type { ObsCategory, ObsComponentDefinition, ObsComponentStatus } from './types'
 
@@ -18,12 +30,24 @@ export * from './types'
  * 新增独立组件时在此数组中登记即可
  */
 export const obsComponentList: ObsComponentDefinition[] = [
+  goalComponent,
+  alertBoxComponent,
+  liveHudComponent,
+  giftBoardComponent,
+  scheduleComponent,
+  nowPlayingComponent,
+  checklistComponent,
+  mysteryBoxComponent,
+  emoteHypeComponent,
+  pointShowcaseComponent,
+  videoCollectComponent,
+  songPickerComponent,
+  voiceAvatarsComponent,
   gamepadComponent,
   keycastComponent,
   typingCatComponent,
   counterComponent,
   clockComponent,
-  goalComponent,
   wheelComponent,
   subtitleComponent,
   pngtuberComponent,

@@ -58,6 +58,7 @@ import { useObsLocalBridge } from '../composables/useObsLocalBridge'
 import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
 import { buildObsScenePlayerUrl, documentRequiresAuthToken } from '../types'
 import { buildSyncLayoutParamsForScene, documentHasObsSources } from '../utils/sceneSlices'
+import { applyObsNativeFilterConfig, syncActiveSceneObsNativeFilters } from '../vfx/obsFilterSync'
 
 const account = useAccount()
 const store = useObsSceneEditorStore()
@@ -272,11 +273,77 @@ async function handleSyncLayoutToObs() {
   })
   const res = await obsBridge.syncSceneLayoutToObs(params)
   if (res.ok) {
-    toast.success(res.message || '已同步分层布局到 OBS')
-    if (res.warnings?.length) toast.warning(res.warnings.join('；'))
+    const filterRes = await syncActiveSceneObsNativeFilters({
+      doc: store.doc,
+      sceneId: store.doc.activeSceneId,
+      obsSceneName: targetScene,
+      executor: {
+        capabilities: obsBridge.filterCapabilities.value,
+        syncSourceFilters: obsBridge.syncSourceFiltersToObs,
+        stageFilterAsset: obsBridge.stageFilterAssetToClient,
+      },
+    })
+    const allWarnings = [...(res.warnings ?? []), ...filterRes.warnings]
+    const extraMsg = filterRes.appliedCount > 0 ? `，并同步 ${filterRes.appliedCount} 项原生滤镜` : ''
+    toast.success(`${res.message || '已同步分层布局到 OBS'}${extraMsg}`)
+    if (allWarnings.length) toast.warning(allWarnings.join('；'))
   } else {
     toast.error(res.message || '同步分层布局失败')
   }
+}
+
+async function handleSyncSceneFiltersToObs() {
+  if (!obsBridge.connected.value) {
+    toast.warning('请先连接本地 OBS')
+    return
+  }
+  const targetScene = store.activeScene?.obsSceneBinding?.trim() || obsBridge.currentScene.value
+  if (!targetScene) {
+    toast.error('未获取到目标 OBS 场景')
+    return
+  }
+  const res = await applyObsNativeFilterConfig(targetScene, store.activeScene?.obsFilters, {
+    capabilities: obsBridge.filterCapabilities.value,
+    syncSourceFilters: obsBridge.syncSourceFiltersToObs,
+    stageFilterAsset: obsBridge.stageFilterAssetToClient,
+  })
+  if (res.ok) {
+    toast.success(res.message || `已同步场景原生滤镜到「${targetScene}」`)
+    if (res.warnings?.length) toast.warning(res.warnings.join('；'))
+  } else {
+    toast.error(res.message || '同步场景原生滤镜失败')
+  }
+}
+
+async function handleSyncSourceFiltersToObs(layerId: string) {
+  if (!obsBridge.connected.value) {
+    toast.warning('请先连接本地 OBS')
+    return
+  }
+  const layer = store.doc.layers[layerId]
+  if (!layer || layer.type !== 'obs-source') return
+  const sourceName = layer.obsSource.sourceName.trim()
+  if (!sourceName) {
+    toast.warning('请先为该图层绑定本地 OBS 源名称')
+    return
+  }
+  const res = await applyObsNativeFilterConfig(sourceName, layer.obsSource.filters, {
+    capabilities: obsBridge.filterCapabilities.value,
+    syncSourceFilters: obsBridge.syncSourceFiltersToObs,
+    stageFilterAsset: obsBridge.stageFilterAssetToClient,
+  })
+  if (res.ok) {
+    toast.success(res.message || `已同步源原生滤镜到「${sourceName}」`)
+    if (res.warnings?.length) toast.warning(res.warnings.join('；'))
+  } else {
+    toast.error(res.message || '同步 OBS 源滤镜失败')
+  }
+}
+
+async function handleRefreshFilterCapabilities() {
+  if (!obsBridge.connected.value) return
+  const caps = await obsBridge.refreshFilterCapabilities()
+  toast.info(caps.hasShaderFilter ? '已检测到 obs-shaderfilter 插件' : '未检测到 obs-shaderfilter 插件（内置调色/锐化/LUT 仍可用）')
 }
 
 async function handleTestVtsAction(layerId: string) {
@@ -508,12 +575,16 @@ onMounted(async () => {
           :obs-connected="obsBridge.connected.value"
           :obs-scene-items="obsBridge.referenceItems.value"
           :vts-status="obsBridge.vtsStatus.value"
+          :filter-capabilities="obsBridge.filterCapabilities.value"
           @open-widget-config="openWidgetConfigDrawer"
           @open-question-display-config="openQuestionDisplayConfigModal"
           @open-danmuji-config="openDanmujiConfigModal"
           @refresh-obs-sources="handleRefreshObsSources"
           @capture-source-preview="handleCaptureSourcePreview"
           @sync-layout-to-obs="handleSyncLayoutToObs"
+          @sync-scene-filters="handleSyncSceneFiltersToObs"
+          @sync-source-filters="handleSyncSourceFiltersToObs"
+          @refresh-filter-capabilities="handleRefreshFilterCapabilities"
           @test-vts-action="handleTestVtsAction"
           @open-obs-link="obsLinkDialogOpen = true"
           @open-setup-guide="openSetupGuide"

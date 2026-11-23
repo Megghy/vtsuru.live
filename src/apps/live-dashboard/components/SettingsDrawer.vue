@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
 import { saveAs } from 'file-saver'
+import { GripVertical } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import { useFilePicker } from '@/composables/useFilePicker'
+import { isTauri } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
@@ -74,8 +75,9 @@ function chooseJsonFile(action: (file: File) => Promise<string>) {
 function onImportEvents() {
   chooseJsonFile(async (file) => {
     const count = await importArchive(file)
+    await dashboard.reloadArchive()
     await refreshCounts()
-    return `已导入 ${count} 条事件，刷新页面后载入列表`
+    return `已导入并载入 ${count} 条事件`
   })
 }
 
@@ -89,8 +91,9 @@ function exportNotes() {
 
 async function clearAll() {
   await clearArchive()
+  await dashboard.reloadArchive()
   await refreshCounts()
-  message.success('本地事件已清空，刷新页面后生效')
+  message.success('本地事件已清空')
 }
 
 const orderedStatOptions = computed({
@@ -146,6 +149,13 @@ function resetToolbarOrder() {
         >
           <Switch v-model="dashboard.settings.absoluteTime" />
         </SettingRow>
+        <SettingRow
+          variant="none"
+          title="列表合并连续刷屏"
+          description="普通列表模式下将连续重复弹幕折叠显示"
+        >
+          <Switch v-model="dashboard.settings.collapseRepeated" />
+        </SettingRow>
         <FormField
           label="字号"
           :extra="`${dashboard.settings.fontSize}px`"
@@ -171,7 +181,7 @@ function resetToolbarOrder() {
         </SettingRow>
 
         <Separator />
-        <div class="settings__stat-header flex justify-between items-center">
+        <div class="flex-between">
           <div class="font-semibold">顶栏指标项 (支持拖拽排序)</div>
           <Button
             size="xs"
@@ -195,15 +205,12 @@ function resetToolbarOrder() {
             class="flex-between gap-2 py-1 px-1.5 rounded-[var(--radius)] bg-popover transition-colors hover:bg-muted/80"
             :title="opt.description"
           >
-            <div class="settings__stat-label flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5">
               <span
                 class="drag-handle cursor-grab text-muted-foreground"
                 title="按住拖拽排序"
               >
-                <component
-                  :is="ReorderThreeOutline"
-                  class="h-4 w-4"
-                />
+                <GripVertical class="size-3.5" />
               </span>
               <span>{{ opt.label }}</span>
             </div>
@@ -254,7 +261,7 @@ function resetToolbarOrder() {
         </template>
 
         <Separator />
-        <div class="font-semibold">高光打点与 OBS 回放联动</div>
+        <div class="font-semibold">{{ isTauri() ? '高光打点与 OBS 回放联动' : '高光打点' }}</div>
         <SettingRow
           variant="none"
           title="弹幕打点指令前缀"
@@ -282,9 +289,9 @@ function resetToolbarOrder() {
           </Select>
         </SettingRow>
         <SettingRow
+          v-if="isTauri()"
           variant="none"
           title="打点时自动保存 OBS 回放缓存"
-          description="仅客户端"
         >
           <Switch v-model="dashboard.settings.highlight.autoSaveReplayOnMark" />
         </SettingRow>
@@ -313,7 +320,7 @@ function resetToolbarOrder() {
             dashboard.historyRange ? '导出范围为当前选择的时间段。' : ''
           }}
         </div>
-        <div class="settings__counts flex flex-wrap gap-2 text-xs text-muted-foreground">
+        <div class="flex flex-wrap gap-2 text-xs text-muted-foreground">
           <span
             v-for="c in counts"
             :key="c.label"
@@ -332,7 +339,7 @@ function resetToolbarOrder() {
             导出 {{ f.toUpperCase() }}
           </Button>
         </div>
-        <div class="settings__buttons items-center">
+        <div class="flex flex-wrap items-center gap-1.5">
           <Button
             variant="outline"
             @click="onImportEvents"

@@ -1,11 +1,22 @@
 <script setup lang="ts">
+import { Check, Flag } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { useAccount } from '@/api/account'
+import type { EventModel } from '@/api/client-types'
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
-import { computeGoalProgressPercent, formatCountdownClock, getVisibleRemainingMs } from './goalEngine'
+import {
+  computeGoalEventDelta,
+  computeGoalProgressPercent,
+  formatCountdownClock,
+  getNextMilestone,
+  getSortedMilestones,
+  getVisibleRemainingMs,
+} from './goalEngine'
 import { DEFAULT_GOAL_STATE } from './types'
 import type { GoalAction, GoalState } from './types'
 
@@ -13,9 +24,12 @@ const props = defineProps<{
   channelId?: string
   userId?: number
   inlineMode?: boolean
+  noShadow?: boolean
 }>()
 
 const route = useRoute()
+const account = useAccount()
+const danmakuClient = useDanmakuClient()
 const targetChannel = computed(() => resolveObsSyncChannel(props.channelId ?? route.query.channel))
 
 const { state, onAction } = useObsBridge<GoalState, GoalAction>({
@@ -25,6 +39,27 @@ const { state, onAction } = useObsBridge<GoalState, GoalAction>({
   defaultState: DEFAULT_GOAL_STATE,
   role: 'viewer',
 })
+
+// 当 OBS 端携带登录态且开启 directTrackOnObs 时，在本地保留临时增量（服务端新快照到达时归零防重复）
+const localProgressOffset = ref(0)
+const localAddedMs = ref(0)
+const seenDirectIds = new Set<string>()
+
+watch(
+  () => [state.value.current, state.value.countdownEndAt, state.value.pausedRemainingMs],
+  () => {
+    localProgressOffset.value = 0
+    localAddedMs.value = 0
+  },
+)
+
+const effectiveCurrent = computed(() => Number((state.value.current + localProgressOffset.value).toFixed(2)))
+const effectiveState = computed<GoalState>(() => ({
+  ...state.value,
+  current: effectiveCurrent.value,
+  countdownEndAt: state.value.countdownEndAt + localAddedMs.value,
+  pausedRemainingMs: state.value.pausedRemainingMs + localAddedMs.value,
+}))
 
 const nowMs = ref(Date.now())
 let clockTimer: ReturnType<typeof setInterval> | undefined
@@ -37,19 +72,28 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (clockTimer) clearInterval(clockTimer)
+  danmakuClient.offEvent('all', handleDirectEvent)
 })
 
 const showProgress = computed(() => state.value.mode === 'goal' || state.value.mode === 'combo')
 const showCountdown = computed(() => state.value.mode === 'subathon' || state.value.mode === 'combo')
 
-const progressPercent = computed(() => computeGoalProgressPercent(state.value.current, state.value.target))
+const progressPercent = computed(() => computeGoalProgressPercent(effectiveCurrent.value, state.value.target))
 const displayPercentText = computed(() => {
   if (!state.value.target || state.value.target <= 0) return '0%'
-  const raw = Math.round((state.value.current / state.value.target) * 100)
+  const raw = Math.round((effectiveCurrent.value / state.value.target) * 100)
   return `${Math.max(0, raw)}%`
 })
 
-const remainingMs = computed(() => getVisibleRemainingMs(state.value, nowMs.value))
+const sortedMilestones = computed(() =>
+  state.value.showMilestones ? getSortedMilestones(state.value.milestones) : [],
+)
+const nextMilestone = computed(() => getNextMilestone(effectiveCurrent.value, sortedMilestones.value))
+const allMilestonesDone = computed(
+  () => sortedMilestones.value.length > 0 && nextMilestone.value === null,
+)
+
+const remainingMs = computed(() => getVisibleRemainingMs(effectiveState.value, nowMs.value))
 const formattedClock = computed(() => formatCountdownClock(remainingMs.value))
 
 // 飘字提示动效
@@ -64,6 +108,49 @@ function showDelta(text: string) {
     deltaBanner.value = ''
   }, 2200)
 }
+
+function handleDirectEvent(event: EventModel) {
+  if (props.inlineMode || !state.value.directTrackOnObs) return
+  const key = event.eventId || `${event.type}:${event.uid}:${event.time}:${event.price}`
+  if (seenDirectIds.has(key)) return
+  seenDirectIds.add(key)
+  if (seenDirectIds.size > 400) {
+    const first = seenDirectIds.values().next().value
+    if (first) seenDirectIds.delete(first)
+  }
+  const res = computeGoalEventDelta(effectiveState.value, {
+    type: event.type,
+    priceYuan: event.price ?? 0,
+    guardLevel: event.guard_level,
+    num: event.num ?? 1,
+    giftName: event.msg,
+  })
+  if (!res) return
+  if (res.addedProgress > 0) {
+    localProgressOffset.value = Number((localProgressOffset.value + res.addedProgress).toFixed(2))
+  }
+  if (res.addedSeconds > 0) {
+    localAddedMs.value += res.addedSeconds * 1000
+  }
+  showDelta(res.deltaText)
+}
+
+watch(
+  () => [!props.inlineMode && state.value.directTrackOnObs && account.value.id > 0],
+  async ([enabled]) => {
+    if (enabled) {
+      danmakuClient.onEvent('all', handleDirectEvent)
+      try {
+        await danmakuClient.ensureOpenlive()
+      } catch {
+        // 独立 OBS 源无 OpenLive 会话时静默降级为纯云端桥接同步
+      }
+    } else {
+      danmakuClient.offEvent('all', handleDirectEvent)
+    }
+  },
+  { immediate: true },
+)
 
 watch(
   () => state.value.lastDeltaTick,
@@ -129,16 +216,33 @@ const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily
       </div>
 
       <template v-if="showProgress">
-        <div class="goal-bar-track">
+        <div class="goal-bar-wrap">
+          <div class="goal-bar-track">
+            <div
+              class="goal-bar-fill"
+              :style="{ transform: `scaleX(${progressPercent / 100})` }"
+            />
+          </div>
+
+          <!-- 阶段里程碑刻度点 -->
           <div
-            class="goal-bar-fill"
-            :style="{ transform: `scaleX(${progressPercent / 100})` }"
-          />
+            v-if="sortedMilestones.length && state.target > 0"
+            class="goal-milestone-ticks"
+          >
+            <span
+              v-for="ms in sortedMilestones"
+              :key="ms.id"
+              class="milestone-tick"
+              :class="{ 'is-reached': effectiveCurrent >= ms.target }"
+              :style="{ left: `${Math.min(100, (ms.target / state.target) * 100)}%` }"
+              :title="`${ms.target}${state.unit} · ${ms.label}`"
+            />
+          </div>
         </div>
 
         <div class="goal-metrics-row">
           <span class="metric-current">
-            <strong>{{ state.current }}</strong>
+            <strong>{{ effectiveCurrent }}</strong>
             <span class="metric-sep">/</span>
             <span>{{ state.target }}</span>
             <span
@@ -148,12 +252,30 @@ const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily
               {{ state.unit }}
             </span>
           </span>
-          <span
-            v-if="state.showPercent"
-            class="metric-percent"
-          >
-            {{ displayPercentText }}
-          </span>
+
+          <div class="goal-right-meta">
+            <span
+              v-if="nextMilestone"
+              class="milestone-pill"
+            >
+              <Flag class="milestone-icon" />
+              <span>{{ nextMilestone.target }}{{ state.unit }} {{ nextMilestone.label }}</span>
+            </span>
+            <span
+              v-else-if="allMilestonesDone"
+              class="milestone-pill is-done"
+            >
+              <Check class="milestone-icon" />
+              <span>全部阶段已达成</span>
+            </span>
+
+            <span
+              v-if="state.showPercent"
+              class="metric-percent"
+            >
+              {{ displayPercentText }}
+            </span>
+          </div>
         </div>
       </template>
     </div>
@@ -271,6 +393,11 @@ const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily
   transform: translateY(-10px) scale(0.96);
 }
 
+.goal-bar-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .goal-bar-track {
   width: 100%;
   height: 12px;
@@ -288,18 +415,78 @@ const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.goal-milestone-ticks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.milestone-tick {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1.5px solid rgba(15, 23, 42, 0.85);
+  transform: translate(-50%, -50%);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.milestone-tick.is-reached {
+  background: #ffffff;
+  border-color: var(--goal-accent, #f43f5e);
+}
+
 .goal-metrics-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
+}
+
+.goal-right-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.milestone-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 240px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.milestone-pill.is-done {
+  background: color-mix(in srgb, var(--goal-accent, #f43f5e) 24%, transparent);
+  border-color: color-mix(in srgb, var(--goal-accent, #f43f5e) 45%, transparent);
+}
+
+.milestone-icon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  color: var(--goal-accent, #f43f5e);
 }
 
 .metric-current {
   display: inline-flex;
   align-items: baseline;
   gap: 3px;
+  flex-shrink: 0;
 }
 
 .metric-current strong {
@@ -319,6 +506,7 @@ const customFontCss = computed(() => resolveFontFamilyCss(state.value.fontFamily
 .metric-percent {
   font-weight: 700;
   color: var(--goal-accent, #f43f5e);
+  flex-shrink: 0;
 }
 
 /* 主题 1: card */

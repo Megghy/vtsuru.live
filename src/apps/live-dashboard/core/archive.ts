@@ -71,6 +71,11 @@ export async function clearArchive() {
   await dashboardDB.events.clear()
 }
 
+export async function pruneArchive(retentionHours: number) {
+  const cutoff = Date.now() - Math.max(24, retentionHours) * 3600_000
+  return dashboardDB.events.where('time').below(cutoff).delete()
+}
+
 export async function queryUserHistory(event: Pick<DashboardEvent, 'uid' | 'ouid'>, limit = 500) {
   const collection =
     event.uid > 0

@@ -5,6 +5,7 @@ import type { RpcObsSceneItemRef } from '@/shared/rpc/contract'
 
 import type { ObsSceneDocument, ObsSceneLayer } from '../types'
 import { resolveSlotRenderLayerIds } from '../utils/sceneSlices'
+import { buildObsNativeFilterPreviewCss } from '../vfx/presets'
 import SceneLayerNode from './SceneLayerNode.vue'
 
 const props = withDefaults(
@@ -43,6 +44,11 @@ const currentSceneId = computed(() => {
 })
 
 const activeScene = computed(() => props.doc.scenes[currentSceneId.value] ?? null)
+
+const editSceneFilterCss = computed(() => {
+  if (props.mode === 'live') return undefined
+  return buildObsNativeFilterPreviewCss(activeScene.value?.obsFilters)
+})
 
 const resolvedLayerIds = computed(() => {
   if (props.mode === 'live' && props.slot) {
@@ -96,6 +102,7 @@ function getReferenceStyle(item: RpcObsSceneItemRef) {
       width: `${doc.canvas.width}px`,
       height: `${doc.canvas.height}px`,
       backgroundColor: mode === 'live' ? 'transparent' : doc.canvas.background || 'transparent',
+      filter: editSceneFilterCss,
     }"
   >
     <!-- 编辑态底层：本地 OBS 源占位参考框 -->

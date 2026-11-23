@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import Add16Regular from '@vicons/fluent/es/Add16Regular'
-import Subtract16Regular from '@vicons/fluent/es/Subtract16Regular'
+import { Minus, Plus } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
 
 import { getUserPointHistories, giveUserPoint } from '@/api/point-user'
@@ -66,26 +65,26 @@ async function give(sign: 1 | -1) {
 </script>
 
 <template>
-  <div class="user-points">
-    <div class="user-points__head">
-      <span class="user-points__label">积分</span>
+  <div class="space-y-1.5">
+    <div class="flex-between text-xs">
+      <span class="text-muted-foreground">积分</span>
       <Spin
         v-if="loading"
         class="h-3 w-3"
       />
       <span
         v-else-if="error"
-        class="user-points__error"
+        class="text-destructive truncate max-w-[200px]"
         :title="error"
         >{{ error }}</span
       >
       <span
         v-else
-        class="user-points__value"
+        class="font-semibold tabular-nums text-foreground"
         >{{ Number((total ?? 0).toFixed(1)) }}</span
       >
     </div>
-    <div class="user-points__form flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5">
       <NumberField
         v-model="count"
         size="xs"
@@ -101,30 +100,24 @@ async function give(sign: 1 | -1) {
         :maxlength="100"
       />
       <Button
-        size="icon"
+        size="icon-xs"
         variant="secondary"
-        class="w-7 shrink-0 text-primary"
+        class="shrink-0 text-primary"
         :disabled="!count || !!error || submitting"
         aria-label="增加积分"
         @click="give(1)"
       >
-        <component
-          :is="Add16Regular"
-          class="h-4 w-4"
-        />
+        <Plus class="size-3.5" />
       </Button>
       <Button
-        size="icon"
+        size="icon-xs"
         variant="secondary"
-        class="w-7 shrink-0"
+        class="shrink-0"
         :disabled="!count || !!error || !total || submitting"
         aria-label="扣除积分"
         @click="give(-1)"
       >
-        <component
-          :is="Subtract16Regular"
-          class="h-4 w-4"
-        />
+        <Minus class="size-3.5" />
       </Button>
     </div>
   </div>

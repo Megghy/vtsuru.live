@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import ArrowSort16Regular from '@vicons/fluent/es/ArrowSort16Regular'
-import CheckmarkCircle16Regular from '@vicons/fluent/es/CheckmarkCircle16Regular'
-import Clock16Regular from '@vicons/fluent/es/Clock16Regular'
-import Eye16Regular from '@vicons/fluent/es/Eye16Regular'
-import EyeOff16Regular from '@vicons/fluent/es/EyeOff16Regular'
-import Filter16Regular from '@vicons/fluent/es/Filter16Regular'
+import { ArrowDownWideNarrow, CheckCheck, Clock, Eye, EyeOff, Filter } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -61,7 +56,7 @@ function markAllRead() {
   >
     <template #actions>
       <IconAction
-        :icon="sort === 'price' ? ArrowSort16Regular : Clock16Regular"
+        :icon="sort === 'price' ? ArrowDownWideNarrow : Clock"
         :tip="sort === 'price' ? '当前按金额排序，点击改为按时间' : '当前按时间排序，点击改为按金额'"
         :active="sort === 'price'"
         @click="sort = sort === 'price' ? 'time' : 'price'"
@@ -78,10 +73,7 @@ function markAllRead() {
                 : 'text-muted-foreground'
             "
           >
-            <component
-              :is="Filter16Regular"
-              class="h-4 w-4"
-            />
+            <Filter class="size-3.5" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -110,9 +102,7 @@ function markAllRead() {
           <Button
             variant="ghost"
             :size="readFilterLabel ? 'xs' : 'icon-xs'"
-            :class="[
-              readFilter !== 'all' ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground',
-            ]"
+            :class="[readFilter !== 'all' ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground']"
             aria-label="筛选已读状态"
             :title="
               readFilter === 'unread'
@@ -123,8 +113,8 @@ function markAllRead() {
             "
           >
             <component
-              :is="readFilter === 'unread' ? EyeOff16Regular : Eye16Regular"
-              class="h-4 w-4 shrink-0"
+              :is="readFilter === 'unread' ? EyeOff : Eye"
+              class="size-3.5 shrink-0"
             />
             <span
               v-if="readFilterLabel"
@@ -135,20 +125,14 @@ function markAllRead() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuRadioGroup v-model="readFilter">
-            <DropdownMenuRadioItem value="all">
-              全部
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="unread">
-              仅未读
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="read">
-              仅已读
-            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="all"> 全部 </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="unread"> 仅未读 </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="read"> 仅已读 </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       <IconAction
-        :icon="CheckmarkCircle16Regular"
+        :icon="CheckCheck"
         tip="全部标为已读"
         @click="markAllRead"
       />

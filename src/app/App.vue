@@ -25,7 +25,10 @@ const route = useRoute()
 const layout = computed(() => {
   if (route.path.startsWith('/user') || route.name === 'user' || route.path.startsWith('/@')) {
     return 'user'
-  } else if (route.path.startsWith('/manage') || (route.path.startsWith('/org') && !route.path.startsWith('/org/join'))) {
+  } else if (
+    route.path.startsWith('/manage') ||
+    (route.path.startsWith('/org') && !route.path.startsWith('/org/join'))
+  ) {
     return 'manage'
   } else if (route.path.startsWith('/open-live')) {
     return 'open-live'
@@ -61,6 +64,7 @@ const siteTokens = computed(() => buildSiteTokens(isDarkMode.value))
 provideThemeScope(computed(() => getThemeCssVars(siteTokens.value)))
 const shellStyle = computed(() => {
   if (isTransparentShell.value) return { height: '100%' }
+  if (route.name === 'live-dashboard') return { height: '100dvh' }
   if (layout.value === 'user' || layout.value === '') return { minHeight: '100dvh' }
   return { height: '100dvh' }
 })

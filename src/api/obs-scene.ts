@@ -44,6 +44,13 @@ export interface UploadedObsSceneAsset {
   size: number
 }
 
+export interface UploadedObsSceneVfxAsset {
+  url: string
+  fileName: string
+  ext: string
+  size: number
+}
+
 function sceneApi(path: string) {
   return new URL(`/api/obs-scene/${path}`, getCurrentAPIUrl()).toString()
 }
@@ -113,4 +120,11 @@ export async function uploadObsSceneAsset(file: File): Promise<UploadedObsSceneA
   form.append('file', file)
   const resp = await QueryPostAPI<UploadedObsSceneAsset>(sceneApi('assets/upload'), form, undefined, '')
   return unwrapOk(resp, '上传图片素材失败')
+}
+
+export async function uploadObsSceneVfxAsset(file: File): Promise<UploadedObsSceneVfxAsset> {
+  const form = new FormData()
+  form.append('file', file)
+  const resp = await QueryPostAPI<UploadedObsSceneVfxAsset>(sceneApi('assets/upload-vfx'), form, undefined, '')
+  return unwrapOk(resp, '上传 VFX / 滤镜素材失败')
 }

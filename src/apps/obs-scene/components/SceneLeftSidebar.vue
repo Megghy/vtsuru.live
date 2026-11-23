@@ -22,6 +22,7 @@ import {
   Type,
   Ungroup,
   UserRound,
+  Wand2,
 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
@@ -43,7 +44,7 @@ import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
-import type { ObsModuleId, ObsSourceRole } from '../types'
+import type { ObsModuleId, ObsSourceRole, VfxLayerMode, VfxPresetId } from '../types'
 import {
   createIframeLayer,
   createImageLayer,
@@ -53,6 +54,7 @@ import {
   createShapeLayer,
   createSlideshowLayer,
   createTextLayer,
+  createVfxLayer,
   createVideoLayer,
   createWidgetLayer,
   formatCleanWidgetName,
@@ -102,6 +104,12 @@ function addObsModule(moduleId: ObsModuleId) {
 
 function addObsSource(role: ObsSourceRole) {
   store.addLayer(createObsSourceLayer(role, store.doc.canvas), 'scene')
+}
+
+function addVfxLayer(mode: VfxLayerMode, presetId: VfxPresetId = 'vignette', name?: string) {
+  const layer = createVfxLayer(store.doc.canvas, mode, presetId)
+  if (name) layer.name = name
+  store.addLayer(layer)
 }
 
 function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slideshow' | 'shape' | 'image' | 'video' | 'iframe') {
@@ -276,6 +284,27 @@ function addBasicLayer(kind: 'text' | 'marquee-text' | 'marquee-image' | 'slides
                 <DropdownMenuItem @select="addObsSource('camera')">
                   <Camera class="w-3.5 h-3.5 mr-2 text-violet-500" />
                   <span class="flex-1 truncate">摄像头 / 采集卡</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>画面滤镜与 VFX 特效</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem @select="addVfxLayer('preset', 'vignette', '电影暗角滤镜')">
+                  <Wand2 class="w-3.5 h-3.5 mr-2 text-fuchsia-500" />
+                  <span class="flex-1 truncate">画面滤镜（暗角/颗粒/扫描线）</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="addVfxLayer('preset', 'sakura', '氛围粒子特效')">
+                  <Sparkles class="w-3.5 h-3.5 mr-2 text-fuchsia-500" />
+                  <span class="flex-1 truncate">动态氛围粒子（樱花/雪/雨/星尘）</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="addVfxLayer('shader', 'vignette', '自定义 Shader 滤镜')">
+                  <Sparkles class="w-3.5 h-3.5 mr-2 text-violet-500" />
+                  <span class="flex-1 truncate">自定义 GLSL Shader 滤镜</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="addVfxLayer('media', 'vignette', 'VFX 特效素材')">
+                  <Film class="w-3.5 h-3.5 mr-2 text-fuchsia-500" />
+                  <span class="flex-1 truncate">VFX 素材（WebM/黑底MP4/Lottie/Rive/SVGA/PAG）</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
 

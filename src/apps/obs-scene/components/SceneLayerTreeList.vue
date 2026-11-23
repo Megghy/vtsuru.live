@@ -27,6 +27,7 @@ import {
   Ungroup,
   Unlock,
   UserRound,
+  Wand2,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -37,6 +38,8 @@ import { useObsSceneEditorStore } from '../store/useObsSceneEditorStore'
 import type { ObsSceneLayer } from '../types'
 import { getObsModuleById } from '../types'
 import { isLayerEffectivelyLocked } from '../utils/groupTree'
+import { getVfxPresetMeta } from '../vfx/presets'
+import { detectVfxMediaFormat } from '../vfx/types'
 
 defineOptions({ name: 'SceneLayerTreeList' })
 
@@ -101,6 +104,8 @@ function getLayerTypeIcon(layer: ObsSceneLayer) {
       if (layer.obsSource.role === 'game') return Gamepad2
       if (layer.obsSource.role === 'camera') return Camera
       return Layers
+    case 'vfx':
+      return Wand2
     case 'marquee':
       return layer.marquee.mode === 'image' ? GalleryHorizontalEnd : MoveHorizontal
     case 'slideshow':
@@ -132,6 +137,11 @@ function getLayerSubtitle(layer: ObsSceneLayer): string {
   if (layer.type === 'obs-source') {
     const tag = layer.obsSource.controller.type === 'vts' ? 'VTS' : 'OBS'
     return layer.obsSource.sourceName ? `${tag} · ${layer.obsSource.sourceName}` : `${tag} · 未绑定本地源`
+  }
+  if (layer.type === 'vfx') {
+    if (layer.vfx.mode === 'preset') return `滤镜 · ${getVfxPresetMeta(layer.vfx.preset.id).label}`
+    if (layer.vfx.mode === 'shader') return '自定义 GLSL Shader'
+    return `VFX · ${detectVfxMediaFormat(layer.vfx.media.url, layer.vfx.media.format).toUpperCase()}`
   }
   if (layer.type === 'marquee') {
     return layer.marquee.mode === 'image' ? '图片走马灯' : '文字走马灯'

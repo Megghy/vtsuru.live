@@ -38,7 +38,7 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
     onlineCount.value = activeUsers.size
   }
 
-  useIntervalFn(() => {
+  const { pause, resume } = useIntervalFn(() => {
     now.value = Date.now()
     arrivals = arrivals.filter((t) => t > now.value - RATE_WINDOW_MS)
     refreshOnlineUsers()
@@ -153,5 +153,7 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
     lastEventType,
     record,
     reset,
+    pause,
+    resume,
   }
 }
