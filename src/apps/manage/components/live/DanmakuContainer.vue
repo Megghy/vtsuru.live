@@ -3,7 +3,7 @@ import DocumentArrowDown20Regular from '@vicons/fluent/es/DocumentArrowDown20Reg
 import Money24Regular from '@vicons/fluent/es/Money24Regular'
 import Search24Filled from '@vicons/fluent/es/Search24Filled'
 import { saveAs } from 'file-saver'
-import { computed, nextTick, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { DanmakuModel } from '@/api/client-types'
@@ -22,6 +22,7 @@ import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 const props = withDefaults(
   defineProps<{
@@ -47,6 +48,11 @@ const emit = defineEmits<{
 
 const accountInfo = useAccount()
 const message = useMessage()
+const liveEmoji = useLiveEmoji()
+
+onMounted(() => {
+  void liveEmoji.ensureFresh()
+})
 
 // 数据源
 const baseDanmakus = shallowRef<DanmakuModel[]>([])

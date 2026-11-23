@@ -28,9 +28,17 @@ export const useLiveEmoji = defineStore('LiveEmoji', () => {
     emojiData.value = { updateAt: Date.now(), data: resp.data }
   }
 
+  let inflightEnsure: Promise<void> | null = null
+
   async function ensureFresh() {
-    await whenPersistedReady(emojiData)
-    if (emojiData.value.updateAt < Date.now() - STALE_MS) await refresh()
+    if (inflightEnsure) return inflightEnsure
+    inflightEnsure = (async () => {
+      await whenPersistedReady(emojiData)
+      if (emojiData.value.updateAt < Date.now() - STALE_MS) await refresh()
+    })().finally(() => {
+      inflightEnsure = null
+    })
+    return inflightEnsure
   }
 
   return { emojiData, merged, refresh, ensureFresh }

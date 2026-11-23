@@ -13,7 +13,9 @@ import { Card } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { normalizeEmojiUrl, splitEmojiSegments, withEmojiSizeSuffix } from '@/shared/utils/danmakuEmoji'
 import { getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 const {
   danmaku,
@@ -53,6 +55,19 @@ function GetGuardColor(price: number | null | undefined): string {
 }
 
 const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
+const liveEmoji = useLiveEmoji()
+
+const emojiUrls = computed(() => {
+  if (!danmaku.isEmoji) return null
+  const full = normalizeEmojiUrl(danmaku.msg)
+  if (!full) return null
+  return { thumb: withEmojiSizeSuffix(full, '@22h'), full }
+})
+
+const messageSegments = computed(() => {
+  if (emojiUrls.value || !danmaku.msg) return []
+  return splitEmojiSegments(danmaku.msg, liveEmoji.merged)
+})
 </script>
 
 <template>
@@ -172,12 +187,12 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       v-if="danmaku.type === EventDataTypes.Message"
       class="danmaku-body text-xs"
     >
-      <template v-if="danmaku.isEmoji">
+      <template v-if="emojiUrls">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
               <img
-                :src="`https://${danmaku.msg}@22h`"
+                :src="emojiUrls.thumb"
                 referrerpolicy="no-referrer"
                 class="danmaku-emoji inline-block"
                 :style="`max-height: ${height}px;`"
@@ -185,13 +200,30 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
             </TooltipTrigger>
             <TooltipContent>
               <img
-                :src="`https://${danmaku.msg}`"
+                :src="emojiUrls.full"
                 referrerpolicy="no-referrer"
                 class="max-w-[80px] max-h-[80px]"
               />
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+      </template>
+      <template v-else-if="messageSegments.length > 0">
+        <template
+          v-for="(seg, idx) in messageSegments"
+          :key="idx"
+        >
+          <img
+            v-if="seg.kind === 'emoji'"
+            :src="seg.url"
+            :alt="seg.name"
+            :title="seg.name"
+            referrerpolicy="no-referrer"
+            loading="lazy"
+            class="inline-block h-[1.4em] w-auto align-[-0.3em] mx-0.5"
+          />
+          <template v-else>{{ seg.text }}</template>
+        </template>
       </template>
       <template v-else>
         {{ danmaku.msg }}
