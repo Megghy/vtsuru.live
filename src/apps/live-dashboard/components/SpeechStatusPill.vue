@@ -4,6 +4,7 @@ import { computed } from 'vue'
 
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useSpeechService } from '@/store/useSpeechService'
 
@@ -17,11 +18,22 @@ const queueCount = computed(() => speakQueue.value.length)
   <TooltipProvider :delay-duration="300">
     <div
       v-if="speechState.canSpeech"
-      class="flex items-center gap-1 h-7 px-1.5 rounded-md border border-border bg-muted/60 shrink-0"
+      class="flex items-center gap-0.5 h-7 pl-1.5 pr-0.5 rounded-md border border-border bg-muted/60 shrink-0"
     >
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <div class="flex items-center gap-1.5 px-1 max-w-[140px] cursor-default">
+      <Popover>
+        <PopoverTrigger as-child>
+          <button
+            type="button"
+            class="flex items-center gap-1.5 px-1 h-6 rounded hover:bg-accent/60 transition-colors cursor-pointer border-0 bg-transparent text-foreground"
+            aria-label="展开语音播报详情"
+            :title="
+              speechState.isSpeaking
+                ? `正在朗读：${speechState.speakingText}`
+                : isPaused
+                  ? '语音播报已暂停（点击展开控制）'
+                  : '语音播报待机中（点击展开控制）'
+            "
+          >
             <span
               class="size-2 rounded-full shrink-0"
               :class="{
@@ -30,7 +42,8 @@ const queueCount = computed(() => speakQueue.value.length)
                 'bg-muted-foreground/40': !speechState.isSpeaking && !isPaused,
               }"
             />
-            <span class="text-xs truncate">
+            <Mic class="size-3.5 shrink-0 text-muted-foreground 2xl:hidden" />
+            <span class="hidden 2xl:inline text-xs truncate max-w-[120px]">
               {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '朗读暂停' : '语音待机' }}
             </span>
             <Badge
@@ -41,12 +54,64 @@ const queueCount = computed(() => speakQueue.value.length)
             >
               {{ queueCount }}
             </Badge>
+          </button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          align="end"
+          class="w-64 p-3 space-y-2.5 text-xs"
+        >
+          <div class="flex-between">
+            <span class="font-semibold text-foreground">语音读弹幕</span>
+            <Badge
+              v-if="queueCount > 0"
+              size="xs"
+              variant="secondary"
+              class="tabular-nums"
+            >
+              排队 {{ queueCount }}
+            </Badge>
           </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          {{ speechState.isSpeaking ? `正在朗读：${speechState.speakingText}` : '语音播报队列状态' }}
-        </TooltipContent>
-      </Tooltip>
+
+          <div class="rounded-md bg-muted/60 px-2.5 py-2 text-muted-foreground leading-relaxed break-words">
+            {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停朗读' : '当前无朗读任务，等待新弹幕...' }}
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5">
+            <Button
+              size="xs"
+              variant="outline"
+              class="gap-1"
+              @click="speechService.togglePause()"
+            >
+              <component
+                :is="isPaused ? Play : Pause"
+                class="size-3.5"
+              />
+              <span>{{ isPaused ? '恢复' : '暂停' }}</span>
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              class="gap-1"
+              :disabled="!speechState.isSpeaking"
+              @click="speechService.skipCurrent()"
+            >
+              <SkipForward class="size-3.5" />
+              <span>跳过</span>
+            </Button>
+            <Button
+              size="xs"
+              variant="ghost"
+              class="gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+              @click="speechService.stopSpeech()"
+            >
+              <Square class="size-3" />
+              <span>停止</span>
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
 
       <Tooltip>
         <TooltipTrigger as-child>
@@ -71,7 +136,7 @@ const queueCount = computed(() => speakQueue.value.length)
           <Button
             size="icon-xs"
             variant="ghost"
-            class="size-6"
+            class="hidden xl:inline-flex size-6"
             :disabled="!speechState.isSpeaking"
             aria-label="跳过当前朗读"
             @click="speechService.skipCurrent()"
@@ -80,21 +145,6 @@ const queueCount = computed(() => speakQueue.value.length)
           </Button>
         </TooltipTrigger>
         <TooltipContent>跳过当前</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <Button
-            size="icon-xs"
-            variant="ghost"
-            class="size-6 text-muted-foreground hover:text-destructive"
-            aria-label="停止朗读并清空"
-            @click="speechService.stopSpeech()"
-          >
-            <Square class="size-3" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>停止朗读并清空队列</TooltipContent>
       </Tooltip>
     </div>
 
@@ -107,7 +157,7 @@ const queueCount = computed(() => speakQueue.value.length)
           aria-label="开启语音读弹幕"
           @click="speechService.startSpeech()"
         >
-          <Mic class="size-4" />
+          <Mic class="size-3.5" />
         </Button>
       </TooltipTrigger>
       <TooltipContent>开启语音读弹幕</TooltipContent>

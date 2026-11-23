@@ -46,6 +46,8 @@ const DEFAULT_PARAM_SLOTS: VtsParamSlot[] = (
   step: 0.01,
   weight: 1,
   value: 0,
+  defaultValue: 0,
+  mode: 'add',
   hold: false,
 }))
 
@@ -101,11 +103,12 @@ export function createVtsConfig() {
       obsLink: obsLink.value.value,
       accessories: accessories.value.value,
       pranks: pranks.value.value,
+      deck: deck.value.value,
     }
   }
 
   async function saveProfileData(data: VtsProfileData) {
-    await Promise.all([
+    const tasks: Promise<void>[] = [
       hotkeyCustom.save(data.hotkeyCustomizations),
       presets.save(data.presets),
       macros.save(data.macros),
@@ -114,7 +117,11 @@ export function createVtsConfig() {
       obsLink.save(data.obsLink),
       accessories.save(data.accessories),
       pranks.save(data.pranks),
-    ])
+    ]
+    if (data.deck !== undefined) {
+      tasks.push(deck.save(data.deck))
+    }
+    await Promise.all(tasks)
   }
 
   function findProfile(id: string) {
@@ -123,9 +130,25 @@ export function createVtsConfig() {
     return profile
   }
 
-  async function addProfile(name: string, data: VtsProfileData) {
-    if (profiles.value.value.some((p) => p.name === name)) throw new Error('已存在同名 Profile（请先重命名或删除）')
-    const profile: VtsProfile = { id: `profile-${nanoid(8)}`, name, data }
+  async function addProfile(
+    name: string,
+    data: VtsProfileData,
+    meta?: Pick<VtsProfile, 'modelId' | 'modelName' | 'autoApplyOnModelLoad'>,
+  ) {
+    let uniqueName = name.trim() || '新配置方案'
+    if (profiles.value.value.some((p) => p.name === uniqueName)) {
+      let suffix = 2
+      while (profiles.value.value.some((p) => p.name === `${uniqueName} (${suffix})`)) suffix++
+      uniqueName = `${uniqueName} (${suffix})`
+    }
+    const profile: VtsProfile = {
+      id: `profile-${nanoid(8)}`,
+      name: uniqueName,
+      modelId: meta?.modelId,
+      modelName: meta?.modelName,
+      autoApplyOnModelLoad: meta?.autoApplyOnModelLoad,
+      data,
+    }
     await profiles.save([profile, ...profiles.value.value])
     return profile
   }
@@ -169,21 +192,33 @@ export function createVtsConfig() {
         rotation: 0,
         size: 0,
       }),
+    newPresetDraft: (name = '新预设'): VtsPreset => ({
+      id: `preset-${nanoid(8)}`,
+      name,
+      timeInSeconds: 0.2,
+      positionX: 0,
+      positionY: 0,
+      rotation: 0,
+      size: 0,
+    }),
     upsertMacro: macros.upsert,
     removeMacro: macros.remove,
     createMacro: async (name = '新宏') => create(macros, { id: `macro-${nanoid(8)}`, name, steps: [] }),
+    newMacroDraft: (name = '新宏'): VtsMacro => ({ id: `macro-${nanoid(8)}`, name, steps: [] }),
     upsertParamSlot: paramSlots.upsert,
     removeParamSlotConfig: paramSlots.remove,
-    createParamSlot: async (name = 'NewParam') =>
+    createParamSlot: async (name = 'NewParam', opts?: Partial<VtsParamSlot>) =>
       create(paramSlots, {
         id: `slot-${nanoid(8)}`,
         name,
-        parameterId: name,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        weight: 1,
-        value: 0,
+        parameterId: opts?.parameterId ?? name,
+        min: opts?.min ?? 0,
+        max: opts?.max ?? 1,
+        step: opts?.step ?? 0.01,
+        weight: opts?.weight ?? 1,
+        value: opts?.defaultValue ?? opts?.value ?? 0,
+        defaultValue: opts?.defaultValue ?? 0,
+        mode: opts?.mode ?? 'add',
         hold: false,
       }),
     setPanicConfig: panic.save,
@@ -196,35 +231,41 @@ export function createVtsConfig() {
       create(accessories, { id: `acc-${nanoid(8)}`, name: '新配饰', itemInstanceID: '', visible: true }),
     upsertPrank: pranks.upsert,
     removePrank: pranks.remove,
-    createPrank: async () => create(pranks, { id: `prank-${nanoid(8)}`, name: '新整活', fileName: '' }),
+    createPrank: async () =>
+      create(pranks, { id: `prank-${nanoid(8)}`, name: '新整活', fileName: '', dropX: 0, dropSize: 0.32 }),
 
-    exportMinimalConfig: (): VtsMinimalExportV1 => ({
+    exportMinimalConfig: (includeToken = false): VtsMinimalExportV1 => ({
       version: 1,
       wsUrl: wsUrl.value.value,
-      authToken: authToken.value.value,
+      ...(includeToken ? { authToken: authToken.value.value } : {}),
     }),
     async importMinimalConfig(payload: unknown) {
       const p = parseImport(minimalExportSchema, payload)
-      await Promise.all([wsUrl.save(p.wsUrl), authToken.save(p.authToken)])
+      const tasks: Promise<void>[] = [wsUrl.save(p.wsUrl)]
+      if (p.authToken) tasks.push(authToken.save(p.authToken))
+      await Promise.all(tasks)
     },
-    exportFullConfig: (): VtsExportV2 => ({
+    exportFullConfig: (includeToken = false): VtsExportV2 => ({
       version: 2,
       wsUrl: wsUrl.value.value,
-      authToken: authToken.value.value,
+      ...(includeToken ? { authToken: authToken.value.value } : {}),
       ...snapshotProfileData(),
       deck: deck.value.value,
     }),
     async importFullConfig(payload: unknown) {
       const p = parseImport(fullExportSchema, payload)
-      await Promise.all([
+      const tasks: Promise<void>[] = [
         wsUrl.save(p.wsUrl),
-        authToken.save(p.authToken),
-        saveProfileData({ ...p, obsLink: p.obsLink ?? obsLink.value.value }),
-        deck.save(p.deck ?? deck.value.value),
-      ])
+        saveProfileData({ ...p, obsLink: p.obsLink ?? obsLink.value.value, deck: p.deck ?? deck.value.value }),
+      ]
+      if (p.authToken) tasks.push(authToken.save(p.authToken))
+      await Promise.all(tasks)
     },
 
-    createProfile: async (name = '新 Profile') => addProfile(name, snapshotProfileData()),
+    createProfile: async (
+      name = '新配置方案',
+      meta?: Pick<VtsProfile, 'modelId' | 'modelName' | 'autoApplyOnModelLoad'>,
+    ) => addProfile(name, snapshotProfileData(), meta),
     updateProfile: profiles.upsert,
     async deleteProfile(id: string) {
       await profiles.remove(id)
@@ -239,11 +280,22 @@ export function createVtsConfig() {
     },
     exportProfile(id: string): VtsProfileExportV1 {
       const profile = findProfile(id)
-      return { version: 1, name: profile.name, data: profile.data }
+      return {
+        version: 1,
+        name: profile.name,
+        modelId: profile.modelId,
+        modelName: profile.modelName,
+        autoApplyOnModelLoad: profile.autoApplyOnModelLoad,
+        data: profile.data,
+      }
     },
     async importProfile(payload: unknown) {
       const p = parseImport(profileExportSchema, payload)
-      return addProfile(p.name, p.data)
+      return addProfile(p.name, p.data, {
+        modelId: p.modelId,
+        modelName: p.modelName,
+        autoApplyOnModelLoad: p.autoApplyOnModelLoad,
+      })
     },
   }
 }

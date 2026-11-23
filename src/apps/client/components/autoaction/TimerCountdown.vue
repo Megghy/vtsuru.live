@@ -1,32 +1,26 @@
 <script setup lang="ts">
-import Clock16Regular from '@vicons/fluent/es/Clock16Regular'
+import { Clock } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Badge } from '@/shared/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
-const props = defineProps({
-  actionId: {
-    type: String,
-    required: true,
-  },
-})
+const props = defineProps<{
+  actionId: string
+}>()
 
 const autoActionStore = useAutoAction()
 
 const remainingSecondsDisplay = ref<string>('...')
-const intervalId = ref<any | null>(null)
+const intervalId = ref<ReturnType<typeof setInterval> | null>(null)
 
-// 获取目标 action 的基本信息
 const targetAction = computed(() => autoActionStore.autoActions.find((a) => a.id === props.actionId))
 
-// 获取当前计时器信息
 function getTimerInfo() {
   return autoActionStore.getScheduledTimerInfo(props.actionId)
 }
 
-// 格式化函数
 function formatDuration(totalSeconds: number): string {
   if (Number.isNaN(totalSeconds) || totalSeconds < 0) return '00:00'
   const minutes = Math.floor(totalSeconds / 60)
@@ -34,23 +28,17 @@ function formatDuration(totalSeconds: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-// 更新显示的函数
 function updateDisplay() {
   const timerInfo = getTimerInfo()
   if (timerInfo && timerInfo.remainingMs > 0) {
     remainingSecondsDisplay.value = formatDuration(timerInfo.remainingMs / 1000)
   } else {
-    // 如果没有计时器信息或时间已到，显示状态标识
     const isGlobal = targetAction.value?.triggerConfig.useGlobalTimer
     remainingSecondsDisplay.value = isGlobal ? '全局计时' : '独立计时'
-    if (intervalId.value) {
-      clearInterval(intervalId.value)
-      intervalId.value = null
-    }
+    stopInterval()
   }
 }
 
-// 启动定时更新
 function startInterval() {
   stopInterval()
   const timerInfo = getTimerInfo()
@@ -62,7 +50,6 @@ function startInterval() {
   }
 }
 
-// 停止定时更新
 function stopInterval() {
   if (intervalId.value) {
     clearInterval(intervalId.value)
@@ -82,7 +69,6 @@ onUnmounted(() => {
   stopInterval()
 })
 
-// 监听计时器状态变化
 watch(
   () => [
     targetAction.value?.triggerConfig.useGlobalTimer,
@@ -96,8 +82,8 @@ watch(
       return
     }
 
-    const newTimerInfo = newValues[2] as any
-    const oldTimerInfo = oldValues ? (oldValues[2] as any) : null
+    const newTimerInfo = newValues[2] as ReturnType<typeof getTimerInfo>
+    const oldTimerInfo = oldValues ? (oldValues[2] as ReturnType<typeof getTimerInfo>) : null
 
     const isActiveNow = newTimerInfo !== null && newTimerInfo.remainingMs > 0
     const wasActiveBefore = oldTimerInfo !== null && oldTimerInfo.remainingMs > 0
@@ -108,8 +94,7 @@ watch(
       stopInterval()
       updateDisplay()
     } else if (isActiveNow && wasActiveBefore) {
-      // 检查是否重置
-      if (newTimerInfo.remainingMs > oldTimerInfo.remainingMs + 1500) {
+      if (newTimerInfo.remainingMs > (oldTimerInfo?.remainingMs ?? 0) + 1500) {
         startInterval()
       } else if (newValues[0] !== oldValues?.[0] || newValues[1] !== oldValues?.[1]) {
         startInterval()
@@ -135,10 +120,11 @@ const isCountingDown = computed(() => {
         <TooltipTrigger as-child>
           <Badge
             :variant="isCountingDown ? 'default' : 'secondary'"
-            class="min-w-[80px] h-6 px-2 font-mono flex-center gap-1 cursor-default"
+            size="sm"
+            class="min-w-[78px] font-mono tabular-nums flex-center gap-1 cursor-default"
           >
-            <Clock16Regular class="h-3.5 w-3.5" />
-            <span class="timer-text font-bold">{{ remainingSecondsDisplay }}</span>
+            <Clock class="size-3.5" />
+            <span class="font-bold">{{ remainingSecondsDisplay }}</span>
           </Badge>
         </TooltipTrigger>
         <TooltipContent>

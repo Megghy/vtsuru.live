@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { AppWindow, Compass, CornerDownLeft, Monitor, Palette, Search, Sparkles, Wrench } from 'lucide-vue-next'
+import { AppWindow, BookOpen, Compass, CornerDownLeft, Monitor, Palette, Search, Sparkles, Wrench } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
+import { ALL_DOCS, getDocCategory } from '@/apps/docs/registry'
 import { obsComponentList } from '@/apps/obs-store/registry'
 import { useCommandPalette } from '@/shared/composables/useCommandPalette'
 import { Button } from '@/shared/ui/button'
@@ -47,7 +48,7 @@ const isInClient = computed(() => route.path.startsWith('/client'))
 const isInOpenLive = computed(() => route.path.startsWith('/open-live'))
 const isInManage = computed(() => route.path.startsWith('/manage'))
 
-function goRoute(name: string, params?: Record<string, string>, queryParams?: Record<string, string>) {
+function goRoute(name: string, params?: Record<string, string | string[]>, queryParams?: Record<string, string>) {
   void router.push({ name, params, query: queryParams })
 }
 
@@ -246,6 +247,28 @@ const allItems = computed<CommandItem[]>(() => {
       keywords: ['client', '客户端', c.label, ...c.kw],
       icon: AppWindow,
       run: () => goRoute(c.name),
+    })
+  }
+
+  // 6. 使用文档
+  items.push({
+    id: 'docs-index',
+    group: '使用文档',
+    label: '使用文档中心',
+    description: '浏览全站功能图文说明与交互示例',
+    keywords: ['doc', 'docs', 'help', 'guide', '文档', '说明', '帮助', '教程'],
+    icon: BookOpen,
+    run: () => goRoute('docs-index'),
+  })
+  for (const doc of ALL_DOCS) {
+    items.push({
+      id: `doc-${doc.slug}`,
+      group: '使用文档',
+      label: doc.title,
+      description: `${getDocCategory(doc.category).title}${doc.description ? ` · ${doc.description}` : ''}`,
+      keywords: ['doc', '文档', '教程', doc.title, ...doc.tags],
+      icon: BookOpen,
+      run: () => goRoute('docs-article', { slug: doc.slug.split('/') }),
     })
   }
 

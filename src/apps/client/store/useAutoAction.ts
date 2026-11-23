@@ -1,35 +1,40 @@
+import { nanoid } from 'nanoid'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, onScopeDispose, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account.js'
 import type { EventModel } from '@/api/client-types'
 import { EventDataTypes } from '@/api/generated/model'
-import { isDev } from '@/shared/config'
+import { canUseVts } from '@/shared/config'
 import { useRealtimeTopic } from '@/shared/realtime'
 import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { useDanmakuClient } from '@/store/useDanmakuClient.js'
 
-import { executeActions } from './autoAction/actionUtils'
-import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator'
-import { useAutoReply } from './autoAction/modules/autoReply'
+import { isLiveStreaming, liveStartTimeMs } from '../data/info'
+import { checkUserFilters, executeActions, processTemplate } from './autoAction/actionUtils'
+import { matchesDanmakuTrigger, useAutoReply } from './autoAction/modules/autoReply'
 import type { CheckInHubEvent } from './autoAction/modules/checkin'
 import { useCheckIn } from './autoAction/modules/checkin'
-import { useEntryWelcome } from './autoAction/modules/entryWelcome'
+import { matchesEnterTrigger, useEntryWelcome } from './autoAction/modules/entryWelcome'
 import { useFollowThank } from './autoAction/modules/followThank'
-import { useGiftThank } from './autoAction/modules/giftThank'
-import { useGuardPm } from './autoAction/modules/guardPm'
+import { matchesGiftTrigger, useGiftThank } from './autoAction/modules/giftThank'
+import { matchesGuardTrigger, pickGuardGiftCode, useGuardPm } from './autoAction/modules/guardPm'
 import type { PointOrderRedeemedHubEvent } from './autoAction/modules/pointRedeem'
-import { usePointRedeem } from './autoAction/modules/pointRedeem'
-import { useSuperChatThank } from './autoAction/modules/superChatThank'
-import type { AutoActionItem, RuntimeState } from './autoAction/types.js'
-import { ActionType, KeywordMatchType, Priority, TriggerType } from './autoAction/types.js'
+import { matchesPointRedeemTrigger, normalizePointRedeemEvent, usePointRedeem } from './autoAction/modules/pointRedeem'
+import { matchesSuperChatTrigger, useSuperChatThank } from './autoAction/modules/superChatThank'
+import type { AutoActionItem, RuntimeState, SingleActionTestResult } from './autoAction/types.js'
+import { ActionType, KeywordMatchType, Priority, TriggerType, VTS_ACTION_TYPES } from './autoAction/types.js'
 import {
   buildExecutionContext,
   createDefaultAutoAction,
   createDefaultRuntimeState,
-  getRandomTemplate,
+  evaluateExpression,
+  validateLogicalExpression,
 } from './autoAction/utils'
+import { useBiliCookie } from './useBiliCookie'
 import { useBiliFunction } from './useBiliFunction.js'
+import { useVtsStore } from './useVtsStore'
 
 export const useAutoAction = defineStore('autoAction', () => {
   const danmakuClient = useDanmakuClient()
@@ -39,11 +44,20 @@ export const useAutoAction = defineStore('autoAction', () => {
   const { on: onUserEvent } = useRealtimeTopic(userEventsTopic)
   let userEventsRegistered = false
 
-  // 共享状态
-  const isLive = computed(() => account.value.streamerInfo?.isStreaming ?? false)
-  const roomId = computed(() => (isDev ? 1294406 : account.value.streamerInfo?.roomId))
+  // 共享状态（统一消费 info.ts 全局单一在播真源）
+  const isLive = computed(() => isLiveStreaming.value)
+  const roomId = computed(() => account.value.streamerInfo?.roomId || account.value.biliRoomId)
   const isTianXuanActive = ref(false)
-  const liveStartTime = ref<number | null>(null)
+  const fallbackLiveStartTime = ref<number | null>(null)
+  const liveStartTime = computed<number | null>(() => {
+    if (!isLive.value) return null
+    return liveStartTimeMs.value ?? fallbackLiveStartTime.value
+  })
+
+  const scheduledHandlers = {
+    sendLiveDanmaku: biliFunc.sendLiveDanmaku,
+    sendPrivateMessage: biliFunc.sendPrivateMessage,
+  }
 
   const autoActions = usePersistedStorage<AutoActionItem[]>('autoAction.items', [])
   const isActionsLoaded = persistLoaded(autoActions)
@@ -124,26 +138,15 @@ export const useAutoAction = defineStore('autoAction', () => {
         actionToExecute = eligibleActions[lastGlobalActionIndex.value]
       }
 
-      if (actionToExecute && actionToExecute.actionType !== ActionType.SEND_DANMAKU && actionToExecute.actionType !== ActionType.SEND_PRIVATE_MSG) {
-        executeActions([actionToExecute], null, TriggerType.SCHEDULED, roomId.value, runtimeState.value, {})
-      } else if (actionToExecute) {
-        const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
-        const template = getRandomTemplate(actionToExecute.template)
-        if (template && roomId.value) {
-          const formattedContent = evaluateTemplateExpressions(template, context)
-          runtimeState.value.lastExecutionTime[actionToExecute.id] = Date.now()
-          if (actionToExecute.actionConfig.delaySeconds && actionToExecute.actionConfig.delaySeconds > 0) {
-            setTimeout(() => {
-              biliFunc
-                .sendLiveDanmaku(roomId.value, formattedContent)
-                .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
-            }, actionToExecute.actionConfig.delaySeconds * 1000)
-          } else {
-            biliFunc
-              .sendLiveDanmaku(roomId.value, formattedContent)
-              .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
-          }
-        }
+      if (actionToExecute) {
+        executeActions(
+          [actionToExecute],
+          null,
+          TriggerType.SCHEDULED,
+          roomId.value,
+          runtimeState.value,
+          scheduledHandlers,
+        )
       }
     } else {
       console.log('[AutoAction] 当前没有符合条件的全局定时任务可执行，跳过本次执行。')
@@ -240,26 +243,18 @@ export const useAutoAction = defineStore('autoAction', () => {
         (!currentAction.triggerConfig.onlyDuringLive || isLive.value) &&
         (!currentAction.triggerConfig.ignoreTianXuan || !isTianXuanActive.value)
 
-      if (shouldExecute && currentAction.actionType !== ActionType.SEND_DANMAKU && currentAction.actionType !== ActionType.SEND_PRIVATE_MSG) {
-        executeActions([currentAction], null, TriggerType.SCHEDULED, roomId.value, runtimeState.value, {})
-      } else if (shouldExecute) {
-        const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
-        const template = getRandomTemplate(currentAction.template)
-        if (template && roomId.value) {
-          const formattedContent = evaluateTemplateExpressions(template, context)
-          runtimeState.value.lastExecutionTime[currentAction.id] = Date.now()
-          if (currentAction.actionConfig.delaySeconds && currentAction.actionConfig.delaySeconds > 0) {
-            setTimeout(() => {
-              biliFunc
-                .sendLiveDanmaku(roomId.value, formattedContent)
-                .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
-            }, currentAction.actionConfig.delaySeconds * 1000)
-          } else {
-            biliFunc
-              .sendLiveDanmaku(roomId.value, formattedContent)
-              .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
-          }
-        }
+      if (shouldExecute && roomId.value) {
+        executeActions(
+          [currentAction],
+          null,
+          TriggerType.SCHEDULED,
+          roomId.value,
+          runtimeState.value,
+          scheduledHandlers,
+          {
+            useSequentialTemplate: currentAction.triggerConfig.schedulingMode === 'sequential',
+          },
+        )
       }
 
       if (currentAction.enabled && !currentAction.triggerConfig.useGlobalTimer) {
@@ -295,6 +290,77 @@ export const useAutoAction = defineStore('autoAction', () => {
     console.log('[AutoAction] 停止所有独立定时器.')
     Object.keys(runtimeState.value.scheduledTimers).forEach(stopIndividualTimer)
   }
+
+  function syncScheduledTimers() {
+    if (!isActionsLoaded.value || !isTriggersLoaded.value) return
+    const scheduledEnabled = Boolean(enabledTriggerTypes.value?.[TriggerType.SCHEDULED])
+
+    if (!scheduledEnabled) {
+      stopGlobalTimer()
+      stopAllIndividualScheduledActions()
+      return
+    }
+
+    const scheduledActions = autoActions.value.filter((a) => a.triggerType === TriggerType.SCHEDULED)
+    const validIndividualIds = new Set<string>()
+
+    for (const action of scheduledActions) {
+      if (action.enabled && !action.triggerConfig.useGlobalTimer) {
+        validIndividualIds.add(action.id)
+      }
+    }
+
+    // 停掉已删除、已禁用或改用全局定时的独立定时器
+    for (const runningId of Object.keys(runtimeState.value.scheduledTimers)) {
+      if (!validIndividualIds.has(runningId)) {
+        stopIndividualTimer(runningId)
+      }
+    }
+
+    // 启动未运行的独立定时器
+    for (const action of scheduledActions) {
+      if (validIndividualIds.has(action.id) && !runtimeState.value.scheduledTimers[action.id]) {
+        startIndividualTimer(action)
+      }
+    }
+
+    // 同步全局定时器启停
+    const needsGlobal = scheduledActions.some((a) => a.enabled && a.triggerConfig.useGlobalTimer)
+    if (needsGlobal) {
+      startGlobalTimer()
+    } else {
+      stopGlobalTimer()
+    }
+  }
+
+  // 自动监听定时规则的关键配置变化，避免编辑器直接修改字段后与运行中定时器失步
+  const scheduledConfigSnapshot = computed(() =>
+    autoActions.value
+      .filter((a) => a.triggerType === TriggerType.SCHEDULED)
+      .map((a) => ({
+        id: a.id,
+        enabled: a.enabled,
+        useGlobal: Boolean(a.triggerConfig?.useGlobalTimer),
+        interval: a.triggerConfig?.intervalSeconds || 300,
+      })),
+  )
+
+  watch(
+    scheduledConfigSnapshot,
+    (nextList, prevList) => {
+      if (!isActionsLoaded.value || !isTriggersLoaded.value) return
+      const prevMap = new Map((prevList ?? []).map((item) => [item.id, item]))
+      for (const item of nextList) {
+        const prev = prevMap.get(item.id)
+        // 独立定时器间隔变化时重启对应定时器
+        if (prev && !item.useGlobal && item.enabled && prev.interval !== item.interval) {
+          stopIndividualTimer(item.id)
+        }
+      }
+      syncScheduledTimers()
+    },
+    { deep: true },
+  )
 
   // 初始化与事件监听
   let isInited = false
@@ -371,16 +437,16 @@ export const useAutoAction = defineStore('autoAction', () => {
       { immediate: true },
     )
 
-    // 监听直播状态变化
+    // 监听直播状态变化，维护开播时间以驱动早鸟签到
     watch(
       isLive,
       (currentState, prevState) => {
         if (currentState && !prevState) {
-          console.log('[AutoAction] 检测到直播开始，更新签到模块状态')
-          // checkInModule.onLiveStart();
+          fallbackLiveStartTime.value = liveStartTimeMs.value ?? Date.now()
+          console.log('[AutoAction] 检测到直播开始，已同步开播时间')
         } else if (!currentState && prevState) {
-          console.log('[AutoAction] 检测到直播结束，更新签到模块状态')
-          // checkInModule.onLiveEnd();
+          fallbackLiveStartTime.value = null
+          console.log('[AutoAction] 检测到直播结束，已重置开播时间')
         }
       },
       { immediate: true },
@@ -401,7 +467,14 @@ export const useAutoAction = defineStore('autoAction', () => {
   const entryWelcomeModule = useEntryWelcome(isLive, roomId, isTianXuanActive, biliFunc.sendLiveDanmaku)
   const autoReplyModule = useAutoReply(isLive, roomId, biliFunc.sendLiveDanmaku)
   const superChatThankModule = useSuperChatThank(isLive, roomId, isTianXuanActive, biliFunc.sendLiveDanmaku)
-  const checkInModule = useCheckIn(isLive, roomId, liveStartTime, isTianXuanActive, biliFunc.sendLiveDanmaku)
+  const checkInModule = useCheckIn(
+    isLive,
+    roomId,
+    liveStartTime,
+    isTianXuanActive,
+    biliFunc.sendLiveDanmaku,
+    async (userId: number, message: string) => biliFunc.sendPrivateMessage(userId, message),
+  )
   const pointRedeemModule = usePointRedeem(
     isLive,
     roomId,
@@ -468,6 +541,21 @@ export const useAutoAction = defineStore('autoAction', () => {
       }
     }
     return newAction
+  }
+
+  /**
+   * 复制一个自动操作项
+   */
+  function duplicateAutoAction(id: string): AutoActionItem | null {
+    const source = autoActions.value.find((action) => action.id === id)
+    if (!source) return null
+    const cloned = JSON.parse(JSON.stringify(source)) as AutoActionItem
+    cloned.id = `auto-action-${nanoid(8)}`
+    cloned.name = `${source.name || '未命名规则'} (副本)`
+    cloned.enabled = false
+    const idx = autoActions.value.findIndex((action) => action.id === id)
+    autoActions.value.splice(idx + 1, 0, cloned)
+    return cloned
   }
 
   /**
@@ -586,7 +674,7 @@ export const useAutoAction = defineStore('autoAction', () => {
   }
 
   /**
-   * 在列表中向上或向下移动一个操作项
+   * 在同触发类型列表中向上或向下移动一个操作项
    */
   function moveAction(id: string, direction: 'up' | 'down') {
     const index = autoActions.value.findIndex((action) => action.id === id)
@@ -596,17 +684,26 @@ export const useAutoAction = defineStore('autoAction', () => {
     }
 
     const actionToMove = autoActions.value[index]
-
-    let newIndex = index
-    if (direction === 'up' && index > 0) {
-      newIndex = index - 1
-    } else if (direction === 'down' && index < autoActions.value.length - 1) {
-      newIndex = index + 1
+    let targetIndex = -1
+    if (direction === 'up') {
+      for (let i = index - 1; i >= 0; i--) {
+        if (autoActions.value[i].triggerType === actionToMove.triggerType) {
+          targetIndex = i
+          break
+        }
+      }
+    } else {
+      for (let i = index + 1; i < autoActions.value.length; i++) {
+        if (autoActions.value[i].triggerType === actionToMove.triggerType) {
+          targetIndex = i
+          break
+        }
+      }
     }
 
-    if (newIndex !== index) {
-      autoActions.value.splice(index, 1)
-      autoActions.value.splice(newIndex, 0, actionToMove)
+    if (targetIndex !== -1) {
+      const [moved] = autoActions.value.splice(index, 1)
+      autoActions.value.splice(targetIndex, 0, moved)
       if (actionToMove.triggerType === TriggerType.SCHEDULED && actionToMove.triggerConfig.useGlobalTimer) {
         lastGlobalActionIndex.value = -1
       }
@@ -688,26 +785,9 @@ export const useAutoAction = defineStore('autoAction', () => {
     restartGlobalTimer()
   }
 
-  /**
-   * 手动触发指定类型的测试逻辑
-   */
-  function triggerTestActionByType(triggerType: TriggerType, testUid?: number) {
-    console.log(`[AutoAction Test] 准备测试类型: ${triggerType}`)
-
-    const actionsToTest = autoActions.value.filter(
-      (a) => a.triggerType === triggerType && a.enabled && enabledTriggerTypes.value[triggerType],
-    )
-
-    if (actionsToTest.length === 0) {
-      console.warn(`[AutoAction Test] 没有找到启用的 ${triggerType} 类型的操作可供测试。`)
-      if (!enabledTriggerTypes.value[triggerType]) {
-        console.warn(`[AutoAction Test] 触发类型 ${triggerType} 本身已被禁用。`)
-      }
-      return
-    }
-
-    const baseTestEvent: Partial<EventModel> = {
-      uid: testUid || 10000,
+  function buildDefaultMockEvent(triggerType: TriggerType, overrides?: Partial<EventModel>): EventModel {
+    const base: Partial<EventModel> = {
+      uid: 10000,
       uname: '测试用户',
       uface: '',
       open_id: 'test-open-id',
@@ -715,115 +795,271 @@ export const useAutoAction = defineStore('autoAction', () => {
       time: Math.floor(Date.now() / 1000),
       num: 1,
       price: 0,
-      guard_level: Math.floor(Math.random() * 3) + 1,
+      guard_level: 3,
       fans_medal_wearing_status: true,
       fans_medal_name: '测试牌子',
-      fans_medal_level: Math.floor(Math.random() * 30) + 1,
+      fans_medal_level: 10,
     }
 
-    let testEvent: EventModel
-
+    let specific: Partial<EventModel> = {}
     switch (triggerType) {
       case TriggerType.DANMAKU:
-        testEvent = {
-          ...baseTestEvent,
-          type: EventDataTypes.Message,
-          msg: '测试弹幕消息',
-        } as EventModel
+        specific = { type: EventDataTypes.Message, msg: '测试弹幕消息' }
         break
       case TriggerType.GIFT:
-        testEvent = {
-          ...baseTestEvent,
-          type: EventDataTypes.Gift,
-          msg: '测试礼物',
-          price: 100,
-          num: 5,
-        } as EventModel
+        specific = { type: EventDataTypes.Gift, msg: '测试礼物', price: 100, num: 5 }
         break
-      case TriggerType.GUARD: {
-        const level = Math.floor(Math.random() * 3) + 1
-        testEvent = {
-          ...baseTestEvent,
-          type: EventDataTypes.Guard,
-          msg: '舰长',
-          price: level === 1 ? 19998 : level === 2 ? 1998 : 198,
-          guard_level: level,
-        } as EventModel
+      case TriggerType.GUARD:
+        specific = { type: EventDataTypes.Guard, msg: '舰长', price: 198, guard_level: 3 }
         break
-      }
       case TriggerType.FOLLOW:
-        testEvent = {
-          ...baseTestEvent,
-          type: EventDataTypes.Follow,
-        } as EventModel
+        specific = { type: EventDataTypes.Follow }
         break
       case TriggerType.ENTER:
-        testEvent = {
-          ...baseTestEvent,
-          type: EventDataTypes.Enter,
-        } as EventModel
+        specific = { type: EventDataTypes.Enter }
         break
       case TriggerType.SUPER_CHAT:
-        testEvent = {
-          ...baseTestEvent,
-          type: EventDataTypes.SC,
-          msg: '这是一条测试SC消息',
-          price: Math.floor(Math.random() * 1000) + 10,
-        } as EventModel
+        specific = { type: EventDataTypes.SC, msg: '这是一条测试SC消息', price: 50 }
         break
-      case TriggerType.POINT_REDEEM: {
-        const testPayload: PointOrderRedeemedHubEvent = {
-          OrderId: 99999,
-          GoodsId: 1,
-          GoodsName: '测试整活道具',
-          GoodsType: 0,
-          Count: 1,
-          Point: 100,
-          IsFree: false,
-          BuyerName: baseTestEvent.uname || '测试用户',
-          BuyerUid: testUid || baseTestEvent.uid || 10000,
-          BuyerOpenId: baseTestEvent.open_id || 'test-open-id',
-          Remark: '测试下单备注',
-          SelectedSubItems: ['默认款式'],
-          Timestamp: Date.now(),
-        }
-        pointRedeemModule.processPointRedeem(testPayload, autoActions.value, runtimeState.value, true)
-        return
-      }
-      case TriggerType.SCHEDULED:
-        if (actionsToTest.length > 0) {
-          const action = actionsToTest[0]
-          const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
-          const template = getRandomTemplate(action.template)
-
-          if (template && roomId.value) {
-            const formattedContent = evaluateTemplateExpressions(template, context)
-            runtimeState.value.lastExecutionTime[action.id] = Date.now()
-
-            console.log(`[定时任务测试] 正在测试定时任务: ${action.name}, 内容: ${formattedContent}`)
-
-            if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-              console.log(`[定时任务测试] 将在 ${action.actionConfig.delaySeconds} 秒后发送弹幕`)
-              setTimeout(() => {
-                biliFunc
-                  .sendLiveDanmaku(roomId.value, formattedContent)
-                  .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
-              }, action.actionConfig.delaySeconds * 1000)
-            } else {
-              biliFunc
-                .sendLiveDanmaku(roomId.value, formattedContent)
-                .catch((err) => console.error('[AutoAction] 发送弹幕失败:', err))
-            }
-          }
-        }
-        return
       default:
-        console.warn(`[AutoAction Test] 未知的触发类型: ${triggerType}`)
-        return
+        specific = { type: EventDataTypes.Message, msg: '' }
     }
 
-    console.log(`[AutoAction Test] 创建测试事件:`, testEvent)
+    return { ...base, ...specific, ...overrides } as EventModel
+  }
+
+  /**
+   * 单条规则沙盒测试（支持 Dry-Run 模拟匹配与渲染预览，以及真实触发执行）
+   */
+  function testSingleAction(
+    action: AutoActionItem,
+    options?: {
+      dryRun?: boolean
+      mockEvent?: Partial<EventModel>
+      mockPointOrder?: Partial<PointOrderRedeemedHubEvent>
+    },
+  ): SingleActionTestResult {
+    const dryRun = options?.dryRun ?? true
+    const triggerType = action.triggerType
+    const effectiveRoomId = roomId.value || 10000
+
+    let event: EventModel | null = null
+    let extraVars: Record<string, unknown> | undefined
+
+    if (triggerType === TriggerType.POINT_REDEEM) {
+      const order = normalizePointRedeemEvent({
+        OrderId: 99999,
+        GoodsId: 1,
+        GoodsName: '测试整活道具',
+        GoodsType: 0,
+        Count: 1,
+        Point: 100,
+        IsFree: false,
+        BuyerName: options?.mockEvent?.uname || '测试用户',
+        BuyerUid: options?.mockEvent?.uid || 10000,
+        BuyerOpenId: 'test-open-id',
+        Remark: '测试下单备注',
+        SelectedSubItems: ['默认款式'],
+        Timestamp: Date.now(),
+        ...options?.mockPointOrder,
+      })
+      event = {
+        ...buildDefaultMockEvent(TriggerType.GIFT, options?.mockEvent),
+        uname: order.buyerName,
+        uid: order.buyerUid,
+        msg: order.goodsName,
+        num: order.count,
+        price: order.point,
+      }
+      extraVars = { pointOrder: order }
+    } else if (triggerType !== TriggerType.SCHEDULED) {
+      event = buildDefaultMockEvent(triggerType, options?.mockEvent)
+    }
+
+    // 1. 触发条件校验
+    if (event) {
+      if (triggerType === TriggerType.DANMAKU && !matchesDanmakuTrigger(action, event.msg || '')) {
+        return { matched: false, reason: '弹幕内容未命中关键词或命中了屏蔽词', executed: false }
+      }
+      if (triggerType === TriggerType.GIFT && !matchesGiftTrigger(action, event)) {
+        return { matched: false, reason: '礼物被过滤规则拦截（免费/黑名单/白名单/最低价值）', executed: false }
+      }
+      if (triggerType === TriggerType.ENTER && !matchesEnterTrigger(action, event)) {
+        return { matched: false, reason: '入场用户未满足筛选条件（黑/白名单、大航海或勋章等级）', executed: false }
+      }
+      if (triggerType === TriggerType.SUPER_CHAT && !matchesSuperChatTrigger(action, event)) {
+        return { matched: false, reason: 'SC 金额不在设定的价格区间内', executed: false }
+      }
+      if (triggerType === TriggerType.GUARD && !matchesGuardTrigger(action, event)) {
+        return { matched: false, reason: '上舰等级未包含在目标大航海等级内', executed: false }
+      }
+      if (triggerType === TriggerType.POINT_REDEEM && extraVars?.pointOrder) {
+        if (!matchesPointRedeemTrigger(action, extraVars.pointOrder as ReturnType<typeof normalizePointRedeemEvent>)) {
+          return { matched: false, reason: '兑换商品未满足过滤条件（免费/商品 ID/名称关键词）', executed: false }
+        }
+      }
+      if (!checkUserFilters(action, event)) {
+        return { matched: false, reason: '用户未满足通用筛选（佩戴粉丝勋章或大航海要求）', executed: false }
+      }
+    }
+
+    // 2. 构建沙盒上下文（dryRun 读取只读隔离，不污染真实存储）
+    const context = buildExecutionContext(event, effectiveRoomId, triggerType, extraVars, { dryRun: true })
+    if (triggerType === TriggerType.GUARD && event && context.variables.guard) {
+      const picked = pickGuardGiftCode(action, event.guard_level)
+      if (picked) {
+        context.variables.guard.giftCode = picked.code
+        context.variables.guard.selectedGiftCode = picked
+      }
+    }
+
+    // 3. 逻辑表达式校验与求值
+    if (action.logicalExpression?.trim()) {
+      const syntaxErr = validateLogicalExpression(action.logicalExpression)
+      if (syntaxErr) {
+        return { matched: false, reason: `逻辑表达式语法错误：${syntaxErr}`, executed: false, error: syntaxErr }
+      }
+      if (event && !evaluateExpression(action.logicalExpression, context)) {
+        return { matched: false, reason: '高级逻辑表达式返回 false，规则被跳过', executed: false }
+      }
+    }
+
+    // 4. 模板渲染预览
+    const needsTemplate =
+      action.actionType === ActionType.SEND_DANMAKU || action.actionType === ActionType.SEND_PRIVATE_MSG
+    let renderedText: string | undefined
+    if (needsTemplate) {
+      const rendered = processTemplate(action, context, { useRandomTemplate: true })
+      if (!rendered) {
+        return { matched: false, reason: '模板内容为空，无法生成消息', executed: false }
+      }
+      renderedText = rendered
+    } else if (action.actionType === ActionType.PLAY_AUDIO) {
+      renderedText = action.actionConfig.audioSource ? `播放音效：${action.actionConfig.audioSource}` : '未配置音效来源'
+      if (!action.actionConfig.audioSource) {
+        return { matched: false, reason: '尚未配置音效文件路径或 URL', executed: false }
+      }
+    } else if (action.actionType === ActionType.PNGTUBER_EXPRESSION) {
+      renderedText = `切换 PNGtuber 表情：${action.actionConfig.pngtuberExpressionId || '未选择'} (${action.actionConfig.pngtuberDurationMs ?? 5000}ms)`
+    } else if (VTS_ACTION_TYPES.has(action.actionType)) {
+      renderedText = `触发 VTS 动作：${action.actionType}`
+    }
+
+    if (dryRun) {
+      return { matched: true, renderedText, executed: false }
+    }
+
+    // 5. 真实触发前置检查
+    if (needsTemplate) {
+      const biliCookie = useBiliCookie()
+      if (!biliCookie.isCookieValid) {
+        return { matched: true, renderedText, executed: false, error: 'B 站 Cookie 未就绪或无效，无法真实发送' }
+      }
+      if (!roomId.value && action.actionType === ActionType.SEND_DANMAKU) {
+        return { matched: true, renderedText, executed: false, error: '尚未绑定直播间 ID，无法发送弹幕' }
+      }
+    } else if (VTS_ACTION_TYPES.has(action.actionType)) {
+      if (!canUseVts()) {
+        return { matched: true, renderedText, executed: false, error: 'VTS 动作仅在桌面客户端中可执行' }
+      }
+      if (!useVtsStore().connected) {
+        return { matched: true, renderedText, executed: false, error: 'VTube Studio 未连接' }
+      }
+    }
+
+    executeActions([action], event, triggerType, effectiveRoomId, runtimeState.value, scheduledHandlers, {
+      isTest: true,
+      customContextBuilder: (ev, rid, tt, act) => {
+        const realCtx = buildExecutionContext(ev, rid, tt, extraVars)
+        if (tt === TriggerType.GUARD && ev && realCtx.variables.guard) {
+          const picked = pickGuardGiftCode(act, ev.guard_level)
+          if (picked) {
+            realCtx.variables.guard.giftCode = picked.code
+            realCtx.variables.guard.selectedGiftCode = picked
+          }
+        }
+        return realCtx
+      },
+    })
+
+    return { matched: true, renderedText, executed: true }
+  }
+
+  /**
+   * 手动触发指定类型的测试逻辑
+   */
+  function triggerTestActionByType(triggerType: TriggerType, testUid?: number) {
+    if (!enabledTriggerTypes.value[triggerType]) {
+      toast.warning('该触发类型的总开关当前已关闭，请先开启后再测试')
+      return
+    }
+
+    const actionsToTest = autoActions.value.filter(
+      (a) => a.triggerType === triggerType && a.enabled && enabledTriggerTypes.value[triggerType],
+    )
+
+    if (actionsToTest.length === 0) {
+      toast.warning('当前分类下没有已启用的规则可供测试')
+      return
+    }
+
+    const needsCookie = actionsToTest.some(
+      (a) => a.actionType === ActionType.SEND_DANMAKU || a.actionType === ActionType.SEND_PRIVATE_MSG,
+    )
+    if (needsCookie && !useBiliCookie().isCookieValid) {
+      toast.error('当前分类包含发弹幕/私信规则，请先在账号设置中配置有效 Cookie')
+      return
+    }
+
+    if (triggerType === TriggerType.POINT_REDEEM) {
+      const testPayload: PointOrderRedeemedHubEvent = {
+        OrderId: 99999,
+        GoodsId: 1,
+        GoodsName: '测试整活道具',
+        GoodsType: 0,
+        Count: 1,
+        Point: 100,
+        IsFree: false,
+        BuyerName: '测试用户',
+        BuyerUid: testUid || 10000,
+        BuyerOpenId: 'test-open-id',
+        Remark: '测试下单备注',
+        SelectedSubItems: ['默认款式'],
+        Timestamp: Date.now(),
+      }
+      pointRedeemModule.processPointRedeem(testPayload, autoActions.value, runtimeState.value, true)
+      toast.success('已发送积分兑换测试事件')
+      return
+    }
+
+    if (triggerType === TriggerType.SCHEDULED) {
+      if (!roomId.value) {
+        toast.warning('尚未获取到直播间 ID，无法触发定时消息')
+        return
+      }
+      executeActions(
+        [actionsToTest[0]],
+        null,
+        TriggerType.SCHEDULED,
+        roomId.value,
+        runtimeState.value,
+        scheduledHandlers,
+        {
+          isTest: true,
+        },
+      )
+      toast.success(`已触发定时规则「${actionsToTest[0].name || '未命名'}」`)
+      return
+    }
+
+    const testEvent = buildDefaultMockEvent(triggerType, {
+      uid: testUid || 10000,
+      guard_level: Math.floor(Math.random() * 3) + 1,
+      fans_medal_level: Math.floor(Math.random() * 30) + 1,
+      ...(triggerType === TriggerType.SUPER_CHAT ? { price: Math.floor(Math.random() * 100) + 30 } : {}),
+    })
     processEvent(testEvent, triggerType, true)
+    toast.success(`已向 ${actionsToTest.length} 条启用规则发送测试事件`)
   }
 
   return {
@@ -838,11 +1074,13 @@ export const useAutoAction = defineStore('autoAction', () => {
     checkInModule,
     init,
     addAutoAction,
+    duplicateAutoAction,
     removeAutoAction,
     toggleAutoAction,
     moveAction,
     setNextGlobalAction,
     restartGlobalTimer,
+    syncScheduledTimers,
     getScheduledTimerInfo,
     setTriggerTypeEnabled,
     startIndividualTimer,
@@ -850,6 +1088,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     stopAllIndividualScheduledActions,
     startIndividualScheduledActions,
     triggerTestActionByType,
+    testSingleAction,
   }
 })
 

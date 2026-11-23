@@ -6,21 +6,43 @@
  * OpenAPI spec version: v1
  */
 import type { VoteOptionDto } from './voteOptionDto'
+import type { VoteResultMode } from './voteResultMode'
 
 export interface VoteOBSData {
   sessionId: number
   title: string
   options: VoteOptionDto[]
   totalVotes: number
+  totalContribution: number
+  resultMode: VoteResultMode
   showResults: boolean
   isActive: boolean
+  isPaused: boolean
+  isUnlimited: boolean
   isEnding: boolean
   /** @nullable */
   winnerOption?: string | null
+  winnerByDraw: boolean
   theme: string
   roundedCorners: boolean
   displayPosition: string
   startTime: number
   /** @nullable */
   endTime?: number | null
+  /** @nullable */
+  recentVoterName?: string | null
+  /** @nullable */
+  recentVoterOption?: string | null
+  /** @nullable */
+  recentVoteTime?: number | null
+  fontFamily: string
+  fontScale: number
+  borderRadius: number
+  cardOpacity: number
+  backdropBlur: number
+  accentColor: string
+  leadingColor: string
+  duelLeftColor: string
+  duelRightColor: string
+  showRecentVoter: boolean
 }

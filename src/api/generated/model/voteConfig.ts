@@ -5,7 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { VoteMultiMode } from './voteMultiMode'
 import type { VoteResultMode } from './voteResultMode'
+import type { VoteTemplateItem } from './voteTemplateItem'
 
 export interface VoteConfig {
   isEnabled: boolean
@@ -13,9 +15,12 @@ export interface VoteConfig {
   voteDurationSeconds: number
   voteCommand: string
   voteEndCommand: string
+  allowDirectVote: boolean
   voteTitle: string
   allowMultipleVotes: boolean
+  multiVoteMode: VoteMultiMode
   allowCustomOptions: boolean
+  maxCustomOptions: number
   defaultOptions: string[]
   theme: string
   roundedCorners: boolean
@@ -23,5 +28,25 @@ export interface VoteConfig {
   allowGiftVoting: boolean
   /** @nullable */
   minGiftPrice?: number | null
+  giftVoteStep: number
   voteResultMode: VoteResultMode
+  requireFansMedal: boolean
+  requireWearingFansMedal: boolean
+  minFansMedalLevel: number
+  requireGuard: boolean
+  guardWeightJianzhang: number
+  guardWeightTidu: number
+  guardWeightZongdu: number
+  fontFamily: string
+  fontScale: number
+  borderRadius: number
+  cardOpacity: number
+  backdropBlur: number
+  accentColor: string
+  leadingColor: string
+  duelLeftColor: string
+  duelRightColor: string
+  showRecentVoter: boolean
+  resultHoldSeconds: number
+  templates: VoteTemplateItem[]
 }

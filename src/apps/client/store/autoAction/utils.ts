@@ -29,6 +29,8 @@ export function createDefaultRuntimeState(): RuntimeState {
     timerStartTimes: {},
     globalTimerStartTime: null,
     sentGuardPms: new Set(),
+    sentActionUsers: {},
+    sequentialLineIndex: {},
     aggregatedEvents: {},
   }
 }
@@ -44,7 +46,7 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
   const defaultTemplates: Record<TriggerType, string> = {
     [TriggerType.DANMAKU]: '收到 {{user.name}} 的弹幕: {{danmaku.msg}}',
     [TriggerType.GIFT]: '感谢 {{user.name}} 赠送的 {{gift.summary}}',
-    [TriggerType.GUARD]: '感谢 {{user.name}} 开通了{{danmaku.msg}}！',
+    [TriggerType.GUARD]: '感谢 {{user.name}} 开通了{{guard.levelName}}！',
     [TriggerType.FOLLOW]: '感谢 {{user.name}} 的关注！',
     [TriggerType.ENTER]: '欢迎 {{user.name}} 进入直播间',
     [TriggerType.SCHEDULED]: '这是一条定时消息，当前时间: {{date.formatted}}',
@@ -82,7 +84,12 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
       requireMedal: false,
       requireCaptain: false,
       preventRepeat: triggerType === TriggerType.GUARD,
+      filterMode:
+        triggerType === TriggerType.GIFT || triggerType === TriggerType.ENTER ? 'none' : undefined,
+      scFilterMode: triggerType === TriggerType.SUPER_CHAT ? 'none' : undefined,
+      useGlobalTimer: triggerType === TriggerType.SCHEDULED ? false : undefined,
       intervalSeconds: triggerType === TriggerType.SCHEDULED ? 300 : undefined,
+      schedulingMode: triggerType === TriggerType.SCHEDULED ? 'random' : undefined,
     },
     actionConfig: {
       delaySeconds: 0,
@@ -108,6 +115,39 @@ export function getRandomTemplate(template: string): string | null {
   if (lines.length === 0) return null
   if (lines.length === 1) return lines[0]
   return lines[Math.floor(Math.random() * lines.length)]
+}
+
+/**
+ * 顺序选取多行模板中的下一行
+ */
+export function getSequentialTemplate(template: string, currentIndex = 0): { line: string; nextIndex: number } | null {
+  if (!template) return null
+  const lines = template
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
+  if (lines.length === 0) return null
+  const safeIndex = ((currentIndex % lines.length) + lines.length) % lines.length
+  return {
+    line: lines[safeIndex],
+    nextIndex: (safeIndex + 1) % lines.length,
+  }
+}
+
+const VALID_JS_IDENTIFIER_RE = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
+
+/**
+ * 仅做语法校验，不执行表达式；返回 null 表示合法，否则返回错误消息
+ */
+export function validateLogicalExpression(expression: string): string | null {
+  if (!expression || expression.trim() === '') return null
+  try {
+    // eslint-disable-next-line ts/no-implied-eval, no-new-func
+    void new Function(`return (${expression});`)
+    return null
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error)
+  }
 }
 
 export function evaluateExpression(expression: string, context: ExecutionContext): boolean {
@@ -139,8 +179,13 @@ export function evaluateExpression(expression: string, context: ExecutionContext
       },
     }
 
-    const scopeKeys = Object.keys(utils)
-    const scopeValues = Object.values(utils)
+    const reservedNames = new Set(['context', 'event', ...Object.keys(utils)])
+    const variableEntries = Object.entries(context.variables ?? {}).filter(
+      ([key]) => VALID_JS_IDENTIFIER_RE.test(key) && !reservedNames.has(key),
+    )
+
+    const scopeKeys = [...Object.keys(utils), ...variableEntries.map(([k]) => k)]
+    const scopeValues = [...Object.values(utils), ...variableEntries.map(([, v]) => v)]
 
     // eslint-disable-next-line ts/no-implied-eval, no-new-func
     const evalFunc = new Function(
@@ -163,6 +208,7 @@ export function evaluateExpression(expression: string, context: ExecutionContext
  * @param roomId 房间ID
  * @param triggerType 触发类型
  * @param additionalContext 附加的上下文数据，将被合并到上下文中
+ * @param options dryRun=true 时读写数据仅作用于内存沙盒，不污染真实 sessionStorage / 持久化存储
  * @returns 标准化的执行上下文
  */
 export function buildExecutionContext(
@@ -170,9 +216,13 @@ export function buildExecutionContext(
   roomId: number | undefined,
   triggerType?: TriggerType,
   additionalContext?: Record<string, any>,
+  options?: { dryRun?: boolean },
 ): ExecutionContext {
   const now = Date.now()
   const dateObj = new Date(now)
+  const isDryRun = Boolean(options?.dryRun)
+  const dryRuntimeMap = new Map<string, unknown>()
+  const dryStorageMap = new Map<string, unknown>()
 
   const context: ExecutionContext = {
     event,
@@ -201,8 +251,19 @@ export function buildExecutionContext(
         return '深夜'
       },
     },
-    // --- 实现运行时数据管理函数 (使用 sessionStorage) ---
+    // --- 实现运行时数据管理函数 (使用 sessionStorage，dryRun 时隔离在内存) ---
     getData: <T>(key: string, defaultValue?: T): T | undefined => {
+      if (isDryRun) {
+        if (dryRuntimeMap.has(key)) return dryRuntimeMap.get(key) as T
+        const prefixedKey = RUNTIME_STORAGE_PREFIX + key
+        try {
+          const storedValue = sessionStorage.getItem(prefixedKey)
+          if (storedValue === null) return defaultValue
+          return JSON.parse(storedValue) as T
+        } catch {
+          return defaultValue
+        }
+      }
       const prefixedKey = RUNTIME_STORAGE_PREFIX + key
       try {
         const storedValue = sessionStorage.getItem(prefixedKey)
@@ -216,6 +277,11 @@ export function buildExecutionContext(
       }
     },
     setData: <T>(key: string, value: T): void => {
+      if (isDryRun) {
+        if (value === undefined) dryRuntimeMap.delete(key)
+        else dryRuntimeMap.set(key, value)
+        return
+      }
       const prefixedKey = RUNTIME_STORAGE_PREFIX + key
       try {
         // 不存储 undefined
@@ -231,28 +297,50 @@ export function buildExecutionContext(
       }
     },
     containsData: (key: string): boolean => {
+      if (isDryRun) {
+        if (dryRuntimeMap.has(key)) return true
+        return sessionStorage.getItem(RUNTIME_STORAGE_PREFIX + key) !== null
+      }
       const prefixedKey = RUNTIME_STORAGE_PREFIX + key
       return sessionStorage.getItem(prefixedKey) !== null
     },
     removeData: (key: string): void => {
+      if (isDryRun) {
+        dryRuntimeMap.delete(key)
+        return
+      }
       const prefixedKey = RUNTIME_STORAGE_PREFIX + key
       sessionStorage.removeItem(prefixedKey)
     },
-    // --- 持久化数据管理函数 (不变，继续使用 userDataStore) ---
+    // --- 持久化数据管理函数 (dryRun 时只读回退，不写入真实存储) ---
     getStorageData: async <T>(key: string, defaultValue?: T): Promise<T | undefined> => {
+      if (isDryRun && dryStorageMap.has(key)) return dryStorageMap.get(key) as T
       const value = await persistedGetJson<T>(userDataKey(key))
       return value === undefined ? defaultValue : value
     },
     setStorageData: async <T>(key: string, value: T): Promise<void> => {
+      if (isDryRun) {
+        dryStorageMap.set(key, value)
+        return
+      }
       await persistedSetJson(userDataKey(key), value)
     },
     hasStorageData: async (key: string): Promise<boolean> => {
+      if (isDryRun && dryStorageMap.has(key)) return true
       return (await persistedGetJson(userDataKey(key))) !== undefined
     },
     removeStorageData: async (key: string): Promise<void> => {
+      if (isDryRun) {
+        dryStorageMap.delete(key)
+        return
+      }
       await persistedRemoveItem(userDataKey(key))
     },
     clearStorageData: async (): Promise<void> => {
+      if (isDryRun) {
+        dryStorageMap.clear()
+        return
+      }
       await persistedRemoveKeys(await persistedListKeys(AUTO_ACTION_USER_DATA_PREFIX))
     },
   }

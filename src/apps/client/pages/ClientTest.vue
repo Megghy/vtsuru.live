@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import Alert24Filled from '@vicons/fluent/es/Alert24Filled'
-import Chat24Filled from '@vicons/fluent/es/Chat24Filled'
+import { Bell, MessageSquare } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
-import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { onReceivedQuestion } from '@/apps/client/data/notification'
 import { useSettings } from '@/apps/client/store/useSettings'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 
 const router = useRouter()
@@ -48,10 +47,7 @@ async function testNotification() {
                 class="gap-1.5"
                 @click="testNotification"
               >
-                <component
-                  :is="Alert24Filled"
-                  class="w-4 h-4 text-primary"
-                />
+                <Bell class="size-3.5 text-primary" />
                 测试触发提问通知
               </Button>
 
@@ -60,28 +56,26 @@ async function testNotification() {
                 class="gap-1.5"
                 @click="router.push({ name: 'client-danmaku-window-manage' })"
               >
-                <component
-                  :is="Chat24Filled"
-                  class="w-4 h-4"
-                />
+                <MessageSquare class="size-3.5" />
                 跳转弹幕机配置
               </Button>
             </div>
 
-            <LabelItem
-              label="禁用弹幕客户端 (开发调试)"
+            <SettingRow
+              variant="none"
+              title="禁用弹幕客户端 (开发调试)"
               description="开启后在开发环境下跳过本地弹幕 WebSocket 连接"
             >
               <Switch
                 :checked="setting.settings.dev_disableDanmakuClient"
                 @update:checked="
                   (val) => {
-                    setting.settings.dev_disableDanmakuClient = val
+                    setting.settings.dev_disableDanmakuClient = Boolean(val)
                     setting.save()
                   }
                 "
               />
-            </LabelItem>
+            </SettingRow>
           </div>
         </CardContent>
       </Card>

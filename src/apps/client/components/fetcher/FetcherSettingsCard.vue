@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import HelpCircle from '@vicons/ionicons5/es/HelpCircle'
 import { toast } from 'vue-sonner'
 
 // Fix vue-tsc type inference issue in template inline functions
@@ -45,20 +44,14 @@ async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boo
   const result = await callStartDanmakuClient()
   showToast.dismiss(noticeId)
   if (result.success) {
-    window.$notification?.success?.({
-      title: 'WebEventFetcher',
-      content: `${webfetcher.webfetcherType} 弹幕客户端连接成功`,
-      closable: true,
+    showToast.success('WebEventFetcher', {
+      description: `${webfetcher.webfetcherType} 弹幕客户端连接成功`,
       duration: 3000,
     })
-    showToast.success(`${webfetcher.webfetcherType} 弹幕客户端连接成功`)
   } else {
-    window.$notification?.error?.({
-      title: 'WebEventFetcher',
-      content: `弹幕服务器连接失败: ${result.message}`,
-      closable: true,
+    showToast.error('WebEventFetcher', {
+      description: `弹幕服务器连接失败: ${result.message}`,
     })
-    showToast.error(`弹幕服务器连接失败: ${result.message}`)
   }
 }
 

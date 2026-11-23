@@ -1,4 +1,5 @@
 import { getVersion } from '@tauri-apps/api/app'
+import { invoke } from '@tauri-apps/api/core'
 import { info, warn } from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
@@ -48,10 +49,20 @@ export interface RpcConnectionInfo {
 
 export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
   const running = ref(false)
+  const lastError = ref<string | null>(null)
   // 连接列表 (响应式, 供 sidebar 展示来源/连接时间); connectionCount 由其长度派生
   const connections = ref<RpcConnectionInfo[]>([])
   const connectionCount = computed(() => connections.value.length)
   let stop: (() => void) | undefined
+
+  async function refreshNativeStatus() {
+    try {
+      const status = await invoke<{ running: boolean; lastError?: string | null }>('rpc_server_status')
+      lastError.value = status.lastError ?? null
+    } catch {
+      // 旧壳版本可能未暴露该字段
+    }
+  }
 
   // 每个连接订阅的事件集合
   const subscriptions = new Map<string, Set<DanmakuEventName>>()
@@ -334,6 +345,7 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
       },
     })
     running.value = true
+    await refreshNativeStatus()
     info('[RPC] 开放接口服务已就绪')
   }
 
@@ -346,8 +358,9 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
     vtsSubscribers.clear()
     connections.value = []
     running.value = false
+    lastError.value = null
     warn('[RPC] 开放接口服务已停止')
   }
 
-  return { running, connections, connectionCount, start, dispose }
+  return { running, lastError, connections, connectionCount, start, dispose, refreshNativeStatus }
 })

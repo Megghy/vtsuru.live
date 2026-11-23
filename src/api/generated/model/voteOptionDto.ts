@@ -10,5 +10,6 @@ export interface VoteOptionDto {
   index: number
   text: string
   count: number
+  contribution: number
   percentage: number
 }

@@ -1,13 +1,6 @@
 <script setup lang="ts">
+import { Check, Download, ExternalLink, RefreshCw, Search, Square, UserPlus, Users } from 'lucide-vue-next'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import ArrowDownload20Regular from '@vicons/fluent/es/ArrowDownload20Regular'
-import ArrowSync20Regular from '@vicons/fluent/es/ArrowSync20Regular'
-import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
-import Open20Regular from '@vicons/fluent/es/Open20Regular'
-import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
-import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
-import Search24Regular from '@vicons/fluent/es/Search24Regular'
-import Stop20Regular from '@vicons/fluent/es/Stop20Regular'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -368,11 +361,11 @@ onMounted(async () => {
             class="gap-1.5 shadow-sm"
             @click="handleFetchAll"
           >
-            <Stop20Regular
+            <Square
               v-if="isFetchingAll"
               class="size-3.5"
             />
-            <ArrowDownload20Regular
+            <Download
               v-else
               class="size-3.5"
             />
@@ -385,7 +378,7 @@ onMounted(async () => {
             class="gap-1.5"
             @click="loadData(1, false)"
           >
-            <ArrowSync20Regular
+            <RefreshCw
               class="size-3.5"
               :class="{ 'animate-spin': isLoading }"
             />
@@ -406,7 +399,7 @@ onMounted(async () => {
         <div class="flex flex-wrap items-center gap-2.5">
           <!-- 搜索输入 -->
           <div class="relative flex-1 min-w-[200px] max-w-sm">
-            <Search24Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <Input
               v-model="searchQuery"
               placeholder="搜索粉丝昵称或 UID..."
@@ -490,7 +483,7 @@ onMounted(async () => {
         v-if="isLoading"
         class="h-64 flex-col-center gap-2 text-muted-foreground"
       >
-        <ArrowSync20Regular class="size-6 animate-spin text-primary" />
+        <RefreshCw class="size-6 animate-spin text-primary" />
         <span class="text-xs">正在拉取粉丝列表...</span>
       </div>
 
@@ -499,7 +492,7 @@ onMounted(async () => {
         v-else-if="filteredFollowers.length === 0"
         class="h-64 flex-col-center gap-2 text-muted-foreground"
       >
-        <PeopleCommunity20Regular class="size-8 opacity-40" />
+        <Users class="size-8 opacity-40" />
         <span class="text-xs">暂无匹配的粉丝记录</span>
       </div>
 
@@ -588,14 +581,14 @@ onMounted(async () => {
             :disabled="item.isFollowingAction"
             @click="handleFollow(item)"
           >
-            <PersonAdd24Regular class="size-3.5" />
+            <UserPlus class="size-3.5" />
             <span>{{ item.isFollowingAction ? '回关中...' : '回关' }}</span>
           </Button>
           <div
             v-else
             class="flex items-center gap-1 text-xs text-muted-foreground px-2 py-1"
           >
-            <Checkmark16Regular class="size-3.5 text-emerald-400" />
+            <Check class="size-3.5 text-emerald-400" />
             <span>已在关注列表</span>
           </div>
 
@@ -606,7 +599,7 @@ onMounted(async () => {
             title="在浏览器中查看个人主页"
             @click="openSpace(item.mid)"
           >
-            <Open20Regular class="size-3.5" />
+            <ExternalLink class="size-3.5" />
           </Button>
         </div>
       </div>
@@ -622,7 +615,7 @@ onMounted(async () => {
           :disabled="isLoadingMore"
           @click="handleLoadMore"
         >
-          <ArrowSync20Regular
+          <RefreshCw
             v-if="isLoadingMore"
             class="size-3.5 animate-spin"
           />

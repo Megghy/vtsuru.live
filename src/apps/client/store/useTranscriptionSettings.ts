@@ -1,5 +1,7 @@
+import { invoke } from '@tauri-apps/api/core'
 import { nanoid } from 'nanoid'
 
+import { isTauri } from '@/shared/config'
 import type {
   OpenAITranscriptionProfile,
   TencentTranscriptionProfile,
@@ -66,6 +68,11 @@ export const useTranscriptionSettings = defineStore('transcription-settings', ()
       if (!saved.profiles.some((profile) => profile.id === saved.activeProfileId)) {
         settings.value.activeProfileId = saved.profiles[0].id
       }
+    }
+    if (isTauri() && settings.value.customFfmpegPath) {
+      await invoke('set_custom_ffmpeg_path', { path: settings.value.customFfmpegPath }).catch((err) => {
+        console.warn('[Transcription] 恢复自定义 FFmpeg 路径失败:', err)
+      })
     }
     initialized.value = true
   }

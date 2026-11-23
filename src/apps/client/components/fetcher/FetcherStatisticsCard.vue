@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BarChartOutline from '@vicons/ionicons5/es/BarChartOutline'
+import { BarChart3 } from 'lucide-vue-next'
 import { BarChart, GaugeChart, LineChart, PieChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -216,7 +216,7 @@ onUnmounted(stopSession)
               <div>
                 <span class="text-xs text-muted-foreground block">会话事件总数</span>
                 <div class="flex items-center gap-1.5 text-xl font-bold text-foreground mt-1">
-                  <BarChartOutline class="size-5 text-primary" />
+                  <BarChart3 class="size-5 text-primary" />
                   <span>{{ webfetcher.sessionEventCount?.toLocaleString() ?? 0 }}</span>
                 </div>
               </div>

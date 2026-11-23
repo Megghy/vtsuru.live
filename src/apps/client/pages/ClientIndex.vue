@@ -1,29 +1,33 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
-import Chat24Filled from '@vicons/fluent/es/Chat24Filled'
-import CloudArchive24Filled from '@vicons/fluent/es/CloudArchive24Filled'
-import Cookies24Filled from '@vicons/fluent/es/Cookies24Filled'
-import FlashAuto24Filled from '@vicons/fluent/es/FlashAuto24Filled'
-import Gift24Filled from '@vicons/fluent/es/Gift24Filled'
-import Live24Filled from '@vicons/fluent/es/Live24Filled'
-import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
-import Open24Regular from '@vicons/fluent/es/Open24Regular'
-import PeopleSearch24Filled from '@vicons/fluent/es/PeopleSearch24Filled'
-import PlugConnected24Filled from '@vicons/fluent/es/PlugConnected24Filled'
-import Settings24Filled from '@vicons/fluent/es/Settings24Filled'
-import VideoPerson24Filled from '@vicons/fluent/es/VideoPerson24Filled'
+import {
+  CloudUpload,
+  Cookie,
+  ExternalLink,
+  Gift,
+  MessageSquare,
+  Mic,
+  Plug,
+  Radio,
+  RotateCcw,
+  Settings,
+  Smile,
+  Sparkles,
+  Users,
+  Zap,
+} from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { logoutAccount, useAccount } from '@/api/account'
 import CookieInvalidAlert from '@/apps/client/components/CookieInvalidAlert.vue'
-import { roomInfo } from '@/apps/client/data/info'
+import { isLiveStreaming, roomInfo } from '@/apps/client/data/info'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { DEFAULT_OVERLAY_POSITION } from '@/apps/client/utils/overlayWindow'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -44,30 +48,25 @@ const vtsStore = useVtsStore()
 const autoActionStore = useAutoAction()
 const rpcServer = useFetcherRpcServer()
 
-// 直播间封面
 const roomCover = computed(() => {
   return roomInfo.value?.user_cover || roomInfo.value?.keyframe || ''
 })
 const liveRoomUrl = computed(() => `https://live.bilibili.com/${accountInfo.value.biliRoomId}`)
-const isStreaming = computed(() => roomInfo.value?.live_status === 1)
 
-// 自动操作启用规则数
 const activeAutoActionCount = computed(() => {
   if (!autoActionStore.autoActions) return 0
   return autoActionStore.autoActions.filter((a) => a.enabled).length
 })
 
-// Cookie 状态
 const cookieBadgeMeta = computed(() => {
   if (!biliCookie.hasBiliCookie) {
-    return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '未同步' }
+    return { variant: 'warning' as const, text: '未同步' }
   }
   return biliCookie.isCookieValid
-    ? { class: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10', text: '有效' }
-    : { class: 'border-destructive/40 text-destructive bg-destructive/10', text: '已失效' }
+    ? { variant: 'success' as const, text: '有效' }
+    : { variant: 'destructive' as const, text: '已失效' }
 })
 
-// 弹幕机浮窗切换
 function toggleDanmakuWindow() {
   if (danmakuWindow.isDanmakuWindowOpen) {
     danmakuWindow.closeWindow()
@@ -76,7 +75,6 @@ function toggleDanmakuWindow() {
   }
 }
 
-// 礼物与排行浮窗切换
 function toggleGiftWindow() {
   if (giftWindow.isGiftWindowOpen) {
     giftWindow.closeWindow()
@@ -108,7 +106,7 @@ function toggleGiftWindow() {
                 class="absolute right-0 bottom-0 size-3 rounded-full bg-muted-foreground border-2 border-card"
                 :class="{
                   'bg-emerald-500 shadow-[0_0_0_0_rgba(16,185,129,0.7)] animate-[pulse-ring_2s_infinite_cubic-bezier(0.66,0,0,1)]':
-                    isStreaming,
+                    isLiveStreaming,
                 }"
               />
             </div>
@@ -119,11 +117,14 @@ function toggleGiftWindow() {
                   {{ accountInfo.name }}
                 </span>
                 <Badge
-                  variant="success"
+                  :variant="isLiveStreaming ? 'success' : 'secondary'"
                   size="sm"
-                  :class="isStreaming ? ' ' : 'text-muted-foreground'"
                 >
-                  {{ isStreaming ? '● 直播中' : '未开播' }}
+                  <span
+                    v-if="isLiveStreaming"
+                    class="inline-block size-1.5 rounded-full bg-current animate-pulse"
+                  />
+                  <span>{{ isLiveStreaming ? '直播中' : '未开播' }}</span>
                 </Badge>
               </div>
 
@@ -144,8 +145,10 @@ function toggleGiftWindow() {
           <div class="flex items-center gap-2">
             <Button
               variant="secondary"
+              class="gap-1.5"
               @click="router.push({ name: 'client-pngtuber' })"
             >
+              <Sparkles class="size-3.5" />
               PNGtuber
             </Button>
             <Button
@@ -153,7 +156,7 @@ function toggleGiftWindow() {
               class="gap-1.5 text-primary hover:text-primary"
               @click="openUrl(liveRoomUrl)"
             >
-              <Open24Regular class="size-3.5" />
+              <ExternalLink class="size-3.5" />
               前往直播间
             </Button>
 
@@ -180,22 +183,18 @@ function toggleGiftWindow() {
 
     <!-- 核心系统健康矩阵 (4 Bento Grid Cards) -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <!-- EventFetcher 弹幕引擎 -->
       <Card
-        class="cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-fetcher' })"
       >
         <CardContent class="p-3">
           <div class="flex-between mb-2">
-            <div class="size-7 rounded-md flex-center text-base bg-blue-500/12 text-blue-500">
-              <CloudArchive24Filled class="size-4" />
+            <div class="size-7 rounded-md flex-center bg-blue-500/12 text-blue-500">
+              <CloudUpload class="size-4" />
             </div>
             <Badge
-              variant="success"
+              :variant="webfetcher.state === 'connected' ? 'success' : 'destructive'"
               size="xs"
-              :class="
-                webfetcher.state === 'connected' ? ' ' : 'border-destructive/40 text-destructive bg-destructive/10'
-              "
             >
               {{ webfetcher.state === 'connected' ? '运行中' : '已断开' }}
             </Badge>
@@ -207,20 +206,18 @@ function toggleGiftWindow() {
         </CardContent>
       </Card>
 
-      <!-- Bilibili 凭据状态 -->
       <Card
-        class="cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-account-manage' })"
       >
         <CardContent class="p-3">
           <div class="flex-between mb-2">
-            <div class="size-7 rounded-md flex-center text-base bg-amber-500/12 text-amber-500">
-              <Cookies24Filled class="size-4" />
+            <div class="size-7 rounded-md flex-center bg-amber-500/12 text-amber-500">
+              <Cookie class="size-4" />
             </div>
             <Badge
-              variant="outline"
+              :variant="cookieBadgeMeta.variant"
               size="xs"
-              :class="cookieBadgeMeta.class"
             >
               {{ cookieBadgeMeta.text }}
             </Badge>
@@ -232,20 +229,18 @@ function toggleGiftWindow() {
         </CardContent>
       </Card>
 
-      <!-- VTube Studio 联动 -->
       <Card
-        class="cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-vts' })"
       >
         <CardContent class="p-3">
           <div class="flex-between mb-2">
-            <div class="size-7 rounded-md flex-center text-base bg-purple-500/12 text-purple-500">
-              <VideoPerson24Filled class="size-4" />
+            <div class="size-7 rounded-md flex-center bg-purple-500/12 text-purple-500">
+              <Smile class="size-4" />
             </div>
             <Badge
-              variant="success"
+              :variant="vtsStore.connected ? 'success' : 'secondary'"
               size="xs"
-              :class="vtsStore.connected ? ' ' : 'text-muted-foreground'"
             >
               {{ vtsStore.connected ? '已连接' : '未连接' }}
             </Badge>
@@ -257,24 +252,18 @@ function toggleGiftWindow() {
         </CardContent>
       </Card>
 
-      <!-- 自动操作引擎 -->
       <Card
-        class="cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-auto-action-manage' })"
       >
         <CardContent class="p-3">
           <div class="flex-between mb-2">
-            <div class="size-7 rounded-md flex-center text-base bg-emerald-500/12 text-emerald-500">
-              <FlashAuto24Filled class="size-4" />
+            <div class="size-7 rounded-md flex-center bg-emerald-500/12 text-emerald-500">
+              <Zap class="size-4" />
             </div>
             <Badge
-              variant="outline"
+              :variant="activeAutoActionCount > 0 ? 'success' : 'secondary'"
               size="xs"
-              :class="
-                activeAutoActionCount > 0
-                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-                  : 'text-muted-foreground'
-              "
             >
               {{ activeAutoActionCount > 0 ? `${activeAutoActionCount} 条规则` : '未启用' }}
             </Badge>
@@ -296,13 +285,12 @@ function toggleGiftWindow() {
           <div class="p-3 border border-border rounded-md bg-muted/30 flex flex-col gap-2 h-full box-border">
             <div class="flex-between">
               <div class="flex items-center gap-1.5">
-                <Chat24Filled class="size-4 text-primary" />
+                <MessageSquare class="size-4 text-primary" />
                 <span class="font-semibold text-xs text-foreground">弹幕机</span>
               </div>
               <Badge
-                variant="success"
+                :variant="danmakuWindow.isDanmakuWindowOpen ? 'success' : 'secondary'"
                 size="xs"
-                :class="danmakuWindow.isDanmakuWindowOpen ? ' ' : 'text-muted-foreground'"
               >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '运行中' : '未开启' }}
               </Badge>
@@ -331,13 +319,13 @@ function toggleGiftWindow() {
                       variant="ghost"
                       class="gap-1"
                       :disabled="!danmakuWindow.isDanmakuWindowOpen"
-                      @click="danmakuWindow.setDanmakuWindowPosition(100, 100)"
+                      @click="danmakuWindow.setDanmakuWindowPosition(DEFAULT_OVERLAY_POSITION.x, DEFAULT_OVERLAY_POSITION.y)"
                     >
-                      <ArrowReset24Regular class="size-3" />
+                      <RotateCcw class="size-3" />
                       重置
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent> 重置浮窗至默认坐标 </TooltipContent>
+                  <TooltipContent>重置浮窗至默认坐标 (100, 100)</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <Button
@@ -355,13 +343,12 @@ function toggleGiftWindow() {
           <div class="p-3 border border-border rounded-md bg-muted/30 flex flex-col gap-2 h-full box-border">
             <div class="flex-between">
               <div class="flex items-center gap-1.5">
-                <Gift24Filled class="size-4 text-amber-500" />
+                <Gift class="size-4 text-amber-500" />
                 <span class="font-semibold text-xs text-foreground">礼物与排行</span>
               </div>
               <Badge
-                variant="success"
+                :variant="giftWindow.isGiftWindowOpen ? 'success' : 'secondary'"
                 size="xs"
-                :class="giftWindow.isGiftWindowOpen ? ' ' : 'text-muted-foreground'"
               >
                 {{ giftWindow.isGiftWindowOpen ? '运行中' : '未开启' }}
               </Badge>
@@ -390,13 +377,13 @@ function toggleGiftWindow() {
                       variant="ghost"
                       class="gap-1"
                       :disabled="!giftWindow.isGiftWindowOpen"
-                      @click="giftWindow.setPosition(100, 100)"
+                      @click="giftWindow.setPosition(DEFAULT_OVERLAY_POSITION.x, DEFAULT_OVERLAY_POSITION.y)"
                     >
-                      <ArrowReset24Regular class="size-3" />
+                      <RotateCcw class="size-3" />
                       重置
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent> 重置浮窗至默认坐标 </TooltipContent>
+                  <TooltipContent>重置浮窗至默认坐标 (100, 100)</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <Button
@@ -441,14 +428,14 @@ function toggleGiftWindow() {
                   :src="roomCover"
                   alt="直播间封面"
                   referrerpolicy="no-referrer"
-                  class="w-full h-full object-cover block transition-all duration-350 ease-out group-hover:scale-105 group-hover:brightness-105"
+                  class="w-full h-full object-cover block transition-transform duration-200 ease-out group-hover:scale-105"
                 />
               </div>
               <div
                 class="absolute inset-0 z-1 bg-gradient-to-t from-black/90 via-black/25 to-black/5 pointer-events-none"
               />
               <div class="absolute left-3 right-3 bottom-2.5 z-2 text-white pointer-events-none">
-                <div class="text-[13px] font-semibold text-shadow-md overflow-hidden whitespace-nowrap text-ellipsis">
+                <div class="text-xs font-semibold text-shadow-md overflow-hidden whitespace-nowrap text-ellipsis">
                   {{ roomInfo?.title || '暂无标题' }}
                 </div>
                 <div class="text-[11px] text-white/80 mt-0.5">
@@ -459,15 +446,15 @@ function toggleGiftWindow() {
                 </div>
               </div>
               <div
-                class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-all duration-250 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0"
+                class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-[opacity,transform] duration-200 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0"
               >
                 <Badge
-                  variant="secondary"
-                  size="xs"
-                  class="h-5 px-2 bg-primary text-primary-foreground gap-1"
+                  variant="default"
+                  size="sm"
+                  class="gap-1"
                 >
                   <span>点击前往直播间</span>
-                  <Open24Regular class="size-3" />
+                  <ExternalLink class="size-3" />
                 </Badge>
               </div>
             </div>
@@ -486,7 +473,7 @@ function toggleGiftWindow() {
             class="gap-1.5"
             @click="router.push({ name: 'client-live-manage' })"
           >
-            <Live24Filled class="size-3.5" />
+            <Radio class="size-3.5" />
             修改直播标题与分区
           </Button>
         </div>
@@ -501,77 +488,67 @@ function toggleGiftWindow() {
           <CardContent class="p-3">
             <div class="grid grid-cols-2 gap-2.5">
               <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-live-manage' })"
               >
-                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-blue-500/10 text-blue-500">
-                  <Live24Filled class="size-4" />
+                <div class="size-8 rounded-md flex-center shrink-0 bg-blue-500/10 text-blue-500">
+                  <Radio class="size-4" />
                 </div>
                 <div class="min-w-0">
-                  <div class="text-[13px] font-medium leading-tight">直播控制</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
-                    OBS 推流与场次信息
-                  </div>
+                  <div class="text-xs font-medium leading-tight">直播控制</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">OBS 推流与场次信息</div>
                 </div>
               </div>
 
               <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-read-danmaku' })"
               >
-                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-emerald-500/10 text-emerald-500">
-                  <Mic24Filled class="size-4" />
+                <div class="size-8 rounded-md flex-center shrink-0 bg-emerald-500/10 text-emerald-500">
+                  <Mic class="size-4" />
                 </div>
                 <div class="min-w-0">
-                  <div class="text-[13px] font-medium leading-tight">读弹幕 (TTS)</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
-                    语音朗读与音色设置
-                  </div>
+                  <div class="text-xs font-medium leading-tight">读弹幕 (TTS)</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">语音朗读与音色设置</div>
                 </div>
               </div>
 
               <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-auto-action-manage' })"
               >
-                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-amber-500/10 text-amber-500">
-                  <FlashAuto24Filled class="size-4" />
+                <div class="size-8 rounded-md flex-center shrink-0 bg-amber-500/10 text-amber-500">
+                  <Zap class="size-4" />
                 </div>
                 <div class="min-w-0">
-                  <div class="text-[13px] font-medium leading-tight">自动操作</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
-                    入场欢迎与进房致谢
-                  </div>
+                  <div class="text-xs font-medium leading-tight">自动操作</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">入场欢迎与进房致谢</div>
                 </div>
               </div>
 
               <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-fans-viewer' })"
               >
-                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-purple-500/10 text-purple-500">
-                  <PeopleSearch24Filled class="size-4" />
+                <div class="size-8 rounded-md flex-center shrink-0 bg-purple-500/10 text-purple-500">
+                  <Users class="size-4" />
                 </div>
                 <div class="min-w-0">
-                  <div class="text-[13px] font-medium leading-tight">粉丝查看</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
-                    粉丝量降序与回关
-                  </div>
+                  <div class="text-xs font-medium leading-tight">粉丝查看</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">粉丝量降序与回关</div>
                 </div>
               </div>
 
               <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-settings' })"
               >
-                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-muted text-muted-foreground">
-                  <Settings24Filled class="size-4" />
+                <div class="size-8 rounded-md flex-center shrink-0 bg-muted text-muted-foreground">
+                  <Settings class="size-4" />
                 </div>
                 <div class="min-w-0">
-                  <div class="text-[13px] font-medium leading-tight">客户端设置</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
-                    通知 / 偏好 / 备份
-                  </div>
+                  <div class="text-xs font-medium leading-tight">客户端设置</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">通知 / 偏好 / 诊断</div>
                 </div>
               </div>
             </div>
@@ -583,11 +560,11 @@ function toggleGiftWindow() {
           class="p-3 border-t bg-muted/10 text-xs text-muted-foreground flex-between"
         >
           <div class="flex items-center gap-1.5">
-            <PlugConnected24Filled
+            <Plug
               class="size-3.5"
               :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
             />
-            <span> 本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接 </span>
+            <span>本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接</span>
           </div>
         </div>
       </Card>

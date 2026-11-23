@@ -14,6 +14,7 @@ import type { StreamerLiveSummary } from './streamerLiveSummary'
 export interface ResponseOrgStreamerDetailModel {
   streamer: ResponseUserBasicInfo
   status: OrgStreamerStatuses
+  allowPointManage: boolean
   /** @nullable */
   note?: string | null
   addedAt: number
@@ -24,4 +25,5 @@ export interface ResponseOrgStreamerDetailModel {
   lives: ResponseLiveInfoModel[]
   page: number
   pageSize: number
+  totalLives: number
 }

@@ -140,6 +140,11 @@ export default defineConfig({
     'size-control-default',
     'size-control-lg',
   ],
+  blocklist: [
+    // 防止 LRC 歌词时间戳（如 [00:00.00]、[mm:ss.xx]）被 UnoCSS 误解析为非法 CSS 任意属性导致 lightningcss 压缩失败
+    /^\[\d+:/,
+    /^\[mm:ss/,
+  ],
   rules: [
     ['h-control-xs', { height: 'var(--control-h-xs, 28px)' }],
     ['h-control-sm', { height: 'var(--control-h-sm, 32px)' }],

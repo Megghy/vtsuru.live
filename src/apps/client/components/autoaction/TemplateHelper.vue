@@ -1,26 +1,20 @@
 <script setup lang="ts">
-import Add16Regular from '@vicons/fluent/es/Add16Regular'
-import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
-import Search16Regular from '@vicons/fluent/es/Search16Regular'
+import { Copy, Plus, Search } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { ScrollArea } from '@/shared/ui/scroll-area'
-import { useMessage } from '@/shared/utils'
 
-const props = defineProps({
-  placeholders: {
-    type: Array as () => { name: string; description: string }[],
-    default: () => [],
-  },
-})
+const props = defineProps<{
+  placeholders: { name: string; description: string }[]
+}>()
 
 const emit = defineEmits<{
   (e: 'insert', text: string): void
 }>()
 
-const message = useMessage()
 const searchText = ref('')
 
 const filteredPlaceholders = computed(() => {
@@ -32,8 +26,8 @@ const filteredPlaceholders = computed(() => {
 })
 
 function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text)
-  message.success('已复制到剪贴板')
+  void navigator.clipboard.writeText(text)
+  toast.success('已复制到剪贴板')
 }
 
 function handleInsert(text: string) {
@@ -42,11 +36,9 @@ function handleInsert(text: string) {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 p-2 bg-muted rounded-md border border-border">
+  <div class="flex flex-col gap-2 p-2 bg-muted/40 rounded-md border border-border">
     <div class="relative">
-      <Search16Regular
-        class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
-      />
+      <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
       <Input
         v-model="searchText"
         placeholder="搜索变量..."
@@ -54,40 +46,40 @@ function handleInsert(text: string) {
       />
     </div>
 
-    <ScrollArea class="h-[200px]">
+    <ScrollArea class="h-[200px] [&_[data-reka-scroll-area-viewport]>div]:!block">
       <div class="flex flex-col gap-1 pr-2">
         <div
           v-for="item in filteredPlaceholders"
           :key="item.name"
-          class="group flex-between py-1.5 px-2 rounded-md cursor-pointer transition-colors hover:bg-muted/80"
+          class="group flex-between py-1.5 px-2 rounded-md cursor-pointer transition-colors hover:bg-muted"
           @click="handleInsert(item.name)"
         >
           <div class="min-w-0 pr-2">
-            <div class="font-mono text-xs font-bold text-primary truncate">
+            <div class="font-mono text-xs font-semibold text-primary truncate">
               {{ item.name }}
             </div>
-            <div class="text-xs text-muted-foreground mt-0.5 truncate">
+            <div class="text-[11px] text-muted-foreground mt-0.5 truncate">
               {{ item.description }}
             </div>
           </div>
-          <div class="flex items-center gap-1 shrink-0 opacity-40 transition-opacity group-hover:opacity-100">
+          <div class="flex items-center gap-0.5 shrink-0 opacity-40 transition-opacity group-hover:opacity-100">
             <Button
               variant="ghost"
-              size="xs"
-              class="size-6 text-muted-foreground"
-              aria-label="复制"
+              size="icon-xs"
+              class="text-muted-foreground"
+              aria-label="复制变量"
               @click.stop="copyToClipboard(item.name)"
             >
-              <Copy16Regular class="size-3.5" />
+              <Copy class="size-3.5" />
             </Button>
             <Button
               variant="ghost"
-              size="xs"
-              class="size-6 text-muted-foreground"
-              aria-label="插入"
+              size="icon-xs"
+              class="text-muted-foreground"
+              aria-label="插入变量"
               @click.stop="handleInsert(item.name)"
             >
-              <Add16Regular class="size-3.5" />
+              <Plus class="size-3.5" />
             </Button>
           </div>
         </div>

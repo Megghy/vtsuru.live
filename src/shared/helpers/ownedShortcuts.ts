@@ -33,5 +33,32 @@ export function createOwnedShortcuts(adapter: ShortcutAdapter) {
     queue = task.catch(() => {})
     return task
   }
-  return { replace, dispose: () => replace([]) }
+  function replaceBestEffort(bindings: { shortcut: string; handler: (event: ShortcutEvent) => void }[]) {
+    const task = queue.then(async () => {
+      for (const key of owned) {
+        await adapter.unregister(key)
+        owned.delete(key)
+      }
+      const failed: string[] = []
+      for (const binding of bindings) {
+        try {
+          if (await adapter.isRegistered(binding.shortcut)) {
+            failed.push(`${binding.shortcut}（已被占用）`)
+            continue
+          }
+          await adapter.register(binding.shortcut, binding.handler)
+          owned.add(binding.shortcut)
+        } catch (error) {
+          failed.push(`${binding.shortcut}（${error instanceof Error ? error.message : String(error)}）`)
+        }
+      }
+      return failed
+    })
+    queue = task.then(
+      () => {},
+      () => {},
+    )
+    return task
+  }
+  return { replace, replaceBestEffort, dispose: () => replace([]) }
 }

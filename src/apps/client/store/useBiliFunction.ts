@@ -1,7 +1,8 @@
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http' // 引入 Body
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import md5 from 'md5'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { computed, h, onScopeDispose, ref } from 'vue'
+import { computed, onScopeDispose, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import { isDev } from '@/shared/config'
@@ -208,12 +209,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     mode: number = 1,
   ): Promise<boolean> {
     if (!activeDanmakuCsrf.value || !activeDanmakuCookie.value) {
-      if (settingsStore.settings.enableBotAccount && !settingsStore.settings.botAccountFallbackToMain) {
-        console.error('发送弹幕失败：机器人小号 Cookie 无效且已关闭回退主账号')
-        window.$notification.error({
-          title: '机器人小号异常',
-          description: '机器人小号 Cookie 已失效，已暂停自动操作发送。请重新登录小号或开启回退主账号。',
-          duration: 5000,
+      if (accountManager.routing.danmakuAccountId !== 'main' && !accountManager.routing.fallbackToMain) {
+        console.error('发送弹幕失败：指定发弹幕账号 Cookie 无效且已关闭回退主账号')
+        toast.error('发弹幕账号异常', {
+          description: '指定发弹幕账号 Cookie 已失效，已暂停自动操作发送。请重新登录或在账号池开启回退主账号。',
         })
       } else {
         console.error('发送弹幕失败：缺少 cookie 或 csrf token')
@@ -229,10 +228,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     if (isDev) {
       const accountLabel = activeDanmakuAccountType.value === 'bot' ? '机器人小号' : '主播号'
       console.log(`[开发环境] 模拟发送弹幕 [${accountLabel}] 到房间 ${roomId}: ${message}`)
-      window.$notification.info({
-        title: `开发环境 - 弹幕未实际发送 (${accountLabel})`,
+      toast.info(`开发环境 - 弹幕未实际发送 (${accountLabel})`, {
         description: `房间: ${roomId}, 内容: ${message}`,
-        duration: 10000,
       })
       return true
     }
@@ -270,23 +267,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       }
       const json = await response.json()
       if (json.code !== 0) {
-        window.$notification.error({
-          title: '发送弹幕失败',
-          description: `内容: ${message}`,
-          meta: () =>
-            h(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                },
-              },
-              `错误: ${json.code} - ${json.message || json.msg}`,
-            ),
-          duration: 0,
+        toast.error('发送弹幕失败', {
+          description: `内容: ${message} (${json.code} - ${json.message || json.msg})`,
         })
         console.error(`发送弹幕API失败 to: ${roomId} [${message}] - ${json.code} - ${json.message || json.msg}`)
         return false
@@ -374,10 +356,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     if (!message || message.trim().length === 0) {
       const error = '尝试发送空私信，已阻止。'
       console.warn(error)
-      window.$notification.error({
-        title: '发送私信失败',
+      toast.error('发送私信失败', {
         description: `尝试发送空私信给 ${receiverId}, 已阻止`,
-        duration: 0,
       })
       return false
     }
@@ -386,10 +366,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     if (isDev) {
       const accountLabel = activeDanmakuAccountType.value === 'bot' ? '机器人小号' : '主播号'
       console.log(`[开发环境] 模拟发送私信 [${accountLabel}] 到用户 ${receiverId}: ${message}`)
-      window.$notification.info({
-        title: `开发环境 - 私信未实际发送 (${accountLabel})`,
+      toast.info(`开发环境 - 私信未实际发送 (${accountLabel})`, {
         description: `接收者: ${receiverId}, 内容: ${message}`,
-        duration: 10000,
       })
       return true
     }

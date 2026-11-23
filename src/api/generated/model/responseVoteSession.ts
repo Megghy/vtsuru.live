@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
+import type { VoteMultiMode } from './voteMultiMode'
 import type { VoteOption } from './voteOption'
 
 export interface ResponseVoteSession {
@@ -16,6 +17,15 @@ export interface ResponseVoteSession {
   /** @nullable */
   endTime?: number | null
   isActive: boolean
+  isPaused: boolean
+  /** @nullable */
+  pausedRemainingSeconds?: number | null
+  isUnlimited: boolean
+  allowMultipleVotes: boolean
+  multiVoteMode: VoteMultiMode
+  /** @nullable */
+  winnerOverride?: string | null
   totalVotes: number
+  totalContribution: number
   creator?: ResponseUserBasicInfo
 }

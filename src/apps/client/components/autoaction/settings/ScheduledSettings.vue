@@ -3,27 +3,23 @@ import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { SettingRow } from '@/shared/ui/setting-row'
 
-const props = defineProps({
-  action: {
-    type: Object as () => AutoActionItem,
-    required: true,
-  },
-})
+const props = defineProps<{
+  action: AutoActionItem
+}>()
 
-// 初始化配置项
 if (props.action.triggerConfig.useGlobalTimer === undefined) {
-  props.action.triggerConfig.useGlobalTimer = false // 默认不使用全局定时器
+  props.action.triggerConfig.useGlobalTimer = false
 }
 if (props.action.triggerConfig.schedulingMode === undefined) {
-  props.action.triggerConfig.schedulingMode = 'random' // 默认随机模式
+  props.action.triggerConfig.schedulingMode = 'random'
 }
 if (props.action.triggerConfig.intervalSeconds === undefined) {
-  props.action.triggerConfig.intervalSeconds = 300 // 默认5分钟
+  props.action.triggerConfig.intervalSeconds = 300
 }
 
-// 双向绑定到 action, 保证父组件修改也能同步到子组件
 const useGlobalTimer = computed({
   get: () => Boolean(props.action.triggerConfig.useGlobalTimer),
   set: (value: boolean) => {
@@ -31,10 +27,9 @@ const useGlobalTimer = computed({
   },
 })
 
-// 定时模式选项
 const schedulingModeOptions = [
-  { label: '随机模式 (每次随机选一个模板)', value: 'random' },
-  { label: '顺序模式 (按列表顺序循环)', value: 'sequential' },
+  { label: '随机模式（多行模板每次随机选一行）', value: 'random' },
+  { label: '顺序模式（多行模板按行顺序循环）', value: 'sequential' },
 ]
 </script>
 
@@ -45,48 +40,48 @@ const schedulingModeOptions = [
   >
     <SettingRow
       type="switch"
-      title="使用全局设置"
-      hint="开启后将遵循【自动化 -> 消息队列】中的全局定时设置"
+      variant="compact"
+      title="使用全局定时器"
+      hint="开启后将与同分类下其他全局定时规则共用一个发送周期"
       v-model="useGlobalTimer"
     />
 
-    <div
+    <Alert
       v-if="useGlobalTimer"
-      class="text-xs text-muted-foreground p-2.5 rounded border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+      size="sm"
+      variant="info"
     >
-      当前正在使用全局定时器。此操作将与其他全局任务共享发送频率和顺序。<br />
-      修改全局间隔请前往：功能设置 -> 消息队列。
-    </div>
+      <AlertDescription class="m-0">
+        当前规则已纳入全局定时器，修改全局发送间隔与轮询顺序请返回【定时发送】列表顶部的「全局定时器配置」卡片。
+      </AlertDescription>
+    </Alert>
 
-    <div class="space-y-3 pt-1">
-      <div class="border-b pb-1">
-        <span class="font-semibold text-xs text-foreground block">独立定时设置</span>
-      </div>
+    <div
+      v-else
+      class="space-y-2.5 p-3 rounded-md border bg-muted/20"
+    >
+      <span class="font-semibold text-xs text-foreground block">独立定时器参数</span>
 
-      <div
-        class="space-y-2"
-        :class="{ 'opacity-50 pointer-events-none': useGlobalTimer }"
-      >
-        <SettingRow
-          type="number"
-          title="发送间隔 (秒)"
-          :min="10"
-          :max="86400"
-          :disabled="useGlobalTimer"
-          placeholder="300"
-          :model-value="action.triggerConfig.intervalSeconds"
-          @change="(val) => (action.triggerConfig.intervalSeconds = Number(val) || 300)"
-        />
+      <SettingRow
+        type="number"
+        variant="compact"
+        title="发送间隔 (秒)"
+        hint="修改后将自动重启该规则的独立计时器"
+        :min="10"
+        :max="86400"
+        placeholder="300"
+        :model-value="action.triggerConfig.intervalSeconds"
+        @update:model-value="action.triggerConfig.intervalSeconds = Number($event) || 300"
+      />
 
-        <SettingRow
-          type="select"
-          title="发送模式"
-          :options="schedulingModeOptions"
-          :disabled="useGlobalTimer"
-          :model-value="action.triggerConfig.schedulingMode"
-          @change="(val) => (action.triggerConfig.schedulingMode = val as any)"
-        />
-      </div>
+      <SettingRow
+        type="select"
+        variant="compact"
+        title="多行模板轮播模式"
+        :options="schedulingModeOptions"
+        :model-value="action.triggerConfig.schedulingMode"
+        @update:model-value="action.triggerConfig.schedulingMode = ($event as 'random' | 'sequential') || 'random'"
+      />
     </div>
   </div>
 </template>

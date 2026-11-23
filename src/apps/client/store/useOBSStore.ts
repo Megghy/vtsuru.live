@@ -1,6 +1,7 @@
 import OBSWebSocket, { EventSubscription } from 'obs-websocket-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { fetchObsFilterCapabilities, syncObsSourceFilters } from '@/shared/obs/obsWebsocketFilters'
 import {
@@ -266,14 +267,8 @@ export const useOBSStore = defineStore('obs', () => {
   function startObsAutoReconnectLoop() {
     if (obsReconnectTimer !== null) return
 
-    // 如果当前条件满足，立即尝试连接一次
-    if (
-      obsAutoReconnect.value &&
-      obsAddress.value &&
-      obsPassword.value &&
-      !obsConnected.value &&
-      !obsConnecting.value
-    ) {
+    // 如果当前条件满足，立即尝试连接一次（允许无密码的本地 OBS WebSocket）
+    if (obsAutoReconnect.value && obsAddress.value && !obsConnected.value && !obsConnecting.value) {
       void handleObsConnect()
     }
 
@@ -282,8 +277,6 @@ export const useOBSStore = defineStore('obs', () => {
       if (!obsAutoReconnect.value) return
       if (!obsAddress.value) return
       if (obsConnected.value || obsConnecting.value) return
-      // 确保地址和密码都已设置才尝试连接
-      if (!obsPassword.value) return
       void handleObsConnect()
     }, 10000)
   }
@@ -377,7 +370,7 @@ export const useOBSStore = defineStore('obs', () => {
   // 切换推流状态
   async function handleObsToggleStream() {
     if (!obs || !obsConnected.value) {
-      window.$message.error('请先连接 OBS')
+      toast.error('请先连接 OBS')
       return
     }
 
@@ -387,11 +380,11 @@ export const useOBSStore = defineStore('obs', () => {
       if (typeof result?.outputActive === 'boolean') {
         obsStreamActive.value = result.outputActive
       }
-      window.$message.success(obsStreamActive.value ? '已开始 OBS 推流' : '已停止 OBS 推流')
+      toast.success(obsStreamActive.value ? '已开始 OBS 推流' : '已停止 OBS 推流')
       void updateObsStats()
     } catch (err: any) {
       console.error('切换 OBS 推流状态失败:', err)
-      window.$message.error(`切换 OBS 推流状态失败: ${err?.message || err}`)
+      toast.error(`切换 OBS 推流状态失败: ${err?.message || err}`)
     } finally {
       isTogglingObsStream.value = false
     }
@@ -413,12 +406,12 @@ export const useOBSStore = defineStore('obs', () => {
       isTogglingObsStream.value = true
       await obs.call('StartStream')
       obsStreamActive.value = true
-      window.$message.success('已开始 OBS 推流')
+      toast.success('已开始 OBS 推流')
       void updateObsStats()
       return true
     } catch (err: any) {
       console.error('开始 OBS 推流失败:', err)
-      window.$message.error(`开始 OBS 推流失败: ${err?.message || err}`)
+      toast.error(`开始 OBS 推流失败: ${err?.message || err}`)
       return false
     } finally {
       isTogglingObsStream.value = false
@@ -441,12 +434,12 @@ export const useOBSStore = defineStore('obs', () => {
       isTogglingObsStream.value = true
       await obs.call('StopStream')
       obsStreamActive.value = false
-      window.$message.success('已停止 OBS 推流')
+      toast.success('已停止 OBS 推流')
       void updateObsStats()
       return true
     } catch (err: any) {
       console.error('停止 OBS 推流失败:', err)
-      window.$message.error(`停止 OBS 推流失败: ${err?.message || err}`)
+      toast.error(`停止 OBS 推流失败: ${err?.message || err}`)
       return false
     } finally {
       isTogglingObsStream.value = false
@@ -456,7 +449,7 @@ export const useOBSStore = defineStore('obs', () => {
   // 同步推流码到 OBS
   async function syncStreamKeyToObs(server: string, key: string) {
     if (!obs || !obsConnected.value) {
-      window.$message.error('请先连接 OBS')
+      toast.error('请先连接 OBS')
       return false
     }
 
@@ -474,11 +467,11 @@ export const useOBSStore = defineStore('obs', () => {
         },
       })
 
-      window.$message.success('推流码已同步到 OBS')
+      toast.success('推流码已同步到 OBS')
       return true
     } catch (err: any) {
       console.error('同步推流码到 OBS 失败:', err)
-      window.$message.error(`同步推流码失败: ${err?.message || err}`)
+      toast.error(`同步推流码失败: ${err?.message || err}`)
       return false
     }
   }
@@ -512,12 +505,12 @@ export const useOBSStore = defineStore('obs', () => {
   // 切换到指定场景
   async function switchToScene(sceneName: string): Promise<boolean> {
     if (!obs || !obsConnected.value) {
-      window.$message.error('OBS未连接')
+      toast.error('OBS未连接')
       return false
     }
 
     if (!sceneName || !obsScenes.value.includes(sceneName)) {
-      window.$message.error('无效的场景名称')
+      toast.error('无效的场景名称')
       return false
     }
 
@@ -537,12 +530,12 @@ export const useOBSStore = defineStore('obs', () => {
 
       currentObsScene.value = sceneName
       console.log(`已切换到场景: ${sceneName}`)
-      window.$message.success(`已切换到场景: ${sceneName}`)
+      toast.success(`已切换到场景: ${sceneName}`)
       return true
     } catch (err: any) {
       console.error('切换场景失败:', err)
       obsSceneError.value = err?.message || '切换场景失败'
-      window.$message.error(`切换场景失败: ${err?.message || err}`)
+      toast.error(`切换场景失败: ${err?.message || err}`)
       return false
     } finally {
       isSwitchingScene.value = false

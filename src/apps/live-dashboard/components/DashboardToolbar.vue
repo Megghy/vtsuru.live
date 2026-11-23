@@ -2,6 +2,8 @@
 import {
   BookmarkPlus,
   Cake,
+  Check,
+  Ellipsis,
   ExternalLink,
   Eye,
   EyeOff,
@@ -25,8 +27,17 @@ import { CURRENT_HOST, isTauri } from '@/shared/config'
 import { useFanPrivacy } from '@/shared/composables/useFanPrivacy'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
@@ -148,6 +159,8 @@ function onStatsWheel(e: WheelEvent) {
   el.scrollLeft += e.deltaY
 }
 
+const hasMoreMenuActiveState = computed(() => dashboard.settings.hideRead || privacyMode.value)
+
 const SEARCH_HELP = [
   'type:superchat,gift,toast,message,enter,follow,like',
   'uid:12345  username:名字  message:内容  medal:勋章  note:备注',
@@ -158,10 +171,10 @@ const SEARCH_HELP = [
 
 <template>
   <header
-    class="relative flex items-center gap-2.5 h-11 px-2.5 border-b border-border bg-card shrink-0 min-w-0 text-sm"
+    class="relative flex items-center gap-2 h-11 px-2.5 border-b border-border bg-card shrink-0 min-w-0 text-sm"
   >
-    <div class="flex items-center gap-1.5 shrink-0">
-      <div class="relative w-[176px]">
+    <div class="flex items-center gap-1 shrink-0">
+      <div class="relative w-[136px] xl:w-[176px]">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
@@ -189,7 +202,7 @@ const SEARCH_HELP = [
         <Button
           v-if="dashboard.search"
           variant="ghost"
-          size="icon-xs"
+          size="none"
           class="absolute right-1 top-1/2 -translate-y-1/2 size-5 text-muted-foreground"
           aria-label="清除搜索"
           @click="dashboard.search = ''"
@@ -204,10 +217,14 @@ const SEARCH_HELP = [
           <Button
             size="xs"
             :variant="range ? 'default' : 'ghost'"
-            class="gap-1"
+            :class="range ? 'gap-1 px-2' : 'gap-1 px-1.5 text-muted-foreground hover:text-foreground'"
+            aria-label="历史事件回溯筛选"
+            title="历史事件回溯筛选"
           >
             <History class="size-3.5" />
-            <span class="hidden lg:inline">{{ range ? '已选历史' : '历史回溯' }}</span>
+            <span :class="range ? 'hidden sm:inline' : 'hidden 2xl:inline'">
+              {{ range ? '已选历史' : '历史回溯' }}
+            </span>
             <X
               v-if="range"
               class="size-3 ml-0.5 hover:text-destructive"
@@ -537,39 +554,23 @@ const SEARCH_HELP = [
       <ClientLiveQuickControl v-if="inTauri" />
       <SpeechStatusPill />
 
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <span
-              class="size-2 rounded-full inline-block cursor-help"
-              :style="{ background: statusColor }"
-            />
-          </TooltipTrigger>
-          <TooltipContent>
-            {{
-              client.hasRemoteSource && client.phase !== 'connected'
-                ? '已通过其他标签页接收弹幕'
-                : client.connectionStatus
-            }}
-            <template v-if="client.reconnectCount"> · 已重连 {{ client.reconnectCount }} 次 </template>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
       <Popover>
         <PopoverTrigger as-child>
           <Button
             variant="ghost"
-            size="xs"
-            class="gap-1 px-2 text-muted-foreground hover:text-foreground"
-            title="记录直播高光打点 (快捷键 Alt+M)"
+            :size="dashboard.markers.length > 0 ? 'xs' : 'icon-xs'"
+            :class="dashboard.markers.length > 0 ? 'gap-1 px-1.5' : '2xl:w-auto 2xl:px-2 2xl:gap-1'"
+            class="text-muted-foreground hover:text-foreground"
+            aria-label="高光打点"
+            title="高光打点 (Alt+M)"
           >
             <BookmarkPlus class="size-3.5" />
-            <span class="hidden sm:inline">打点</span>
+            <span class="hidden 2xl:inline">打点</span>
             <Badge
               v-if="dashboard.markers.length > 0"
               size="xs"
               variant="secondary"
+              class="px-1 tabular-nums"
             >
               {{ dashboard.markers.length }}
             </Badge>
@@ -642,34 +643,75 @@ const SEARCH_HELP = [
         </PopoverContent>
       </Popover>
 
-      <Button
+      <TooltipProvider
         v-if="dashboard.fans.todayReminders.length > 0"
-        variant="ghost"
-        size="xs"
-        class="gap-1 text-amber-600 dark:text-amber-400"
-        aria-label="今日粉丝特别日提醒"
-        :title="`今日有 ${dashboard.fans.todayReminders.length} 条粉丝生日或纪念日`"
-        @click="dashboard.fans.todayReminderDialogOpen = true"
+        :delay-duration="400"
       >
-        <Cake class="size-3.5" />
-        <span class="hidden lg:inline">今日 {{ dashboard.fans.todayReminders.length }}</span>
-      </Button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="xs"
+              class="gap-1 px-1.5 text-amber-600 dark:text-amber-400"
+              aria-label="今日粉丝特别日提醒"
+              @click="dashboard.fans.todayReminderDialogOpen = true"
+            >
+              <Cake class="size-3.5" />
+              <span class="tabular-nums text-[11px]">{{ dashboard.fans.todayReminders.length }}</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>今日有 {{ dashboard.fans.todayReminders.length }} 条粉丝生日或纪念日</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <!-- 仅在开启防露屏时显式提醒，点击可一键关闭 -->
       <IconAction
-        :icon="privacyMode ? ShieldOff : Shield"
-        :tip="privacyMode ? '防露屏模式已开启（点击关闭）' : '开启防露屏模式（隐藏粉丝生日/备注/消费金额）'"
-        :active="privacyMode"
+        v-if="privacyMode"
+        :icon="ShieldOff"
+        tip="防露屏模式已开启（点击关闭）"
+        active
         @click="togglePrivacyMode"
       />
-      <IconAction
-        :icon="RefreshCw"
-        tip="重新连接弹幕源"
-        @click="reconnect"
-      />
-      <IconAction
-        :icon="dashboard.settings.hideRead ? EyeOff : Eye"
-        :tip="dashboard.settings.hideRead ? '显示已读项 (Alt+R)' : '隐藏已读项 (Alt+R)'"
-        :active="dashboard.settings.hideRead"
-        @click="dashboard.settings.hideRead = !dashboard.settings.hideRead"
+
+      <!-- 弹幕连接状态与重连二合一 -->
+      <TooltipProvider :delay-duration="300">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label="弹幕连接状态（点击重连）"
+              :disabled="reconnecting"
+              @click="reconnect"
+            >
+              <RefreshCw
+                v-if="reconnecting"
+                class="size-3.5 text-muted-foreground animate-spin"
+              />
+              <span
+                v-else
+                class="size-2 rounded-full inline-block"
+                :style="{ background: statusColor }"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div>
+              {{
+                client.hasRemoteSource && client.phase !== 'connected'
+                  ? '已通过其他标签页接收弹幕'
+                  : client.connectionStatus
+              }}
+              <template v-if="client.reconnectCount"> · 已重连 {{ client.reconnectCount }} 次 </template>
+            </div>
+            <div class="text-[11px] text-muted-foreground">点击重新连接弹幕源</div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <Separator
+        orientation="vertical"
+        class="h-4 mx-0.5"
       />
 
       <Popover>
@@ -677,7 +719,8 @@ const SEARCH_HELP = [
           <Button
             variant="ghost"
             size="icon-xs"
-            aria-label="布局"
+            aria-label="面板布局"
+            title="面板布局"
           >
             <LayoutGrid class="size-3.5 text-muted-foreground" />
           </Button>
@@ -691,25 +734,90 @@ const SEARCH_HELP = [
       </Popover>
 
       <IconAction
-        :icon="isDarkMode ? Sun : Moon"
-        tip="切换深色 / 浅色 (Alt+D)"
-        @click="ui.toggleTheme()"
-      />
-      <IconAction
-        :icon="Keyboard"
-        tip="快捷键 (?)"
-        @click="ui.shortcutsOpen = true"
-      />
-      <IconAction
-        :icon="ExternalLink"
-        :tip="inTauri ? '在浏览器中独立打开' : '在新窗口中独立打开'"
-        @click="openInNewWindow"
-      />
-      <IconAction
         :icon="Settings"
         tip="设置"
         @click="ui.settingsOpen = true"
       />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            class="relative text-muted-foreground hover:text-foreground"
+            aria-label="更多操作"
+            title="更多操作"
+          >
+            <Ellipsis class="size-3.5" />
+            <span
+              v-if="hasMoreMenuActiveState"
+              class="absolute top-1 right-1 size-1.5 rounded-full bg-primary"
+            />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          class="w-52"
+        >
+          <DropdownMenuItem @select="dashboard.settings.hideRead = !dashboard.settings.hideRead">
+            <component
+              :is="dashboard.settings.hideRead ? EyeOff : Eye"
+              class="!size-3.5 text-muted-foreground"
+            />
+            <span>隐藏已读项</span>
+            <Check
+              v-if="dashboard.settings.hideRead"
+              class="ml-auto !size-3.5 text-primary"
+            />
+            <DropdownMenuShortcut v-else>Alt+R</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem @select="togglePrivacyMode">
+            <component
+              :is="privacyMode ? ShieldOff : Shield"
+              class="!size-3.5 text-muted-foreground"
+            />
+            <span>防露屏模式</span>
+            <Check
+              v-if="privacyMode"
+              class="ml-auto !size-3.5 text-primary"
+            />
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            :disabled="reconnecting"
+            @select="reconnect"
+          >
+            <RefreshCw
+              class="!size-3.5 text-muted-foreground"
+              :class="{ 'animate-spin': reconnecting }"
+            />
+            <span>重新连接弹幕源</span>
+            <span
+              class="ml-auto size-2 rounded-full shrink-0"
+              :style="{ background: statusColor }"
+            />
+          </DropdownMenuItem>
+          <DropdownMenuItem @select="ui.toggleTheme()">
+            <component
+              :is="isDarkMode ? Sun : Moon"
+              class="!size-3.5 text-muted-foreground"
+            />
+            <span>{{ isDarkMode ? '切换浅色主题' : '切换深色主题' }}</span>
+            <DropdownMenuShortcut>Alt+D</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem @select="ui.shortcutsOpen = true">
+            <Keyboard class="!size-3.5 text-muted-foreground" />
+            <span>快捷键一览</span>
+            <DropdownMenuShortcut>?</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem @select="openInNewWindow">
+            <ExternalLink class="!size-3.5 text-muted-foreground" />
+            <span>{{ inTauri ? '在浏览器中独立打开' : '在新窗口中独立打开' }}</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
     <div
       v-if="reconnecting"

@@ -8,4 +8,6 @@
 
 export type GetApiOrgOrgIdPointsGoodsParams = {
   streamerId?: number
+  page?: number
+  pageSize?: number
 }

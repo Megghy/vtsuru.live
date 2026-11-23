@@ -53,29 +53,29 @@ export function useLiveCover() {
 
   const handleUploadCover = async () => {
     if (!coverFile.value) {
-      window.$message.error('请先选择要上传的封面图片')
+      toast.error('请先选择要上传的封面图片')
       return
     }
 
     try {
       isUploadingCover.value = true
-      window.$message.info('正在上传并应用封面...')
+      toast.info('正在上传并应用封面...')
       const uploadResponse = await uploadCover(coverFile.value)
       if (uploadResponse.code === 0 && uploadResponse.data?.location) {
         uploadedCoverUrl.value = uploadResponse.data.location
 
         const updateResponse = await updateCover(uploadResponse.data.location)
         if (updateResponse.code === 0) {
-          window.$message.success('封面上传并应用成功！')
+          toast.success('封面上传并应用成功！')
         } else {
-          window.$message.error(`封面上传成功但应用失败: ${updateResponse.message || '未知错误'}`)
+          toast.error(`封面上传成功但应用失败: ${updateResponse.message || '未知错误'}`)
         }
       } else {
-        window.$message.error(`封面上传失败: ${uploadResponse.message || '未知错误'}`)
+        toast.error(`封面上传失败: ${uploadResponse.message || '未知错误'}`)
       }
     } catch (err: any) {
       console.error('封面上传或应用失败:', err)
-      window.$message.error(`封面上传或应用失败: ${err.message || err}`)
+      toast.error(`封面上传或应用失败: ${err.message || err}`)
     } finally {
       isUploadingCover.value = false
     }

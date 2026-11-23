@@ -1,7 +1,6 @@
 <script setup lang="ts">
+import { Monitor, Radio } from 'lucide-vue-next'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
-import Live24Filled from '@vicons/fluent/es/Live24Filled'
 import { nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -83,14 +82,14 @@ async function navigateCheck(target: CheckTarget) {
             value="control"
             class="gap-1.5"
           >
-            <Live24Filled class="size-3.5" />
+            <Radio class="size-3.5" />
             直播控制
           </TabsTrigger>
           <TabsTrigger
             value="obs"
             class="gap-1.5"
           >
-            <Desktop24Filled class="size-3.5" />
+            <Monitor class="size-3.5" />
             OBS 与统计
           </TabsTrigger>
         </TabsList>

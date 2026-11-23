@@ -9,4 +9,5 @@
 export type GetApiVoteHistoryParams = {
   limit?: number
   offset?: number
+  keyword?: string
 }

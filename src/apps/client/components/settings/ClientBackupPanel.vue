@@ -12,6 +12,7 @@ import {
 import { useSettings } from '@/apps/client/store/useSettings'
 import { isTauri } from '@/shared/config'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -19,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/di
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 
 const settings = useSettings()
 const backup = useClientBackup()
@@ -121,14 +124,14 @@ function toggleModule(mod: ClientBackupModule) {
   <div class="flex flex-col gap-3">
     <Alert
       v-if="!isTauri()"
-      class="border-destructive/20 bg-destructive/10 text-destructive"
+      variant="destructive"
     >
       <AlertDescription class="m-0"> 当前不是 Tauri 客户端环境，无法使用备份功能。 </AlertDescription>
     </Alert>
 
     <Alert
-      variant="warning"
       v-else-if="!backup.isSupported"
+      variant="warning"
     >
       <div class="flex-between gap-2">
         <AlertDescription class="m-0">
@@ -149,7 +152,7 @@ function toggleModule(mod: ClientBackupModule) {
     <template v-else>
       <Alert variant="info">
         <AlertDescription class="m-0">
-          备份会生成单个 ZIP 文件，覆盖 Tauri Store 与客户端 IndexedDB 数据。自动备份仅在客户端运行期间生效。
+          备份会生成单个 ZIP 文件，覆盖 Tauri Store 与客户端 IndexedDB 数据。默认剔除 B 站 Cookie、Token 与转写密钥，防止分享配置时泄露账号。
         </AlertDescription>
       </Alert>
 
@@ -178,19 +181,35 @@ function toggleModule(mod: ClientBackupModule) {
 
       <Card>
         <CardHeader class="p-3 pb-1">
-          <CardTitle>自动备份</CardTitle>
+          <CardTitle>备份策略与安全</CardTitle>
         </CardHeader>
         <CardContent class="p-3 space-y-3">
-          <div class="flex-between gap-3">
-            <span class="text-xs font-medium text-foreground">启用定时备份</span>
-            <Checkbox
-              :checked="backupSettings.scheduleEnabled"
-              @update:checked="backupSettings.scheduleEnabled = $event"
+          <SettingRow
+            variant="none"
+            title="包含敏感凭据（Cookie / API 密钥）"
+            description="关闭时将自动剔除 B 站 Cookie、账号池、推流码及转写服务密钥；导入此类脱敏备份时也会保留本机已有凭据"
+          >
+            <Switch
+              :checked="Boolean(backupSettings.includeSensitiveCredentials)"
+              @update:checked="backupSettings.includeSensitiveCredentials = Boolean($event)"
             />
-          </div>
+          </SettingRow>
 
-          <div class="flex-between gap-3">
-            <span class="text-xs font-medium text-foreground">预设周期</span>
+          <SettingRow
+            variant="none"
+            title="启用定时备份"
+            description="仅在客户端运行期间按以下周期自动写入备份目录"
+          >
+            <Switch
+              :checked="backupSettings.scheduleEnabled"
+              @update:checked="backupSettings.scheduleEnabled = Boolean($event)"
+            />
+          </SettingRow>
+
+          <SettingRow
+            variant="none"
+            title="预设周期"
+          >
             <div class="w-[180px]">
               <Select
                 :model-value="String(backupSettings.presetHours)"
@@ -210,20 +229,26 @@ function toggleModule(mod: ClientBackupModule) {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </SettingRow>
 
-          <div class="flex-between gap-3">
-            <span class="text-xs font-medium text-foreground">自定义周期（小时）</span>
+          <SettingRow
+            variant="none"
+            title="自定义周期（小时）"
+            description="留空时使用上方预设周期"
+          >
             <NumberField
               :model-value="backupSettings.customHours"
               :min="1"
               class="w-[180px]"
-              @update:model-value="backupSettings.customHours = $event ?? undefined"
+              @update:model-value="backupSettings.customHours = $event ?? null"
             />
-          </div>
+          </SettingRow>
 
-          <div class="flex-between gap-3">
-            <span class="text-xs font-medium text-foreground">最多保留份数</span>
+          <SettingRow
+            variant="none"
+            title="最多保留份数"
+            description="超出后自动清理最旧的备份文件"
+          >
             <NumberField
               :model-value="backupSettings.keepCount"
               :min="1"
@@ -231,9 +256,9 @@ function toggleModule(mod: ClientBackupModule) {
               class="w-[180px]"
               @update:model-value="backupSettings.keepCount = $event || 10"
             />
-          </div>
+          </SettingRow>
 
-          <div class="text-xs text-muted-foreground pt-1 border-t">
+          <div class="text-xs text-muted-foreground pt-1 border-t border-border">
             {{ effectiveIntervalText }}
           </div>
         </CardContent>
@@ -279,12 +304,25 @@ function toggleModule(mod: ClientBackupModule) {
             size="sm"
             variant="warning"
           >
-            <AlertDescription class="m-0"> 导入会覆盖已勾选模块的当前数据，未勾选模块保持不变。 </AlertDescription>
+            <AlertDescription class="m-0">
+              导入会覆盖已勾选模块的当前数据，未勾选模块保持不变。
+              <template v-if="importPreview.manifest.includesSensitiveCredentials === false">
+                该备份为脱敏备份，导入时会自动保留你本机现有的 Cookie 与凭据。
+              </template>
+            </AlertDescription>
           </Alert>
 
-          <div class="text-xs text-muted-foreground space-y-0.5">
-            <div>备份时间: {{ new Date(importPreview.manifest.createdAt).toLocaleString() }}</div>
-            <div>备份客户端版本: {{ importPreview.manifest.clientVersion }}</div>
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <div class="space-y-0.5">
+              <div>备份时间: {{ new Date(importPreview.manifest.createdAt).toLocaleString() }}</div>
+              <div>备份客户端版本: {{ importPreview.manifest.clientVersion }}</div>
+            </div>
+            <Badge
+              :variant="importPreview.manifest.includesSensitiveCredentials === false ? 'secondary' : 'outline'"
+              size="xs"
+            >
+              {{ importPreview.manifest.includesSensitiveCredentials === false ? '脱敏备份（不含凭据）' : '含凭据 / 完整备份' }}
+            </Badge>
           </div>
 
           <div class="space-y-2 max-h-[300px] overflow-y-auto">
@@ -313,7 +351,7 @@ function toggleModule(mod: ClientBackupModule) {
             </Card>
           </div>
 
-          <div class="flex justify-end gap-2 pt-2 border-t">
+          <div class="flex justify-end gap-2 pt-2 border-t border-border">
             <Button
               variant="outline"
               @click="showImportModal = false"

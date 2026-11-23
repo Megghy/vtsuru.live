@@ -1,4 +1,5 @@
 import { ref, computed, watch, onMounted } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import {
@@ -10,7 +11,7 @@ import {
   updateRoomNews,
 } from '@/apps/client/api/live-manage'
 import type { LiveArea } from '@/apps/client/api/live-manage'
-import { roomInfo } from '@/apps/client/data/info'
+import { isLiveStreaming, roomInfo } from '@/apps/client/data/info'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 
@@ -33,8 +34,8 @@ export function useLiveControl() {
   const tauriStore = useTauriStore()
   const cover = useLiveCover()
 
-  // 直播状态
-  const isLiving = ref(false)
+  // 直播状态（初始与全局单一真源同步，后续随 roomInfo/streamingInfo 保持同步）
+  const isLiving = ref(isLiveStreaming.value)
   const rtmpServer = ref('')
   const rtmpCode = ref('')
 
@@ -124,7 +125,7 @@ export function useLiveControl() {
       liveAreas.value = await getLiveAreas()
     } catch (err) {
       console.error('加载直播分区失败:', err)
-      window.$message.error('加载直播分区失败')
+      toast.error('加载直播分区失败')
     }
   }
 
@@ -150,31 +151,31 @@ export function useLiveControl() {
   const handleUpdateAnnouncement = async () => {
     const roomId = accountInfo.value.biliRoomId || accountInfo.value.streamerInfo?.roomId
     if (!roomId) {
-      window.$message.error('无法获取直播间ID')
+      toast.error('无法获取直播间ID')
       return
     }
 
     if (roomAnnouncement.value.length > 60) {
-      window.$message.error('公告内容不能超过60个字符')
+      toast.error('公告内容不能超过60个字符')
       return
     }
 
     try {
       isUpdatingAnnouncement.value = true
-      window.$message.info('正在更新直播间公告...')
+      toast.info('正在更新直播间公告...')
       const response = await updateRoomNews({
         roomId,
         content: roomAnnouncement.value,
       })
 
       if (response.code === 0) {
-        window.$message.success('直播间公告更新成功！')
+        toast.success('直播间公告更新成功！')
       } else {
-        window.$message.error(`更新公告失败: ${response.message || '未知错误'}`)
+        toast.error(`更新公告失败: ${response.message || '未知错误'}`)
       }
     } catch (err: any) {
       console.error('更新直播间公告失败:', err)
-      window.$message.error(`更新公告失败: ${err.message || err}`)
+      toast.error(`更新公告失败: ${err.message || err}`)
     } finally {
       isUpdatingAnnouncement.value = false
     }
@@ -184,18 +185,18 @@ export function useLiveControl() {
   // 开始直播
   const handleStartLive = async () => {
     if (!liveAreaId.value) {
-      window.$message.error('请选择直播分区')
+      toast.error('请选择直播分区')
       return
     }
 
     const roomId = accountInfo.value.biliRoomId || accountInfo.value.streamerInfo?.roomId
     if (!roomId) {
-      window.$message.error('无法获取直播间ID')
+      toast.error('无法获取直播间ID')
       return
     }
 
     try {
-      window.$message.info('正在开播...')
+      toast.info('正在开播...')
 
       // 确保已获取直播姬版本
       if (!liveVersionInfo.value) {
@@ -214,12 +215,12 @@ export function useLiveControl() {
       // 处理不同的响应码
       if (response.code === 60024) {
         // 需要人脸认证
-        window.$message.warning('需要进行人脸认证')
+        toast.warning('需要进行人脸认证')
         if (response.data?.qr) {
           faceAuthQrCode.value = response.data.qr
           showFaceAuthModal.value = true
         } else {
-          window.$message.error('无法获取人脸认证二维码')
+          toast.error('无法获取人脸认证二维码')
         }
         return
       }
@@ -238,7 +239,7 @@ export function useLiveControl() {
           console.error('保存推流信息失败:', err)
         }
 
-        window.$message.success('开播成功！')
+        toast.success('开播成功！')
 
         // 设置直播状态
         isLiving.value = true
@@ -264,12 +265,12 @@ export function useLiveControl() {
           }
         }
       } else {
-        window.$message.error(`开播失败: ${response.message || response.msg}`)
+        toast.error(`开播失败: ${response.message || response.msg}`)
         console.error('开播失败详情:', response)
       }
     } catch (err: any) {
       console.error('开播失败:', err)
-      window.$message.error(`开播失败: ${err.message || err}`)
+      toast.error(`开播失败: ${err.message || err}`)
     }
   }
 
@@ -277,12 +278,12 @@ export function useLiveControl() {
   const handleStartLiveWithUpdate = async () => {
     const roomId = accountInfo.value.biliRoomId || accountInfo.value.streamerInfo?.roomId
     if (!roomId) {
-      window.$message.error('无法获取直播间ID')
+      toast.error('无法获取直播间ID')
       return
     }
 
     try {
-      window.$message.info('正在更新直播间信息...')
+      toast.info('正在更新直播间信息...')
 
       const response = await updateRoom({
         roomId,
@@ -291,7 +292,7 @@ export function useLiveControl() {
       })
 
       if (response.code === 0) {
-        window.$message.success('直播间信息更新成功，开始开播...')
+        toast.success('直播间信息更新成功，开始开播...')
         if (roomInfo.value) {
           if (liveTitle.value) {
             roomInfo.value.title = liveTitle.value
@@ -303,11 +304,11 @@ export function useLiveControl() {
         }
         await handleStartLive()
       } else {
-        window.$message.error(`更新直播间信息失败: ${response.message || response.msg}`)
+        toast.error(`更新直播间信息失败: ${response.message || response.msg}`)
       }
     } catch (err: any) {
       console.error('更新直播间信息失败:', err)
-      window.$message.error(`更新直播间信息失败: ${err.message || err}`)
+      toast.error(`更新直播间信息失败: ${err.message || err}`)
     }
   }
 
@@ -315,12 +316,12 @@ export function useLiveControl() {
   const handleStopLive = async () => {
     const roomId = accountInfo.value.biliRoomId || accountInfo.value.streamerInfo?.roomId
     if (!roomId) {
-      window.$message.error('无法获取直播间ID')
+      toast.error('无法获取直播间ID')
       return
     }
 
     try {
-      window.$message.info('正在下播...')
+      toast.info('正在下播...')
 
       // 自动停止 OBS 推流（在下播之前）
       if (obsStore.obsSceneConfig.autoToggleStream && obsStore.obsConnected) {
@@ -338,7 +339,7 @@ export function useLiveControl() {
       })
 
       if (response.code === 0) {
-        window.$message.success('下播成功！')
+        toast.success('下播成功！')
 
         // 设置直播状态
         isLiving.value = false
@@ -355,29 +356,29 @@ export function useLiveControl() {
           }
         }
       } else {
-        window.$message.error(`下播失败: ${response.message || response.msg}`)
+        toast.error(`下播失败: ${response.message || response.msg}`)
       }
     } catch (err: any) {
       console.error('下播失败:', err)
-      window.$message.error(`下播失败: ${err.message || err}`)
+      toast.error(`下播失败: ${err.message || err}`)
     }
   }
 
   // 更新直播间信息
   const handleUpdateRoom = async () => {
     if (!liveTitle.value && !liveAreaId.value) {
-      window.$message.error('请至少填写一项要修改的信息')
+      toast.error('请至少填写一项要修改的信息')
       return
     }
 
     const roomId = accountInfo.value.biliRoomId || accountInfo.value.streamerInfo?.roomId
     if (!roomId) {
-      window.$message.error('无法获取直播间ID')
+      toast.error('无法获取直播间ID')
       return
     }
 
     try {
-      window.$message.info('正在更新直播间信息...')
+      toast.info('正在更新直播间信息...')
 
       const response = await updateRoom({
         roomId,
@@ -386,7 +387,7 @@ export function useLiveControl() {
       })
 
       if (response.code === 0) {
-        window.$message.success('直播间信息更新成功！')
+        toast.success('直播间信息更新成功！')
         if (roomInfo.value) {
           if (liveTitle.value) {
             roomInfo.value.title = liveTitle.value
@@ -397,11 +398,11 @@ export function useLiveControl() {
           }
         }
       } else {
-        window.$message.error(`更新失败: ${response.message || response.msg}`)
+        toast.error(`更新失败: ${response.message || response.msg}`)
       }
     } catch (err: any) {
       console.error('更新直播间信息失败:', err)
-      window.$message.error(`更新失败: ${err.message || err}`)
+      toast.error(`更新失败: ${err.message || err}`)
     }
   }
 
@@ -416,18 +417,18 @@ export function useLiveControl() {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        window.$message.success('已复制到剪贴板')
+        toast.success('已复制到剪贴板')
       })
       .catch((err) => {
         console.error('复制失败:', err)
-        window.$message.error('复制失败')
+        toast.error('复制失败')
       })
   }
 
   // 同步推流码到 OBS
   const handleSyncStreamKeyToObs = async () => {
     if (!rtmpServer.value || !rtmpCode.value) {
-      window.$message.error('推流信息不完整')
+      toast.error('推流信息不完整')
       return
     }
     await obsStore.syncStreamKeyToObs(rtmpServer.value, rtmpCode.value)
@@ -459,9 +460,15 @@ export function useLiveControl() {
     }
   })
 
+  // 与全局在播状态保持同步（覆盖外部/直播姬开播或下播场景）
+  watch(isLiveStreaming, (live) => {
+    isLiving.value = live
+  })
+
   // 当 roomInfo 异步更新且当前未选择分区时，同步一次分区
   watch(roomInfo, (val) => {
     if (!val) return
+    isLiving.value = val.live_status === 1
     if (!liveTitle.value) {
       liveTitle.value = val.title || ''
     }

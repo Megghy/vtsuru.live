@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { EventDataTypes } from './eventDataTypes'
+import type { GuardLevel } from './guardLevel'
 
 export interface RequestProcessVoteEvent {
   type: EventDataTypes
@@ -18,7 +19,13 @@ export interface RequestProcessVoteEvent {
   /** @nullable */
   msg?: string | null
   time: number
+  num: number
   price: number
+  guard_level: GuardLevel
+  fans_medal_level: number
+  /** @nullable */
+  fans_medal_name?: string | null
+  fans_medal_wearing_status: boolean
   /** @nullable */
   eventId?: string | null
 }

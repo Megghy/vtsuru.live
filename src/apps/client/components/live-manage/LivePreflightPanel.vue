@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
-import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import { CheckCircle2, RefreshCw } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { Alert, AlertDescription } from '@/shared/ui/alert'
@@ -49,7 +48,7 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
       <div class="flex-between gap-3 max-[480px]:items-start">
         <div>
           <h2 class="flex items-center gap-1.5 m-0 text-sm font-semibold text-foreground">
-            <CheckmarkCircle24Regular class="size-4.5 text-primary" />
+            <CheckCircle2 class="size-4.5 text-primary" />
             开播前检查
           </h2>
           <p class="mt-0.5 text-xs text-muted-foreground">连接状态实时更新；登录与 OBS 配置可手动刷新。</p>
@@ -60,7 +59,7 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
           :disabled="refreshing"
           @click="$emit('refresh')"
         >
-          <ArrowSync24Regular
+          <RefreshCw
             class="size-3.5"
             :class="{ 'animate-spin': refreshing }"
           />

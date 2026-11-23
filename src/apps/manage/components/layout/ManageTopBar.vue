@@ -4,7 +4,7 @@ import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
 import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
 import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
 import MenuOutline from '@vicons/ionicons5/es/MenuOutline'
-import { Search } from 'lucide-vue-next'
+import { BookOpen, Search } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -144,6 +144,20 @@ async function goToUserPage(accountName?: string) {
       </Button>
 
       <NotificationsPopover v-if="workspace === 'streamer'" />
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="使用文档"
+            @click="router.push({ name: 'docs-index' })"
+          >
+            <BookOpen class="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>使用文档</TooltipContent>
+      </Tooltip>
 
       <ThemeToggleButton />
 

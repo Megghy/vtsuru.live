@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import Box24Regular from '@vicons/fluent/es/Box24Regular'
-import Heart24Filled from '@vicons/fluent/es/Heart24Filled'
-import VehicleShip24Filled from '@vicons/fluent/es/VehicleShip24Filled'
+import { Heart, Package, Ship } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 
 import { EventDataTypes } from '@/api/generated/model'
@@ -71,7 +69,7 @@ const {
               <TooltipTrigger as-child>
                 <span class="gift-box-badge">
                   <component
-                    :is="Box24Regular"
+                    :is="Package"
                     style="width: 12px; height: 12px"
                   />
                   <span v-if="giftDisplay.mysteryBoxPriceText">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
@@ -162,7 +160,7 @@ const {
           :style="{ backgroundColor: guardColor }"
         >
           <component
-            :is="VehicleShip24Filled"
+            :is="Ship"
             style="width: 12px; height: 12px"
           />
         </span>
@@ -185,7 +183,7 @@ const {
         <template v-else-if="item.type === EventDataTypes.Like">
           <span class="like-badge">
             <component
-              :is="Heart24Filled"
+              :is="Heart"
               style="width: 12px; height: 12px; vertical-align: -2px; margin-right: 2px"
             />
             点赞了

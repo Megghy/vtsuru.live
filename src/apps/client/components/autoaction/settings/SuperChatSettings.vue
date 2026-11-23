@@ -6,14 +6,14 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 
-defineProps({
-  action: {
-    type: Object as () => AutoActionItem,
-    required: true,
-  },
-})
+const props = defineProps<{
+  action: AutoActionItem
+}>()
 
-// SC过滤模式选项
+if (!props.action.triggerConfig.scFilterMode) {
+  props.action.triggerConfig.scFilterMode = 'none'
+}
+
 const scFilterModeOptions = [
   { label: '不进行额外过滤', value: 'none' },
   { label: '按价格区间过滤', value: 'price' },
@@ -27,7 +27,7 @@ const scFilterModeOptions = [
   >
     <FormField
       type="select"
-      label="SC过滤模式"
+      label="SC 过滤模式"
       :options="scFilterModeOptions"
       v-model="action.triggerConfig.scFilterMode"
     />
@@ -38,7 +38,7 @@ const scFilterModeOptions = [
     >
       <FormField
         label="价格区间 (元)"
-        hint="仅当 SC 价格在区间内才触发感谢。最低填 30 元可自动忽略 B 站每日赠送的 2 元免费 SC；填 2 ~ 29 元可针对 2 元小额 SC 设置专属感谢话术。"
+        description="仅当 SC 金额落在区间内才触发。最低填 30 元可自动忽略 2 元小额 SC；填 2 ~ 29 元可单独配置小额 SC 话术。"
       >
         <div class="flex items-center gap-2">
           <NumberField
@@ -66,18 +66,8 @@ const scFilterModeOptions = [
       type="switch"
       variant="compact"
       title="防止重复发送"
-      hint="同一用户在单次直播中多次发送 SC 仅触发一次感谢"
+      hint="同一用户在本次会话中多次发送 SC 仅触发一次感谢（按规则独立记录）"
       v-model="action.triggerConfig.preventRepeat"
-    />
-
-    <SettingRow
-      type="number"
-      variant="compact"
-      title="单次合并上限"
-      hint="单条感谢弹幕中最多合并展示的用户数量"
-      :min="1"
-      :max="50"
-      v-model="action.actionConfig.maxUsersPerMsg"
     />
   </div>
 </template>

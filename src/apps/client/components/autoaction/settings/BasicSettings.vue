@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
+import { ActionType, Priority, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { FormField } from '@/shared/ui/form-field'
 import { SettingRow } from '@/shared/ui/setting-row'
@@ -22,17 +22,29 @@ const props = defineProps({
   },
 })
 
-// 需要模板内容的动作类型(发送弹幕/私信/执行命令)
-const requiresTemplate = computed(() =>
-  [ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG, ActionType.EXECUTE_COMMAND].includes(props.action.actionType),
-)
+const autoActionStore = useAutoAction()
 
 const nameInvalid = computed(() => !props.action.name?.trim())
-const templateInvalid = computed(
-  () => requiresTemplate.value && (typeof props.action.template !== 'string' || !props.action.template.trim()),
-)
 
-// 触发类型选项
+const enabledModel = computed({
+  get: () => props.action.enabled,
+  set: (val: boolean) => {
+    const existsInStore = autoActionStore.autoActions.some((a) => a.id === props.action.id)
+    if (existsInStore) {
+      autoActionStore.toggleAutoAction(props.action.id, val)
+    } else {
+      props.action.enabled = val
+    }
+  },
+})
+
+const priorityModel = computed({
+  get: () => String(Number(props.action.priority ?? Priority.NORMAL)),
+  set: (val: string) => {
+    props.action.priority = Number(val) as Priority
+  },
+})
+
 const triggerTypeOptions = [
   { label: '弹幕触发', value: TriggerType.DANMAKU },
   { label: '礼物感谢', value: TriggerType.GIFT },
@@ -44,69 +56,79 @@ const triggerTypeOptions = [
   { label: '积分商品兑换', value: TriggerType.POINT_REDEEM },
 ]
 
-// 操作类型选项
 const actionTypeOptions = [
   { label: '发送弹幕', value: ActionType.SEND_DANMAKU },
   { label: '发送私信', value: ActionType.SEND_PRIVATE_MSG },
-  { label: '执行命令', value: ActionType.EXECUTE_COMMAND },
-  { label: '播放音效（无需VTS）', value: ActionType.PLAY_AUDIO },
+  { label: '播放音效（无需 VTS）', value: ActionType.PLAY_AUDIO },
   { label: 'PNGtuber：切换表情', value: ActionType.PNGTUBER_EXPRESSION },
   { label: 'VTS：触发热键', value: ActionType.VTS_HOTKEY },
+  { label: 'VTS：切换表情', value: ActionType.VTS_EXPRESSION },
   { label: 'VTS：机位预设', value: ActionType.VTS_PRESET },
   { label: 'VTS：掉落道具', value: ActionType.VTS_DROP_ITEM },
   { label: 'VTS：参数注入', value: ActionType.VTS_PARAM_ADD },
   { label: 'VTS：运行宏', value: ActionType.VTS_MACRO },
   { label: 'VTS：配饰显隐', value: ActionType.VTS_ACCESSORY },
+  { label: 'VTS：模型染色', value: ActionType.VTS_COLOR_TINT },
+  { label: 'VTS：后处理滤镜', value: ActionType.VTS_POST_PROCESSING },
 ]
 
-// 优先级选项
 const priorityOptions = [
-  { label: '最高', value: Priority.HIGHEST },
-  { label: '高', value: Priority.HIGH },
-  { label: '普通', value: Priority.NORMAL },
-  { label: '低', value: Priority.LOW },
-  { label: '最低', value: Priority.LOWEST },
+  { label: '最高', value: String(Priority.HIGHEST) },
+  { label: '高', value: String(Priority.HIGH) },
+  { label: '普通', value: String(Priority.NORMAL) },
+  { label: '低', value: String(Priority.LOW) },
+  { label: '最低', value: String(Priority.LOWEST) },
 ]
 </script>
 
 <template>
   <Card>
     <CardHeader class="p-3 border-b">
-      <CardTitle>常规设置</CardTitle>
+      <CardTitle class="text-xs font-semibold">常规设置</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3 space-y-3">
-      <FormField
+      <div
         v-if="!hideName"
-        type="text"
-        label="操作名称"
-        placeholder="例如：给礼物老板点赞"
-        :error="nameInvalid ? '操作名称不能为空' : undefined"
-        :description="templateInvalid ? '当前动作需要设置模板内容，否则不会生效' : undefined"
-        v-model="action.name"
-      />
+        class="grid grid-cols-1 sm:grid-cols-2 gap-3"
+      >
+        <FormField
+          type="text"
+          label="规则名称"
+          placeholder="例如：感谢礼物老板"
+          :error="nameInvalid ? '规则名称不能为空' : undefined"
+          v-model="action.name"
+        />
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <FormField
+          type="text"
+          label="备注说明（可选）"
+          placeholder="用于列表快速辨识规则用途"
+          v-model="action.description"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
         <SettingRow
           v-if="!hideEnabled"
           type="switch"
           variant="compact"
-          title="是否启用"
-          v-model="action.enabled"
+          title="启用此规则"
+          v-model="enabledModel"
         />
 
         <SettingRow
           type="switch"
           variant="compact"
-          title="仅直播时"
-          hint="关闭直播后将不会触发此操作"
+          title="仅开播时触发"
+          hint="未开播时将跳过此规则"
           v-model="action.triggerConfig.onlyDuringLive"
         />
 
         <SettingRow
           type="switch"
           variant="compact"
-          title="忽略天选"
+          title="天选时刻暂停"
           hint="开启天选时刻期间暂停触发（防止被风控）"
           v-model="action.triggerConfig.ignoreTianXuan"
         />
@@ -129,8 +151,9 @@ const priorityOptions = [
         <FormField
           type="select"
           label="执行优先级"
+          description="同一事件命中多条规则时，优先级高的先执行"
           :options="priorityOptions"
-          v-model="action.priority"
+          v-model="priorityModel"
         />
       </div>
     </CardContent>

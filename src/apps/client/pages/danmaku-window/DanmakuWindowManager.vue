@@ -1,21 +1,12 @@
 <script setup lang="ts">
-import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
-import Color24Filled from '@vicons/fluent/es/Color24Filled'
-import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
-import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
-import Eye20Regular from '@vicons/fluent/es/Eye20Regular'
-import EyeOff20Regular from '@vicons/fluent/es/EyeOff20Regular'
-import Filter24Filled from '@vicons/fluent/es/Filter24Filled'
-import Payment20Regular from '@vicons/fluent/es/Payment20Regular'
-import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
-import Send24Filled from '@vicons/fluent/es/Send24Filled'
-import ThumbLike20Regular from '@vicons/fluent/es/ThumbLike20Regular'
-import WindowShield20Regular from '@vicons/fluent/es/WindowShield20Regular'
+import { Eye, EyeOff, Filter, Monitor, Palette, RotateCcw, Send, ShieldCheck, ThumbsUp, Trash2, Users, Wallet } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+import { DEFAULT_OVERLAY_POSITION } from '@/apps/client/utils/overlayWindow'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -106,7 +97,7 @@ function applyPreset(preset: keyof typeof presets) {
 }
 
 function resetWindowPosition() {
-  danmakuWindow.setDanmakuWindowPosition(0, 0)
+  danmakuWindow.setDanmakuWindowPosition(DEFAULT_OVERLAY_POSITION.x, DEFAULT_OVERLAY_POSITION.y)
   toast.success('窗口位置已重置至默认坐标')
 }
 
@@ -130,11 +121,15 @@ function toggleFilterType(val: string, checked: boolean) {
     >
       <template #actions>
         <Badge
-          variant="success"
-          class="h-6 px-2.5"
-          :class="danmakuWindow.isDanmakuWindowOpen ? ' ' : 'text-muted-foreground'"
+          :variant="danmakuWindow.isDanmakuWindowOpen ? 'success' : 'secondary'"
+          size="xs"
+          class="gap-1.5 px-2"
         >
-          {{ danmakuWindow.isDanmakuWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
+          <span
+            class="size-1.5 rounded-full"
+            :class="danmakuWindow.isDanmakuWindowOpen ? 'bg-emerald-500' : 'bg-muted-foreground/50'"
+          />
+          {{ danmakuWindow.isDanmakuWindowOpen ? '浮窗运行中' : '浮窗已关闭' }}
         </Badge>
 
         <Button
@@ -156,7 +151,7 @@ function toggleFilterType(val: string, checked: boolean) {
             :disabled="!danmakuWindow.isDanmakuWindowOpen"
             @click="danmakuWindow.sendTestDanmaku()"
           >
-            <Send24Filled class="size-3.5 text-sky-500" />
+            <Send class="size-3.5 text-sky-500" />
             测试弹幕
           </Button>
           <Button
@@ -165,7 +160,7 @@ function toggleFilterType(val: string, checked: boolean) {
             :disabled="!danmakuWindow.isDanmakuWindowOpen"
             @click="danmakuWindow.clearAllDanmaku()"
           >
-            <Delete24Regular class="size-3.5 text-amber-500" />
+            <Trash2 class="size-3.5 text-amber-500" />
             清空
           </Button>
         </div>
@@ -182,21 +177,21 @@ function toggleFilterType(val: string, checked: boolean) {
           value="appearance"
           class="gap-1.5"
         >
-          <Color24Filled class="size-3.5" />
+          <Palette class="size-3.5" />
           外观与预设
         </TabsTrigger>
         <TabsTrigger
           value="window"
           class="gap-1.5"
         >
-          <Desktop24Filled class="size-3.5" />
+          <Monitor class="size-3.5" />
           窗口与行为
         </TabsTrigger>
         <TabsTrigger
           value="filter"
           class="gap-1.5"
         >
-          <Filter24Filled class="size-3.5" />
+          <Filter class="size-3.5" />
           过滤与元素
         </TabsTrigger>
       </TabsList>
@@ -214,24 +209,24 @@ function toggleFilterType(val: string, checked: boolean) {
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div
-                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-[#18181b] text-[#fafafa]"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-[transform,border-color,box-shadow] duration-150 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-[#18181b] text-[#fafafa]"
                 @click="applyPreset('dark')"
               >
-                <div class="text-[13px] font-semibold">暗黑</div>
+                <div class="text-xs font-semibold">暗黑</div>
                 <div class="text-[11px] opacity-75 leading-relaxed">高对比暗色气泡，适合各类游戏背景</div>
               </div>
               <div
-                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-white text-[#18181b]"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-[transform,border-color,box-shadow] duration-150 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-white text-[#18181b]"
                 @click="applyPreset('light')"
               >
-                <div class="text-[13px] font-semibold">明亮</div>
+                <div class="text-xs font-semibold">明亮</div>
                 <div class="text-[11px] opacity-75 leading-relaxed">温润浅底灰字，高清晰度可读性</div>
               </div>
               <div
-                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-sm text-foreground"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-[transform,border-color,box-shadow] duration-150 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-sm text-foreground"
                 @click="applyPreset('transparent')"
               >
-                <div class="text-[13px] font-semibold">透明</div>
+                <div class="text-xs font-semibold">透明</div>
                 <div class="text-[11px] opacity-75 leading-relaxed">超低透明背景，零视觉遮挡</div>
               </div>
             </div>
@@ -320,7 +315,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="py-1"
                 >
                   <template #title>
-                    <Eye20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <Eye class="size-4 text-muted-foreground shrink-0" />
                     <span class="font-medium text-foreground truncate">显示观看人数</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showWatchedCount" />
@@ -332,7 +327,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="py-1"
                 >
                   <template #title>
-                    <ThumbLike20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <ThumbsUp class="size-4 text-muted-foreground shrink-0" />
                     <span class="font-medium text-foreground truncate">显示点赞互动数</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showLikeCount" />
@@ -344,7 +339,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="py-1"
                 >
                   <template #title>
-                    <Payment20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <Wallet class="size-4 text-muted-foreground shrink-0" />
                     <span class="font-medium text-foreground truncate">显示本场收益金额</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showIncome" />
@@ -357,7 +352,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="py-1"
                 >
                   <template #title>
-                    <EyeOff20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <EyeOff class="size-4 text-muted-foreground shrink-0" />
                     <span class="font-medium text-foreground truncate">脱敏隐藏金额</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.hideIncomeAmount" />
@@ -369,7 +364,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   class="py-1"
                 >
                   <template #title>
-                    <PeopleCommunity20Regular class="size-4 text-muted-foreground shrink-0" />
+                    <Users class="size-4 text-muted-foreground shrink-0" />
                     <span class="font-medium text-foreground truncate">显示在线人数</span>
                   </template>
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showOnlineCount" />
@@ -387,7 +382,7 @@ function toggleFilterType(val: string, checked: boolean) {
                     class="gap-1 shrink-0"
                     @click="(danmakuWindow.resetLiveStats(), toast.success('实时统计数据已重置'))"
                   >
-                    <ArrowReset24Regular class="size-3" />
+                    <RotateCcw class="size-3" />
                     重置统计
                   </Button>
                 </div>
@@ -481,6 +476,17 @@ function toggleFilterType(val: string, checked: boolean) {
                   :max="24"
                   :step="1"
                   @update:model-value="danmakuWindow.danmakuWindowSetting.fontSize = $event?.[0] ?? 14"
+                />
+              </FormField>
+
+              <FormField
+                label="显示字体"
+                class="min-w-0 sm:col-span-2"
+              >
+                <GoogleFontPicker
+                  :model-value="danmakuWindow.danmakuWindowSetting.fontFamily || null"
+                  placeholder="跟随系统默认字体"
+                  @update:model-value="danmakuWindow.danmakuWindowSetting.fontFamily = $event || ''"
                 />
               </FormField>
 
@@ -600,7 +606,7 @@ function toggleFilterType(val: string, checked: boolean) {
                 class="gap-1.5"
                 @click="resetWindowPosition"
               >
-                <ArrowReset24Regular class="size-3.5" />
+                <RotateCcw class="size-3.5" />
                 重置至默认坐标
               </Button>
             </div>
@@ -635,7 +641,7 @@ function toggleFilterType(val: string, checked: boolean) {
               class="py-1"
             >
               <template #title>
-                <WindowShield20Regular class="size-4 text-muted-foreground shrink-0" />
+                <ShieldCheck class="size-4 text-muted-foreground shrink-0" />
                 <span class="font-medium text-foreground truncate">防 OBS / 屏幕共享捕捉 (防抓取)</span>
               </template>
               <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.contentProtected" />

@@ -6,6 +6,39 @@ import { executeActions, filterValidActions } from '../actionUtils'
 import type { AutoActionItem, RuntimeState } from '../types'
 import { KeywordMatchType, TriggerType } from '../types'
 
+export function isKeywordMatch(
+  text: string,
+  keyword: string,
+  matchType: KeywordMatchType = KeywordMatchType.Contains,
+): boolean {
+  switch (matchType) {
+    case KeywordMatchType.Full:
+      return text === keyword
+    case KeywordMatchType.Contains:
+      return text.includes(keyword)
+    case KeywordMatchType.Regex:
+      try {
+        const regex = new RegExp(keyword)
+        return regex.test(text)
+      } catch (e) {
+        console.warn('无效的正则表达式:', keyword, e)
+        return false
+      }
+    default:
+      return text.includes(keyword)
+  }
+}
+
+export function matchesDanmakuTrigger(action: AutoActionItem, message: string): boolean {
+  const keywordMatchType = action.triggerConfig.keywordMatchType || KeywordMatchType.Contains
+  const keywordMatch = action.triggerConfig.keywords?.some((kw) => isKeywordMatch(message, kw, keywordMatchType))
+  if (!keywordMatch) return false
+
+  const blockwordMatchType = action.triggerConfig.blockwordMatchType || KeywordMatchType.Contains
+  const blockwordMatch = action.triggerConfig.blockwords?.some((bw) => isKeywordMatch(message, bw, blockwordMatchType))
+  return !blockwordMatch
+}
+
 /**
  * 自动回复模块
  * @param isLive 是否处于直播状态
@@ -17,36 +50,6 @@ export function useAutoReply(
   roomId: Ref<number | undefined>,
   sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
-  /**
-   * 检查关键词匹配
-   * @param text 要检查的文本
-   * @param keyword 关键词
-   * @param matchType 匹配类型
-   * @returns 是否匹配
-   */
-  function isKeywordMatch(
-    text: string,
-    keyword: string,
-    matchType: KeywordMatchType = KeywordMatchType.Contains,
-  ): boolean {
-    switch (matchType) {
-      case KeywordMatchType.Full:
-        return text === keyword
-      case KeywordMatchType.Contains:
-        return text.includes(keyword)
-      case KeywordMatchType.Regex:
-        try {
-          const regex = new RegExp(keyword)
-          return regex.test(text)
-        } catch (e) {
-          console.warn('无效的正则表达式:', keyword, e)
-          return false
-        }
-      default:
-        return text.includes(keyword) // 默认使用包含匹配
-    }
-  }
-
   /**
    * 处理弹幕事件
    * @param event 弹幕事件
@@ -71,22 +74,7 @@ export function useAutoReply(
         { sendLiveDanmaku },
         {
           isTest,
-          customFilters: [
-            // 关键词和屏蔽词检查
-            (action, _context) => {
-              const keywordMatchType = action.triggerConfig.keywordMatchType || KeywordMatchType.Contains
-              const keywordMatch = action.triggerConfig.keywords?.some((kw) =>
-                isKeywordMatch(message, kw, keywordMatchType),
-              )
-              if (!keywordMatch) return false
-
-              const blockwordMatchType = action.triggerConfig.blockwordMatchType || KeywordMatchType.Contains
-              const blockwordMatch = action.triggerConfig.blockwords?.some((bw) =>
-                isKeywordMatch(message, bw, blockwordMatchType),
-              )
-              return !blockwordMatch // 如果匹配屏蔽词返回false，否则返回true
-            },
-          ],
+          customFilters: [(action) => matchesDanmakuTrigger(action, message)],
         },
       )
     }

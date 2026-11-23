@@ -14,7 +14,11 @@ import type {
   PostApiVoteEndParams,
   RequestCreateBulletVote,
   RequestExtendVote,
+  RequestMergeVoteOption,
   RequestProcessVoteEvent,
+  RequestRemoveVoteOption,
+  RequestTiebreakDraw,
+  RequestTiebreakOvertime,
   ResponseResult,
   ResponseResultOfListOfResponseVoteSession,
   ResponseResultOfResponseVoteSession,
@@ -182,6 +186,36 @@ export const getApiVoteHistory = async (
   })
 }
 
+export const getPostApiVoteMergeOptionUrl = () => {
+  return `/api/vote/merge-option`
+}
+
+export const postApiVoteMergeOption = async (
+  requestMergeVoteOption?: RequestMergeVoteOption,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseVoteSession> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteMergeOptionUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestMergeVoteOption),
+  })
+}
+
 export const getGetApiVoteObsDataUrl = (params?: GetApiVoteObsDataParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -230,6 +264,62 @@ export const getApiVoteObsHash = async (
   })
 }
 
+export const getPostApiVotePauseUrl = () => {
+  return `/api/vote/pause`
+}
+
+export const postApiVotePause = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseVoteSession> => {
+  return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVotePauseUrl(), {
+    ...options,
+    method: 'POST',
+  })
+}
+
+export const getPostApiVoteRemoveOptionUrl = () => {
+  return `/api/vote/remove-option`
+}
+
+export const postApiVoteRemoveOption = async (
+  requestRemoveVoteOption?: RequestRemoveVoteOption,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseVoteSession> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteRemoveOptionUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestRemoveVoteOption),
+  })
+}
+
+export const getPostApiVoteResumeUrl = () => {
+  return `/api/vote/resume`
+}
+
+export const postApiVoteResume = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseVoteSession> => {
+  return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteResumeUrl(), {
+    ...options,
+    method: 'POST',
+  })
+}
+
 export const getPostApiVoteSaveConfigUrl = () => {
   return `/api/vote/save-config`
 }
@@ -257,6 +347,66 @@ export const postApiVoteSaveConfig = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(voteConfig),
+  })
+}
+
+export const getPostApiVoteTiebreakDrawUrl = () => {
+  return `/api/vote/tiebreak-draw`
+}
+
+export const postApiVoteTiebreakDraw = async (
+  requestTiebreakDraw?: RequestTiebreakDraw,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseVoteSession> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteTiebreakDrawUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestTiebreakDraw),
+  })
+}
+
+export const getPostApiVoteTiebreakOvertimeUrl = () => {
+  return `/api/vote/tiebreak-overtime`
+}
+
+export const postApiVoteTiebreakOvertime = async (
+  requestTiebreakOvertime?: RequestTiebreakOvertime,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseVoteSession> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteTiebreakOvertimeUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestTiebreakOvertime),
   })
 }
 

@@ -1,5 +1,6 @@
 import { defaultWindowIcon } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { Menu } from '@tauri-apps/api/menu'
 import type { TrayIconOptions } from '@tauri-apps/api/tray'
 import { TrayIcon } from '@tauri-apps/api/tray'
@@ -10,7 +11,7 @@ import { isPermissionGranted, onAction, requestPermission, sendNotification } fr
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { isLoggedIn, useAccount } from '@/api/account'
@@ -44,10 +45,28 @@ const accountInfo = useAccount()
 
 export const clientInited = ref(false)
 export const clientInitStage = ref('')
+export const isCheckingUpdate = ref(false)
+export const isClientVersionOutdated = computed(() => {
+  if (!isTauri() || !clientVersion.value) return false
+  return compareSemver(clientVersion.value, REQUIRED_CLIENT_VERSION) < 0
+})
+
 let tray: TrayIcon | undefined
 let updateCheckTimer: number | null = null
+let trayEventUnlisten: (() => void) | null = null
 const UPDATE_TOAST_ID = 'client-update-available'
 const UPDATE_PROGRESS_ID = 'client-update-progress'
+const NATIVE_TRAY_ID = 'main-tray'
+
+function compareSemver(a: string, b: string): number {
+  const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0)
+  const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diff = (pa[i] || 0) - (pb[i] || 0)
+    if (diff !== 0) return diff
+  }
+  return 0
+}
 
 function setInitStageSafely(stage: string) {
   if (clientInitStage.value !== '启动完成') {
@@ -56,93 +75,33 @@ function setInitStageSafely(stage: string) {
 }
 
 function startDanmakuClientInitFlow() {
-  const danmakuInitNoticeRef = window.$notification.info({
-    title: '正在初始化弹幕客户端...',
-    closable: false,
-  })
+  const loadingToastId = toast.loading('正在初始化弹幕客户端...')
   setInitStageSafely('初始化弹幕客户端...')
 
   void initDanmakuClient()
     .then((result) => {
       if (result.success) {
         info('[init] 弹幕客户端初始化完成')
-        window.$notification.success({
-          title: '弹幕客户端初始化完成',
-          duration: 3000,
-        })
+        toast.success('弹幕客户端初始化完成', { id: loadingToastId, duration: 3000 })
         setInitStageSafely('弹幕客户端初始化完成')
       } else {
         warn(`[init] 弹幕客户端初始化失败: ${result.message}`)
-        window.$notification.error({
-          title: '弹幕客户端初始化失败',
-          content: result.message || '请稍后重试',
+        toast.error('弹幕客户端初始化失败', {
+          id: loadingToastId,
+          description: result.message || '请稍后重试',
         })
         setInitStageSafely('弹幕客户端初始化失败')
       }
     })
     .catch((error) => {
       warn(`[init] 弹幕客户端初始化异常: ${error}`)
-      window.$notification.error({
-        title: '弹幕客户端初始化异常',
-        content: `${error}`,
+      toast.error('弹幕客户端初始化异常', {
+        id: loadingToastId,
+        description: `${error}`,
       })
       setInitStageSafely('弹幕客户端初始化失败')
     })
-    .finally(() => {
-      danmakuInitNoticeRef?.destroy?.()
-    })
 }
-
-// interface RtmpRelayState {
-//   roomId: number
-//   targetRtmpUrl: string
-// }
-
-// const RTMP_RELAY_STATE_KEY = 'webfetcher.rtmpRelay'
-// let hasTriedAutoResumeRtmp = false
-
-// async function tryAutoResumeRtmpRelay() {
-//   if (hasTriedAutoResumeRtmp) return
-//
-//   const store = useTauriStore()
-//   const saved = await store.get<RtmpRelayState | null>(RTMP_RELAY_STATE_KEY)
-//   if (!saved || !saved.roomId || !saved.targetRtmpUrl) {
-//     hasTriedAutoResumeRtmp = true
-//     return
-//   }
-//
-//   const room = roomInfo.value
-//   if (!room || room.live_status !== 1) {
-//     return
-//   }
-//
-//   if (room.room_id !== saved.roomId) {
-//     hasTriedAutoResumeRtmp = true
-//     return
-//   }
-//
-//   try {
-//     // 如果已经在进行 RTMP 转发，则不再重复启动
-//     try {
-//       const status = await invoke<{ is_relaying: boolean }>('get_rtmp_relay_status')
-//       if (status?.is_relaying) {
-//         info('[RTMP] 已在转发中，跳过自动恢复')
-//         hasTriedAutoResumeRtmp = true
-//         return
-//       }
-//     }
-//     catch (error) {
-//       warn(`[RTMP] 获取 RTMP 转发状态失败: ${error}`)
-//     }
-//
-//     await invoke('start_rtmp_relay', { targetUrl: saved.targetRtmpUrl })
-//     info('[RTMP] 检测到正在开播，已自动恢复 RTMP 转发')
-//   } catch (error) {
-//     warn(`[RTMP] 自动恢复 RTMP 转发失败: ${error}`)
-//   } finally {
-//     hasTriedAutoResumeRtmp = true
-//   }
-// }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return Promise.race([
@@ -159,35 +118,39 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 async function getTrayIcon(): Promise<TrayIconOptions['icon']> {
   try {
     const icon = await defaultWindowIcon()
-    if (icon) {
-      return icon
-    }
+    if (icon) return icon
   } catch (err) {
     warn(`[tray] 获取原生默认窗口图标失败: ${err}`)
   }
 
-  // 本地同源静态图标兜底 (1.5s 短超时)
   try {
     const res = await fetch('/favicon.ico', { signal: AbortSignal.timeout(1500) })
-    if (res.ok) {
-      return await res.arrayBuffer()
-    }
+    if (res.ok) return await res.arrayBuffer()
   } catch {}
 
-  // 远端 OSS 图标短超时兜底 (1.5s 短超时)
   try {
     const res = await fetch('https://oss.suki.club/vtsuru/icon.ico', { signal: AbortSignal.timeout(1500) })
-    if (res.ok) {
-      return await res.arrayBuffer()
-    }
+    if (res.ok) return await res.arrayBuffer()
   } catch {}
 
   return undefined
 }
 
 async function initSystemTray(appWindow: ReturnType<typeof getCurrentWindow>) {
-  setInitStageSafely('创建系统托盘...')
+  setInitStageSafely('检查系统托盘...')
   try {
+    // 若新版 Rust 宿主已在 setup 中创建原生托盘，跳过前端重复创建
+    const existingNativeTray = await TrayIcon.getById(NATIVE_TRAY_ID).catch(() => null)
+    if (existingNativeTray) {
+      info('[tray] 检测到 Rust 原生托盘已就绪，跳过前端重复创建')
+      if (!trayEventUnlisten) {
+        trayEventUnlisten = await listen('tray://check-update', () => {
+          void checkUpdate(true)
+        })
+      }
+      return
+    }
+
     if (tray) {
       try {
         await tray.close()
@@ -201,8 +164,8 @@ async function initSystemTray(appWindow: ReturnType<typeof getCurrentWindow>) {
           id: 'show-main',
           text: '显示主界面',
           action: () => {
-            void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
             void appWindow.unminimize().catch(() => {})
+            void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
             void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
           },
         },
@@ -240,20 +203,19 @@ async function initSystemTray(appWindow: ReturnType<typeof getCurrentWindow>) {
       tooltip: 'VTsuru 事件收集器',
       ...(icon ? { icon } : {}),
       action: (event) => {
-        // 仅在左键单击或双击时激活并显示主窗口；右键由系统原生弹出菜单
         if (
           (event.type === 'Click' && event.button === 'Left' && event.buttonState === 'Up') ||
           event.type === 'DoubleClick'
         ) {
-          void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
           void appWindow.unminimize().catch(() => {})
+          void appWindow.show().catch(async (err) => warn(`[tray] 显示窗口失败: ${err}`))
           void appWindow.setFocus().catch(async (err) => warn(`[tray] 聚焦窗口失败: ${err}`))
         }
       },
     }
 
     tray = await TrayIcon.new(options)
-    info('[tray] 系统托盘创建成功')
+    info('[tray] 兼容模式前端托盘创建成功')
   } catch (err) {
     warn(`[tray] 系统托盘创建失败，降级跳过: ${err}`)
   } finally {
@@ -262,16 +224,14 @@ async function initSystemTray(appWindow: ReturnType<typeof getCurrentWindow>) {
 }
 
 export function startUpdateCheck() {
-  // 立即检查一次更新
-  void checkUpdatePeriodically()
-
-  // 之后每 6 小时检查一次更新
+  void checkUpdate(false)
+  if (updateCheckTimer !== null) clearInterval(updateCheckTimer)
   updateCheckTimer = window.setInterval(
     () => {
-      void checkUpdatePeriodically()
+      void checkUpdate(false)
     },
     6 * 60 * 60 * 1000,
-  ) // 6 hours
+  )
   info('[更新检查] 定时器已启动，间隔 6 小时')
 }
 
@@ -285,26 +245,30 @@ export function stopUpdateCheck() {
   toast.dismiss(UPDATE_PROGRESS_ID)
 }
 
-async function checkUpdatePeriodically() {
+/**
+ * 统一的更新检查与安装入口（定时与设置页手动检查共用）
+ */
+export async function checkUpdate(manual = false): Promise<boolean> {
+  if (isCheckingUpdate.value) return false
+  isCheckingUpdate.value = true
   try {
-    info('[更新检查] 开始检查更新...')
+    info(`[更新检查] 开始检查更新 (manual=${manual})...`)
     const update = await check()
 
     if (update) {
       info(`[更新检查] 发现新版本: ${update.version}`)
-
-      // 发送 Windows 通知
       const permissionGranted = await isPermissionGranted()
       if (permissionGranted) {
         sendNotification({
           title: 'VTsuru.Client 更新可用',
-          body: `发现新版本 ${update.version}，点击通知查看详情`,
+          body: `发现新版本 ${update.version}，点击应用内通知可立即更新`,
         })
       }
 
-      toast.warning('发现新版本', {
+      const summary = update.body?.trim() ? `\n${update.body.trim().slice(0, 120)}` : ''
+      toast.warning(`发现新版本 ${update.version}`, {
         id: UPDATE_TOAST_ID,
-        description: `VTsuru.Client ${update.version} 现已可用${update.date ? `\n${update.date}` : ''}`,
+        description: `VTsuru.Client ${update.version} 现已可用${update.date ? ` (${update.date})` : ''}${summary}`,
         duration: Infinity,
         action: {
           label: '立即更新',
@@ -315,11 +279,22 @@ async function checkUpdatePeriodically() {
           onClick: handleUpdateDismiss,
         },
       })
-    } else {
-      info('[更新检查] 当前已是最新版本')
+      return true
     }
+
+    info('[更新检查] 当前已是最新版本')
+    if (manual) {
+      toast.success('当前已是最新版本')
+    }
+    return false
   } catch (error) {
     warn(`[更新检查] 检查更新失败: ${error}`)
+    if (manual) {
+      toast.error('检查更新失败', { description: `${error}` })
+    }
+    return false
+  } finally {
+    isCheckingUpdate.value = false
   }
 }
 
@@ -331,7 +306,7 @@ function showUpdateProgress(description: string) {
   })
 }
 
-async function handleUpdateInstall(update: any) {
+async function handleUpdateInstall(update: NonNullable<Awaited<ReturnType<typeof check>>>) {
   try {
     toast.dismiss(UPDATE_TOAST_ID)
     let downloaded = 0
@@ -339,7 +314,7 @@ async function handleUpdateInstall(update: any) {
     showUpdateProgress('准备下载更新...')
 
     info('[更新] 开始下载并安装更新')
-    await update.downloadAndInstall((event: any) => {
+    await update.downloadAndInstall((event) => {
       switch (event.event) {
         case 'Started':
           contentLength = event.data.contentLength || 0
@@ -355,7 +330,6 @@ async function handleUpdateInstall(update: any) {
           showUpdateProgress(
             contentLength > 0 ? `已下载 ${formatMb(downloadedMb)}MB / ${formatMb(totalMb)}MB` : '正在下载更新...',
           )
-          info(`[更新] 已下载 ${downloaded} / ${contentLength} 字节`)
           break
         }
         case 'Finished':
@@ -369,7 +343,6 @@ async function handleUpdateInstall(update: any) {
     info('[更新] 更新安装完成，准备重启应用')
     toast.success('更新完成', { description: '应用将在 3 秒后重启', duration: 3000 })
 
-    // 延迟 3 秒后重启
     await new Promise((resolve) => setTimeout(resolve, 3000))
     try {
       await useWebFetcher().Stop()
@@ -389,28 +362,34 @@ function handleUpdateDismiss() {
   info('[更新] 用户选择稍后更新')
 }
 
-export async function initAll(isOnBoot: boolean) {
-  const setting = useSettings()
+export async function initAll(_isOnBoot?: boolean) {
+  const settings = useSettings()
   if (clientInited.value) {
     return
   }
   clientInitStage.value = '初始化中...'
   await initClientVersion()
   if (!isTauri()) {
-    console.warn('[init] 非 Tauri 环境，跳过客户端原生初始化')
+    if (isDev) {
+      console.info('[init] Dev 网页调试模式：跳过 Tauri 原生初始化，仅加载纯前端客户端 Store')
+      clientInitStage.value = '加载网页调试模块...'
+      await settings.init()
+      usePngtuberDriver()
+      useAutoAction().init()
+      void useVtsStore()
+        .init()
+        .catch((err) => console.warn('[VTS] 网页调试初始化失败:', err))
+    } else {
+      console.warn('[init] 非 Tauri 环境，跳过客户端原生初始化')
+    }
     clientInited.value = true
     clientInitStage.value = '启动完成'
     return
   }
   info(`[init] 当前 client 版本: ${clientVersion.value ?? '未知'} (前端所需最低: ${REQUIRED_CLIENT_VERSION})`)
-  // 初始检查更新（不阻塞初始化）
-  if (!isDev) {
-    void checkUpdate()
-  }
+
   const appWindow = getCurrentWindow()
   let permissionGranted = await isPermissionGranted()
-
-  // If not we need to request it
   if (!permissionGranted) {
     const permission = await requestPermission()
     permissionGranted = permission === 'granted'
@@ -419,35 +398,43 @@ export async function initAll(isOnBoot: boolean) {
     }
   }
 
-  if (isOnBoot) {
-    if (setting.settings.bootAsMinimized && !isDev && (await appWindow.isVisible())) {
-      appWindow.hide()
+  initNotificationHandler()
+  await attachConsole()
+
+  clientInitStage.value = '加载设置...'
+  await settings.init()
+
+  // 仅在真正由系统开机自启启动（带 --autostart 参数）且用户开启了静默最小化时才隐藏主窗
+  const launchedByAutostart = await invoke<boolean>('is_autostart_launch').catch(() => false)
+  if (launchedByAutostart && settings.settings.bootAsMinimized && !isDev && (await appWindow.isVisible())) {
+    void appWindow.hide()
+    if (permissionGranted) {
       sendNotification({
         title: 'VTsuru.Client',
-        body: '已启动并最小化到托盘',
+        body: '已随系统启动并最小化到托盘',
       })
     }
   }
-  initNotificationHandler()
-  await attachConsole()
-  const settings = useSettings()
+
+  // 同步看门狗自动重载开关到 Rust 宿主（兼容老壳忽略异常）
+  if (settings.settings.watchdogAutoReload !== undefined) {
+    void invoke('set_heartbeat_auto_reload', { enabled: Boolean(settings.settings.watchdogAutoReload) }).catch(() => {})
+  }
+
   const biliCookie = useBiliCookie()
-  clientInitStage.value = '加载设置...'
-  await settings.init()
-  info('[init] 已加载账户信息')
-  clientInitStage.value = '加载 Bilibili Cookie...'
-  biliCookie.init()
-  useBiliAccountManager().init()
-  info('[init] 已加载bilibili cookie')
+  clientInitStage.value = '加载 Bilibili 账号与 Cookie...'
+  await biliCookie.init()
+  info('[init] 已加载 Bilibili 账号与 Cookie')
+
   clientInitStage.value = '初始化基础信息...'
   initInfo()
-  info('[init] 开始更新数据')
 
-  // 创建系统托盘（设 4s 熔断超时与异常隔离，绝不阻塞客户端核心启动流程）
   await withTimeout(initSystemTray(appWindow), 4000, undefined)
 
   const shouldInitDanmakuClient =
-    isLoggedIn.value && accountInfo.value.isBiliVerified && !setting.settings.dev_disableDanmakuClient
+    isLoggedIn.value &&
+    (accountInfo.value.isBiliVerified || accountInfo.value.isBiliAuthed) &&
+    !settings.settings.dev_disableDanmakuClient
   if (shouldInitDanmakuClient) {
     startDanmakuClientInitFlow()
   } else {
@@ -456,30 +443,25 @@ export async function initAll(isOnBoot: boolean) {
 
   appWindow.setMinSize(new PhysicalSize(860, 580))
 
-  getAllWebviewWindows().then(async (windows) => {
-    const w = windows.find((win) => win.label === 'danmaku-window')
-    if (w) {
-      const useWindow = useDanmakuWindow()
-      useWindow.init()
-
-      await useLiveEmoji().ensureFresh()
-      if (await w.isVisible()) {
-        useWindow.isDanmakuWindowOpen = true
-
-        console.log('弹幕窗口已打开')
-      }
+  // 初始化浮窗 Store（不再依赖启动时预创建的常驻空 WebView，按需懒创建浮窗）
+  void (async () => {
+    const windows = await getAllWebviewWindows().catch(() => [])
+    const danmakuStore = useDanmakuWindow()
+    danmakuStore.init()
+    await useLiveEmoji().ensureFresh()
+    const dw = windows.find((win) => win.label === 'danmaku-window')
+    if (dw && (await dw.isVisible().catch(() => false))) {
+      danmakuStore.isDanmakuWindowOpen = true
     }
 
+    const { useGiftWindow } = await import('@/apps/client/store/useGiftWindow')
+    const giftStore = useGiftWindow()
+    giftStore.init()
     const gw = windows.find((win) => win.label === 'gift-window')
-    if (gw) {
-      const { useGiftWindow } = await import('@/apps/client/store/useGiftWindow')
-      const giftStore = useGiftWindow()
-      giftStore.init()
-      if (await gw.isVisible()) {
-        giftStore.isGiftWindowOpen = true
-      }
+    if (gw && (await gw.isVisible().catch(() => false))) {
+      giftStore.isGiftWindowOpen = true
     }
-  })
+  })()
 
   window.addEventListener('keydown', (event) => {
     if (event.key === 'F12') {
@@ -490,7 +472,7 @@ export async function initAll(isOnBoot: boolean) {
     }
   })
 
-  usePngtuberDriver() // Pinia owns the driver; audio starts only through an explicit user action.
+  usePngtuberDriver()
   useAutoAction().init()
   useBiliFunction().init()
   void useVtsStore()
@@ -499,8 +481,6 @@ export async function initAll(isOnBoot: boolean) {
   await useClientBackup().init()
   await useTranscription().init()
 
-  // 启动开放 RPC 接口 (供外部网页接入本地弹幕/发送能力)。
-  // 老版本 client 二进制没有 Rust 中继, 前端跑在其上时不启动, 避免徒劳等待。
   if (clientSupportsRpc()) {
     void useFetcherRpcServer()
       .start()
@@ -511,26 +491,25 @@ export async function initAll(isOnBoot: boolean) {
     )
   }
 
-  // 启动定期更新检查
   if (!isDev) {
     startUpdateCheck()
   }
 
-  // void tryAutoResumeRtmpRelay()
-
-  // watch(roomInfo, () => {
-  //   void tryAutoResumeRtmpRelay()
-  // })
-
   clientInited.value = true
   clientInitStage.value = '启动完成'
 }
+
 export function OnClientUnmounted() {
   if (clientInited.value) {
     clientInited.value = false
   }
 
+  void useVtsStore().dispose()
+  if (!isTauri()) return
+
   stopUpdateCheck()
+  trayEventUnlisten?.()
+  trayEventUnlisten = null
   void useClientBackup().dispose()
   void useTranscription().dispose()
   useFetcherRpcServer().dispose()
@@ -539,20 +518,15 @@ export function OnClientUnmounted() {
   void currentTray?.close()
 }
 
-export async function checkUpdate() {
-  // 手动检查更新（保留用于手动触发）
-  await checkUpdatePeriodically()
-}
-
 export const isInitedDanmakuClient = ref(false)
 export const isInitingDanmakuClient = ref(false)
 
-// 重置弹幕客户端初始化状态
 export function resetDanmakuClientInitState() {
   isInitedDanmakuClient.value = false
   isInitingDanmakuClient.value = false
   info('弹幕客户端初始化状态已重置')
 }
+
 export async function initDanmakuClient() {
   const biliCookie = useBiliCookie()
   const settings = useSettings()
@@ -561,17 +535,15 @@ export async function initDanmakuClient() {
     return { success: true, message: '' }
   }
 
-  // 检查是否启用 EventFetcher
   if (!settings.settings.enableEventFetcher) {
     info('EventFetcher 功能已禁用, 跳过弹幕客户端初始化')
     return { success: true, message: 'EventFetcher 已禁用' }
   }
 
   isInitingDanmakuClient.value = true
-  console.log(settings.settings)
   let result = { success: false, message: '' }
   try {
-    if (isLoggedIn) {
+    if (isLoggedIn.value) {
       if (settings.settings.useDanmakuClientType === 'openlive') {
         result = await initOpenLive()
       } else {
@@ -584,10 +556,7 @@ export async function initDanmakuClient() {
             result = await initOpenLive()
           } else {
             info('未设置bilibili cookie, 跳过弹幕客户端初始化')
-            window.$notification.warning({
-              title: '未设置bilibili cookie, 跳过弹幕客户端初始化',
-              duration: 5,
-            })
+            toast.warning('未设置 Bilibili Cookie，已跳过弹幕客户端初始化', { duration: 5000 })
             result = { success: false, message: '未设置bilibili cookie' }
           }
         } else {
@@ -610,29 +579,21 @@ export async function initDanmakuClient() {
     warn(`加载弹幕客户端失败: ${err}`)
     return { success: false, message: '加载弹幕客户端失败' }
   } finally {
-    if (result) {
+    isInitingDanmakuClient.value = false
+    if (result.success) {
       isInitedDanmakuClient.value = true
     }
-    isInitingDanmakuClient.value = false
   }
 }
+
 export async function initOpenLive() {
-  const reuslt = await callStartDanmakuClient()
-  if (reuslt?.success == true) {
+  const result = await callStartDanmakuClient()
+  if (result?.success === true) {
     info('已加载弹幕客户端 [openlive]')
   } else {
-    warn(`加载弹幕客户端失败 [openlive]: ${reuslt?.message}`)
+    warn(`加载弹幕客户端失败 [openlive]: ${result?.message}`)
   }
-  return reuslt
-}
-function initNotificationHandler() {
-  void onAction((event) => {
-    if (event.notification?.extra?.type === 'question-box') {
-      void openUrl(`${CN_HOST}/manage/question-box`)
-    }
-  }).catch((err) => {
-    warn(`[notification] 注册通知点击回调失败: ${err}`)
-  })
+  return result
 }
 
 export async function callStartDanmakuClient() {
@@ -665,4 +626,17 @@ export async function callStartDanmakuClient() {
     info('开始初始化弹幕客户端 [openlive]')
     return webFetcher.Start('openlive', undefined, true)
   }
+}
+
+function initNotificationHandler() {
+  void onAction((event) => {
+    const extra = (event as { notification?: { extra?: Record<string, unknown> } }).notification?.extra
+    if (extra?.type === 'question-box') {
+      void openUrl(`${CN_HOST}manage/question-box`)
+    } else if (extra?.type === 'goods-buy') {
+      void openUrl(`${CN_HOST}manage/goods-buy`)
+    }
+  }).catch((err) => {
+    warn(`[notification] 注册通知点击回调失败: ${err}`)
+  })
 }

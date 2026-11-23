@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
-import Cookies24Filled from '@vicons/fluent/es/Cookies24Filled'
-import PeopleCommunity24Filled from '@vicons/fluent/es/PeopleCommunity24Filled'
-import PersonAccounts24Filled from '@vicons/fluent/es/PersonAccounts24Filled'
+import { Cookie, RefreshCw, UserCog, Users } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -108,7 +105,7 @@ const poolCountBadge = computed(() => {
               :disabled="isCheckingAll"
               @click="handleCheckAll"
             >
-              <ArrowSync24Regular
+              <RefreshCw
                 class="size-3.5"
                 :class="{ 'animate-spin': isCheckingAll }"
               />
@@ -130,14 +127,14 @@ const poolCountBadge = computed(() => {
           value="main"
           class="gap-1.5"
         >
-          <Cookies24Filled class="size-3.5" />
+          <Cookie class="size-3.5" />
           <span>主播主凭据</span>
         </TabsTrigger>
         <TabsTrigger
           value="pool"
           class="gap-1.5"
         >
-          <PeopleCommunity24Filled class="size-3.5" />
+          <Users class="size-3.5" />
           <span>多账号管理池</span>
           <span class="text-[10px] text-muted-foreground ml-1"> ({{ accountManager.accounts.length }}) </span>
         </TabsTrigger>

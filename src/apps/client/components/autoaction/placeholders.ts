@@ -40,7 +40,7 @@ export const TRIGGER_PLACEHOLDERS: Partial<Record<TriggerType, Placeholder[]>> =
   [TriggerType.GUARD]: [
     { name: '{{guard.level}}', description: '开通的舰队等级 (1:总督, 2:提督, 3:舰长)' },
     { name: '{{guard.levelName}}', description: '开通的舰队等级名称' },
-    { name: '{{guard.giftCode}}', description: '舰长礼物代码 (预留字段)' },
+    { name: '{{guard.giftCode}}', description: '舰长专属礼品码（按开通等级自动匹配）' },
   ],
   [TriggerType.SUPER_CHAT]: [
     { name: '{{sc.message}}', description: 'SC留言内容' },

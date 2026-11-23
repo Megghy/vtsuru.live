@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { z } from 'zod'
 
 import type { VtsAvailableItemFile, VtsItemInstance } from '@/apps/client/api/vts/messages'
+import { resolveAudioPlayUrl } from '@/apps/client/store/autoAction/modules/audioPlayer'
 
 import type { VtsConfig } from './config'
 import type { VtsConnection } from './connection'
@@ -13,15 +14,48 @@ type ParamValue = { id: string; value: number; weight?: number }
 
 const PARAM_HOLD_INTERVAL_MS = 120
 
+function parseHexToRgb(hex: string): { r: number; g: number; b: number } {
+  const cleaned = hex.trim().replace(/^#/, '')
+  const normalized =
+    cleaned.length === 3
+      ? cleaned
+          .split('')
+          .map((ch) => ch + ch)
+          .join('')
+      : cleaned.slice(0, 6)
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    throw new Error(`无效的颜色值: ${hex}`)
+  }
+  return {
+    r: Number.parseInt(normalized.slice(0, 2), 16),
+    g: Number.parseInt(normalized.slice(2, 4), 16),
+    b: Number.parseInt(normalized.slice(4, 6), 16),
+  }
+}
+
 const num = z.number().finite()
 const replayPayloadSchemas = {
+  modelLoad: z.object({ modelID: z.string() }),
   hotkeyTrigger: z.object({ hotkeyID: z.string() }),
   expressionSet: z.object({ file: z.string(), active: z.boolean() }),
   moveModel: z.object({ timeInSeconds: num, positionX: num, positionY: num, rotation: num, size: num }),
-  injectParam: z.object({ values: z.array(z.object({ id: z.string(), value: num, weight: num.optional() })) }),
+  injectParam: z.object({
+    values: z.array(z.object({ id: z.string(), value: num, weight: num.optional() })),
+    mode: z.enum(['add', 'set']).optional(),
+  }),
   macroRun: z.object({ macroId: z.string() }),
   itemOpacity: z.object({ itemInstanceID: z.string(), opacity: num }),
   dropItem: z.object({ fileName: z.string(), x: num, size: num }),
+  colorTint: z.object({
+    colorHex: z.string().optional(),
+    rainbow: z.boolean().optional(),
+    reset: z.boolean().optional(),
+  }),
+  postProcessing: z.object({
+    enabled: z.boolean(),
+    preset: z.string().optional(),
+    fadeTime: num.optional(),
+  }),
 } satisfies Partial<Record<VtsOpKind, z.ZodType>>
 
 export const REPLAYABLE_KINDS = new Set(Object.keys(replayPayloadSchemas))
@@ -33,19 +67,28 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
   const itemInstancesInScene = ref<VtsItemInstance[]>([])
   const availableItemFiles = ref<VtsAvailableItemFile[]>([])
   const holdTimers = new Map<string, number>()
+  let activeMacroAbort: AbortController | null = null
+  let activeMacroAudio: HTMLAudioElement | null = null
+
+  async function loadModel(modelID: string) {
+    const model = conn.availableModels.value.find((m) => m.modelID === modelID)
+    await call('modelLoad', model?.modelName || modelID, async (c) => c.modelLoad({ modelID }), { modelID })
+    await Promise.all([conn.refreshModelState(), conn.refreshAvailableModels().catch(() => {})])
+  }
 
   async function triggerHotkey(hotkeyID: string) {
-    await call('hotkeyTrigger', hotkeyID, async (c) => c.hotkeyTrigger({ hotkeyID }), { hotkeyID })
-    // 表情类热键会改变表情状态, 同步给操作台高亮
-    if (conn.hotkeys.value.find((h) => h.hotkeyID === hotkeyID)?.type.includes('Expression')) {
+    const hk = conn.hotkeys.value.find((h) => h.hotkeyID === hotkeyID)
+    await call('hotkeyTrigger', hk?.name || hotkeyID, async (c) => c.hotkeyTrigger({ hotkeyID }), { hotkeyID })
+    if (hk?.type.includes('Expression')) {
       await conn.refreshExpressions()
     }
   }
 
   async function setExpression(file: string, active: boolean) {
+    const exp = conn.expressions.value.find((e) => e.file === file)
     await call(
       'expressionSet',
-      `${file}:${active}`,
+      `${exp?.name || file}: ${active ? '开启' : '关闭'}`,
       async (c) => c.expressionActivation({ expressionFile: file, active }),
       { file, active },
     )
@@ -66,7 +109,7 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     const payload = { ...t }
     await call(
       'moveModel',
-      undefined,
+      `x=${t.positionX.toFixed(2)}, y=${t.positionY.toFixed(2)}, size=${t.size.toFixed(0)}`,
       async (c) => c.moveModel({ ...payload, valuesAreRelativeToModel: false }),
       payload,
     )
@@ -78,14 +121,23 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     await moveModel(preset)
   }
 
-  async function injectParametersAdd(values: ParamValue[]) {
+  async function injectParameters(values: ParamValue[], options?: { mode?: 'add' | 'set'; silent?: boolean }) {
     if (values.length === 0) return
+    const mode = options?.mode ?? 'add'
+    if (options?.silent) {
+      await request(async (c) => c.injectParameterData({ mode, parameterValues: values }))
+      return
+    }
     await call(
       'injectParam',
-      values.map((v) => v.id).join(','),
-      async (c) => c.injectParameterData({ mode: 'add', parameterValues: values }),
-      { values },
+      `${values.map((v) => `${v.id}=${v.value}`).join(', ')} (${mode})`,
+      async (c) => c.injectParameterData({ mode, parameterValues: values }),
+      { values, mode },
     )
+  }
+
+  async function injectParametersAdd(values: ParamValue[]) {
+    return injectParameters(values, { mode: 'add' })
   }
 
   function stopParamHold(slotId: string) {
@@ -99,22 +151,57 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
       const slot = config.paramSlots.value.find((s) => s.id === slotId)
       if (!slot?.hold) return stopParamHold(slotId)
       try {
-        await injectParametersAdd([{ id: slot.parameterId, value: slot.value, weight: slot.weight }])
+        await injectParameters([{ id: slot.parameterId, value: slot.value, weight: slot.weight }], {
+          mode: slot.mode ?? 'add',
+          silent: true,
+        })
       } catch (err) {
         stopParamHold(slotId)
+        if (slot.hold) void config.upsertParamSlot({ ...slot, hold: false })
         conn.lastError.value = err instanceof Error ? err.message : String(err)
       }
     }, PARAM_HOLD_INTERVAL_MS)
     holdTimers.set(slotId, timer)
   }
 
-  function stopAllParamHolds() {
+  async function stopAllParamHolds() {
     for (const slotId of holdTimers.keys()) stopParamHold(slotId)
+    const held = config.paramSlots.value.filter((s) => s.hold)
+    if (held.length > 0) {
+      await Promise.all(held.map((s) => config.upsertParamSlot({ ...s, hold: false })))
+    }
   }
 
   async function removeParamSlot(id: string) {
     stopParamHold(id)
     await config.removeParamSlotConfig(id)
+  }
+
+  async function autoRebindAccessories() {
+    const instances = itemInstancesInScene.value
+    if (instances.length === 0) return
+    const aliveIds = new Set(instances.map((i) => i.instanceID))
+    const usedIds = new Set(
+      config.accessories.value.filter((a) => aliveIds.has(a.itemInstanceID)).map((a) => a.itemInstanceID),
+    )
+
+    for (const acc of config.accessories.value) {
+      if (acc.itemInstanceID && aliveIds.has(acc.itemInstanceID)) {
+        if (!acc.fileName) {
+          const matched = instances.find((i) => i.instanceID === acc.itemInstanceID)
+          if (matched) await config.upsertAccessory({ ...acc, fileName: matched.fileName })
+        }
+        continue
+      }
+      if (!acc.fileName) continue
+      const candidate =
+        instances.find((i) => i.fileName === acc.fileName && !usedIds.has(i.instanceID)) ??
+        instances.find((i) => i.fileName === acc.fileName)
+      if (candidate) {
+        usedIds.add(candidate.instanceID)
+        await config.upsertAccessory({ ...acc, itemInstanceID: candidate.instanceID })
+      }
+    }
   }
 
   async function refreshItems(options?: { includeFiles?: boolean }) {
@@ -127,8 +214,8 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     )
     canLoadItems.value = data.canLoadItemsRightNow
     itemInstancesInScene.value = data.itemInstancesInScene
-    // vtubestudio 库把 loadedCount 标成 boolean, 实际协议返回数量
     availableItemFiles.value = data.availableItemFiles as unknown as VtsAvailableItemFile[]
+    await autoRebindAccessories()
   }
 
   async function loadItem(
@@ -172,18 +259,48 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     )
   }
 
+  async function unloadAllPluginItems() {
+    await call('itemUnload', '本插件全部道具', async (c) =>
+      c.itemUnload({
+        unloadAllInScene: false,
+        unloadAllLoadedByThisPlugin: true,
+        allowUnloadingItemsLoadedByUserOrOtherPlugins: false,
+        instanceIDs: [],
+        fileNames: [],
+      }),
+    )
+    await refreshItems({ includeFiles: true })
+  }
+
+  async function pinItem(itemInstanceID: string, pin: boolean) {
+    await call(
+      'itemPin',
+      `${itemInstanceID.slice(0, 8)}:${pin ? '固定' : '取消固定'}`,
+      async (c) =>
+        c.itemPin({
+          itemInstanceID,
+          pin,
+          angleRelativeTo: 'RelativeToCurrentItemRotation',
+          sizeRelativeTo: 'RelativeToCurrentItemSize',
+          vertexPinType: 'Center',
+        }),
+      { itemInstanceID, pin },
+    )
+    await refreshItems({ includeFiles: false })
+  }
+
   async function setItemOpacity(itemInstanceID: string, opacity: number) {
     await call(
       'itemOpacity',
-      `${itemInstanceID}:${opacity}`,
+      `${itemInstanceID.slice(0, 8)}:${opacity}`,
       async (c) => c.itemAnimationControl({ itemInstanceID, opacity } as Parameters<typeof c.itemAnimationControl>[0]),
       { itemInstanceID, opacity },
     )
   }
 
   /** 道具从画面上方掉落, 落地后自动卸载 */
-  async function dropItem(fileName: string, options?: { x?: number; size?: number }) {
-    const x = options?.x ?? 0
+  async function dropItem(fileName: string, options?: { x?: number; size?: number; randomX?: boolean }) {
+    const x = options?.randomX ? Number(((Math.random() - 0.5) * 1.2).toFixed(2)) : (options?.x ?? 0)
     const size = options?.size ?? 0.32
     await history.withHistory(
       'dropItem',
@@ -199,14 +316,67 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
             }),
           )
           const landed = await conn.waitForItemEvent(instanceID, ['DroppedPinned', 'DroppedUnpinned'], 1600)
-          window.setTimeout(() => void unloadItems({ instanceIDs: [instanceID] }), landed ? 300 : 1200)
+          window.setTimeout(() => void unloadItems({ instanceIDs: [instanceID] }).catch(() => {}), landed ? 300 : 1200)
         } catch (err) {
-          await unloadItems({ instanceIDs: [instanceID] })
+          await unloadItems({ instanceIDs: [instanceID] }).catch(() => {})
           throw err
         }
       },
       { fileName, x, size },
     )
+  }
+
+  async function tintModel(options: {
+    colorHex?: string
+    rainbow?: boolean
+    reset?: boolean
+    mixWithSceneLighting?: number
+  }) {
+    const payload = { colorHex: options.colorHex, rainbow: options.rainbow, reset: options.reset }
+    const rgb =
+      options.reset || options.rainbow ? { r: 255, g: 255, b: 255 } : parseHexToRgb(options.colorHex || '#ffffff')
+    const detail = options.reset ? '重置颜色' : options.rainbow ? '彩虹染色' : options.colorHex || '#ffffff'
+    await call(
+      'colorTint',
+      detail,
+      async (c) =>
+        c.colorTint({
+          colorTint: {
+            colorR: rgb.r,
+            colorG: rgb.g,
+            colorB: rgb.b,
+            colorA: 255,
+            mixWithSceneLightingColor: options.mixWithSceneLighting ?? 0,
+            ...(options.rainbow ? { jeb_: true as const } : {}),
+          },
+          artMeshMatcher: { tintAll: true },
+        }),
+      payload,
+    )
+  }
+
+  async function updatePostProcessing(options: { enabled: boolean; preset?: string; fadeTime?: number }) {
+    const payload = { enabled: options.enabled, preset: options.preset, fadeTime: options.fadeTime }
+    const detail = options.enabled ? (options.preset ? `预设: ${options.preset}` : '开启滤镜') : '关闭滤镜'
+    const res = await call(
+      'postProcessing',
+      detail,
+      async (c) =>
+        c.postProcessingUpdate({
+          postProcessingOn: options.enabled,
+          setPostProcessingPreset: Boolean(options.enabled && options.preset),
+          presetToSet: options.preset,
+          postProcessingFadeTime: options.fadeTime ?? 0.3,
+        }),
+      payload,
+    )
+    if (conn.postProcessing.value) {
+      conn.postProcessing.value = {
+        ...conn.postProcessing.value,
+        active: res.postProcessingActive,
+        activePreset: res.activePreset,
+      }
+    }
   }
 
   async function toggleAccessory(id: string, visible: boolean) {
@@ -218,7 +388,7 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
   }
 
   async function triggerPanicHotkey(hotkeyID: string, label: string) {
-    if (!hotkeyID) throw new Error(`未配置“${label}”热键`)
+    if (!hotkeyID) throw new Error(`未配置“${label}”热键，请先在「设置」中绑定`)
     await triggerHotkey(hotkeyID)
   }
 
@@ -227,73 +397,155 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     if (!prank) throw new Error('整活不存在')
     if (prank.hotkeyID) return triggerHotkey(prank.hotkeyID)
     if (!prank.fileName) throw new Error('整活未配置道具文件或热键')
-    await dropItem(prank.fileName)
+    await dropItem(prank.fileName, {
+      x: prank.dropX,
+      size: prank.dropSize,
+      randomX: prank.randomX,
+    })
   }
 
-  async function playAudio(step: Extract<VtsMacroStep, { type: 'playAudio' }>) {
-    const audio = new Audio(step.url)
-    if (step.volume !== undefined) audio.volume = step.volume
+  function waitAbortable(seconds: number, signal: AbortSignal) {
+    return new Promise<void>((resolve, reject) => {
+      if (signal.aborted) return reject(new Error('宏已中止'))
+      const timer = window.setTimeout(() => {
+        signal.removeEventListener('abort', onAbort)
+        resolve()
+      }, seconds * 1000)
+      const onAbort = () => {
+        window.clearTimeout(timer)
+        reject(new Error('宏已中止'))
+      }
+      signal.addEventListener('abort', onAbort, { once: true })
+    })
+  }
+
+  async function playAudio(step: Extract<VtsMacroStep, { type: 'playAudio' }>, signal?: AbortSignal) {
+    const resolvedUrl = await resolveAudioPlayUrl(step.url)
+    const audio = new Audio(resolvedUrl)
+    if (step.volume !== undefined) audio.volume = Math.min(1, Math.max(0, step.volume))
+    activeMacroAudio = audio
     const ended = new Promise<void>((resolve, reject) => {
-      audio.onended = () => resolve()
-      audio.onerror = () => reject(new Error('音效播放失败'))
+      const cleanup = () => {
+        if (activeMacroAudio === audio) activeMacroAudio = null
+        signal?.removeEventListener('abort', onAbort)
+      }
+      const onAbort = () => {
+        audio.pause()
+        cleanup()
+        reject(new Error('宏已中止'))
+      }
+      audio.onended = () => {
+        cleanup()
+        resolve()
+      }
+      audio.onerror = () => {
+        cleanup()
+        reject(new Error('音效播放失败'))
+      }
+      signal?.addEventListener('abort', onAbort, { once: true })
     })
     await audio.play()
     if (step.waitForEnd) await ended
   }
 
-  async function runMacroStep(step: VtsMacroStep) {
+  async function runMacroStep(step: VtsMacroStep, signal: AbortSignal) {
+    if (signal.aborted) throw new Error('宏已中止')
     switch (step.type) {
       case 'hotkey':
         return triggerHotkey(step.hotkeyID)
+      case 'expression':
+        return setExpression(step.file, step.active)
+      case 'clearExpressions':
+        return clearExpressions()
       case 'preset':
         return applyPreset(step.presetId)
       case 'wait':
-        return new Promise<void>((r) => setTimeout(r, step.seconds * 1000))
+        return waitAbortable(step.seconds, signal)
       case 'injectParam':
-        return injectParametersAdd([{ id: step.parameterId, value: step.value, weight: step.weight }])
+        return injectParameters([{ id: step.parameterId, value: step.value, weight: step.weight }], {
+          mode: step.mode ?? 'add',
+        })
       case 'accessory':
         return toggleAccessory(step.accessoryId, step.visible)
       case 'prank':
         return runPrank(step.prankId)
+      case 'colorTint':
+        return tintModel({ colorHex: step.color, rainbow: step.rainbow, reset: step.reset })
+      case 'postProcessing':
+        return updatePostProcessing({ enabled: step.enabled, preset: step.preset, fadeTime: step.fadeTime })
       case 'playAudio':
-        return playAudio(step)
+        return playAudio(step, signal)
     }
+  }
+
+  function stopMacro() {
+    if (!activeMacroAbort) return
+    activeMacroAbort.abort()
+    activeMacroAbort = null
+    activeMacroAudio?.pause()
+    activeMacroAudio = null
+    macroRunning.value = null
   }
 
   async function runMacro(macroId: string) {
     const macro = config.macros.value.find((m) => m.id === macroId)
     if (!macro) throw new Error('宏不存在')
     if (!conn.connected.value) throw new Error('VTS 未连接')
+    if (activeMacroAbort) throw new Error('已有宏正在执行，请等待完成或先点击「停止」')
+
+    const controller = new AbortController()
+    activeMacroAbort = controller
     const totalSteps = macro.steps.length
     try {
       await history.withHistory(
         'macroRun',
-        macroId,
+        macro.name || macroId,
         async () => {
           for (const [stepIndex, step] of macro.steps.entries()) {
+            if (controller.signal.aborted) throw new Error('宏已中止')
             macroRunning.value = { macroId, stepIndex, totalSteps }
-            await runMacroStep(step)
+            await runMacroStep(step, controller.signal)
           }
         },
         { macroId },
       )
     } finally {
-      macroRunning.value = null
+      if (activeMacroAbort === controller) {
+        activeMacroAbort = null
+        macroRunning.value = null
+      }
     }
   }
+
+  conn.onSessionReady(() => {
+    void refreshItems({ includeFiles: true }).catch(() => {})
+  })
+
+  conn.onSessionReset(() => {
+    stopMacro()
+    void stopAllParamHolds()
+    canLoadItems.value = null
+    itemInstancesInScene.value = []
+    availableItemFiles.value = []
+  })
 
   const replay =
     <S extends z.ZodType>(schema: S, fn: (p: z.output<S>) => Promise<unknown>) =>
     async (raw: unknown) =>
       fn(schema.parse(raw))
   const replayers = {
+    modelLoad: replay(replayPayloadSchemas.modelLoad, async (p) => loadModel(p.modelID)),
     hotkeyTrigger: replay(replayPayloadSchemas.hotkeyTrigger, async (p) => triggerHotkey(p.hotkeyID)),
     expressionSet: replay(replayPayloadSchemas.expressionSet, async (p) => setExpression(p.file, p.active)),
     moveModel: replay(replayPayloadSchemas.moveModel, moveModel),
-    injectParam: replay(replayPayloadSchemas.injectParam, async (p) => injectParametersAdd(p.values)),
+    injectParam: replay(replayPayloadSchemas.injectParam, async (p) =>
+      injectParameters(p.values, { mode: p.mode ?? 'add' }),
+    ),
     macroRun: replay(replayPayloadSchemas.macroRun, async (p) => runMacro(p.macroId)),
     itemOpacity: replay(replayPayloadSchemas.itemOpacity, async (p) => setItemOpacity(p.itemInstanceID, p.opacity)),
     dropItem: replay(replayPayloadSchemas.dropItem, async (p) => dropItem(p.fileName, p)),
+    colorTint: replay(replayPayloadSchemas.colorTint, tintModel),
+    postProcessing: replay(replayPayloadSchemas.postProcessing, updatePostProcessing),
   } satisfies Record<keyof typeof replayPayloadSchemas, (raw: unknown) => Promise<unknown>>
 
   async function replayHistoryRecord(recordId: string) {
@@ -309,12 +561,14 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     itemInstancesInScene,
     availableItemFiles,
 
+    loadModel,
     triggerHotkey,
     setExpression,
     toggleExpression,
     clearExpressions,
     moveModel,
     applyPreset,
+    injectParameters,
     injectParametersAdd,
     startParamHold,
     stopParamHold,
@@ -323,12 +577,17 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     refreshItems,
     loadItem,
     unloadItems,
+    unloadAllPluginItems,
+    pinItem,
     setItemOpacity,
     dropItem,
+    tintModel,
+    updatePostProcessing,
     toggleAccessory,
     panicCalibrate: async () => triggerPanicHotkey(config.panicConfig.value.calibrateHotkeyId, '校准'),
     panicResetPhysics: async () => triggerPanicHotkey(config.panicConfig.value.resetPhysicsHotkeyId, '重置物理'),
     runMacro,
+    stopMacro,
     replayHistoryRecord,
   }
 }

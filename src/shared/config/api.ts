@@ -24,6 +24,10 @@ const API_MANUAL_SELECTION_KEY = 'vtsuru:settings:api-selection-manual'
 const API_FAILOVER_SESSION_KEY = 'vtsuru:runtime:api-failover'
 
 export const isTauri = () => '__TAURI__' in window || '__TAURI_INTERNAL__' in window
+/** 本地 dev 网页调试模式（非 Tauri 壳，允许初始化纯前端客户端 Store 与本地 WebSocket 功能） */
+export const isClientWebDebug = () => !isTauri() && isDev
+/** 允许使用本地 VTube Studio（桌面客户端，或本地 dev 网页直连 ws://127.0.0.1） */
+export const canUseVts = () => isTauri() || isDev
 
 export interface APIConfig {
   name: string

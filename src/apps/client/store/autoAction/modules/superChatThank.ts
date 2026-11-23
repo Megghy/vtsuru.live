@@ -6,6 +6,32 @@ import { executeActions, filterValidActions } from '../actionUtils'
 import type { AutoActionItem, RuntimeState } from '../types'
 import { TriggerType } from '../types'
 
+export function matchesSuperChatTrigger(action: AutoActionItem, event: EventModel): boolean {
+  if (!action.triggerConfig.scFilterMode || action.triggerConfig.scFilterMode === 'none') {
+    return true
+  }
+
+  if (action.triggerConfig.scFilterMode === 'price') {
+    const price = event.price || 0
+    if (
+      action.triggerConfig.scMinPrice !== undefined &&
+      action.triggerConfig.scMinPrice !== null &&
+      price < action.triggerConfig.scMinPrice
+    ) {
+      return false
+    }
+    if (
+      action.triggerConfig.scMaxPrice !== undefined &&
+      action.triggerConfig.scMaxPrice !== null &&
+      price > action.triggerConfig.scMaxPrice
+    ) {
+      return false
+    }
+  }
+
+  return true
+}
+
 /**
  * 醒目留言感谢模块
  * @param isLive 是否处于直播状态
@@ -42,36 +68,7 @@ export function useSuperChatThank(
         { sendLiveDanmaku },
         {
           isTest,
-          customFilters: [
-            // SC价格过滤
-            (action, _context) => {
-              // 如果未设置SC过滤或选择了不过滤模式
-              if (!action.triggerConfig.scFilterMode || action.triggerConfig.scFilterMode === 'none') {
-                return true
-              }
-
-              // 价格过滤模式（支持最低与最高价格区间）
-              if (action.triggerConfig.scFilterMode === 'price') {
-                const price = event.price || 0
-                if (
-                  action.triggerConfig.scMinPrice !== undefined &&
-                  action.triggerConfig.scMinPrice !== null &&
-                  price < action.triggerConfig.scMinPrice
-                ) {
-                  return false
-                }
-                if (
-                  action.triggerConfig.scMaxPrice !== undefined &&
-                  action.triggerConfig.scMaxPrice !== null &&
-                  price > action.triggerConfig.scMaxPrice
-                ) {
-                  return false
-                }
-              }
-
-              return true
-            },
-          ],
+          customFilters: [(action) => matchesSuperChatTrigger(action, event)],
         },
       )
     }

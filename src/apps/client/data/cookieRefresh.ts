@@ -26,7 +26,8 @@ function str2ab(str: string): ArrayBuffer {
 export async function getCorrespondPath(timestamp: number): Promise<string> {
   try {
     const keyData = str2ab(BILI_REFRESH_PUBLIC_KEY)
-    const key = await window.crypto.subtle.importKey(
+    const subtle = globalThis.crypto.subtle
+    const key = await subtle.importKey(
       'spki',
       keyData,
       {
@@ -37,7 +38,7 @@ export async function getCorrespondPath(timestamp: number): Promise<string> {
       ['encrypt'],
     )
     const plainText = new TextEncoder().encode(`refresh_${timestamp}`)
-    const encrypted = await window.crypto.subtle.encrypt(
+    const encrypted = await subtle.encrypt(
       { name: 'RSA-OAEP' },
       key,
       plainText,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
+import { createDefaultAutoAction, validateLogicalExpression } from '@/apps/client/store/autoAction/utils'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
@@ -20,15 +20,9 @@ const props = defineProps({
   },
 })
 
-// 根据触发类型判断是否显示用户过滤选项
-const showUserFilter = computed(() => {
-  return !props.hideUserFilter && ![TriggerType.SCHEDULED].includes(props.action.triggerType)
-})
-
-// 获取默认配置作为比较基准
+const showUserFilter = computed(() => !props.hideUserFilter && props.action.triggerType !== TriggerType.SCHEDULED)
 const defaultAction = computed(() => createDefaultAutoAction(props.action.triggerType))
 
-// 检查设置项是否被修改
 function isModified(path: string, value: any) {
   const pathParts = path.split('.')
   let defaultValue: any = defaultAction.value
@@ -41,14 +35,10 @@ function isModified(path: string, value: any) {
       currentValue && typeof currentValue === 'object' ? currentValue[part as keyof typeof currentValue] : undefined
   }
 
-  if (value !== undefined) {
-    return value !== defaultValue
-  }
-
+  if (value !== undefined) return value !== defaultValue
   return currentValue !== defaultValue
 }
 
-// 检查用户过滤区域是否有修改
 const userFilterModified = computed(() => {
   if (!showUserFilter.value) return false
   return (
@@ -58,7 +48,6 @@ const userFilterModified = computed(() => {
   )
 })
 
-// 检查冷却控制区域是否有修改
 const cooldownModified = computed(() => {
   return (
     isModified('ignoreCooldown', props.action.ignoreCooldown) ||
@@ -67,14 +56,11 @@ const cooldownModified = computed(() => {
   )
 })
 
-// 检查逻辑表达式是否有修改
-const logicalExpressionModified = computed(() => {
-  return isModified('logicalExpression', props.action.logicalExpression)
-})
+const logicalExpressionModified = computed(() => isModified('logicalExpression', props.action.logicalExpression))
 
-// 检查自定义JS是否有修改
-const customJsModified = computed(() => {
-  return isModified('executeCommand', props.action.executeCommand)
+const expressionSyntaxError = computed(() => {
+  const err = validateLogicalExpression(props.action.logicalExpression)
+  return err ? `语法错误：${err}` : undefined
 })
 </script>
 
@@ -98,7 +84,11 @@ const customJsModified = computed(() => {
             >
               用户过滤条件
             </span>
-            <Badge v-if="userFilterModified" variant="warning" size="xs">
+            <Badge
+              v-if="userFilterModified"
+              variant="warning"
+              size="xs"
+            >
               已修改
             </Badge>
           </div>
@@ -108,7 +98,7 @@ const customJsModified = computed(() => {
           <SettingRow
             type="switch"
             variant="compact"
-            title="启用过滤"
+            title="启用通用用户筛选"
             v-model="action.triggerConfig.userFilterEnabled"
           />
 
@@ -119,13 +109,13 @@ const customJsModified = computed(() => {
             <SettingRow
               type="switch"
               variant="compact"
-              title="要求本房勋章"
+              title="要求佩戴粉丝勋章"
               v-model="action.triggerConfig.requireMedal"
             />
             <SettingRow
               type="switch"
               variant="compact"
-              title="要求任意舰长"
+              title="要求大航海身份"
               v-model="action.triggerConfig.requireCaptain"
             />
           </div>
@@ -144,7 +134,11 @@ const customJsModified = computed(() => {
             >
               频率与延迟控制
             </span>
-            <Badge v-if="cooldownModified" variant="warning" size="xs">
+            <Badge
+              v-if="cooldownModified"
+              variant="warning"
+              size="xs"
+            >
               已修改
             </Badge>
           </div>
@@ -154,8 +148,8 @@ const customJsModified = computed(() => {
           <SettingRow
             type="switch"
             variant="compact"
-            title="忽略全局冷却"
-            hint="开启后此操作不受全局发送频率限制的影响"
+            title="忽略单条规则冷却"
+            hint="开启后跳过下方设定的单条规则冷却时间；全局每分钟弹幕防吞限流仍会生效"
             v-model="action.ignoreCooldown"
           />
 
@@ -163,6 +157,7 @@ const customJsModified = computed(() => {
             type="number"
             variant="compact"
             title="延迟执行 (秒)"
+            hint="命中条件后延迟指定秒数再触发动作"
             :min="0"
             :max="600"
             v-model="action.actionConfig.delaySeconds"
@@ -171,9 +166,11 @@ const customJsModified = computed(() => {
           <SettingRow
             type="number"
             variant="compact"
-            title="冷却时间 (秒)"
+            title="规则冷却时间 (秒)"
+            hint="两次触发之间的最小间隔（忽略单条冷却开启时不生效）"
             :min="0"
             :max="3600"
+            :disabled="action.ignoreCooldown"
             v-model="action.actionConfig.cooldownSeconds"
           />
         </AccordionContent>
@@ -187,11 +184,22 @@ const customJsModified = computed(() => {
           <div class="flex items-center gap-2">
             <span
               class="text-xs font-semibold"
-              :class="logicalExpressionModified ? 'text-amber-500' : 'text-foreground'"
+              :class="expressionSyntaxError ? 'text-destructive' : logicalExpressionModified ? 'text-amber-500' : 'text-foreground'"
             >
               逻辑判断表达式
             </span>
-            <Badge v-if="logicalExpressionModified" variant="warning" size="xs">
+            <Badge
+              v-if="expressionSyntaxError"
+              variant="destructive"
+              size="xs"
+            >
+              语法错误
+            </Badge>
+            <Badge
+              v-else-if="logicalExpressionModified"
+              variant="warning"
+              size="xs"
+            >
               已配置
             </Badge>
           </div>
@@ -199,40 +207,12 @@ const customJsModified = computed(() => {
 
         <AccordionContent class="pt-2 pb-3 space-y-2">
           <FormField
-            type="textarea"
-            placeholder="输入表达式..."
-            control-class="font-mono resize-none min-h-[64px]"
-            description="使用 JavaScript 语法，仅在返回值为真时执行。例如：user.guardLevel > 0 || gift.price >= 10"
             v-model="action.logicalExpression"
-          />
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem
-        value="custom-js"
-        class="border rounded-md px-3 bg-card"
-      >
-        <AccordionTrigger class="py-2.5 hover:no-underline">
-          <div class="flex items-center gap-2">
-            <span
-              class="text-xs font-semibold"
-              :class="customJsModified ? 'text-amber-500' : 'text-foreground'"
-            >
-              自定义脚本 (JS)
-            </span>
-            <Badge v-if="customJsModified" variant="warning" size="xs">
-              已编写
-            </Badge>
-          </div>
-        </AccordionTrigger>
-
-        <AccordionContent class="pt-2 pb-3 space-y-2">
-          <FormField
             type="textarea"
-            placeholder="输入要执行的JS代码..."
-            control-class="font-mono resize-none min-h-[96px]"
-            description="在操作执行前运行。可访问 context, event, biliFunc 等变量。"
-            v-model="action.executeCommand"
+            placeholder="例如：user.guardLevel > 0 || gift.price >= 10"
+            control-class="font-mono resize-none min-h-[64px]"
+            :error="expressionSyntaxError"
+            description="使用同步 JavaScript 表达式，仅返回真值时执行。可直接访问 user、gift、sc、guard、danmaku、pointOrder、event 以及 inDanmaku()、giftValue()、hasMedal()、isCaptain() 等辅助变量。"
           />
         </AccordionContent>
       </AccordionItem>

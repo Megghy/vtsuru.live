@@ -4,51 +4,38 @@ import { computed } from 'vue'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType } from '@/apps/client/store/useAutoAction'
 
+import type { Placeholder } from '../placeholders'
 import TemplateEditor from '../TemplateEditor.vue'
 
-const props = defineProps({
-  action: {
-    type: Object as () => AutoActionItem,
-    required: true,
-  },
-  customTestContext: {
-    type: Object,
-    default: undefined,
-  },
-})
+const props = defineProps<{
+  action: AutoActionItem
+  customTestContext?: Record<string, any>
+  extraPlaceholders?: Placeholder[]
+}>()
 
-// 根据操作类型获取模板标题
 const templateTitle = computed(() => {
   switch (props.action.actionType) {
     case ActionType.SEND_DANMAKU:
       return '弹幕模板'
     case ActionType.SEND_PRIVATE_MSG:
       return '私信模板'
-    case ActionType.EXECUTE_COMMAND:
-      return '命令模板'
     default:
       return '消息模板'
   }
 })
 
-// 根据操作类型获取模板描述
 const templateDescription = computed(() => {
   switch (props.action.actionType) {
     case ActionType.SEND_DANMAKU:
-      return '发送到直播间的弹幕内容'
+      return '发送到直播间的弹幕内容（每行一条候选文案，支持变量与 JS 表达式）'
     case ActionType.SEND_PRIVATE_MSG:
-      return '发送给用户的私信内容'
-    case ActionType.EXECUTE_COMMAND:
-      return '执行的命令模板'
+      return '发送给用户的私信内容（支持变量与 JS 表达式）'
     default:
       return '消息内容模板'
   }
 })
 
-// Handle template updates from TemplateEditor
 function handleTemplateUpdate(payload: { index: number; value: string }) {
-  // Assuming index will always be 0 here as we only render one editor
-  // And assuming action.templates is a string based on previous findings
   if (payload.index === 0) {
     props.action.template = payload.value
   }
@@ -64,6 +51,7 @@ function handleTemplateUpdate(payload: { index: number; value: string }) {
       :description="templateDescription"
       :check-length="action.actionType === ActionType.SEND_DANMAKU"
       :custom-test-context="customTestContext"
+      :extra-placeholders="extraPlaceholders"
       class="template-editor"
       @update:template="handleTemplateUpdate"
     />

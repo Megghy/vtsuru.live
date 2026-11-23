@@ -10,6 +10,14 @@ import type { OrgMemberRoles } from './orgMemberRoles'
 export interface OrgInfoModel {
   id: number
   name: string
+  /** @nullable */
+  description?: string | null
   ownerUserId: number
+  /** @nullable */
+  ownerName?: string | null
   role: OrgMemberRoles
+  canViewRevenue: boolean
+  memberCount: number
+  streamerCount: number
+  liveStreamerCount: number
 }

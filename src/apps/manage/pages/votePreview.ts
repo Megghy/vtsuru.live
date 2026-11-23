@@ -67,6 +67,7 @@ export function createVotePreviewScene(
     isPaused: false,
     isUnlimited: false,
     isEnding: false,
+    winnerByDraw: false,
     showResults: config?.showResults ?? true,
     resultMode,
     theme: preset.theme,

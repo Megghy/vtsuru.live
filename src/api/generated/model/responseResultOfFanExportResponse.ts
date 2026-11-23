@@ -5,14 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgPointGoodsItem } from './orgPointGoodsItem'
+import type { FanExportResponse } from './fanExportResponse'
 
 /**
  * 统一响应信封：code / message / data
  */
-export interface ResponseResultOfOrgPointGoodsItemArray {
+export interface ResponseResultOfFanExportResponse {
   message: string
   code: number
-  /** @nullable */
-  data: OrgPointGoodsItem[] | null
+  data: FanExportResponse
 }

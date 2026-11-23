@@ -32,14 +32,24 @@ const HISTORY_KEYS = {
   [HistoryType.COMMAND]: 'autoAction_history_command',
 }
 
+// 按存储键串行化读写，防止并发触发丢失历史记录
+const writeQueues = new Map<string, Promise<void>>()
+
 // 环形队列添加记录
 async function addToCircularQueue(key: string, item: HistoryItem, capacity: number): Promise<void> {
-  const history = (await persistedGetJson<HistoryItem[]>(key)) ?? []
-  history.push(item)
-  if (history.length > capacity) {
-    history.splice(0, history.length - capacity)
-  }
-  await persistedSetJson(key, history)
+  const prev = writeQueues.get(key) ?? Promise.resolve()
+  const next = prev
+    .catch(() => {})
+    .then(async () => {
+      const history = (await persistedGetJson<HistoryItem[]>(key)) ?? []
+      history.push(item)
+      if (history.length > capacity) {
+        history.splice(0, history.length - capacity)
+      }
+      await persistedSetJson(key, history)
+    })
+  writeQueues.set(key, next)
+  await next
 }
 
 /**

@@ -1,6 +1,4 @@
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { debug, error, info } from '@tauri-apps/plugin-log'
-import { AES, enc, MD5 } from 'crypto-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -9,7 +7,8 @@ import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persis
 import type { BiliUserProfile } from '../data/models'
 import { QueryBiliAPI } from '../data/utils'
 import { refreshBiliCookieAsync } from '../data/cookieRefresh'
-import type { CookieCloudConfig, CookieCloudExportData } from './useBiliCookie'
+import type { CookieCloudConfig } from '../utils/cookieCloud'
+import { DEFAULT_COOKIE_CLOUD_HOST, fetchBiliCookieFromCloud } from '../utils/cookieCloud'
 import { useTauriStore } from './useTauriStore'
 
 // --- 类型定义 ---
@@ -49,7 +48,7 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
     fallbackToMain: true,
   })
   const cookieCloudStore = useTauriStore().getTarget<CookieCloudConfig>(BILI_MULTI_COOKIE_CLOUD_KEY, {
-    host: 'https://cookie.vtsuru.live',
+    host: DEFAULT_COOKIE_CLOUD_HOST,
     key: '',
     password: '',
   })
@@ -315,46 +314,7 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
       throw new Error('CookieCloud 配置不完整')
     }
 
-    const host = cloudConfig.host || 'https://cookie.vtsuru.live'
-    const url = new URL(host)
-    url.pathname = `/get/${cloudConfig.key}`
-
-    info(`[AccountManager] 正在从 CookieCloud (${url.hostname}) 获取数据...`)
-
-    const response = await tauriFetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    if (!response.ok) {
-      throw new Error(`CookieCloud 请求失败: ${response.status}`)
-    }
-
-    const json = await response.json()
-    let cookieString = ''
-
-    if (json.encrypted) {
-      const key = MD5(cloudConfig.key + '-' + cloudConfig.password)
-        .toString()
-        .substring(0, 16)
-      const decrypted = AES.decrypt(json.cookie_data, enc.Utf8.parse(key), {
-        iv: enc.Utf8.parse(key),
-      }).toString(enc.Utf8)
-
-      if (!decrypted) throw new Error('CookieCloud 解密失败，可能密码错误')
-      const data: CookieCloudExportData = JSON.parse(decrypted)
-      const biliCookies = data.cookie_data['bilibili.com'] || []
-      cookieString = biliCookies.map((item: { name: string; value: string }) => `${item.name}=${item.value}`).join('; ')
-    } else if (json.cookie_data) {
-      const data = json as CookieCloudExportData
-      const biliCookies = data.cookie_data['bilibili.com'] || []
-      cookieString = biliCookies.map((item: { name: string; value: string }) => `${item.name}=${item.value}`).join('; ')
-    }
-
-    if (!cookieString) {
-      throw new Error('未在 CookieCloud 中找到有效的 bilibili.com Cookie')
-    }
-
+    const cookieString = await fetchBiliCookieFromCloud(cloudConfig)
     const item = await addOrUpdateAccount(cookieString)
     await cookieCloudStore.set(cloudConfig)
     return [item]

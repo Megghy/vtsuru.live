@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import FolderOpen16Regular from '@vicons/fluent/es/FolderOpen16Regular'
-import MusicNote224Regular from '@vicons/fluent/es/MusicNote224Regular'
-import Play16Regular from '@vicons/fluent/es/Play16Regular'
+import { FolderOpen, Music, Play } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -71,7 +69,7 @@ async function testPlayAudio() {
   <Card>
     <CardHeader class="p-3 border-b flex-between flex-row">
       <div class="flex items-center gap-2">
-        <MusicNote224Regular class="size-4 text-primary" />
+        <Music class="size-4 text-primary" />
         <CardTitle>播放音效（无需连接 VTS）</CardTitle>
       </div>
       <Button
@@ -81,7 +79,7 @@ async function testPlayAudio() {
         :disabled="playing || !action.actionConfig.audioSource?.trim()"
         @click="testPlayAudio"
       >
-        <Play16Regular class="size-3.5" />
+        <Play class="size-3.5" />
         试听
       </Button>
     </CardHeader>
@@ -99,7 +97,7 @@ async function testPlayAudio() {
             class="gap-1 shrink-0"
             @click="pickLocalAudio"
           >
-            <FolderOpen16Regular class="size-4" />
+            <FolderOpen class="size-4" />
             选择文件
           </Button>
         </div>

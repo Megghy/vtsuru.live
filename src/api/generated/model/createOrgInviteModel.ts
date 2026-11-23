@@ -13,4 +13,6 @@ export interface CreateOrgInviteModel {
   expireDays?: number | null
   /** @nullable */
   targetUserId?: number | null
+  /** @nullable */
+  maxUses?: number | null
 }

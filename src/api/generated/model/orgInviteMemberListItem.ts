@@ -23,6 +23,8 @@ export interface OrgInviteMemberListItem {
   targetUserName?: string | null
   usedCount: number
   /** @nullable */
+  maxUses?: number | null
+  /** @nullable */
   lastUsedAt?: number | null
   isRevoked: boolean
 }

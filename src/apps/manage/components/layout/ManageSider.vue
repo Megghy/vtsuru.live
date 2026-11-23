@@ -534,7 +534,15 @@ async function go(name: string, query?: Record<string, string>) {
           反馈
         </Button>
       </div>
-      <div class="text-xs text-muted-foreground text-center">
+      <div class="text-xs text-muted-foreground text-center inline-flex items-center gap-2">
+        <Button
+          variant="link"
+          class="h-auto p-0 text-brand"
+          @click="go('docs-index')"
+        >
+          使用文档
+        </Button>
+        <span class="text-border">·</span>
         <Button
           variant="link"
           class="h-auto p-0 text-brand"

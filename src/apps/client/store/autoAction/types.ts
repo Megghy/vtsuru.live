@@ -23,12 +23,27 @@ export enum ActionType {
   PLAY_AUDIO = 'play_audio', // 播放本地/URL 音效（不依赖 VTS）
   PNGTUBER_EXPRESSION = 'pngtuber_expression', // 切换 PNGtuber 表情
   VTS_HOTKEY = 'vts_hotkey', // 触发 VTS hotkey
+  VTS_EXPRESSION = 'vts_expression', // 切换 VTS 表情
   VTS_PRESET = 'vts_preset', // 应用 VTS 机位预设
   VTS_DROP_ITEM = 'vts_drop_item', // 掉落 VTS 道具
-  VTS_PARAM_ADD = 'vts_param_add', // 注入 VTS 参数（mode=add）
+  VTS_PARAM_ADD = 'vts_param_add', // 注入 VTS 参数
   VTS_MACRO = 'vts_macro', // 运行 VTS 宏
   VTS_ACCESSORY = 'vts_accessory', // 配饰显隐
+  VTS_COLOR_TINT = 'vts_color_tint', // 模型染色
+  VTS_POST_PROCESSING = 'vts_post_processing', // 后处理滤镜
 }
+
+export const VTS_ACTION_TYPES = new Set<ActionType>([
+  ActionType.VTS_HOTKEY,
+  ActionType.VTS_EXPRESSION,
+  ActionType.VTS_PRESET,
+  ActionType.VTS_DROP_ITEM,
+  ActionType.VTS_PARAM_ADD,
+  ActionType.VTS_MACRO,
+  ActionType.VTS_ACCESSORY,
+  ActionType.VTS_COLOR_TINT,
+  ActionType.VTS_POST_PROCESSING,
+])
 
 // 关键词匹配类型
 export enum KeywordMatchType {
@@ -83,16 +98,26 @@ export interface AutoActionItem {
 
     // --- VTS 动作配置（按 actionType 使用） ---
     vtsHotkeyId?: string
+    vtsExpressionFile?: string
+    vtsExpressionActive?: boolean
     vtsPresetId?: string
     vtsItemFileName?: string
     vtsItemDropX?: number
     vtsItemDropSize?: number
+    vtsItemRandomX?: boolean
     vtsParamId?: string
     vtsParamValue?: number
     vtsParamWeight?: number
+    vtsParamMode?: 'add' | 'set'
     vtsMacroId?: string
     vtsAccessoryId?: string
     vtsAccessoryVisible?: boolean
+    vtsTintColor?: string
+    vtsTintRainbow?: boolean
+    vtsTintReset?: boolean
+    vtsPostProcessingEnabled?: boolean
+    vtsPostProcessingPreset?: string
+    vtsPostProcessingFadeTime?: number
   }
 }
 
@@ -131,9 +156,19 @@ export interface RuntimeState {
   lastExecutionTime: Record<string, number> // 上次执行时间
   aggregatedEvents: Record<string, any[]> // 聚合的事件
   scheduledTimers: Record<string, any | null> // 定时器 ID
-  timerStartTimes: Record<string, number> // <--- 新增：独立定时器启动时间戳
-  globalTimerStartTime: number | null // <--- 新增：全局定时器启动时间戳
-  sentGuardPms: Set<number> // 已发送的舰长私信
+  timerStartTimes: Record<string, number> // 独立定时器启动时间戳
+  globalTimerStartTime: number | null // 全局定时器启动时间戳
+  sentGuardPms: Set<number> // 兼容旧版：已发送的舰长私信
+  sentActionUsers?: Record<string, Set<string>> // 按规则 ID 隔离的已触发用户集合（preventRepeat）
+  sequentialLineIndex?: Record<string, number> // 按规则 ID 隔离的顺序多行模板游标
+}
+
+export interface SingleActionTestResult {
+  matched: boolean
+  reason?: string
+  renderedText?: string
+  executed: boolean
+  error?: string
 }
 
 export interface TriggerConfig {

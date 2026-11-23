@@ -45,6 +45,22 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: '/docs',
+    name: 'docs-index',
+    component: async () => import('@/apps/docs/components/DocsIndexView.vue'),
+    meta: {
+      title: '使用文档',
+    },
+  },
+  {
+    path: '/docs/:slug+',
+    name: 'docs-article',
+    component: async () => import('@/apps/docs/components/DocsArticleView.vue'),
+    meta: {
+      title: '使用文档',
+    },
+  },
+  {
     path: '/reset-password',
     name: 'resetPassword',
     component: async () => import('@/apps/web/pages/auth/ChangePasswordView.vue'),

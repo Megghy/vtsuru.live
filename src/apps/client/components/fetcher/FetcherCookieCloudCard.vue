@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { error as logError } from '@tauri-apps/plugin-log'
-import CloudDownloadOutline from '@vicons/ionicons5/es/CloudDownloadOutline'
-import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import { CloudDownload, RefreshCw } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -114,7 +113,6 @@ async function handleClearCookieCloudConfig() {
       <Badge
         variant="success"
         size="xs"
-        class="h-5"
         :class="
           biliCookie.cookieCloudState === 'valid'
             ? ' '
@@ -170,14 +168,13 @@ async function handleClearCookieCloudConfig() {
 
       <div class="flex items-center gap-2 pt-1">
         <Button
-          v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'"
           :disabled="isLoadingCookiecloud"
           @click="setCookieCloud"
         >
-          保存配置
+          {{ biliCookie.cookieCloudState === 'valid' ? '更新配置' : '保存配置' }}
         </Button>
         <Popconfirm
-          v-else
+          v-if="biliCookie.cookieCloudState !== 'unset'"
           title="清除配置"
           @positive-click="handleClearCookieCloudConfig"
         >
@@ -214,7 +211,7 @@ async function handleClearCookieCloudConfig() {
                 "
                 @click="manualSyncFromCloud"
               >
-                <CloudDownloadOutline class="size-3.5" />
+                <CloudDownload class="size-3.5" />
                 {{
                   syncCooldown.remaining.value > 0
                     ? `同步 Cookie (${syncCooldown.remaining.value}s)`
@@ -241,7 +238,7 @@ async function handleClearCookieCloudConfig() {
                 :disabled="!biliCookie.hasBiliCookie || checkCooldown.remaining.value > 0 || isCheckingCookie"
                 @click="manualCheckCookie"
               >
-                <RefreshOutline class="size-3.5" />
+                <RefreshCw class="size-3.5" />
                 {{
                   checkCooldown.remaining.value > 0
                     ? `检查状态 (${checkCooldown.remaining.value}s)`

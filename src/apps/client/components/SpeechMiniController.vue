@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
-import MicOff24Filled from '@vicons/fluent/es/MicOff24Filled'
-import Next20Filled from '@vicons/fluent/es/Next20Filled'
-import Pause20Filled from '@vicons/fluent/es/Pause20Filled'
-import Play20Filled from '@vicons/fluent/es/Play20Filled'
+import { Mic, MicOff, Pause, Play, SkipForward } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -76,7 +72,7 @@ function goToPage() {
                 @click="speechService.togglePause()"
               >
                 <component
-                  :is="isPaused ? Play20Filled : Pause20Filled"
+                  :is="isPaused ? Play : Pause"
                   class="size-3.5"
                 />
               </Button>
@@ -94,7 +90,7 @@ function goToPage() {
                 :disabled="!speechState.isSpeaking"
                 @click="speechService.skipCurrent()"
               >
-                <Next20Filled class="size-3.5" />
+                <SkipForward class="size-3.5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent> 跳过当前 </TooltipContent>
@@ -107,7 +103,7 @@ function goToPage() {
                 variant="destructive"
                 @click="speechService.stopSpeech()"
               >
-                <MicOff24Filled class="size-3.5" />
+                <MicOff class="size-3.5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent> 停止朗读并清空 </TooltipContent>
@@ -121,7 +117,7 @@ function goToPage() {
                 class="text-muted-foreground"
                 @click="goToPage"
               >
-                <Mic24Filled class="size-3.5" />
+                <Mic class="size-3.5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent> 打开读弹幕页面 </TooltipContent>

@@ -1,30 +1,34 @@
 <script setup lang="ts">
-import Info16Regular from '@vicons/fluent/es/Info16Regular'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
+import type { GuardLevel } from '@/api/generated/model'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
-const props = defineProps({
-  action: {
-    type: Object as () => AutoActionItem,
-    required: true,
-  },
-})
+const props = defineProps<{
+  action: AutoActionItem
+}>()
 
-// 舰长礼品码相关
 const tempGiftCodeLevel = ref('3')
 const tempGiftCode = ref('')
 
-// 添加礼品码
+const selectedGuardLevels = computed({
+  get: () => (props.action.triggerConfig.guardLevels ?? []).map(String),
+  set: (vals: string[]) => {
+    props.action.triggerConfig.guardLevels = vals.map((v) => Number(v) as GuardLevel)
+  },
+})
+
 function addGiftCode() {
   const code = tempGiftCode.value.trim()
   if (!code) return
@@ -34,9 +38,7 @@ function addGiftCode() {
     props.action.triggerConfig.giftCodes = []
   }
 
-  // 查找对应等级的礼品码数组
   let levelCodes = props.action.triggerConfig.giftCodes.find((gc) => gc.level === levelNum)
-
   if (!levelCodes) {
     levelCodes = { level: levelNum, codes: [] }
     props.action.triggerConfig.giftCodes.push(levelCodes)
@@ -50,18 +52,12 @@ function addGiftCode() {
   }
 }
 
-// 移除礼品码
 function removeGiftCode(levelIndex: number, codeIndex: number) {
-  if (
-    props.action.triggerConfig.giftCodes &&
-    props.action.triggerConfig.giftCodes[levelIndex] &&
-    props.action.triggerConfig.giftCodes[levelIndex].codes
-  ) {
-    props.action.triggerConfig.giftCodes[levelIndex].codes.splice(codeIndex, 1)
-
-    if (props.action.triggerConfig.giftCodes[levelIndex].codes.length === 0) {
-      props.action.triggerConfig.giftCodes.splice(levelIndex, 1)
-    }
+  const group = props.action.triggerConfig.giftCodes?.[levelIndex]
+  if (!group?.codes) return
+  group.codes.splice(codeIndex, 1)
+  if (group.codes.length === 0) {
+    props.action.triggerConfig.giftCodes?.splice(levelIndex, 1)
   }
 }
 
@@ -77,6 +73,13 @@ function getGuardLevelName(level: number): string {
       return '通用'
   }
 }
+
+function getGuardBadgeClass(level: number): string {
+  if (level === 3) return 'border-sky-500/40 text-sky-600 dark:text-sky-400 bg-sky-500/10'
+  if (level === 2) return 'border-violet-500/40 text-violet-600 dark:text-violet-400 bg-violet-500/10'
+  if (level === 1) return 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
+  return ''
+}
 </script>
 
 <template>
@@ -84,24 +87,47 @@ function getGuardLevelName(level: number): string {
     v-if="action.triggerType === TriggerType.GUARD"
     class="guard-trigger-settings space-y-3"
   >
+    <FormField
+      label="适用大航海等级"
+      description="不选则默认对所有大航海等级（总督/提督/舰长）生效"
+    >
+      <ToggleGroup
+        v-model="selectedGuardLevels"
+        type="multiple"
+        class="justify-start"
+      >
+        <ToggleGroupItem value="3">舰长</ToggleGroupItem>
+        <ToggleGroupItem value="2">提督</ToggleGroupItem>
+        <ToggleGroupItem value="1">总督</ToggleGroupItem>
+      </ToggleGroup>
+    </FormField>
+
     <SettingRow
       variant="compact"
       title="防止重复发送"
-      hint="同一用户在单次直播中多次上舰仅触发一次"
+      hint="同一用户在本次会话中多次上舰仅触发一次（按规则独立记录）"
     >
       <Switch v-model:checked="action.triggerConfig.preventRepeat" />
     </SettingRow>
 
     <div
       v-if="action.actionType === ActionType.SEND_PRIVATE_MSG"
-      class="gift-codes-section space-y-3 p-3 rounded-md border bg-card"
+      class="gift-codes-section space-y-3 p-3 rounded-md border bg-muted/20"
     >
       <div class="border-b pb-2">
         <span class="font-semibold text-xs text-foreground block">私信礼品码库</span>
-        <span class="text-xs text-muted-foreground mt-0.5 block">
-          当操作类型为“发送私信”时，可以设置在私信中发放礼品码。
+        <span class="text-[11px] text-muted-foreground mt-0.5 block">
+          在私信模板中使用 <code v-pre class="px-1 rounded bg-muted">{{guard.giftCode}}</code> 即可自动按开通等级抽取礼品码发放。
         </span>
       </div>
+
+      <SettingRow
+        variant="compact"
+        title="发送成功后自动消耗礼品码"
+        hint="开启后，私信成功发出的礼品码会立即从库存中移除，防止重复发给其他观众"
+      >
+        <Switch v-model:checked="action.triggerConfig.consumeGiftCode" />
+      </SettingRow>
 
       <div class="flex items-center gap-2">
         <div class="w-24 shrink-0">
@@ -110,20 +136,20 @@ function getGuardLevelName(level: number): string {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">总督</SelectItem>
-              <SelectItem value="2">提督</SelectItem>
               <SelectItem value="3">舰长</SelectItem>
+              <SelectItem value="2">提督</SelectItem>
+              <SelectItem value="1">总督</SelectItem>
               <SelectItem value="0">通用</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <Input
           v-model="tempGiftCode"
-          placeholder="输入礼品码..."
+          placeholder="输入礼品码后回车添加..."
           class="flex-1"
           @keyup.enter="addGiftCode"
         />
-        <Button @click="addGiftCode"> 添加 </Button>
+        <Button @click="addGiftCode">添加</Button>
       </div>
 
       <div
@@ -132,20 +158,13 @@ function getGuardLevelName(level: number): string {
       >
         <div
           v-for="(levelCodes, levelIndex) in action.triggerConfig.giftCodes"
-          :key="levelIndex"
-          class="flex items-center gap-2 p-1.5 rounded border bg-muted/20"
+          :key="levelCodes.level"
+          class="flex items-center gap-2 p-2 rounded border bg-card"
         >
           <Badge
-            variant="warning"
+            variant="outline"
             size="xs"
-            class="h-5"
-            :class="
-              levelCodes.level === 3
-                ? 'border-sky-500/40 text-sky-600 bg-sky-500/10'
-                : levelCodes.level === 0
-                  ? ''
-                  : ' '
-            "
+            :class="getGuardBadgeClass(levelCodes.level)"
           >
             {{ getGuardLevelName(levelCodes.level) }}
           </Badge>
@@ -153,7 +172,7 @@ function getGuardLevelName(level: number): string {
           <div class="flex flex-wrap items-center gap-1.5 flex-1">
             <Tag
               v-for="(code, codeIndex) in levelCodes.codes"
-              :key="codeIndex"
+              :key="code"
               closable
               @close="removeGiftCode(levelIndex, codeIndex)"
             >
@@ -164,7 +183,7 @@ function getGuardLevelName(level: number): string {
       </div>
       <div
         v-else
-        class="text-xs italic text-muted-foreground text-center py-3"
+        class="text-xs italic text-muted-foreground text-center py-2.5"
       >
         暂无库存礼品码
       </div>

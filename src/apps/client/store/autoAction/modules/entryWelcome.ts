@@ -1,5 +1,4 @@
 import type { Ref } from 'vue'
-import { ref } from 'vue'
 
 import type { EventModel } from '@/api/client-types'
 
@@ -7,80 +6,47 @@ import { executeActions, filterValidActions } from '../actionUtils'
 import type { AutoActionItem, RuntimeState } from '../types'
 import { TriggerType } from '../types'
 
-/**
- * 入场欢迎模块
- * @param isLive 是否处于直播状态
- * @param roomId 房间ID
- * @param isTianXuanActive 是否处于天选时刻
- * @param sendLiveDanmaku 发送弹幕函数
- */
+export function matchesEnterTrigger(action: AutoActionItem, event: EventModel): boolean {
+  const { filterMode, filterGiftNames, enterMedalMinLevel } = action.triggerConfig
+  switch (filterMode) {
+    case 'blacklist':
+      return !filterGiftNames?.includes(event.uname)
+    case 'whitelist':
+      return !!filterGiftNames?.includes(event.uname)
+    case 'guard':
+      return (event.guard_level || 0) > 0
+    case 'medal':
+      return event.fans_medal_wearing_status && (event.fans_medal_level || 0) >= (enterMedalMinLevel || 0)
+    default:
+      return true
+  }
+}
+
 export function useEntryWelcome(
   isLive: Ref<boolean>,
   roomId: Ref<number | undefined>,
   isTianXuanActive: Ref<boolean>,
   sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
-  // 运行时数据
-  const timer = ref<any | null>(null)
-
-  /**
-   * 处理入场事件 - 支持新的AutoActionItem结构
-   * @param event 入场事件
-   * @param actions 自动操作列表
-   * @param runtimeState 运行时状态
-   */
   function processEnter(event: EventModel, actions: AutoActionItem[], runtimeState: RuntimeState, isTest = false) {
     if (!roomId.value) return
 
-    // 使用通用函数过滤有效的入场欢迎操作
     const enterActions = filterValidActions(actions, TriggerType.ENTER, isLive, isTianXuanActive, { isTest })
+    if (enterActions.length === 0) return
 
-    // 使用通用执行函数处理入场事件
-    if (enterActions.length > 0 && roomId.value) {
-      executeActions(
-        enterActions,
-        event,
-        TriggerType.ENTER,
-        roomId.value,
-        runtimeState,
-        { sendLiveDanmaku },
-        {
-          isTest,
-          customFilters: [
-            // 检查入场过滤条件
-            (action, _context) => {
-              const { filterMode, filterGiftNames, enterMedalMinLevel } = action.triggerConfig
-              switch (filterMode) {
-                case 'blacklist':
-                  return !filterGiftNames?.includes(event.uname)
-                case 'whitelist':
-                  return !!filterGiftNames?.includes(event.uname)
-                case 'guard':
-                  return (event.guard_level || 0) > 0
-                case 'medal':
-                  return event.fans_medal_wearing_status && (event.fans_medal_level || 0) >= (enterMedalMinLevel || 0)
-                default:
-                  return true
-              }
-            },
-          ],
-        },
-      )
-    }
+    executeActions(
+      enterActions,
+      event,
+      TriggerType.ENTER,
+      roomId.value,
+      runtimeState,
+      { sendLiveDanmaku },
+      {
+        isTest,
+        customFilters: [(action) => matchesEnterTrigger(action, event)],
+      },
+    )
   }
 
-  /**
-   * 清理计时器
-   */
-  function clearTimer() {
-    if (timer.value) {
-      clearTimeout(timer.value)
-      timer.value = null
-    }
-  }
-
-  return {
-    processEnter,
-    clearTimer,
-  }
+  return { processEnter }
 }

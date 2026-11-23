@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowUpRight, Radio } from 'lucide-vue-next'
+import { ArrowUpRight, BookOpen, Radio } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 import { ACCOUNT, isLoggedIn } from '@/api/account'
@@ -82,6 +82,15 @@ function scrollToTop() {
       </nav>
 
       <div class="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          class="hidden sm:inline-flex gap-1.5 text-muted-foreground hover:text-foreground"
+          @click="router.push({ name: 'docs-index' })"
+        >
+          <BookOpen class="size-3.5" />
+          <span>文档</span>
+        </Button>
+
         <Button
           variant="ghost"
           class="hidden sm:inline-flex gap-1.5 text-muted-foreground hover:text-foreground"

@@ -5,6 +5,7 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { GuardLevel } from './guardLevel'
 
 export interface VoteVoterInfo {
   voterId: string
@@ -12,5 +13,7 @@ export interface VoteVoterInfo {
   /** @nullable */
   ouId?: string | null
   count: number
+  contribution: number
+  guardLevel: GuardLevel
   lastVoteTime: number
 }

@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { error as logError, info as logInfo } from '@tauri-apps/plugin-log'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import CheckmarkCircleOutline from '@vicons/ionicons5/es/CheckmarkCircleOutline'
-import CloseCircleOutline from '@vicons/ionicons5/es/CloseCircleOutline'
-import EyeOffOutline from '@vicons/ionicons5/es/EyeOffOutline'
-import EyeOutline from '@vicons/ionicons5/es/EyeOutline'
-import HelpCircle from '@vicons/ionicons5/es/HelpCircle'
-import LogInOutline from '@vicons/ionicons5/es/LogInOutline'
-import LogOutOutline from '@vicons/ionicons5/es/LogOutOutline'
+import { CheckCircle2, Eye, EyeOff, HelpCircle, LogIn, LogOut, XCircle } from 'lucide-vue-next'
 import { intervalToDuration } from 'date-fns'
 import QrcodeVue from 'qrcode.vue'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { getLoginInfoAsync, getLoginUrlDataAsync } from '@/apps/client/data/biliLogin'
@@ -33,7 +27,7 @@ const settings = useSettings()
 const isQRCodeLogining = ref(false)
 const loginUrl = ref('')
 const loginKey = ref('')
-const cookie = ref<string>() // 本地展示用
+const cookie = computed(() => biliCookie.cookie ?? '') // 直接响应 store 中的最新 Cookie
 const showCookie = ref(false) // Cookie 脱敏显示开关
 const timer = ref(0)
 const expiredTimer = ref(0)
@@ -121,7 +115,6 @@ function finishLogin() {
   loginStatus.value = undefined
   loginUrl.value = ''
   loginKey.value = ''
-  cookie.value = ''
 }
 
 function formatTimeDifference(startUnix: number, endUnix: number) {
@@ -136,9 +129,6 @@ async function logout() {
   toast.info('已退出登录')
 }
 
-onMounted(async () => {
-  cookie.value = await biliCookie.getBiliCookie()
-})
 onUnmounted(() => {
   clearInterval(timer.value)
   clearTimeout(expiredTimer.value)
@@ -154,18 +144,18 @@ onUnmounted(() => {
         v-if="biliCookie.isCookieValid"
         variant="success"
         size="xs"
-        class="h-5 gap-1"
+        class="gap-1"
       >
-        <CheckmarkCircleOutline class="size-3" />
+        <CheckCircle2 class="size-3" />
         已登录
       </Badge>
       <Badge
         v-else
         variant="outline"
         size="xs"
-        class="h-5 gap-1 border-destructive/40 text-destructive bg-destructive/10"
+        class="gap-1 border-destructive/40 text-destructive bg-destructive/10"
       >
-        <CloseCircleOutline class="size-3" />
+        <XCircle class="size-3" />
         未登录
       </Badge>
     </CardHeader>
@@ -220,11 +210,11 @@ onUnmounted(() => {
             class="gap-1"
             @click="showCookie = !showCookie"
           >
-            <EyeOffOutline
+            <EyeOff
               v-if="showCookie"
               class="size-3.5"
             />
-            <EyeOutline
+            <Eye
               v-else
               class="size-3.5"
             />
@@ -244,7 +234,7 @@ onUnmounted(() => {
           class="gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
           @click="logout"
         >
-          <LogOutOutline class="size-3.5" />
+          <LogOut class="size-3.5" />
           退出登录
         </Button>
       </div>
@@ -281,7 +271,7 @@ onUnmounted(() => {
               class="gap-1.5"
               @click="startLogin"
             >
-              <LogInOutline class="size-4" />
+              <LogIn class="size-3.5" />
               {{ loginStatus === 'expired' ? '重新获取二维码' : '获取二维码' }}
             </Button>
             <TooltipProvider>

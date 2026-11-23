@@ -1,15 +1,6 @@
 <script setup lang="ts">
+import { CheckCircle2, MessageSquareMore, Pencil, Plus, QrCode, RefreshCw, Star, Trash2, User, XCircle } from 'lucide-vue-next'
 import { error as logError, info as logInfo } from '@tauri-apps/plugin-log'
-import AddOutline from '@vicons/ionicons5/es/AddOutline'
-import ChatbubbleEllipsesOutline from '@vicons/ionicons5/es/ChatbubbleEllipsesOutline'
-import CheckmarkCircleOutline from '@vicons/ionicons5/es/CheckmarkCircleOutline'
-import CloseCircleOutline from '@vicons/ionicons5/es/CloseCircleOutline'
-import CreateOutline from '@vicons/ionicons5/es/CreateOutline'
-import PersonOutline from '@vicons/ionicons5/es/PersonOutline'
-import QrCodeOutline from '@vicons/ionicons5/es/QrCodeOutline'
-import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
-import StarOutline from '@vicons/ionicons5/es/StarOutline'
-import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
@@ -274,7 +265,7 @@ async function handleRemoveAccount(id: string) {
       <CardHeader class="p-3 border-b">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <PersonOutline class="size-5 text-primary" />
+            <User class="size-5 text-primary" />
             <div>
               <CardTitle>B 站多账号管理池</CardTitle>
               <div class="text-xs text-muted-foreground mt-0.5">
@@ -291,7 +282,7 @@ async function handleRemoveAccount(id: string) {
               :disabled="isBatchChecking"
               @click="handleBatchCheck"
             >
-              <RefreshOutline
+              <RefreshCw
                 class="size-3.5"
                 :class="{ 'animate-spin': isBatchChecking }"
               />
@@ -306,7 +297,7 @@ async function handleRemoveAccount(id: string) {
                 }
               "
             >
-              <AddOutline class="size-4" />
+              <Plus class="size-4" />
               添加新账号
             </Button>
           </div>
@@ -320,7 +311,7 @@ async function handleRemoveAccount(id: string) {
             <FormField class="flex-1 min-w-[240px]">
               <template #label>
                 <label class="font-medium text-foreground select-none flex items-center gap-1">
-                  <StarOutline class="size-3.5 text-amber-500" />
+                  <Star class="size-3.5 text-amber-500" />
                   <span>主播管理账号（主管开播/关播/改分区/房管禁言）</span>
                 </label>
               </template>
@@ -347,7 +338,7 @@ async function handleRemoveAccount(id: string) {
             <FormField class="flex-1 min-w-[240px]">
               <template #label>
                 <label class="font-medium text-foreground select-none flex items-center gap-1">
-                  <ChatbubbleEllipsesOutline class="size-3.5 text-primary" />
+                  <MessageSquareMore class="size-3.5 text-primary" />
                   <span>自动操作发弹幕/私信账号（入场/礼物/SC/回复/定时）</span>
                 </label>
               </template>
@@ -434,7 +425,7 @@ async function handleRemoveAccount(id: string) {
                   :alt="acc.name"
                 />
                 <AvatarFallback>
-                  <PersonOutline class="size-5 text-muted-foreground" />
+                  <User class="size-5 text-muted-foreground" />
                 </AvatarFallback>
               </Avatar>
               <div>
@@ -484,7 +475,7 @@ async function handleRemoveAccount(id: string) {
                     class="text-muted-foreground gap-1"
                     @click="startEditAlias(acc)"
                   >
-                    <CreateOutline class="size-3" />
+                    <Pencil class="size-3" />
                     设备注
                   </Button>
 
@@ -494,7 +485,7 @@ async function handleRemoveAccount(id: string) {
                     variant="success"
                     class="gap-0.5"
                   >
-                    <CheckmarkCircleOutline class="size-3" />
+                    <CheckCircle2 class="size-3" />
                     有效
                   </Badge>
                   <Badge
@@ -503,7 +494,7 @@ async function handleRemoveAccount(id: string) {
                     size="xs"
                     class="border-destructive/40 text-destructive bg-destructive/10 gap-0.5"
                   >
-                    <CloseCircleOutline class="size-3" />
+                    <XCircle class="size-3" />
                     已失效
                   </Badge>
 
@@ -530,7 +521,7 @@ async function handleRemoveAccount(id: string) {
                 size="xs"
                 class="h-5 gap-1"
               >
-                <StarOutline class="size-3" />
+                <Star class="size-3" />
                 主播管理
               </Badge>
               <Badge
@@ -543,7 +534,7 @@ async function handleRemoveAccount(id: string) {
                 size="xs"
                 class="h-5 border-sky-500/40 text-sky-600 bg-sky-500/10 gap-1"
               >
-                <ChatbubbleEllipsesOutline class="size-3" />
+                <MessageSquareMore class="size-3" />
                 发弹幕
               </Badge>
 
@@ -554,7 +545,7 @@ async function handleRemoveAccount(id: string) {
                 class="gap-1"
                 @click="handleCheckSingle(acc)"
               >
-                <RefreshOutline class="size-3" />
+                <RefreshCw class="size-3" />
                 检查
               </Button>
 
@@ -565,7 +556,7 @@ async function handleRemoveAccount(id: string) {
                 class="border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10 gap-1"
                 @click="handleRefreshSingle(acc)"
               >
-                <RefreshOutline class="size-3" />
+                <RefreshCw class="size-3" />
                 手动续期
               </Button>
 
@@ -599,7 +590,7 @@ async function handleRemoveAccount(id: string) {
                     variant="outline"
                     class="w-7 p-0 border-destructive/40 text-destructive hover:bg-destructive/10"
                   >
-                    <TrashOutline class="size-3.5" />
+                    <Trash2 class="size-3.5" />
                   </Button>
                 </template>
                 确定要将账号「{{ acc.name }}」从账号池中移除吗？
@@ -650,7 +641,7 @@ async function handleRemoveAccount(id: string) {
                   class="h-9 gap-1.5"
                   @click="startQRCodeLogin"
                 >
-                  <QrCodeOutline class="size-4" />
+                  <QrCode class="size-4" />
                   点击生成登录二维码
                 </Button>
               </div>

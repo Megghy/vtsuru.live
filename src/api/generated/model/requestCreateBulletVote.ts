@@ -5,6 +5,7 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { VoteMultiMode } from './voteMultiMode'
 
 export interface RequestCreateBulletVote {
   /**
@@ -14,6 +15,7 @@ export interface RequestCreateBulletVote {
   title: string
   options: string[]
   allowMultipleVotes: boolean
+  multiVoteMode?: VoteMultiMode
   /** @nullable */
   durationSeconds?: number | null
 }

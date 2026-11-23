@@ -5,10 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { PointOrderStatus } from './pointOrderStatus'
 
 export type GetApiOrgOrgIdPointsOrdersParams = {
   streamerId?: number
   customerId?: number
+  status?: PointOrderStatus
   page?: number
   pageSize?: number
 }

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import Maximize24Filled from '@vicons/fluent/es/Maximize24Filled'
-import SquareMultiple24Regular from '@vicons/fluent/es/SquareMultiple24Regular'
-import Close from '@vicons/ionicons5/es/Close'
-import Minus from '@vicons/ionicons5/es/RemoveOutline'
+import { Copy, Minus, Square, X } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { isLiveStreaming, roomInfo } from '@/apps/client/data/info'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { isTauri } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -15,97 +14,59 @@ const router = useRouter()
 const isMaximized = ref(false)
 const giftWindow = useGiftWindow()
 
-// 直播控制，用于显示当前开播状态
-const currentLive = computed(() => giftWindow.currentLive)
-const isLiving = computed(() => Boolean(currentLive.value && !currentLive.value.isFinish))
+const liveTitle = computed(() => roomInfo.value?.title || giftWindow.currentLive?.title || '直播中')
 
 let unlistenResize: (() => void) | null = null
 
 async function getTauriWindow() {
-  if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
-    return null
-  }
-  try {
-    const { getCurrentWindow } = await import('@tauri-apps/api/window')
-    return getCurrentWindow()
-  } catch {
-    return null
-  }
+  if (!isTauri()) return null
+  const { getCurrentWindow } = await import('@tauri-apps/api/window')
+  return getCurrentWindow()
 }
 
 onMounted(async () => {
   const appWindow = await getTauriWindow()
   if (!appWindow) return
 
-  try {
+  isMaximized.value = await appWindow.isMaximized()
+  unlistenResize = await appWindow.onResized(async () => {
     isMaximized.value = await appWindow.isMaximized()
-    unlistenResize = await appWindow.onResized(async () => {
-      isMaximized.value = await appWindow.isMaximized()
-    })
-  } catch {
-    // 忽略非桌面端或未初始化异常
-  }
+  })
 })
 
 onUnmounted(() => {
-  if (unlistenResize) {
-    unlistenResize()
-  }
+  unlistenResize?.()
 })
 
 async function minimizeWindow() {
   const appWindow = await getTauriWindow()
-  if (!appWindow) return
-  try {
-    await appWindow.minimize()
-  } catch {
-    // 忽略
-  }
+  if (appWindow) await appWindow.minimize()
 }
 
 async function toggleMaximizeWindow() {
   const appWindow = await getTauriWindow()
-  if (!appWindow) return
-  try {
-    await appWindow.toggleMaximize()
-  } catch {
-    // 忽略
-  }
+  if (appWindow) await appWindow.toggleMaximize()
 }
 
 async function closeWindow() {
   const appWindow = await getTauriWindow()
-  if (!appWindow) return
-  try {
-    await appWindow.hide()
-  } catch {
-    // 忽略
-  }
+  if (appWindow) await appWindow.hide()
 }
 
-// 拖拽窗口 (双击最大化)
 let lastClickTime = 0
 async function handleTitlebarMouseDown(e: MouseEvent) {
-  // 只响应左键
   if (e.button !== 0) return
 
   const now = Date.now()
   if (now - lastClickTime < 300) {
-    // 双击切换最大化
-    toggleMaximizeWindow()
+    void toggleMaximizeWindow()
     lastClickTime = 0
     return
   }
   lastClickTime = now
 
-  // 单击拖拽窗口
   const appWindow = await getTauriWindow()
-  if (!appWindow) return
-  try {
-    await appWindow.startDragging()
-  } catch {
-    // 忽略
-  }
+  if (appWindow) await appWindow.startDragging()
 }
 
 function goToLiveManage() {
@@ -125,8 +86,7 @@ function goToLiveManage() {
     >
       <span class="text-xs font-semibold text-foreground tracking-[0.5px]">VTsuru.Client</span>
 
-      <!-- 开播状态指示 (可点击跳转直播管理) -->
-      <TooltipProvider v-if="isLiving">
+      <TooltipProvider v-if="isLiveStreaming">
         <Tooltip>
           <TooltipTrigger as-child>
             <Badge
@@ -140,7 +100,7 @@ function goToLiveManage() {
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
-            正在直播：{{ currentLive?.title }}
+            正在直播：{{ liveTitle }}
             <br />
             点击进入直播管理
           </TooltipContent>
@@ -181,9 +141,13 @@ function goToLiveManage() {
               :aria-label="isMaximized ? '还原' : '最大化'"
               @click="toggleMaximizeWindow"
             >
-              <component
-                :is="isMaximized ? SquareMultiple24Regular : Maximize24Filled"
-                class="size-3.5"
+              <Copy
+                v-if="isMaximized"
+                class="size-3"
+              />
+              <Square
+                v-else
+                class="size-3"
               />
             </Button>
           </TooltipTrigger>
@@ -199,7 +163,7 @@ function goToLiveManage() {
               aria-label="关闭到后台"
               @click="closeWindow"
             >
-              <Close class="size-3.5" />
+              <X class="size-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>关闭到后台</TooltipContent>

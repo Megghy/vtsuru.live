@@ -8,4 +8,6 @@
 
 export interface CreateOrgModel {
   name: string
+  /** @nullable */
+  description?: string | null
 }

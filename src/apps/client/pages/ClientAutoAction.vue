@@ -1,23 +1,32 @@
 <script setup lang="ts">
-import AppGeneric24Regular from '@vicons/fluent/es/AppGeneric24Regular'
-import ArrowLeft24Filled from '@vicons/fluent/es/ArrowLeft24Filled'
-import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
-import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
-import DataUsage24Regular from '@vicons/fluent/es/DataUsage24Regular'
-import DoorArrowLeft24Regular from '@vicons/fluent/es/DoorArrowLeft24Regular'
-import Edit16Regular from '@vicons/fluent/es/Edit16Regular'
-import Gift24Regular from '@vicons/fluent/es/Gift24Regular'
-import History24Regular from '@vicons/fluent/es/History24Regular'
-import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
-import Receipt24Regular from '@vicons/fluent/es/Receipt24Regular'
-import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
-import Shield24Regular from '@vicons/fluent/es/Shield24Regular'
-import Star24Regular from '@vicons/fluent/es/Star24Regular'
-import Target24Filled from '@vicons/fluent/es/Target24Filled'
-import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
+import {
+  ArrowLeft,
+  Bot,
+  Check,
+  Copy,
+  ExternalLink,
+  FlaskConical,
+  Gift,
+  History,
+  LayoutGrid,
+  LogIn,
+  MessageSquare,
+  Pencil,
+  PieChart,
+  Plus,
+  Receipt,
+  RotateCcw,
+  Settings,
+  Shield,
+  Star,
+  Target,
+  Timer,
+  Trash2,
+  UserPlus,
+} from 'lucide-vue-next'
 import type { Component } from 'vue'
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
@@ -25,10 +34,11 @@ import ActionHistoryViewer from '@/apps/client/components/autoaction/ActionHisto
 import ActionList from '@/apps/client/components/autoaction/ActionList.vue'
 import AutoActionEditor from '@/apps/client/components/autoaction/AutoActionEditor.vue'
 import DataManager from '@/apps/client/components/autoaction/DataManager.vue'
+import RuleTestDialog from '@/apps/client/components/autoaction/RuleTestDialog.vue'
 import CheckInSettings from '@/apps/client/components/autoaction/settings/CheckInSettings.vue'
 import GlobalScheduledSettings from '@/apps/client/components/autoaction/settings/GlobalScheduledSettings.vue'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
-import BiliAccountManagerCard from '@/apps/client/components/settings/BiliAccountManagerCard.vue'
+import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliAccountManager } from '@/apps/client/store/useBiliAccountManager'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
@@ -37,12 +47,14 @@ import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
+import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -52,20 +64,8 @@ const biliCookieStore = useBiliCookie()
 const accountManager = useBiliAccountManager()
 const webFetcherStore = useWebFetcher()
 const biliFunc = useBiliFunction()
+const route = useRoute()
 const router = useRouter()
-
-// 状态管理
-const currentMenuKey = ref<string>(TriggerType.GIFT) // 默认选中礼物感谢
-const editingActionId = ref<string | null>(null)
-const showAddModal = ref(false)
-const selectedTriggerType = ref<TriggerType>(TriggerType.GIFT)
-
-// 模态框状态
-const showSetNextModal = ref(false)
-const targetNextActionId = ref<string | null>(null)
-const showTestModal = ref(false)
-const testUid = ref<number | undefined>(10004)
-const currentTestType = ref<TriggerType | null>(null)
 
 interface MenuItem {
   label: string
@@ -84,34 +84,124 @@ const menuGroups: MenuGroup[] = [
     label: '自动操作',
     key: 'group-actions',
     children: [
-      { label: '自动回复', key: TriggerType.DANMAKU, icon: Chat24Regular },
-      { label: '礼物感谢', key: TriggerType.GIFT, icon: Gift24Regular },
-      { label: '上舰感谢', key: TriggerType.GUARD, icon: Shield24Regular },
-      { label: '关注感谢', key: TriggerType.FOLLOW, icon: PersonAdd24Regular },
-      { label: '入场欢迎', key: TriggerType.ENTER, icon: DoorArrowLeft24Regular },
-      { label: '定时发送', key: TriggerType.SCHEDULED, icon: Timer24Regular },
-      { label: 'SC感谢', key: TriggerType.SUPER_CHAT, icon: Star24Regular },
-      { label: '积分兑换', key: TriggerType.POINT_REDEEM, icon: Receipt24Regular },
+      { label: '自动回复', key: TriggerType.DANMAKU, icon: MessageSquare },
+      { label: '礼物感谢', key: TriggerType.GIFT, icon: Gift },
+      { label: '上舰感谢', key: TriggerType.GUARD, icon: Shield },
+      { label: '关注感谢', key: TriggerType.FOLLOW, icon: UserPlus },
+      { label: '入场欢迎', key: TriggerType.ENTER, icon: LogIn },
+      { label: '定时发送', key: TriggerType.SCHEDULED, icon: Timer },
+      { label: 'SC感谢', key: TriggerType.SUPER_CHAT, icon: Star },
+      { label: '积分兑换', key: TriggerType.POINT_REDEEM, icon: Receipt },
     ],
   },
   {
     label: '功能设置',
     key: 'group-settings',
     children: [
-      { label: '发弹幕账号 (多账号管理)', key: 'account-settings', icon: Bot24Regular },
-      { label: '签到设置', key: 'check-in-settings', icon: AppGeneric24Regular },
-      { label: '消息队列', key: 'queue-settings', icon: Settings24Regular },
+      { label: '发送账号路由', key: 'account-settings', icon: Bot },
+      { label: '签到设置', key: 'check-in-settings', icon: LayoutGrid },
+      { label: '消息队列', key: 'queue-settings', icon: Settings },
     ],
   },
   {
     label: '数据与记录',
     key: 'group-data',
     children: [
-      { label: '执行历史', key: 'action-history', icon: History24Regular },
-      { label: '数据管理', key: 'data-manager', icon: DataUsage24Regular },
+      { label: '执行历史', key: 'action-history', icon: History },
+      { label: '数据管理', key: 'data-manager', icon: PieChart },
     ],
   },
 ]
+
+const validMenuKeys = new Set(menuGroups.flatMap((g) => g.children.map((c) => c.key)))
+
+// 状态管理（与 URL query 双向同步）
+const initialTab = typeof route.query.tab === 'string' && validMenuKeys.has(route.query.tab)
+  ? route.query.tab
+  : TriggerType.GIFT
+const currentMenuKey = ref<string>(initialTab)
+const editingActionId = ref<string | null>(typeof route.query.edit === 'string' ? route.query.edit : null)
+
+watch(
+  [currentMenuKey, editingActionId],
+  ([tab, edit]) => {
+    const nextQuery: Record<string, string> = { tab }
+    if (edit) nextQuery.edit = edit
+    if (route.query.tab !== nextQuery.tab || (route.query.edit ?? undefined) !== nextQuery.edit) {
+      void router.replace({ query: nextQuery })
+    }
+  },
+  { flush: 'post' },
+)
+
+// 编辑态打开快照（用于“还原本次修改”）
+const editingSnapshot = ref<string | null>(null)
+
+const currentEditingAction = computed(() => {
+  if (!editingActionId.value) return null
+  return autoActionStore.autoActions.find((a) => a.id === editingActionId.value) ?? null
+})
+
+watch(
+  editingActionId,
+  (id) => {
+    if (!id) {
+      editingSnapshot.value = null
+      return
+    }
+    const target = autoActionStore.autoActions.find((a) => a.id === id)
+    editingSnapshot.value = target ? JSON.stringify(target) : null
+  },
+  { immediate: true },
+)
+
+const hasUnsavedChanges = computed(() => {
+  if (!currentEditingAction.value || !editingSnapshot.value) return false
+  return JSON.stringify(currentEditingAction.value) !== editingSnapshot.value
+})
+
+function revertEditingChanges() {
+  if (!currentEditingAction.value || !editingSnapshot.value) return
+  const restored = JSON.parse(editingSnapshot.value) as AutoActionItem
+  Object.assign(currentEditingAction.value, restored)
+  autoActionStore.syncScheduledTimers()
+  toast.success('已还原本次编辑的所有修改')
+}
+
+function duplicateEditingAction() {
+  if (!currentEditingAction.value) return
+  const cloned = autoActionStore.duplicateAutoAction(currentEditingAction.value.id)
+  if (cloned) {
+    editingActionId.value = cloned.id
+    toast.success(`已复制规则「${cloned.name}」并切换至编辑`)
+  }
+}
+
+function deleteEditingAction() {
+  if (!currentEditingAction.value) return
+  const name = currentEditingAction.value.name || '未命名规则'
+  autoActionStore.removeAutoAction(currentEditingAction.value.id)
+  editingActionId.value = null
+  toast.success(`已删除规则「${name}」`)
+}
+
+// 弹窗状态
+const showAddModal = ref(false)
+const selectedTriggerType = ref<TriggerType>(TriggerType.GIFT)
+const showSetNextModal = ref(false)
+const targetNextActionId = ref<string | null>(null)
+const showTestModal = ref(false)
+const testUid = ref<number | undefined>(10004)
+const currentTestType = ref<TriggerType | null>(null)
+
+// 单条规则沙盒测试弹窗
+const showRuleTestDialog = ref(false)
+const ruleTestTarget = ref<AutoActionItem | null>(null)
+
+function openRuleTest(action: AutoActionItem) {
+  ruleTestTarget.value = action
+  showRuleTestDialog.value = true
+}
 
 function getMenuItemStatus(key: string) {
   const isTriggerType = Object.values(TriggerType).includes(key as TriggerType)
@@ -119,19 +209,15 @@ function getMenuItemStatus(key: string) {
 
   if (!isTriggerType && !isCheckIn) return { isEnabled: false, count: 0, isTriggerType: false }
 
-  let isEnabled = false
-  let count = 0
-
   if (isTriggerType) {
     const type = key as TriggerType
-    isEnabled = autoActionStore.enabledTriggerTypes?.[type] ?? false
-    count = autoActionStore.autoActions.filter((a) => a.triggerType === type && a.enabled).length
-  } else if (isCheckIn) {
-    isEnabled = accountStore.value?.settings?.point?.enableCheckIn ?? false
-    count = isEnabled ? 1 : 0
+    const isEnabled = autoActionStore.enabledTriggerTypes?.[type] ?? false
+    const count = autoActionStore.autoActions.filter((a) => a.triggerType === type && a.enabled).length
+    return { isEnabled, count, isTriggerType: true }
   }
 
-  return { isEnabled, count, isTriggerType }
+  const isEnabled = accountStore.value?.settings?.point?.enableCheckIn ?? false
+  return { isEnabled, count: isEnabled ? 1 : 0, isTriggerType: false }
 }
 
 const typeMap: Record<string, string> = {
@@ -165,16 +251,23 @@ const eligibleGlobalActions = computed(() => {
     }))
 })
 
-const currentEditingAction = computed(() => {
-  if (!editingActionId.value) return null
-  return autoActionStore.autoActions.find((a) => a.id === editingActionId.value)
-})
-
-const activeRulesCount = computed(() => autoActionStore.autoActions.filter((a) => a.enabled).length)
+// 仅统计「规则本身已启用且所属分类总开关也开启」的真正生效规则数
+const effectiveActiveRulesCount = computed(
+  () =>
+    autoActionStore.autoActions.filter((a) => a.enabled && autoActionStore.enabledTriggerTypes?.[a.triggerType]).length,
+)
+const totalEnabledRulesCount = computed(() => autoActionStore.autoActions.filter((a) => a.enabled).length)
 
 function handleMenuUpdate(key: string) {
   currentMenuKey.value = key
   editingActionId.value = null
+}
+
+function openQuickAddModal() {
+  if (Object.values(TriggerType).includes(currentMenuKey.value as TriggerType)) {
+    selectedTriggerType.value = currentMenuKey.value as TriggerType
+  }
+  showAddModal.value = true
 }
 
 function handleAddAction() {
@@ -191,7 +284,7 @@ function addAutoAction() {
   showAddModal.value = false
   currentMenuKey.value = selectedTriggerType.value
   editingActionId.value = newAction.id
-  toast.success('已添加新的自动操作')
+  toast.success('已创建新规则')
 }
 
 function handleEdit(id: string) {
@@ -203,12 +296,6 @@ function backToOverview() {
 }
 
 function handleTestClick(type: TriggerType) {
-  const requiresLogin = [TriggerType.DANMAKU, TriggerType.GUARD, TriggerType.SUPER_CHAT].includes(type)
-  if (requiresLogin && !biliCookieStore.isCookieValid) {
-    toast.error('此测试需要登录B站账号，请先前往设置页面登录')
-    return
-  }
-
   if (type === TriggerType.GUARD) {
     currentTestType.value = type
     testUid.value = 10004
@@ -220,14 +307,9 @@ function handleTestClick(type: TriggerType) {
 
 function confirmTest() {
   if (currentTestType.value === TriggerType.GUARD) {
-    if (!biliCookieStore.isCookieValid) {
-      toast.error('无法发送私信测试，请先登录B站账号')
-      showTestModal.value = false
-      return
-    }
     const uid = Number(testUid.value)
     if (!Number.isFinite(uid) || uid <= 0) {
-      toast.error('请输入有效的UID')
+      toast.error('请输入有效的 UID')
       return
     }
     autoActionStore.triggerTestActionByType(currentTestType.value, uid)
@@ -243,7 +325,7 @@ function openSetNextModal() {
 function confirmSetNextAction() {
   if (targetNextActionId.value) {
     autoActionStore.setNextGlobalAction(targetNextActionId.value)
-    toast.success('已指定下一条执行的操作')
+    toast.success('已指定下一条执行的定时规则')
   }
   showSetNextModal.value = false
 }
@@ -258,30 +340,41 @@ const triggerTypeOptions = [
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
   { label: '积分兑换', value: TriggerType.POINT_REDEEM },
 ]
+
+async function handleDanmakuAccountChange(value: string) {
+  await accountManager.setDanmakuAccount(value)
+  toast.success('已切换自动操作发弹幕/私信账号')
+}
+
+async function handleFallbackChange(value: boolean) {
+  await accountManager.setFallbackToMain(value)
+}
 </script>
 
 <template>
-  <div class="auto-action-page flex flex-col gap-3.5">
+  <div class="auto-action-page flex flex-col gap-3 h-[calc(100vh-88px)] min-h-[540px]">
     <!-- 标准管理页标头 -->
     <ClientPageHeader
       title="自动操作"
-      description="管理自动回复、礼物感谢、入场欢迎、定时发送等自动化规则"
+      description="管理自动回复、礼物感谢、入场欢迎、定时发送、音效与 VTS/PNGtuber 联动规则"
     >
       <template #actions>
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
                 <Badge
                   variant="outline"
-                  class="cursor-pointer h-6 px-2 gap-1.5"
+                  class="cursor-pointer gap-1.5"
                   :class="
-                    biliFunc.activeDanmakuAccountType === 'bot' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ''
+                    biliFunc.activeDanmakuAccountType === 'bot'
+                      ? 'border-sky-500/40 text-sky-600 dark:text-sky-400 bg-sky-500/10'
+                      : ''
                   "
-                  @click="currentMenuKey = 'account-settings'"
+                  @click="handleMenuUpdate('account-settings')"
                 >
                   <component
-                    :is="biliFunc.activeDanmakuAccountType === 'bot' ? Bot24Regular : PersonAdd24Regular"
+                    :is="biliFunc.activeDanmakuAccountType === 'bot' ? Bot : UserPlus"
                     class="size-3.5"
                   />
                   <span>
@@ -293,17 +386,36 @@ const triggerTypeOptions = [
                   </span>
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent> 点击管理 B 站账号池，自由选择发弹幕账号（支持添加多个账号随时切换） </TooltipContent>
+              <TooltipContent>点击快速切换自动操作发弹幕/私信所使用的 B 站账号</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          <Badge
-            variant="secondary"
-            class="h-6 px-2"
-            :class="activeRulesCount > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ''"
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Badge
+                  variant="secondary"
+                  class="tabular-nums"
+                  :class="
+                    effectiveActiveRulesCount > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ''
+                  "
+                >
+                  {{ `${effectiveActiveRulesCount} 条生效中` }}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                当前共有 {{ effectiveActiveRulesCount }} 条规则处于生效状态（共 {{ totalEnabledRulesCount }} 条规则开启，部分可能受分类总开关关闭影响）
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <Button
+            class="gap-1.5"
+            @click="openQuickAddModal"
           >
-            {{ `${activeRulesCount} 条规则已启用` }}
-          </Badge>
+            <Plus class="size-3.5" />
+            新建规则
+          </Button>
         </div>
       </template>
     </ClientPageHeader>
@@ -312,12 +424,13 @@ const triggerTypeOptions = [
       size="sm"
       variant="warning"
       v-if="!biliCookieStore.isCookieValid"
+      class="shrink-0"
     >
       <div class="flex items-center justify-between w-full">
         <div>
           <AlertTitle>B站账号凭据未就绪</AlertTitle>
           <AlertDescription class="mt-0.5">
-            部分需要发送弹幕或私信的操作（如自动回复、上舰感谢）将无法执行。请前往【账号与凭据】完成登录或配置多账号池。
+            发弹幕或私信类规则暂无法发送；本地音效、PNGtuber 与 VTS 联动规则不受影响。
           </AlertDescription>
         </div>
         <Button
@@ -326,16 +439,16 @@ const triggerTypeOptions = [
           class="shrink-0 ml-3"
           @click="router.push({ name: 'client-account-manage' })"
         >
-          前往配置
+          前往账号池
         </Button>
       </div>
     </Alert>
 
-    <!-- 双栏工作台卡片 -->
-    <Card class="auto-action-workbench overflow-hidden">
-      <div class="flex min-h-[560px]">
+    <!-- 双栏全高工作台 -->
+    <Card class="auto-action-workbench flex-1 min-h-0 overflow-hidden flex flex-col">
+      <div class="flex flex-1 min-h-0">
         <!-- 左侧二级菜单 -->
-        <div class="w-52 border-r bg-muted/10 p-2.5 flex flex-col gap-4 shrink-0">
+        <div class="w-48 border-r bg-muted/10 p-2 flex flex-col gap-3.5 shrink-0 overflow-y-auto scrollbar-thin">
           <div
             v-for="group in menuGroups"
             :key="group.key"
@@ -360,52 +473,124 @@ const triggerTypeOptions = [
                   <span class="truncate">{{ item.label }}</span>
                 </div>
 
-                <div
-                  v-if="getMenuItemStatus(item.key).isTriggerType || item.key === 'check-in-settings'"
-                  class="flex items-center gap-1.5 shrink-0 pl-1"
-                >
-                  <span
-                    v-if="getMenuItemStatus(item.key).count > 0 && getMenuItemStatus(item.key).isTriggerType"
-                    class="text-[10px] px-1 rounded font-semibold"
-                    :class="
-                      currentMenuKey === item.key
-                        ? 'bg-primary-foreground text-primary'
-                        : 'bg-muted text-muted-foreground'
-                    "
-                  >
-                    {{ getMenuItemStatus(item.key).count }}
-                  </span>
-                  <div
-                    class="size-1.5 rounded-full"
-                    :class="
-                      getMenuItemStatus(item.key).isEnabled
-                        ? 'bg-emerald-500 shadow-[0_0_4px_#10b981]'
-                        : 'bg-muted-foreground/40'
-                    "
-                  />
-                </div>
+                <TooltipProvider v-if="getMenuItemStatus(item.key).isTriggerType || item.key === 'check-in-settings'">
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <div class="flex items-center gap-1.5 shrink-0 pl-1">
+                        <span
+                          v-if="getMenuItemStatus(item.key).count > 0 && getMenuItemStatus(item.key).isTriggerType"
+                          class="text-[10px] px-1 rounded font-semibold tabular-nums"
+                          :class="[
+                            currentMenuKey === item.key
+                              ? 'bg-primary-foreground text-primary'
+                              : 'bg-muted text-muted-foreground',
+                            !getMenuItemStatus(item.key).isEnabled ? 'opacity-50 line-through' : '',
+                          ]"
+                        >
+                          {{ getMenuItemStatus(item.key).count }}
+                        </span>
+                        <div
+                          class="size-1.5 rounded-full"
+                          :class="
+                            getMenuItemStatus(item.key).isEnabled
+                              ? 'bg-emerald-500 shadow-[0_0_4px_#10b981]'
+                              : 'bg-muted-foreground/40'
+                          "
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {{
+                        getMenuItemStatus(item.key).isEnabled
+                          ? `总开关已开启（${getMenuItemStatus(item.key).count} 条已启用）`
+                          : '总开关已关闭（该分类规则暂不触发）'
+                      }}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </Button>
             </div>
           </div>
         </div>
 
-        <!-- 右侧内容区域 -->
-        <div class="flex-1 p-4 overflow-y-auto max-h-[780px]">
+        <!-- 右侧独立滚动内容区 -->
+        <div class="flex-1 min-w-0 p-4 overflow-y-auto scrollbar-thin">
           <!-- 编辑模式 -->
           <div
             v-if="editingActionId && currentEditingAction"
-            class="space-y-3.5 max-w-4xl mx-auto"
+            class="space-y-3.5 max-w-4xl mx-auto pb-4"
           >
-            <div class="flex items-center gap-3">
-              <Button
-                variant="secondary"
-                class="gap-1.5"
-                @click="backToOverview"
-              >
-                <ArrowLeft24Filled class="size-3.5" />
-                返回列表
-              </Button>
-              <span class="font-semibold text-sm text-foreground"> 编辑 {{ currentEditingAction.name }} </span>
+            <div class="flex-between gap-3 flex-wrap pb-2.5 border-b sticky top-0 bg-card/95 backdrop-blur z-10 -mx-1 px-1 pt-0.5">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <Button
+                  variant="secondary"
+                  class="gap-1.5 shrink-0"
+                  @click="backToOverview"
+                >
+                  <ArrowLeft class="size-3.5" />
+                  返回列表
+                </Button>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-semibold text-sm text-foreground truncate">
+                    {{ currentEditingAction.name || '未命名规则' }}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                    class="gap-1 text-muted-foreground shrink-0"
+                  >
+                    <Check class="size-3 text-emerald-500" />
+                    {{ hasUnsavedChanges ? '已自动保存修改' : '实时自动保存' }}
+                  </Badge>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <Button
+                  v-if="hasUnsavedChanges"
+                  variant="ghost"
+                  size="xs"
+                  class="gap-1"
+                  @click="revertEditingChanges"
+                >
+                  <RotateCcw class="size-3.5" />
+                  还原修改
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  class="gap-1 text-amber-600 dark:text-amber-400"
+                  @click="openRuleTest(currentEditingAction)"
+                >
+                  <FlaskConical class="size-3.5" />
+                  测试此规则
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  class="gap-1"
+                  @click="duplicateEditingAction"
+                >
+                  <Copy class="size-3.5" />
+                  复制
+                </Button>
+
+                <Popconfirm
+                  :title="`确定删除规则「${currentEditingAction.name || '未命名规则'}」吗？`"
+                  @confirm="deleteEditingAction"
+                >
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    class="gap-1 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 class="size-3.5" />
+                    删除
+                  </Button>
+                </Popconfirm>
+              </div>
             </div>
 
             <AutoActionEditor :action="currentEditingAction" />
@@ -424,12 +609,13 @@ const triggerTypeOptions = [
               @edit="handleEdit"
               @add="handleAddAction"
               @test="() => handleTestClick(currentMenuKey as TriggerType)"
+              @test-action="openRuleTest"
             >
               <template #header-content>
                 <!-- 定时发送专属设置 -->
                 <div
                   v-if="currentMenuKey === TriggerType.SCHEDULED"
-                  class="mb-3.5 space-y-2.5"
+                  class="mt-3 space-y-2.5"
                 >
                   <GlobalScheduledSettings />
                   <div
@@ -442,7 +628,7 @@ const triggerTypeOptions = [
                     class="next-action-display flex-between p-2.5 rounded-md border border-l-4 border-l-primary bg-card"
                   >
                     <div class="flex items-center gap-2 text-xs text-foreground">
-                      <Target24Filled class="size-4 text-primary" />
+                      <Target class="size-4 text-primary" />
                       <span>下一个执行:</span>
                       <Badge
                         variant="secondary"
@@ -457,7 +643,7 @@ const triggerTypeOptions = [
                       class="gap-1 text-primary hover:text-primary"
                       @click="openSetNextModal"
                     >
-                      <Edit16Regular class="size-3" />
+                      <Pencil class="size-3.5" />
                       手动指定
                     </Button>
                   </div>
@@ -468,19 +654,118 @@ const triggerTypeOptions = [
                   size="sm"
                   variant="warning"
                   v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
-                  class="mb-3"
+                  class="mt-3"
                 >
                   <AlertTitle>功能限制提醒</AlertTitle>
                   <AlertDescription class="mt-0.5">
-                    当前连接模式 (OpenLive) 无法获取用户
-                    UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
+                    当前连接模式 (OpenLive) 无法获取用户 UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
                   </AlertDescription>
                 </Alert>
               </template>
             </ActionList>
 
-            <!-- 多账号管理设置 -->
-            <BiliAccountManagerCard v-else-if="currentMenuKey === 'account-settings'" />
+            <!-- 发送账号路由快捷卡片（不再重复嵌入整页多账号管理器） -->
+            <div
+              v-else-if="currentMenuKey === 'account-settings'"
+              class="space-y-4 max-w-2xl"
+            >
+              <Card>
+                <CardHeader class="p-3.5 border-b flex-row items-center justify-between space-y-0">
+                  <div>
+                    <CardTitle class="text-xs font-semibold">自动操作发送账号路由</CardTitle>
+                    <CardDescription class="text-[11px] mt-0.5">
+                      决定自动回复、礼物感谢、上舰私信与定时弹幕使用账号池中的哪一个 B 站账号发送。
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="gap-1.5 shrink-0"
+                    @click="router.push({ name: 'client-account-manage' })"
+                  >
+                    <ExternalLink class="size-3.5" />
+                    管理账号池
+                  </Button>
+                </CardHeader>
+                <CardContent class="p-3.5 space-y-3">
+                  <Alert
+                    v-if="accountManager.accounts.length === 0"
+                    size="sm"
+                    variant="warning"
+                  >
+                    <AlertTitle>尚未添加任何 B 站账号</AlertTitle>
+                    <AlertDescription class="mt-0.5">
+                      请前往【账号与凭据】添加主账号或房管小号后，再回到此处指定发送路由。
+                    </AlertDescription>
+                  </Alert>
+
+                  <template v-else>
+                    <SettingRow
+                      variant="compact"
+                      title="当前主账号（直播管理 / 房管）"
+                      :description="
+                        accountManager.mainAccount
+                          ? `UID ${accountManager.mainAccount.mid}${accountManager.mainAccount.alias ? ` · ${accountManager.mainAccount.alias}` : ''}`
+                          : '未指定'
+                      "
+                    >
+                      <Badge
+                        variant="outline"
+                        size="xs"
+                        :class="
+                          accountManager.mainAccount?.isValid
+                            ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                            : 'border-destructive/40 text-destructive bg-destructive/10'
+                        "
+                      >
+                        {{ accountManager.mainAccount?.name || '未设置' }}
+                        ({{ accountManager.mainAccount?.isValid ? '有效' : '失效' }})
+                      </Badge>
+                    </SettingRow>
+
+                    <SettingRow
+                      variant="compact"
+                      title="自动发弹幕 / 私信账号"
+                      description="可指定专用机器人小号发言，避免占用主播本人账号频率。"
+                    >
+                      <div class="w-56">
+                        <Select
+                          :model-value="accountManager.routing.danmakuAccountId || 'main'"
+                          @update:model-value="handleDanmakuAccountChange(String($event))"
+                        >
+                          <SelectTrigger class="w-full">
+                            <SelectValue placeholder="选择发送账号" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="main">
+                              跟随主账号 ({{ accountManager.mainAccount?.name || '未设置' }})
+                            </SelectItem>
+                            <SelectItem
+                              v-for="acc in accountManager.accounts"
+                              :key="acc.id"
+                              :value="acc.id"
+                            >
+                              {{ acc.name }}{{ acc.alias ? ` (${acc.alias})` : '' }}{{ acc.isValid ? '' : ' [已失效]' }}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </SettingRow>
+
+                    <SettingRow
+                      variant="compact"
+                      title="小号失效时自动回退主账号"
+                      description="当指定的发弹幕小号 Cookie 过期时，自动使用主账号继续发送，防止自动化中断。"
+                    >
+                      <Switch
+                        :checked="accountManager.routing.fallbackToMain"
+                        @update:checked="handleFallbackChange"
+                      />
+                    </SettingRow>
+                  </template>
+                </CardContent>
+              </Card>
+            </div>
 
             <!-- 签到设置 -->
             <CheckInSettings v-else-if="currentMenuKey === 'check-in-settings'" />
@@ -488,17 +773,17 @@ const triggerTypeOptions = [
             <!-- 消息队列设置 -->
             <div
               v-else-if="currentMenuKey === 'queue-settings'"
-              class="space-y-4"
+              class="space-y-4 max-w-2xl"
             >
               <Card>
                 <CardHeader class="p-3 border-b">
-                  <CardTitle>全局消息队列频率</CardTitle>
+                  <CardTitle class="text-xs font-semibold">全局消息队列频率</CardTitle>
                 </CardHeader>
                 <CardContent class="p-3 space-y-3">
                   <SettingRow
                     variant="compact"
-                    title="弹幕队列最小间隔"
-                    description="两条弹幕之间的最小发送间隔，过短可能导致被B站吞弹幕。建议 1000ms 以上。"
+                    title="弹幕队列最小间隔 (ms)"
+                    description="两条弹幕之间的最小发送间隔，过短可能导致被 B 站吞弹幕。建议 1000ms 以上。"
                   >
                     <NumberField
                       :model-value="biliFunc.danmakuInterval"
@@ -511,7 +796,7 @@ const triggerTypeOptions = [
 
                   <SettingRow
                     variant="compact"
-                    title="私信队列最小间隔"
+                    title="私信队列最小间隔 (ms)"
                     description="私信发送频率限制，建议保持默认 1000ms 或更高以避免触发 B 站频控。"
                   >
                     <NumberField
@@ -536,15 +821,14 @@ const triggerTypeOptions = [
       </div>
     </Card>
 
-    <!-- 弹窗部分 -->
-    <!-- 添加新自动操作 -->
+    <!-- 弹窗：新建规则 -->
     <Dialog v-model:open="showAddModal">
       <DialogContent class="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle class="text-sm">添加新的自动操作</DialogTitle>
+          <DialogTitle class="text-sm">新建自动操作规则</DialogTitle>
         </DialogHeader>
         <FormField
-          label="自动操作类型"
+          label="触发类型"
           class="pt-2"
         >
           <Select v-model="selectedTriggerType">
@@ -569,25 +853,25 @@ const triggerTypeOptions = [
           >
             取消
           </Button>
-          <Button @click="addAutoAction"> 确认 </Button>
+          <Button @click="addAutoAction"> 创建并编辑 </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
 
-    <!-- 手动指定下一条 (顺序模式) -->
+    <!-- 弹窗：手动指定下一条 (顺序模式) -->
     <Dialog v-model:open="showSetNextModal">
       <DialogContent class="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle class="text-sm">手动指定下一条 (顺序模式)</DialogTitle>
         </DialogHeader>
         <FormField
-          label="目标操作"
-          description="只会列出当前已启用、类型也已启用且使用全局定时器的操作。"
+          label="目标规则"
+          description="仅列出当前已启用、类型也已启用且使用全局定时器的规则。"
           class="pt-2"
         >
           <Select v-model="targetNextActionId">
             <SelectTrigger class="w-full">
-              <SelectValue placeholder="选择操作" />
+              <SelectValue placeholder="选择规则" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem
@@ -612,19 +896,20 @@ const triggerTypeOptions = [
       </DialogContent>
     </Dialog>
 
-    <!-- 测试舰长私信 -->
+    <!-- 弹窗：批量测试上舰感谢 -->
     <Dialog v-model:open="showTestModal">
       <DialogContent class="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle class="text-sm">测试舰长私信</DialogTitle>
+          <DialogTitle class="text-sm">批量测试上舰感谢</DialogTitle>
         </DialogHeader>
         <FormField
-          label="私信接收者 UID"
+          label="测试接收者 UID"
+          description="将向上舰分类下所有已启用规则广播一次模拟上舰事件。"
           class="pt-2"
         >
           <BiliUserSelector
             v-model:value="testUid"
-            placeholder="请输入B站用户UID"
+            placeholder="请输入 B 站用户 UID"
           />
         </FormField>
         <DialogFooter class="pt-3">
@@ -638,5 +923,11 @@ const triggerTypeOptions = [
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <!-- 弹窗：单条规则沙盒测试 -->
+    <RuleTestDialog
+      v-model:open="showRuleTestDialog"
+      :action="ruleTestTarget"
+    />
   </div>
 </template>

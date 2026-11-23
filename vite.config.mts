@@ -7,10 +7,10 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import Markdown from 'unplugin-vue-markdown/vite'
 import { defineConfig } from 'vite'
-import checker from 'vite-plugin-checker'
 import svgLoader from 'vite-svg-loader'
 
 import { customHtmlSandboxLibsPlugin } from './customHtmlSandboxLibsPlugin.ts'
+import { docsFrontmatterMetaPlugin, setupDocsMarkdown } from './scripts/docsMarkdownSetup.ts'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -34,17 +34,8 @@ const removeSodipodiInkscape = {
 export default defineConfig({
   appType: 'spa',
   plugins: [
+    docsFrontmatterMetaPlugin(),
     customHtmlSandboxLibsPlugin(),
-    checker({
-      enableBuild: false,
-      vueTsc: {
-        tsconfigPath: 'tsconfig.json',
-        // 并行模式减少检查时间
-        root: import.meta.dirname,
-      },
-      // 仅在 build 时启用 overlay，避免开发时过多干扰
-      overlay: { initialIsOpen: false },
-    }),
     UnoCSS(),
     {
       name: 'drop-ort-wasm',
@@ -90,12 +81,16 @@ export default defineConfig({
         ],
       },
     }),
-    Markdown({}),
+    Markdown({
+      wrapperClasses: (id) => (id.includes('/content/docs/') || id.includes('\\content\\docs\\') ? 'docs-prose' : 'markdown-body'),
+      markdownSetup: setupDocsMarkdown,
+    }),
     AutoImport({
       imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', 'date-fns'],
       dts: 'src/auto-imports.d.ts',
     }),
     Components({
+      dirs: ['src/components', 'src/apps/docs/components/mdx'],
       resolvers: [],
       dts: 'src/components.d.ts',
       extensions: ['vue', 'md'],

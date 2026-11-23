@@ -95,46 +95,20 @@ export interface VoteVoterInfo {
   lastVoteTime: number
 }
 
-export type VoteOptionWithVoters = VoteOption & {
-  contribution?: number
+export type VoteOptionWithVoters = Omit<VoteOption, 'voterDetails'> & {
   voterDetails?: VoteVoterInfo[]
 }
 
-export interface VoteOptionDtoModel extends VoteOptionDto {
-  contribution?: number
-}
+export type VoteOptionDtoModel = VoteOptionDto
 
-export interface VoteSessionModel extends Omit<ResponseVoteSession, 'options'> {
+export interface VoteSessionModel extends Omit<ResponseVoteSession, 'options' | 'multiVoteMode'> {
   options: VoteOptionWithVoters[]
-  isPaused?: boolean
-  pausedRemainingSeconds?: number | null
-  isUnlimited?: boolean
-  allowMultipleVotes?: boolean
-  multiVoteMode?: VoteMultiMode
-  winnerOverride?: string | null
-  totalContribution?: number
+  multiVoteMode: VoteMultiMode
 }
 
-export interface VoteOBSDataModel extends Omit<VoteOBSData, 'options'> {
+export interface VoteOBSDataModel extends Omit<VoteOBSData, 'options' | 'resultMode'> {
   options: VoteOptionDtoModel[]
-  totalContribution?: number
-  resultMode?: VoteResultMode
-  isPaused?: boolean
-  isUnlimited?: boolean
-  winnerByDraw?: boolean
-  recentVoterName?: string | null
-  recentVoterOption?: string | null
-  recentVoteTime?: number | null
-  fontFamily?: string
-  fontScale?: number
-  borderRadius?: number
-  cardOpacity?: number
-  backdropBlur?: number
-  accentColor?: string
-  leadingColor?: string
-  duelLeftColor?: string
-  duelRightColor?: string
-  showRecentVoter?: boolean
+  resultMode: VoteResultMode
 }
 
 export interface CreateVotePayload {

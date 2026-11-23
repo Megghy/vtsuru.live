@@ -21,6 +21,9 @@ export interface OrgInviteStreamerListItem {
   targetStreamerUserName?: string | null
   usedCount: number
   /** @nullable */
+  maxUses?: number | null
+  allowPointManage: boolean
+  /** @nullable */
   lastUsedAt?: number | null
   isRevoked: boolean
 }

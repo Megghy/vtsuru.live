@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TrendingUpOutline from '@vicons/ionicons5/es/TrendingUpOutline'
+import { TrendingUp } from 'lucide-vue-next'
 import { BarChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -145,7 +145,7 @@ onMounted(loadHistoricalData)
             <div class="flex flex-col justify-center p-3 bg-muted/20 rounded-md border">
               <span class="text-xs text-muted-foreground">今日接收总数</span>
               <div class="flex items-center gap-2 mt-1">
-                <TrendingUpOutline class="size-6 text-primary" />
+                <TrendingUp class="size-6 text-primary" />
                 <span class="text-2xl font-bold text-foreground">
                   {{ currentStatistic.count?.toLocaleString() ?? 0 }}
                 </span>

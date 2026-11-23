@@ -11,6 +11,8 @@ export interface OrgInvitePreviewModel {
   type: string
   orgId: number
   orgName: string
+  /** @nullable */
+  orgDescription?: string | null
   expiresAt: number
   role?: OrgMemberRoles
   createdByUserId: number
@@ -20,4 +22,8 @@ export interface OrgInvitePreviewModel {
   targetUserId?: number | null
   /** @nullable */
   targetStreamerUserId?: number | null
+  /** @nullable */
+  allowPointManage?: boolean | null
+  /** @nullable */
+  maxUses?: number | null
 }

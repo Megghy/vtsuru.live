@@ -1,25 +1,16 @@
 <script setup lang="ts">
-import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
-import ArrowSync24Filled from '@vicons/fluent/es/ArrowSync24Filled'
-import Color24Filled from '@vicons/fluent/es/Color24Filled'
-import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
-import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
-import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
-import Filter24Filled from '@vicons/fluent/es/Filter24Filled'
-import History24Filled from '@vicons/fluent/es/History24Filled'
-import Megaphone24Filled from '@vicons/fluent/es/Megaphone24Filled'
-import Send24Filled from '@vicons/fluent/es/Send24Filled'
-import Trophy20Regular from '@vicons/fluent/es/Trophy20Regular'
-import VehicleShip20Regular from '@vicons/fluent/es/VehicleShip20Regular'
-import WindowShield20Regular from '@vicons/fluent/es/WindowShield20Regular'
+import { Filter, History, Megaphone, Monitor, Palette, RefreshCw, RotateCcw, Send, ShieldCheck, Trash2 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { getApiLiveGetAll, getApiLiveRanking } from '@/api/generated/live/live'
 import type { ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/generated/model'
-import { GuardLevel } from '@/api/generated/model'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { DEFAULT_OVERLAY_POSITION } from '@/apps/client/utils/overlayWindow'
+import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
+
+import GiftWindowThankTab from './GiftWindowThankTab.vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -86,80 +77,12 @@ function applyPreset(preset: keyof typeof presets) {
 }
 
 function resetWindowPosition() {
-  giftWindow.setPosition(0, 0)
+  giftWindow.setPosition(DEFAULT_OVERLAY_POSITION.x, DEFAULT_OVERLAY_POSITION.y)
   toast.success('窗口位置已重置至默认坐标')
-}
-
-// 实时感谢数据
-const realtimeRankList = computed(() => giftWindow.getRankedList())
-const realtimeGuardList = computed(() => giftWindow.getOnlineGuardList())
-const realtimeViewerList = computed(() => giftWindow.getOnlineViewerList())
-
-function getGuardTitle(level: GuardLevel): string {
-  switch (level) {
-    case GuardLevel.Zongdu:
-      return '总督'
-    case GuardLevel.Tidu:
-      return '提督'
-    case GuardLevel.Jianzhang:
-      return '舰长'
-    default:
-      return ''
-  }
 }
 
 function formatPaid(totalPaid: number) {
   return `¥${totalPaid.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-}
-
-function copyThankText() {
-  const ranked = realtimeRankList.value
-  const guards = realtimeGuardList.value
-
-  const lines: string[] = []
-  lines.push(`【本场打赏贡献榜 Top ${ranked.length}】`)
-  if (ranked.length === 0) {
-    lines.push('(暂无打赏记录)')
-  } else {
-    ranked.forEach((r, idx) => {
-      const guardStr = r.guardLevel > 0 ? ` [${getGuardTitle(r.guardLevel)}]` : ''
-      const onlineStr = r.isOnline ? ' (在场)' : ''
-      lines.push(`${idx + 1}. ${r.uname} - ¥${r.score}${guardStr}${onlineStr}`)
-    })
-  }
-
-  lines.push('')
-  lines.push(`【在场大航海名单 (共 ${guards.length} 人)】`)
-  if (guards.length === 0) {
-    lines.push('(暂无在场大航海记录)')
-  } else {
-    guards.forEach((g) => {
-      lines.push(`- ${g.uname} [${getGuardTitle(g.guardLevel)}] (${g.lastAction})`)
-    })
-  }
-
-  const viewers = realtimeViewerList.value
-  lines.push('')
-  lines.push(`【在场陪伴与在线观众 (共 ${viewers.length} 人)】`)
-  if (viewers.length === 0) {
-    lines.push('(暂无在线观众数据)')
-  } else {
-    viewers.forEach((v) => {
-      const formerStr = v.isFormerGuard ? ' [老舰长]' : ''
-      const medalStr = v.medalLevel ? ` [${v.medalName || '粉丝'} Lv.${v.medalLevel}]` : ''
-      lines.push(`- ${v.uname}${formerStr}${medalStr} (${v.lastAction})`)
-    })
-  }
-
-  const text = lines.join('\n')
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      toast.success('已复制下播感谢文案至剪贴板')
-    })
-    .catch(() => {
-      toast.error('复制到剪贴板失败')
-    })
 }
 
 // 历史榜单查询
@@ -243,11 +166,15 @@ function toggleFilterType(val: string, checked: boolean) {
     >
       <template #actions>
         <Badge
-          variant="success"
-          class="h-6 px-2.5"
-          :class="giftWindow.isGiftWindowOpen ? ' ' : 'text-muted-foreground'"
+          :variant="giftWindow.isGiftWindowOpen ? 'success' : 'secondary'"
+          size="xs"
+          class="gap-1.5 px-2"
         >
-          {{ giftWindow.isGiftWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
+          <span
+            class="size-1.5 rounded-full"
+            :class="giftWindow.isGiftWindowOpen ? 'bg-emerald-500' : 'bg-muted-foreground/50'"
+          />
+          {{ giftWindow.isGiftWindowOpen ? '浮窗运行中' : '浮窗已关闭' }}
         </Badge>
 
         <Button
@@ -267,7 +194,7 @@ function toggleFilterType(val: string, checked: boolean) {
             :disabled="!giftWindow.isGiftWindowOpen"
             @click="giftWindow.sendTestGift()"
           >
-            <Send24Filled class="size-3.5 text-sky-500" />
+            <Send class="size-3.5 text-sky-500" />
             测试礼物
           </Button>
           <Button
@@ -276,7 +203,7 @@ function toggleFilterType(val: string, checked: boolean) {
             :disabled="!giftWindow.isGiftWindowOpen"
             @click="giftWindow.clearGifts()"
           >
-            <Delete24Regular class="size-3.5 text-amber-500" />
+            <Trash2 class="size-3.5 text-amber-500" />
             清空
           </Button>
         </div>
@@ -294,35 +221,35 @@ function toggleFilterType(val: string, checked: boolean) {
           value="thank"
           class="gap-1.5"
         >
-          <Megaphone24Filled class="size-3.5" />
+          <Megaphone class="size-3.5" />
           下播感谢
         </TabsTrigger>
         <TabsTrigger
           value="appearance"
           class="gap-1.5"
         >
-          <Color24Filled class="size-3.5" />
+          <Palette class="size-3.5" />
           外观与主题
         </TabsTrigger>
         <TabsTrigger
           value="window"
           class="gap-1.5"
         >
-          <Desktop24Filled class="size-3.5" />
+          <Monitor class="size-3.5" />
           窗口与布局
         </TabsTrigger>
         <TabsTrigger
           value="filter"
           class="gap-1.5"
         >
-          <Filter24Filled class="size-3.5" />
+          <Filter class="size-3.5" />
           筛选与规则
         </TabsTrigger>
         <TabsTrigger
           value="history"
           class="gap-1.5"
         >
-          <History24Filled class="size-3.5" />
+          <History class="size-3.5" />
           往期榜单
         </TabsTrigger>
       </TabsList>
@@ -332,190 +259,7 @@ function toggleFilterType(val: string, checked: boolean) {
         value="thank"
         class="pt-3 space-y-3 client-readable"
       >
-        <Card>
-          <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
-            <CardTitle>本场打赏前 50 ➕ 在场舰长名单</CardTitle>
-            <Button
-              variant="secondary"
-              class="gap-1 text-primary"
-              @click="copyThankText"
-            >
-              <Copy24Regular class="size-3.5" />
-              一键复制感谢文案
-            </Button>
-          </CardHeader>
-
-          <CardContent class="p-3">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- 左列: 本场打赏榜 Top 50 -->
-              <div>
-                <div class="flex-between mb-2">
-                  <span class="font-semibold text-[13px] text-foreground flex items-center gap-1.5">
-                    <Trophy20Regular class="size-4 text-amber-500" />
-                    本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    size="xs"
-                    class="text-amber-600 bg-amber-500/10"
-                  >
-                    上限 {{ giftWindow.settings.rankDisplayCount }} 人
-                  </Badge>
-                </div>
-
-                <div class="max-h-[460px] overflow-y-auto pr-1">
-                  <Empty
-                    v-if="realtimeRankList.length === 0"
-                    description="本场暂无打赏记录"
-                    class="py-8"
-                  />
-                  <div
-                    v-else
-                    class="flex flex-col gap-1.5"
-                  >
-                    <div
-                      v-for="(r, idx) in realtimeRankList"
-                      :key="r.id"
-                      class="p-2 px-3 rounded-md bg-popover border border-border transition-all duration-150 hover:border-primary"
-                      :class="{ 'border-amber-500/35 bg-amber-500/5': idx < 3 }"
-                    >
-                      <div class="flex-between w-full">
-                        <div class="flex items-center gap-2">
-                          <span
-                            class="w-5 font-bold text-xs text-center text-muted-foreground"
-                            :class="{
-                              'text-amber-500': idx === 0,
-                              'text-slate-400': idx === 1,
-                              'text-amber-700 dark:text-amber-600': idx === 2,
-                            }"
-                          >
-                            {{ idx + 1 }}
-                          </span>
-                          <div class="relative flex-center">
-                            <img
-                              :src="r.uface || 'https://i0.hdslb.com/bfs/face/member/noface.jpg'"
-                              referrerpolicy="no-referrer"
-                              class="size-6 rounded-full object-cover"
-                              alt="avatar"
-                            />
-                            <span
-                              class="absolute -right-0.5 -bottom-0.5 size-1.75 rounded-full bg-slate-400 border-[1.5px] border-popover"
-                              :class="{ 'bg-emerald-500 shadow-[0_0_4px_#22c55e]': r.isOnline }"
-                              :title="r.isOnline ? '在场活跃' : '离线'"
-                            />
-                          </div>
-                          <span class="text-xs font-semibold text-foreground">{{ r.uname }}</span>
-                          <Badge
-                            v-if="r.guardLevel > 0"
-                            variant="outline"
-                            class="text-[9px] h-4 px-1"
-                            :class="
-                              r.guardLevel === GuardLevel.Zongdu
-                                ? 'text-destructive border-destructive/40 bg-destructive/10'
-                                : r.guardLevel === GuardLevel.Tidu
-                                  ? 'text-amber-600 border-amber-500/40 bg-amber-500/10'
-                                  : 'text-sky-600 border-sky-500/40 bg-sky-500/10'
-                            "
-                          >
-                            {{ getGuardTitle(r.guardLevel) }}
-                          </Badge>
-                        </div>
-
-                        <div class="flex items-center gap-1.5">
-                          <Badge
-                            v-if="r.isOnline"
-                            variant="success"
-                            size="xs"
-                            class="text-[9px]"
-                          >
-                            在场
-                          </Badge>
-                          <span class="text-xs font-bold text-amber-500"> ¥{{ r.score.toLocaleString() }} </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 右列: 还在直播间的在场舰长 -->
-              <div>
-                <div class="flex-between mb-2">
-                  <span class="font-semibold text-[13px] text-foreground flex items-center gap-1.5">
-                    <VehicleShip20Regular class="size-4 text-sky-500" />
-                    还在直播间的舰长 ({{ realtimeGuardList.length }} 人)
-                  </span>
-                  <span class="text-[11px] text-muted-foreground">
-                    {{ giftWindow.settings.onlineThresholdMinutes }} 分钟内有互动
-                  </span>
-                </div>
-
-                <div class="max-h-[460px] overflow-y-auto pr-1">
-                  <Empty
-                    v-if="realtimeGuardList.length === 0"
-                    description="当前暂无在场大航海观众活跃"
-                    class="py-8"
-                  />
-                  <div
-                    v-else
-                    class="flex flex-col gap-1.5"
-                  >
-                    <div
-                      v-for="g in realtimeGuardList"
-                      :key="g.id"
-                      class="p-2 px-3 rounded-md bg-popover border border-sky-500/30 bg-sky-500/5"
-                    >
-                      <div class="flex-between w-full">
-                        <div class="flex items-center gap-2">
-                          <Badge
-                            variant="warning"
-                            size="xs"
-                            class="text-[9px]"
-                            :class="
-                              g.guardLevel === GuardLevel.Zongdu
-                                ? 'text-destructive border-destructive/40 bg-destructive/10'
-                                : g.guardLevel === GuardLevel.Tidu
-                                  ? ' '
-                                  : 'text-sky-600 border-sky-500/40 bg-sky-500/10'
-                            "
-                          >
-                            {{ getGuardTitle(g.guardLevel) }}
-                          </Badge>
-                          <div class="relative flex-center">
-                            <img
-                              :src="g.uface || 'https://i0.hdslb.com/bfs/face/member/noface.jpg'"
-                              referrerpolicy="no-referrer"
-                              class="size-6 rounded-full object-cover"
-                              alt="avatar"
-                            />
-                            <span
-                              class="absolute -right-0.5 -bottom-0.5 size-1.75 rounded-full border-[1.5px] border-popover bg-emerald-500 shadow-[0_0_4px_#22c55e]"
-                            />
-                          </div>
-                          <span class="text-xs font-semibold text-foreground">{{ g.uname }}</span>
-                        </div>
-
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[11px] text-muted-foreground">
-                            {{ g.lastAction }}
-                          </span>
-                          <Badge
-                            v-if="g.rankIndex"
-                            variant="warning"
-                            size="xs"
-                            class="text-[9px]"
-                          >
-                            榜 #{{ g.rankIndex }}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <GiftWindowThankTab />
       </TabsContent>
 
       <!-- 外观与主题 -->
@@ -634,6 +378,17 @@ function toggleFilterType(val: string, checked: boolean) {
                   :max="24"
                   :step="1"
                   @update:model-value="giftWindow.settings.fontSize = $event?.[0] ?? 14"
+                />
+              </FormField>
+
+              <FormField
+                label="显示字体"
+                class="min-w-0 sm:col-span-2"
+              >
+                <GoogleFontPicker
+                  :model-value="giftWindow.settings.fontFamily || null"
+                  placeholder="跟随系统默认字体"
+                  @update:model-value="giftWindow.settings.fontFamily = $event || ''"
                 />
               </FormField>
 
@@ -776,7 +531,7 @@ function toggleFilterType(val: string, checked: boolean) {
                 class="gap-1.5"
                 @click="resetWindowPosition"
               >
-                <ArrowReset24Regular class="size-3.5" />
+                <RotateCcw class="size-3.5" />
                 重置至默认坐标
               </Button>
             </div>
@@ -862,7 +617,7 @@ function toggleFilterType(val: string, checked: boolean) {
               class="py-1"
             >
               <template #title>
-                <WindowShield20Regular class="size-4 text-muted-foreground shrink-0" />
+                <ShieldCheck class="size-4 text-muted-foreground shrink-0" />
                 <span class="font-medium text-foreground truncate">防 OBS / 屏幕共享捕捉 (防抓取)</span>
               </template>
               <Switch v-model:checked="giftWindow.settings.contentProtected" />
@@ -1071,7 +826,7 @@ function toggleFilterType(val: string, checked: boolean) {
                 :disabled="isHistoryLoading"
                 @click="loadHistory"
               >
-                <ArrowSync24Filled
+                <RefreshCw
                   class="size-3.5"
                   :class="{ 'animate-spin': isHistoryLoading }"
                 />

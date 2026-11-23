@@ -30,6 +30,7 @@ export interface TranscriptionSettings {
   profiles: TranscriptionProfile[]
   syncObsSubtitle?: boolean
   obsSubtitleChannel?: string
+  customFfmpegPath?: string
 }
 
 export type TranscriptionPhase =

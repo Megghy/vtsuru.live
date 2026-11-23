@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import CloudArchive24Filled from '@vicons/fluent/es/CloudArchive24Filled'
-import DataTrending24Filled from '@vicons/fluent/es/DataTrending24Filled'
-import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
-import PersonAccounts24Filled from '@vicons/fluent/es/PersonAccounts24Filled'
+import { CloudUpload, Monitor, TrendingUp, UserCog } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -46,21 +43,21 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
           value="connection"
           class="gap-1.5"
         >
-          <CloudArchive24Filled class="size-3.5" />
+          <CloudUpload class="size-3.5" />
           连接设置
         </TabsTrigger>
         <TabsTrigger
           value="stats"
           class="gap-1.5"
         >
-          <DataTrending24Filled class="size-3.5" />
+          <TrendingUp class="size-3.5" />
           监控与统计
         </TabsTrigger>
         <TabsTrigger
           value="system"
           class="gap-1.5"
         >
-          <Desktop24Filled class="size-3.5" />
+          <Monitor class="size-3.5" />
           系统与诊断
         </TabsTrigger>
       </TabsList>
@@ -75,7 +72,7 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
               <div class="size-8 rounded-md flex-center text-primary bg-primary/10 shrink-0">
-                <PersonAccounts24Filled class="size-4.5" />
+                <UserCog class="size-4.5" />
               </div>
               <div>
                 <div class="text-xs font-semibold text-foreground flex items-center gap-1.5">

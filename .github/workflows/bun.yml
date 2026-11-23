@@ -34,7 +34,7 @@ jobs:
           BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          pattern='^(openapi\.json|orval\.config\.ts|scripts/check-api-gen\.mjs|src/api/generated/)'
+          pattern='^(openapi\.json|orval\.config\.ts|scripts/(gen|check)-api\.mjs|src/api/generated/)'
           if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
             if git fetch --depth=1 origin "$BEFORE" && ! git diff --name-only "$BEFORE" HEAD | grep -Eq "$pattern"; then
               echo "skip api:check (no OpenAPI/generated changes)"

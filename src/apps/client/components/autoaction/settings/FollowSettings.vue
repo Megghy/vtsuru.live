@@ -3,12 +3,9 @@ import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { SettingRow } from '@/shared/ui/setting-row'
 
-defineProps({
-  action: {
-    type: Object as () => AutoActionItem,
-    required: true,
-  },
-})
+defineProps<{
+  action: AutoActionItem
+}>()
 </script>
 
 <template>
@@ -20,18 +17,8 @@ defineProps({
       type="switch"
       variant="compact"
       title="防止重复发送"
-      hint="同一用户在单次直播中多次关注仅触发一次感谢"
+      hint="同一用户在本次会话中反复关注/取关仅触发一次感谢（按规则独立记录）"
       v-model="action.triggerConfig.preventRepeat"
-    />
-
-    <SettingRow
-      type="number"
-      variant="compact"
-      title="单次合并上限"
-      hint="单条感谢弹幕中最多合并展示的用户数量"
-      :min="1"
-      :max="50"
-      v-model="action.actionConfig.maxUsersPerMsg"
     />
   </div>
 </template>

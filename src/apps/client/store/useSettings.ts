@@ -10,6 +10,7 @@ export interface ClientBackupSettings {
   presetHours: number
   customHours: number | null
   keepCount: number
+  includeSensitiveCredentials: boolean
   lastBackupAt: number | null
   lastBackupFile: string | null
 }
@@ -30,6 +31,8 @@ export interface VTsuruClientSettings {
 
   // EventFetcher 功能开关
   enableEventFetcher: boolean
+  // 看门狗心跳超时自动重载主界面
+  watchdogAutoReload?: boolean
 
   // 机器人小号独立自动操作
   enableBotAccount: boolean
@@ -58,6 +61,7 @@ export const useSettings = defineStore('settings', () => {
 
     // 默认启用 EventFetcher
     enableEventFetcher: true,
+    watchdogAutoReload: false,
 
     // 机器人小号设置
     enableBotAccount: false,
@@ -71,6 +75,7 @@ export const useSettings = defineStore('settings', () => {
       presetHours: 24,
       customHours: null,
       keepCount: 10,
+      includeSensitiveCredentials: false,
       lastBackupAt: null,
       lastBackupFile: null,
     },

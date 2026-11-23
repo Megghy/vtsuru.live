@@ -120,6 +120,7 @@ export function useCheckIn(
   liveStartTime: Ref<number | null>,
   _isTianXuanActive: Ref<boolean>,
   sendDanmaku: (roomId: number, message: string) => Promise<boolean>,
+  sendPrivateMessage?: (userId: number, message: string) => Promise<boolean>,
 ) {
   const checkInConfig = usePersistedStorage<CheckInConfig>('autoAction.checkin.config', createDefaultCheckInConfig())
   const isConfigLoaded = persistLoaded(checkInConfig)
@@ -169,7 +170,7 @@ export function useCheckIn(
       TriggerType.DANMAKU,
       roomId.value,
       runtimeState,
-      { sendLiveDanmaku: sendDanmaku },
+      { sendLiveDanmaku: sendDanmaku, sendPrivateMessage },
       {
         customContextBuilder: () => checkInContext,
         skipUserFilters: true,

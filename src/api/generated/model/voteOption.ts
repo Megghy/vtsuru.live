@@ -10,6 +10,7 @@ import type { VoteVoterInfo } from './voteVoterInfo'
 export interface VoteOption {
   text: string
   count: number
+  contribution: number
   voters: string[]
   voterDetails: VoteVoterInfo[]
 }

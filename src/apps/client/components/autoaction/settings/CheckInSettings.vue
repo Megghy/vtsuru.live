@@ -1,14 +1,8 @@
 <script lang="ts" setup>
-import ArrowClockwise16Filled from '@vicons/fluent/es/ArrowClockwise16Filled'
-import Delete16Filled from '@vicons/fluent/es/Delete16Filled'
-import Flash24Regular from '@vicons/fluent/es/Flash24Regular'
-import Info24Filled from '@vicons/fluent/es/Info24Filled'
-import People24Regular from '@vicons/fluent/es/People24Regular'
-import Search24Regular from '@vicons/fluent/es/Search24Regular'
-import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import { Info, RotateCw, Search, Settings, Trash2, Users, Zap } from 'lucide-vue-next'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
@@ -17,7 +11,7 @@ import {
   postApiCheckinAdminReset,
   postApiCheckinCheckInFor,
 } from '@/api/generated/check-in/check-in'
-import type { CheckInResponse, ResponseUserCheckInModel, SettingPoint } from '@/api/generated/model'
+import type { ResponseUserCheckInModel, SettingPoint } from '@/api/generated/model'
 import { FunctionTypes } from '@/api/generated/model'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
@@ -39,7 +33,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 
 import AutoActionEditor from '../AutoActionEditor.vue'
 import { CHECKIN_PLACEHOLDERS } from '../placeholders'
-import TemplateHelper from '../TemplateHelper.vue'
 
 const autoActionStore = useAutoAction()
 const config = autoActionStore.checkInModule.checkInConfig
@@ -48,9 +41,9 @@ const isLoading = ref(false)
 
 const customTestContext = ref({
   checkin: {
-    points: 0,
-    consecutiveDays: 0,
-    todayRank: 0,
+    points: 20,
+    consecutiveDays: 5,
+    todayRank: 3,
     time: new Date(),
   },
 })
@@ -86,28 +79,16 @@ const defaultPointSetting: SettingPoint = {
   checkInOnlyOnStreaming: false,
 }
 
-const serverSetting = computed<SettingPoint>(() => {
-  return accountInfo.value?.settings?.point ?? defaultPointSetting
-})
+const serverSetting = computed<SettingPoint>(() => accountInfo.value?.settings?.point ?? defaultPointSetting)
+const canEdit = computed(() => Boolean(accountInfo.value?.settings?.point))
 
-const canEdit = computed(() => {
-  return accountInfo.value && accountInfo.value.settings && accountInfo.value.settings.point
-})
-
-async function updateSettings() {
-  const serverSaved = await updateServerSettings()
-  if (serverSaved) {
-    toast.success('设置已保存')
-  }
-  return serverSaved
-}
-
-async function updateServerSettings() {
+async function updateServerSettings(showSuccessToast = true) {
   if (!canEdit.value) return false
   isLoading.value = true
 
   try {
     await SaveSetting('Point', accountInfo.value.settings.point)
+    if (showSuccessToast) toast.success('云端签到规则已保存')
     return true
   } catch (err) {
     toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
@@ -125,6 +106,11 @@ const timeRange = ref<string>('all')
 const userFilter = ref<string>('')
 const rankingPage = ref(1)
 const rankingPageSize = ref(10)
+
+// 本地筛选条件变化时仅重置页码，不再重复请求后端接口
+watch([timeRange, userFilter], () => {
+  rankingPage.value = 1
+})
 
 const timeRangeOptions = [
   { label: '全部时间', value: 'all' },
@@ -169,8 +155,8 @@ const filteredRankingData = computed(() => {
     }
   }
 
-  if (userFilter.value) {
-    const keyword = userFilter.value.toLowerCase()
+  if (userFilter.value.trim()) {
+    const keyword = userFilter.value.trim().toLowerCase()
     filtered = filtered.filter((user) => user.name.toLowerCase().includes(keyword))
   }
 
@@ -182,12 +168,15 @@ const paginatedRankingData = computed(() => {
   return filteredRankingData.value.slice(start, start + rankingPageSize.value)
 })
 
+function getAbsoluteRank(pageIdx: number): number {
+  return (rankingPage.value - 1) * rankingPageSize.value + pageIdx + 1
+}
+
 async function loadCheckInRanking() {
   if (isLoadingRanking.value) return
   isLoadingRanking.value = true
   try {
     const response = await getApiCheckinAdminUsers()
-
     if (response.code === 200) {
       rankingData.value = response.data
       rankingPage.value = 1
@@ -205,13 +194,10 @@ async function loadCheckInRanking() {
 }
 
 const isResetting = ref(false)
-const resetTargetId = ref<string>()
 
 async function resetUserCheckInByGuid(ouId: string) {
   if (!ouId || isResetting.value) return
   isResetting.value = true
-  resetTargetId.value = ouId
-
   try {
     const response = await postApiCheckinAdminReset({ ouId })
     if (response && response.code === 200) {
@@ -225,7 +211,6 @@ async function resetUserCheckInByGuid(ouId: string) {
     toast.error('重置用户签到数据时发生错误')
   } finally {
     isResetting.value = false
-    resetTargetId.value = undefined
   }
 }
 
@@ -256,7 +241,7 @@ async function handleTestCheckIn() {
   if (!testUid.value || !serverSetting.value.enableCheckIn) {
     testResult.value = {
       success: false,
-      message: '请输入有效的UID或确保签到功能已启用',
+      message: '请输入有效的 UID 并确保签到功能已启用',
     }
     return
   }
@@ -280,7 +265,7 @@ async function handleTestCheckIn() {
     } else {
       testResult.value = {
         success: false,
-        message: `API返回错误: ${response.message || '未知错误'}`,
+        message: `API 返回错误: ${response.message || '未知错误'}`,
       }
     }
   } catch (error) {
@@ -308,14 +293,14 @@ function formatRelativeTime(ts: number) {
 }
 
 onMounted(() => {
-  loadCheckInRanking()
+  void loadCheckInRanking()
 })
 </script>
 
 <template>
   <Card v-if="config">
     <CardHeader class="p-3 border-b">
-      <CardTitle>弹幕签到设置</CardTitle>
+      <CardTitle class="text-xs font-semibold">弹幕签到设置</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3">
@@ -325,21 +310,21 @@ onMounted(() => {
             value="settings"
             class="gap-1.5"
           >
-            <Settings24Regular class="size-3.5" />
+            <Settings class="size-3.5" />
             功能设置
           </TabsTrigger>
           <TabsTrigger
             value="ranking"
             class="gap-1.5"
           >
-            <People24Regular class="size-3.5" />
+            <Users class="size-3.5" />
             签到排行榜
           </TabsTrigger>
           <TabsTrigger
             value="test"
             class="gap-1.5"
           >
-            <Flash24Regular class="size-3.5" />
+            <Zap class="size-3.5" />
             模拟测试
           </TabsTrigger>
         </TabsList>
@@ -354,20 +339,38 @@ onMounted(() => {
             variant="warning"
             v-if="!canEdit"
           >
-            <AlertDescription class="m-0"> 加载中或无法编辑设置，请稍后再试 </AlertDescription>
+            <AlertDescription class="m-0">加载中或无法编辑云端设置，请稍后再试</AlertDescription>
           </Alert>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <!-- 基础设置 -->
-            <div class="col-span-1 md:col-span-2 border rounded-md p-3 bg-muted/10 space-y-3">
-              <span class="font-semibold text-xs text-foreground block">基础设置</span>
+          <div class="space-y-3.5">
+            <!-- 云端规则区 -->
+            <div class="border rounded-md p-3 bg-muted/10 space-y-3">
+              <div class="flex-between">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-xs text-foreground">云端签到规则</span>
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                  >
+                    云端同步
+                  </Badge>
+                </div>
+                <Button
+                  size="xs"
+                  :disabled="!canEdit || isLoading"
+                  @click="updateServerSettings(true)"
+                >
+                  {{ isLoading ? '保存中...' : '保存云端规则' }}
+                </Button>
+              </div>
 
               <SettingRow
                 type="switch"
+                variant="compact"
                 title="启用签到功能"
                 description="观众发送签到命令可获得积分"
                 v-model="serverSetting.enableCheckIn"
-                @change="updateServerSettings"
+                @change="updateServerSettings(false)"
               />
 
               <div
@@ -377,146 +380,167 @@ onMounted(() => {
                 <FormField
                   label="签到命令"
                   required
+                  description="修改关键词后请点击右上角「保存云端规则」"
                 >
-                  <div class="flex items-center gap-2">
-                    <Input
-                      :model-value="serverSetting.checkInKeyword"
-                      placeholder="例如：签到"
-                      class="flex-1"
-                      @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value"
-                    />
-                    <Button @click="updateServerSettings"> 保存 </Button>
-                  </div>
+                  <Input
+                    v-model="serverSetting.checkInKeyword"
+                    placeholder="例如：签到"
+                  />
                 </FormField>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-2">
                   <SettingRow
                     type="switch"
+                    variant="compact"
                     title="要求已认证"
                     v-model="serverSetting.requireAuth"
-                    @change="updateServerSettings"
+                    @change="updateServerSettings(false)"
                   />
                   <SettingRow
                     type="switch"
+                    variant="compact"
                     title="允许自己签到"
                     v-model="serverSetting.allowSelfCheckIn"
-                    @change="updateServerSettings"
+                    @change="updateServerSettings(false)"
                   />
                   <SettingRow
                     type="switch"
+                    variant="compact"
                     title="允许查看排行"
                     :model-value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)"
                     @change="updateCheckInRanking"
                   />
                 </div>
-              </div>
-            </div>
 
-            <!-- 积分奖励配置 -->
-            <div
-              v-if="serverSetting.enableCheckIn"
-              class="col-span-1 md:col-span-2 border rounded-md p-3 bg-muted/10 space-y-3"
-            >
-              <span class="font-semibold text-xs text-foreground block">积分奖励配置</span>
-
-              <SettingRow
-                type="switch"
-                title="启用积分奖励"
-                v-model="serverSetting.givePointsForCheckIn"
-                @change="updateServerSettings"
-              />
-
-              <div
-                v-if="serverSetting.givePointsForCheckIn"
-                class="space-y-3 pt-1"
-              >
-                <SettingRow
-                  type="number"
-                  title="基础签到积分"
-                  :min="0"
-                  v-model="serverSetting.baseCheckInPoints"
-                  @change="updateServerSettings"
-                />
-
-                <SettingRow
-                  type="switch"
-                  title="连续签到奖励"
-                  v-model="serverSetting.enableConsecutiveBonus"
-                  @change="updateServerSettings"
-                />
-
-                <div
-                  v-if="serverSetting.enableConsecutiveBonus"
-                  class="grid grid-cols-1 sm:grid-cols-2 gap-2"
-                >
+                <!-- 积分奖励配置 -->
+                <div class="border-t pt-3 space-y-2.5">
                   <SettingRow
-                    type="number"
-                    title="每日额外奖励"
-                    :min="0"
-                    v-model="serverSetting.bonusPointsPerDay"
-                    @change="updateServerSettings"
+                    type="switch"
+                    variant="compact"
+                    title="启用积分奖励"
+                    v-model="serverSetting.givePointsForCheckIn"
+                    @change="updateServerSettings(false)"
                   />
-                  <SettingRow
-                    type="number"
-                    title="奖励积分上限"
-                    :min="0"
-                    v-model="serverSetting.maxBonusPoints"
-                    @change="updateServerSettings"
-                  />
+
+                  <div
+                    v-if="serverSetting.givePointsForCheckIn"
+                    class="space-y-2.5 pl-2 border-l-2 border-primary/30"
+                  >
+                    <SettingRow
+                      type="number"
+                      variant="compact"
+                      title="基础签到积分"
+                      :min="0"
+                      v-model="serverSetting.baseCheckInPoints"
+                    />
+
+                    <SettingRow
+                      type="switch"
+                      variant="compact"
+                      title="连续签到奖励"
+                      v-model="serverSetting.enableConsecutiveBonus"
+                      @change="updateServerSettings(false)"
+                    />
+
+                    <div
+                      v-if="serverSetting.enableConsecutiveBonus"
+                      class="grid grid-cols-1 sm:grid-cols-2 gap-2"
+                    >
+                      <SettingRow
+                        type="number"
+                        variant="compact"
+                        title="每日额外奖励"
+                        :min="0"
+                        v-model="serverSetting.bonusPointsPerDay"
+                      />
+                      <SettingRow
+                        type="number"
+                        variant="compact"
+                        title="奖励积分上限"
+                        :min="0"
+                        v-model="serverSetting.maxBonusPoints"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- 自动回复消息 -->
+            <!-- 客户端本地回复模板区 -->
             <div
               v-if="serverSetting.enableCheckIn"
-              class="col-span-1 md:col-span-2 border rounded-md p-3 bg-muted/10 space-y-3"
+              class="border rounded-md p-3 bg-muted/10 space-y-3"
             >
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-xs text-foreground">客户端自动回复模板</span>
+                <Badge
+                  variant="secondary"
+                  size="xs"
+                >
+                  本地实时保存
+                </Badge>
+              </div>
+
               <SettingRow
                 type="switch"
+                variant="compact"
                 title="发送签到回复"
+                hint="关闭后仍记录积分，但客户端不向直播间或私信发送回复"
                 v-model="config.sendReply"
               />
 
               <div
                 v-if="config.sendReply"
-                class="space-y-4 pt-1"
+                class="space-y-3.5 pt-1"
               >
-                <TemplateHelper :placeholders="checkInPlaceholders" />
-
-                <div class="reply-editor-section space-y-2 p-3 rounded-md border bg-card">
+                <div class="space-y-2 p-3 rounded-md border bg-card">
                   <span class="font-semibold text-xs text-foreground block">签到成功回复</span>
                   <AutoActionEditor
                     :action="config.successAction"
                     :hide-name="true"
                     :hide-enabled="true"
                     :hide-user-filter="true"
+                    :hide-trigger-settings="true"
                     :custom-test-context="customTestContext"
+                    :extra-placeholders="checkInPlaceholders"
                   />
                 </div>
 
-                <div class="reply-editor-section space-y-2 p-3 rounded-md border bg-card">
+                <!-- 早鸟签到（开播前 30 分钟内） -->
+                <div class="space-y-2.5 p-3 rounded-md border bg-card">
+                  <SettingRow
+                    type="switch"
+                    variant="compact"
+                    title="启用早鸟签到专属回复"
+                    hint="开播后 30 分钟内完成签到时，优先使用下方专属回复替代普通签到回复"
+                    v-model="config.earlyBird.enabled"
+                  />
+                  <AutoActionEditor
+                    v-if="config.earlyBird.enabled"
+                    :action="config.earlyBird.successAction"
+                    :hide-name="true"
+                    :hide-enabled="true"
+                    :hide-user-filter="true"
+                    :hide-trigger-settings="true"
+                    :custom-test-context="customTestContext"
+                    :extra-placeholders="checkInPlaceholders"
+                  />
+                </div>
+
+                <div class="space-y-2 p-3 rounded-md border bg-card">
                   <span class="font-semibold text-xs text-foreground block">重复签到回复</span>
                   <AutoActionEditor
                     :action="config.cooldownAction"
                     :hide-name="true"
                     :hide-enabled="true"
                     :hide-user-filter="true"
+                    :hide-trigger-settings="true"
                     :custom-test-context="customTestContext"
+                    :extra-placeholders="checkInPlaceholders"
                   />
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="flex justify-center pt-2">
-            <Button
-              class="px-8"
-              :disabled="!canEdit || isLoading"
-              @click="updateSettings"
-            >
-              {{ isLoading ? '保存中...' : '保存所有更改' }}
-            </Button>
           </div>
         </TabsContent>
 
@@ -525,20 +549,10 @@ onMounted(() => {
           value="ranking"
           class="pt-3 space-y-3"
         >
-          <Alert
-            size="sm"
-            variant="info"
-          >
-            <AlertDescription class="m-0"> 显示用户签到排行榜。选择时间段可查看不同期间的签到数据。 </AlertDescription>
-          </Alert>
-
           <div class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
               <div class="w-32">
-                <Select
-                  v-model="timeRange"
-                  @update:model-value="loadCheckInRanking"
-                >
+                <Select v-model="timeRange">
                   <SelectTrigger class="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -555,7 +569,7 @@ onMounted(() => {
               </div>
 
               <div class="relative w-44">
-                <Search24Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
                 <Input
                   v-model="userFilter"
                   placeholder="搜索用户名..."
@@ -567,11 +581,11 @@ onMounted(() => {
             <div class="flex items-center gap-2">
               <Button
                 variant="secondary"
-                class="gap-1"
+                class="gap-1.5"
                 :disabled="isLoadingRanking"
                 @click="loadCheckInRanking"
               >
-                <ArrowClockwise16Filled
+                <RotateCw
                   class="size-3.5"
                   :class="{ 'animate-spin': isLoadingRanking }"
                 />
@@ -579,18 +593,16 @@ onMounted(() => {
               </Button>
 
               <Popconfirm
-                title="警告"
-                @positive-click="resetAllCheckIn"
+                title="确定清空所有用户的签到记录吗？"
+                description="此操作不可撤销。"
+                @confirm="resetAllCheckIn"
               >
-                <template #trigger>
-                  <Button
-                    variant="outline"
-                    class="border-destructive/40 text-destructive hover:bg-destructive/10"
-                  >
-                    重置全部
-                  </Button>
-                </template>
-                此操作将清空所有用户的签到记录，确定要继续吗？
+                <Button
+                  variant="outline"
+                  class="border-destructive/40 text-destructive hover:bg-destructive/10"
+                >
+                  重置全部
+                </Button>
               </Popconfirm>
             </div>
           </div>
@@ -614,14 +626,20 @@ onMounted(() => {
                     v-for="(row, idx) in paginatedRankingData"
                     :key="row.ouId || idx"
                   >
-                    <TableCell class="text-center">
+                    <TableCell class="text-center tabular-nums">
                       <Badge
                         variant="secondary"
                         size="xs"
-                        class="h-5 font-bold"
-                        :class="idx === 0 ? 'bg-amber-500 text-white' : idx <= 2 ? 'bg-sky-500 text-white' : ''"
+                        class="font-bold"
+                        :class="
+                          getAbsoluteRank(idx) === 1
+                            ? 'bg-amber-500 text-white'
+                            : getAbsoluteRank(idx) <= 3
+                              ? 'bg-sky-500 text-white'
+                              : ''
+                        "
                       >
-                        {{ (rankingPage - 1) * rankingPageSize + idx + 1 }}
+                        {{ getAbsoluteRank(idx) }}
                       </Badge>
                     </TableCell>
 
@@ -629,7 +647,7 @@ onMounted(() => {
                       {{ row.name }}
                     </TableCell>
 
-                    <TableCell class="text-center">
+                    <TableCell class="text-center tabular-nums">
                       <span
                         :class="
                           row.consecutiveDays > 0
@@ -641,7 +659,7 @@ onMounted(() => {
                       </span>
                     </TableCell>
 
-                    <TableCell class="text-center font-bold text-sky-600 dark:text-sky-400">
+                    <TableCell class="text-center font-bold text-sky-600 dark:text-sky-400 tabular-nums">
                       {{ row.points }}
                     </TableCell>
 
@@ -669,26 +687,24 @@ onMounted(() => {
                       <span
                         v-else
                         class="text-xs text-muted-foreground"
-                        >否</span
                       >
+                        否
+                      </span>
                     </TableCell>
 
                     <TableCell class="text-right">
                       <Popconfirm
-                        title="确认重置"
-                        @positive-click="resetUserCheckInByGuid(row.ouId)"
+                        :title="`确定重置用户「${row.name}」的签到数据吗？`"
+                        @confirm="resetUserCheckInByGuid(row.ouId)"
                       >
-                        <template #trigger>
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            class="text-destructive hover:bg-destructive/10"
-                            :disabled="isResetting"
-                          >
-                            <Delete16Filled class="size-3.5" />
-                          </Button>
-                        </template>
-                        确定要重置用户「{{ row.name }}」的签到数据吗？
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-destructive hover:bg-destructive/10"
+                          :disabled="isResetting"
+                        >
+                          <Trash2 class="size-3.5" />
+                        </Button>
                       </Popconfirm>
                     </TableCell>
                   </TableRow>
@@ -715,7 +731,6 @@ onMounted(() => {
               v-model:page="rankingPage"
               v-model:page-size="rankingPageSize"
               :total="filteredRankingData.length"
-              size="small"
             />
           </div>
         </TabsContent>
@@ -730,7 +745,7 @@ onMounted(() => {
             variant="info"
           >
             <AlertDescription class="m-0">
-              在此可以模拟用户发送签到命令，验证逻辑和回复消息是否正确。
+              在此可以向服务端发送一次真实模拟签到请求，验证积分计算与客户端自动回复是否正常。
             </AlertDescription>
           </Alert>
 
@@ -738,7 +753,7 @@ onMounted(() => {
             <FormField label="模拟用户 UID">
               <BiliUserSelector
                 v-model:value="testUid"
-                placeholder="请输入或选择B站用户"
+                placeholder="请输入或选择 B 站用户"
                 @user-info-loaded="
                   (u) => {
                     if (u?.name && (!testUsername || testUsername === '测试用户')) testUsername = u.name
@@ -750,7 +765,7 @@ onMounted(() => {
             <FormField label="模拟用户名称">
               <Input
                 v-model="testUsername"
-                placeholder="默认为'测试用户'"
+                placeholder="默认为「测试用户」"
               />
             </FormField>
 
@@ -782,8 +797,8 @@ onMounted(() => {
     </CardContent>
 
     <div class="p-3 border-t bg-muted/20 text-xs text-muted-foreground flex items-center gap-1.5">
-      <Info24Filled class="size-4 shrink-0 text-muted-foreground" />
-      <span>提示：签到回复消息会遵循全局弹幕设置（频率限制、长度等）。</span>
+      <Info class="size-4 shrink-0 text-muted-foreground" />
+      <span>提示：签到回复消息会遵循全局消息队列间隔与弹幕限流保护。</span>
     </div>
   </Card>
 

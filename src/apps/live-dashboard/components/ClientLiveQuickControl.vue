@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertTriangle, Check, ExternalLink, Radio, SlidersHorizontal, Video } from 'lucide-vue-next'
+import { AlertTriangle, Check, ExternalLink, Radio, Video } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -83,7 +83,7 @@ function goLiveManage() {
           class="size-2 rounded-full shrink-0"
           :class="isLiving ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'"
         />
-        <span class="hidden md:inline">{{ isLiving ? '直播中' : '未开播' }}</span>
+        <span class="hidden sm:inline">{{ isLiving ? '直播中' : '未开播' }}</span>
         <template v-if="obs.obsConnected">
           <span class="text-muted-foreground/50">|</span>
           <Video
@@ -92,7 +92,7 @@ function goLiveManage() {
           />
           <span
             v-if="obs.obsStreamActive"
-            class="hidden lg:inline text-[11px] tabular-nums text-muted-foreground"
+            class="hidden 2xl:inline text-[11px] tabular-nums text-muted-foreground"
           >
             {{ Math.round(obs.obsStats.fps) }}fps · {{ obs.obsStats.bitrateKbps }}k
           </span>
@@ -102,7 +102,6 @@ function goLiveManage() {
             :title="`丢帧率 ${dropRatio}%`"
           />
         </template>
-        <SlidersHorizontal class="size-3 text-muted-foreground hidden sm:inline" />
       </Button>
     </PopoverTrigger>
 
@@ -121,7 +120,7 @@ function goLiveManage() {
         <Button
           variant="ghost"
           size="xs"
-          class="gap-1 text-muted-foreground h-6 px-1.5"
+          class="gap-1 text-muted-foreground"
           @click="goLiveManage"
         >
           <span>完整播控</span>

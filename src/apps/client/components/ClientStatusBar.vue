@@ -1,18 +1,24 @@
 <script setup lang="ts">
-import Board20Regular from '@vicons/fluent/es/Board20Regular'
-import Chat20Regular from '@vicons/fluent/es/Chat20Regular'
-import Eye20Regular from '@vicons/fluent/es/Eye20Regular'
-import Gift20Regular from '@vicons/fluent/es/Gift20Regular'
-import Payment20Regular from '@vicons/fluent/es/Payment20Regular'
-import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
-import PlugConnected20Regular from '@vicons/fluent/es/PlugConnected20Regular'
-import ThumbLike20Regular from '@vicons/fluent/es/ThumbLike20Regular'
+import {
+  AlertTriangle,
+  Eye,
+  Gift,
+  LayoutDashboard,
+  MessageSquare,
+  Plug,
+  ThumbsUp,
+  Users,
+  Wallet,
+} from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
@@ -28,7 +34,6 @@ const rpcServer = useFetcherRpcServer()
 const liveStats = computed(() => danmakuWindow.liveStats)
 const isIncomeHidden = computed(() => danmakuWindow.danmakuWindowSetting.hideIncomeAmount)
 
-// 弹幕源连接文案
 const danmakuStatusText = computed(() => {
   if (danmakuClient.phase === 'connected' || danmakuClient.hasRemoteSource) {
     if (danmakuClient.sourceType === 'direct') return '弹幕直连'
@@ -56,12 +61,34 @@ function formatIncome(amount: number): string {
   return amount % 1 === 0 ? String(amount) : amount.toFixed(1)
 }
 
+function formatOrigin(origin: string) {
+  if (!origin) return '未知来源'
+  try {
+    return new URL(origin).host
+  } catch {
+    return origin
+  }
+}
+
+function formatSince(connectedAt: number) {
+  const seconds = Math.max(0, Math.floor((Date.now() - connectedAt) / 1000))
+  if (seconds < 60) return `${seconds} 秒前`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes} 分钟前`
+  const hours = Math.floor(minutes / 60)
+  return `${hours} 小时前`
+}
+
 function goToDashboard() {
   router.push({ name: 'client-live-dashboard' })
 }
 
 function goToFetcher() {
   router.push({ name: 'client-fetcher' })
+}
+
+function goToDiagnostics() {
+  router.push({ name: 'client-settings', query: { tab: 'diagnostics' } })
 }
 
 function toggleDanmakuWindow() {
@@ -83,7 +110,7 @@ function toggleGiftWindow() {
 
 <template>
   <footer
-    class="flex-between h-8 min-h-8 px-3 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3"
+    class="flex-between py-1 px-3 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3"
   >
     <!-- 左侧：连接与采集源状态 -->
     <div class="flex items-center gap-2 whitespace-nowrap shrink-0">
@@ -92,7 +119,7 @@ function toggleGiftWindow() {
         <Tooltip>
           <TooltipTrigger as-child>
             <div
-              class="inline-flex items-center gap-1.25 px-1.5 py-0.5 rounded bg-white/4 text-[11px] cursor-pointer transition-colors hover:bg-white/8"
+              class="inline-flex items-center gap-1.25 px-1.5 py-0.5 rounded bg-muted/40 text-[11px] cursor-pointer transition-colors hover:bg-muted/70"
               :class="isDanmakuConnected ? 'text-emerald-500' : 'text-rose-500'"
               @click="goToFetcher"
             >
@@ -137,86 +164,107 @@ function toggleGiftWindow() {
           </TooltipContent>
         </Tooltip>
 
-        <!-- 本地 RPC 外部接入状态 -->
-        <Tooltip v-if="rpcServer.running && rpcServer.connectionCount > 0">
+        <!-- 本地 RPC 端口异常提示 -->
+        <Tooltip v-if="rpcServer.lastError">
           <TooltipTrigger as-child>
             <div
-              class="inline-flex items-center gap-1.25 px-1.5 py-0.5 rounded text-[11px] cursor-pointer text-indigo-500 bg-indigo-500/10"
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] cursor-pointer text-destructive bg-destructive/10 hover:bg-destructive/15 transition-colors"
+              @click="goToDiagnostics"
             >
-              <component
-                :is="PlugConnected20Regular"
-                class="size-3.5"
-              />
-              <span>{{ rpcServer.connectionCount }} 外部接入</span>
+              <AlertTriangle class="size-3" />
+              <span>RPC 异常</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <div>已有 {{ rpcServer.connectionCount }} 个外部网页/OBS 正在通过本地 RPC 订阅弹幕</div>
+            <div>{{ rpcServer.lastError }}（点击查看诊断）</div>
           </TooltipContent>
         </Tooltip>
+
+        <!-- 本地 RPC 外部接入状态（可点击查看连接列表） -->
+        <Popover v-else-if="rpcServer.running && rpcServer.connectionCount > 0">
+          <PopoverTrigger as-child>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.25 px-1.5 py-0.5 rounded text-[11px] cursor-pointer text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border-0"
+            >
+              <Plug class="size-3" />
+              <span>{{ rpcServer.connectionCount }} 外部接入</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="start"
+            class="w-64 space-y-2"
+          >
+            <div class="font-semibold text-foreground text-xs">外部接入连接 ({{ rpcServer.connectionCount }})</div>
+            <Empty
+              v-if="rpcServer.connectionCount === 0"
+              description="暂无外部连接"
+              class="py-3"
+            />
+            <div
+              v-for="conn in rpcServer.connections"
+              v-else
+              :key="conn.connId"
+              class="p-2 rounded bg-muted/40 space-y-1 text-xs"
+            >
+              <div class="flex-between gap-2">
+                <span class="font-medium text-foreground truncate">{{ formatOrigin(conn.origin) }}</span>
+                <Badge
+                  :variant="conn.subscribed ? 'success' : 'secondary'"
+                  size="xs"
+                >
+                  {{ conn.subscribed ? '已订阅' : '未订阅' }}
+                </Badge>
+              </div>
+              <div class="text-[10px] text-muted-foreground">接入于 {{ formatSince(conn.connectedAt) }}</div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </TooltipProvider>
     </div>
 
     <!-- 中间：实时直播互动数据指标 (点击可一键前往中控台) -->
     <div
-      class="group flex-1 flex-center cursor-pointer px-2 py-0.5 rounded whitespace-nowrap transition-all duration-200 hover:bg-popover hover:text-foreground"
+      class="group flex-1 flex-center cursor-pointer px-2 py-0.5 rounded whitespace-nowrap transition-colors duration-150 hover:bg-popover hover:text-foreground"
       title="点击前往「中控台」查看全景大盘"
       @click="goToDashboard"
     >
       <div class="inline-flex items-center gap-3.5">
-        <!-- 观看/在看人数 -->
         <div
-          class="inline-flex items-center gap-1 font-medium color-inherit"
+          class="inline-flex items-center gap-1 font-medium"
           title="累计观看人次"
         >
-          <component
-            :is="Eye20Regular"
-            class="size-3.5 opacity-80"
-          />
+          <Eye class="size-3.5 opacity-80" />
           <span class="text-foreground">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
         </div>
 
-        <!-- 点赞互动数 -->
         <div
-          class="inline-flex items-center gap-1 font-medium color-inherit"
+          class="inline-flex items-center gap-1 font-medium"
           title="本场累计点赞数"
         >
-          <component
-            :is="ThumbLike20Regular"
-            class="size-3.5 opacity-80"
-          />
+          <ThumbsUp class="size-3.5 opacity-80" />
           <span class="text-foreground">{{ formatStatCount(liveStats.likeCount) }}</span>
         </div>
 
-        <!-- 实时在线人数 -->
         <div
-          class="inline-flex items-center gap-1 font-medium color-inherit"
+          class="inline-flex items-center gap-1 font-medium"
           title="在线观众人数"
         >
-          <component
-            :is="PeopleCommunity20Regular"
-            class="size-3.5 opacity-80"
-          />
+          <Users class="size-3.5 opacity-80" />
           <span class="text-foreground">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
         </div>
 
-        <!-- 本场总收益 -->
         <div
-          class="inline-flex items-center gap-1 font-medium color-inherit"
+          class="inline-flex items-center gap-1 font-medium"
           title="本场总收益（打赏 + SC + 大航海）"
         >
-          <component
-            :is="Payment20Regular"
-            class="size-3.5 opacity-80"
-          />
-          <span class="text-amber-400 font-semibold"
-            >¥ {{ isIncomeHidden ? '***' : formatIncome(liveStats.totalIncome) }}</span
-          >
+          <Wallet class="size-3.5 opacity-80" />
+          <span class="text-amber-500 font-semibold">¥ {{ isIncomeHidden ? '***' : formatIncome(liveStats.totalIncome) }}</span>
         </div>
 
-        <component
-          :is="Board20Regular"
-          class="size-3.5 opacity-40 transition-all duration-200 group-hover:opacity-90 group-hover:scale-110"
+        <LayoutDashboard
+          class="size-3.5 opacity-40 transition-transform duration-150 group-hover:opacity-90 group-hover:scale-110"
           title="进入中控台"
         />
       </div>
@@ -224,7 +272,6 @@ function toggleGiftWindow() {
 
     <!-- 右侧：浮窗快捷状态与一键开关 -->
     <div class="flex items-center gap-1.5 whitespace-nowrap shrink-0">
-      <!-- 弹幕机浮窗开关 -->
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
@@ -241,10 +288,7 @@ function toggleGiftWindow() {
               :aria-label="danmakuWindow.isDanmakuWindowOpen ? '关闭弹幕浮窗' : '打开弹幕浮窗'"
               @click="toggleDanmakuWindow"
             >
-              <component
-                :is="Chat20Regular"
-                class="size-3.5"
-              />
+              <MessageSquare class="size-3" />
               <span>弹幕浮窗</span>
               <span
                 class="inline-flex-center px-1 rounded text-[9px] font-semibold leading-tight"
@@ -261,7 +305,6 @@ function toggleGiftWindow() {
           }}</TooltipContent>
         </Tooltip>
 
-        <!-- 礼物与排行浮窗开关 -->
         <Tooltip>
           <TooltipTrigger as-child>
             <Button
@@ -277,10 +320,7 @@ function toggleGiftWindow() {
               :aria-label="giftWindow.isGiftWindowOpen ? '关闭礼物排行浮窗' : '打开礼物排行浮窗'"
               @click="toggleGiftWindow"
             >
-              <component
-                :is="Gift20Regular"
-                class="size-3.5"
-              />
+              <Gift class="size-3" />
               <span>礼物排行</span>
               <span
                 class="inline-flex-center px-1 rounded text-[9px] font-semibold leading-tight"

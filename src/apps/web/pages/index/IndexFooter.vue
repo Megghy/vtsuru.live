@@ -125,6 +125,13 @@ const sheenStyle = computed(() => {
           <button
             type="button"
             class="transition-colors hover:text-foreground"
+            @click="router.push({ name: 'docs-index' })"
+          >
+            使用文档
+          </button>
+          <button
+            type="button"
+            class="transition-colors hover:text-foreground"
             @click="router.push({ name: 'live-directory' })"
           >
             直播与关注

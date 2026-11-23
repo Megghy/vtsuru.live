@@ -1,6 +1,6 @@
 import { error, info } from '@tauri-apps/plugin-log'
 import { format } from 'date-fns'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { fetchOfficialLiveStats, updateOfficialStats } from '@/shared/services/officialLiveStats'
@@ -34,6 +34,30 @@ export const streamingInfo = ref<BiliStreamingInfo>({
  * 房间基本信息 (从B站API获取)
  */
 export const roomInfo = ref<BiliRoomInfo>() // 可以添加房间信息
+
+/**
+ * 全局唯一的“当前是否正在直播”单一真源
+ */
+export const isLiveStreaming = computed<boolean>(
+  () => roomInfo.value?.live_status === 1 || streamingInfo.value?.status === 'streaming',
+)
+
+/**
+ * 全局唯一的开播时间戳（毫秒），未开播时为 null
+ */
+export const liveStartTimeMs = computed<number | null>(() => {
+  if (!isLiveStreaming.value) return null
+  const rawRoomTime = roomInfo.value?.live_time
+  if (rawRoomTime && rawRoomTime !== '0000-00-00 00:00:00') {
+    const parsed = Date.parse(rawRoomTime.replace(' ', 'T'))
+    if (!Number.isNaN(parsed)) return parsed
+  }
+  const streamTs = (streamingInfo.value as { live_time?: number } | undefined)?.live_time
+  if (typeof streamTs === 'number' && streamTs > 0) {
+    return streamTs > 1e12 ? streamTs : streamTs * 1000
+  }
+  return null
+})
 
 // --- Bili API 更新相关 ---
 const updateCount = ref(0) // 用于控制API调用频率的计数器

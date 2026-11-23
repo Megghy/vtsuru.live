@@ -242,6 +242,32 @@ export const postApiSongListReorder = async (
   })
 }
 
+export const getGetApiSongListSearchNeteaseUrl = (params?: GetApiSongListSearchNeteaseParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/song-list/search-netease?${stringifiedParams}`
+    : `/api/song-list/search-netease`
+}
+
+export const getApiSongListSearchNetease = async (
+  params?: GetApiSongListSearchNeteaseParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfNullableOfResponseSongModel> => {
+  return vtsuruMutator<ResponseResultOfNullableOfResponseSongModel>(getGetApiSongListSearchNeteaseUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
 export const getPostApiSongListUpdateBatchAuthorUrl = () => {
   return `/api/song-list/update-batch-author`
 }
@@ -269,6 +295,36 @@ export const postApiSongListUpdateBatchAuthor = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdate),
+  })
+}
+
+export const getPostApiSongListUpdateBatchDisabledUrl = () => {
+  return `/api/song-list/update-batch-disabled`
+}
+
+export const postApiSongListUpdateBatchDisabled = async (
+  batchUpdateBool?: BatchUpdateBool,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfInt32> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchDisabledUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(batchUpdateBool),
   })
 }
 
@@ -329,6 +385,36 @@ export const postApiSongListUpdateBatchOption = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdateOption),
+  })
+}
+
+export const getPostApiSongListUpdateBatchPinUrl = () => {
+  return `/api/song-list/update-batch-pin`
+}
+
+export const postApiSongListUpdateBatchPin = async (
+  batchUpdateBool?: BatchUpdateBool,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfInt32> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchPinUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(batchUpdateBool),
   })
 }
 
@@ -419,91 +505,5 @@ export const postApiSongListUpdate = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateSongModel),
-  })
-}
-
-export const getGetApiSongListSearchNeteaseUrl = (params?: GetApiSongListSearchNeteaseParams) => {
-  const normalizedParams = new URLSearchParams()
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  })
-
-  const stringifiedParams = normalizedParams.toString()
-
-  return stringifiedParams.length > 0
-    ? `/api/song-list/search-netease?${stringifiedParams}`
-    : `/api/song-list/search-netease`
-}
-
-export const getApiSongListSearchNetease = async (
-  params?: GetApiSongListSearchNeteaseParams,
-  options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfNullableOfResponseSongModel> => {
-  return vtsuruMutator<ResponseResultOfNullableOfResponseSongModel>(getGetApiSongListSearchNeteaseUrl(params), {
-    ...options,
-    method: 'GET',
-  })
-}
-
-export const getPostApiSongListUpdateBatchDisabledUrl = () => {
-  return `/api/song-list/update-batch-disabled`
-}
-
-export const postApiSongListUpdateBatchDisabled = async (
-  batchUpdateBool?: BatchUpdateBool,
-  options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfInt32> => {
-  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {}
-    if (h instanceof Headers) return Object.fromEntries(h.entries())
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      )
-    }
-    const headers: Record<string, string | readonly string[]> = {}
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value
-    }
-    return headers
-  }
-  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchDisabledUrl(), {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(batchUpdateBool),
-  })
-}
-
-export const getPostApiSongListUpdateBatchPinUrl = () => {
-  return `/api/song-list/update-batch-pin`
-}
-
-export const postApiSongListUpdateBatchPin = async (
-  batchUpdateBool?: BatchUpdateBool,
-  options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfInt32> => {
-  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {}
-    if (h instanceof Headers) return Object.fromEntries(h.entries())
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      )
-    }
-    const headers: Record<string, string | readonly string[]> = {}
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value
-    }
-    return headers
-  }
-  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchPinUrl(), {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(batchUpdateBool),
   })
 }

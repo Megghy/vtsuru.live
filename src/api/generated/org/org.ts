@@ -20,6 +20,7 @@ import type {
   GetApiOrgOrgIdPointsStatsParams,
   GetApiOrgOrgIdStreamersParams,
   GetApiOrgOrgIdStreamersStreamerUserIdDetailParams,
+  PaginationResponseOfListOfOrgPointGoodsItem,
   PaginationResponseOfListOfResponsePointOrder2OwnerModel,
   PostApiOrgInviteMemberAcceptParams,
   PostApiOrgInviteMemberRejectParams,
@@ -29,13 +30,12 @@ import type {
   PostApiOrgOrgIdPointsSettingsUpdateParams,
   RemoveOrgMemberModel,
   RemoveOrgStreamerModel,
-  RenameOrgModel,
   ResponseResult,
   ResponseResultOfInt32Array,
   ResponseResultOfListOfOrgInfoModel,
   ResponseResultOfListOfOrgInviteMemberListItem,
   ResponseResultOfListOfOrgInviteStreamerListItem,
-  ResponseResultOfListOfResponseOrgAuditLogItem,
+  ResponseResultOfListOfResponseMyAuthorizedOrgModel,
   ResponseResultOfListOfResponseOrgLiveInfoModel,
   ResponseResultOfListOfResponseOrgMemberModel,
   ResponseResultOfListOfResponseOrgStreamerModel,
@@ -44,16 +44,21 @@ import type {
   ResponseResultOfOrgInvitePreviewModel,
   ResponseResultOfOrgInviteResponseModel,
   ResponseResultOfOrgJoinResponseModel,
-  ResponseResultOfOrgPointGoodsItemArray,
   ResponseResultOfOrgPointStatsModel,
+  ResponseResultOfResponseOrgAuditListModel,
   ResponseResultOfResponseOrgStreamerDetailModel,
+  ResponseResultOfResponsePointOrder2OwnerModel,
   ResponseResultOfSettingPoint,
   SettingPoint,
   TransferOrgOwnerModel,
+  UpdateOrgMemberPermissionModel,
   UpdateOrgMemberRoleModel,
+  UpdateOrgModel,
   UpdateOrgOrderExpressModel,
   UpdateOrgOrdersStatusModel,
+  UpdateOrgServiceOrderModel,
   UpdateOrgStreamerModel,
+  UpdateStreamerSelfPermissionModel,
 } from '../model'
 
 export const getGetApiOrgOrgIdUrl = (orgId: number) => {
@@ -113,8 +118,8 @@ export const getApiOrgOrgIdAudit = async (
   orgId: number,
   params?: GetApiOrgOrgIdAuditParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfListOfResponseOrgAuditLogItem> => {
-  return vtsuruMutator<ResponseResultOfListOfResponseOrgAuditLogItem>(getGetApiOrgOrgIdAuditUrl(orgId, params), {
+): Promise<ResponseResultOfResponseOrgAuditListModel> => {
+  return vtsuruMutator<ResponseResultOfResponseOrgAuditListModel>(getGetApiOrgOrgIdAuditUrl(orgId, params), {
     ...options,
     method: 'GET',
   })
@@ -290,6 +295,37 @@ export const getApiOrgOrgIdLives = async (
   })
 }
 
+export const getPostApiOrgOrgIdMemberPermissionUrl = (orgId: number) => {
+  return `/api/org/${orgId}/member/permission`
+}
+
+export const postApiOrgOrgIdMemberPermission = async (
+  orgId: number,
+  updateOrgMemberPermissionModel?: UpdateOrgMemberPermissionModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdMemberPermissionUrl(orgId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateOrgMemberPermissionModel),
+  })
+}
+
 export const getPostApiOrgOrgIdMemberRemoveUrl = (orgId: number) => {
   return `/api/org/${orgId}/member/remove`
 }
@@ -386,8 +422,8 @@ export const getApiOrgOrgIdPointsGoods = async (
   orgId: number,
   params?: GetApiOrgOrgIdPointsGoodsParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfOrgPointGoodsItemArray> => {
-  return vtsuruMutator<ResponseResultOfOrgPointGoodsItemArray>(getGetApiOrgOrgIdPointsGoodsUrl(orgId, params), {
+): Promise<PaginationResponseOfListOfOrgPointGoodsItem> => {
+  return vtsuruMutator<PaginationResponseOfListOfOrgPointGoodsItem>(getGetApiOrgOrgIdPointsGoodsUrl(orgId, params), {
     ...options,
     method: 'GET',
   })
@@ -452,6 +488,40 @@ export const postApiOrgOrgIdPointsOrdersExpress = async (
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateOrgOrderExpressModel),
   })
+}
+
+export const getPostApiOrgOrgIdPointsOrdersServiceUpdateUrl = (orgId: number) => {
+  return `/api/org/${orgId}/points/orders/service-update`
+}
+
+export const postApiOrgOrgIdPointsOrdersServiceUpdate = async (
+  orgId: number,
+  updateOrgServiceOrderModel?: UpdateOrgServiceOrderModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponsePointOrder2OwnerModel> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponsePointOrder2OwnerModel>(
+    getPostApiOrgOrgIdPointsOrdersServiceUpdateUrl(orgId),
+    {
+      ...options,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+      body: JSON.stringify(updateOrgServiceOrderModel),
+    },
+  )
 }
 
 export const getPostApiOrgOrgIdPointsOrdersStatusUrl = (orgId: number) => {
@@ -589,37 +659,6 @@ export const getApiOrgOrgIdPointsStats = async (
   })
 }
 
-export const getPostApiOrgOrgIdRenameUrl = (orgId: number) => {
-  return `/api/org/${orgId}/rename`
-}
-
-export const postApiOrgOrgIdRename = async (
-  orgId: number,
-  renameOrgModel?: RenameOrgModel,
-  options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResult> => {
-  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {}
-    if (h instanceof Headers) return Object.fromEntries(h.entries())
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      )
-    }
-    const headers: Record<string, string | readonly string[]> = {}
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value
-    }
-    return headers
-  }
-  return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdRenameUrl(orgId), {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(renameOrgModel),
-  })
-}
-
 export const getPostApiOrgOrgIdStreamerRemoveUrl = (orgId: number) => {
   return `/api/org/${orgId}/streamer/remove`
 }
@@ -648,6 +687,51 @@ export const postApiOrgOrgIdStreamerRemove = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(removeOrgStreamerModel),
+  })
+}
+
+export const getPostApiOrgOrgIdStreamerRevokeSelfUrl = (orgId: number) => {
+  return `/api/org/${orgId}/streamer/revoke-self`
+}
+
+export const postApiOrgOrgIdStreamerRevokeSelf = async (
+  orgId: number,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdStreamerRevokeSelfUrl(orgId), {
+    ...options,
+    method: 'POST',
+  })
+}
+
+export const getPostApiOrgOrgIdStreamerSelfPermissionUrl = (orgId: number) => {
+  return `/api/org/${orgId}/streamer/self-permission`
+}
+
+export const postApiOrgOrgIdStreamerSelfPermission = async (
+  orgId: number,
+  updateStreamerSelfPermissionModel?: UpdateStreamerSelfPermissionModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdStreamerSelfPermissionUrl(orgId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateStreamerSelfPermissionModel),
   })
 }
 
@@ -772,6 +856,37 @@ export const postApiOrgOrgIdTransferOwner = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(transferOrgOwnerModel),
+  })
+}
+
+export const getPostApiOrgOrgIdUpdateUrl = (orgId: number) => {
+  return `/api/org/${orgId}/update`
+}
+
+export const postApiOrgOrgIdUpdate = async (
+  orgId: number,
+  updateOrgModel?: UpdateOrgModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdUpdateUrl(orgId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateOrgModel),
   })
 }
 
@@ -930,6 +1045,19 @@ export const postApiOrgInviteStreamerReject = async (
   return vtsuruMutator<ResponseResultOfOrgJoinResponseModel>(getPostApiOrgInviteStreamerRejectUrl(params), {
     ...options,
     method: 'POST',
+  })
+}
+
+export const getGetApiOrgMyAuthorizedUrl = () => {
+  return `/api/org/my-authorized`
+}
+
+export const getApiOrgMyAuthorized = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfListOfResponseMyAuthorizedOrgModel> => {
+  return vtsuruMutator<ResponseResultOfListOfResponseMyAuthorizedOrgModel>(getGetApiOrgMyAuthorizedUrl(), {
+    ...options,
+    method: 'GET',
   })
 }
 

@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import Eye20Regular from '@vicons/fluent/es/Eye20Regular'
-import LockClosed20Regular from '@vicons/fluent/es/LockClosed20Regular'
-import LockOpen20Regular from '@vicons/fluent/es/LockOpen20Regular'
-import Payment20Regular from '@vicons/fluent/es/Payment20Regular'
-import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
-import ThumbLike20Regular from '@vicons/fluent/es/ThumbLike20Regular'
+import { Eye, Lock, ThumbsUp, Unlock, Users, Wallet } from 'lucide-vue-next'
 import { nanoid } from 'nanoid'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -13,6 +8,7 @@ import { EventDataTypes } from '@/api/generated/model'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
 import type { DanmakuWindowBCData, DanmakuWindowSettings, LiveStatsData } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
+import { resolveFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
@@ -69,6 +65,8 @@ const hasVisibleStats = computed(() => {
   )
 })
 
+useGoogleFont(computed(() => setting.value?.fontFamily || undefined))
+
 // 动态设置CSS变量
 function updateCssVariables() {
   if (!setting.value) return
@@ -90,6 +88,10 @@ function updateCssVariables() {
   root.style.setProperty('--dw-border-radius', `${setting.value.borderRadius || 0}px`)
   root.style.setProperty('--dw-opacity', `${setting.value.opacity || 1}`)
   root.style.setProperty('--dw-font-size', `${setting.value.fontSize || 14}px`)
+  root.style.setProperty(
+    '--dw-font-family',
+    setting.value.fontFamily ? resolveFontFamilyCss(setting.value.fontFamily) : 'inherit',
+  )
   root.style.setProperty('--dw-avatar-size', `${(setting.value.fontSize || 14) + 6}px`)
   root.style.setProperty('--dw-emoji-size', `${(setting.value.fontSize || 14) + 10}px`)
   root.style.setProperty('--dw-item-spacing', `${setting.value.itemSpacing || 5}px`)
@@ -262,7 +264,7 @@ watch(
           class="status-pill"
           title="累计观看人次"
         >
-          <Eye20Regular class="status-icon size-4" />
+          <Eye class="status-icon size-4" />
           <span class="status-value">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
         </div>
 
@@ -272,7 +274,7 @@ watch(
           class="status-pill"
           title="本场累计点赞数"
         >
-          <ThumbLike20Regular class="status-icon size-4" />
+          <ThumbsUp class="status-icon size-4" />
           <span class="status-value">{{ formatStatCount(liveStats.likeCount) }}</span>
         </div>
 
@@ -284,7 +286,7 @@ watch(
             setting.hideIncomeAmount ? '本场收益（已脱敏隐藏）' : `本场收益：¥${liveStats.totalIncome.toFixed(1)}`
           "
         >
-          <Payment20Regular class="status-icon size-4" />
+          <Wallet class="status-icon size-4" />
           <span class="status-value"
             >¥ {{ setting.hideIncomeAmount ? '***' : formatIncomeDisplay(liveStats.totalIncome) }}</span
           >
@@ -296,7 +298,7 @@ watch(
           class="status-pill"
           title="在线观众人数"
         >
-          <PeopleCommunity20Regular class="status-icon size-4" />
+          <Users class="status-icon size-4" />
           <span class="status-value">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
         </div>
       </div>
@@ -310,11 +312,11 @@ watch(
         :aria-label="setting.interactive ? '鼠标穿透：已开启（点击关闭穿透）' : '鼠标穿透：已关闭（点击开启穿透）'"
         @click="toggleInteractive"
       >
-        <LockClosed20Regular
+        <Lock
           v-if="setting.interactive"
           class="mini-btn-icon size-3.5"
         />
-        <LockOpen20Regular
+        <Unlock
           v-else
           class="mini-btn-icon size-3.5"
         />
@@ -382,6 +384,7 @@ body {
   border-radius: var(--dw-border-radius, 0);
   color: var(--dw-text-color);
   font-size: var(--dw-font-size);
+  font-family: var(--dw-font-family, inherit);
   box-shadow: var(--dw-shadow);
 }
 

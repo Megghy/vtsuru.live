@@ -2,6 +2,7 @@ import type { Options } from '@tauri-apps/plugin-notification'
 import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { h } from 'vue'
+import { toast } from 'vue-sonner'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
 import type { ResponsePointOrder2OwnerModel, ResponseQAInfoToTarget } from '@/api/generated/model'
@@ -36,10 +37,10 @@ export function onReceivedNotification(type: string, json: string) {
 export async function onReceivedQuestion(question: ResponseQAInfoToTarget) {
   const setting = useSettings()
   if (setting.settings.notificationSettings.enableTypes.includes('question-box')) {
-    window.$notification.info({
-      title: '提问箱',
-      description: `收到来自 [${question.sender?.name || question.anonymousName || '匿名用户'}] 的提问`,
-      duration: 0,
+    const senderName = question.sender?.name || question.anonymousName || '匿名用户'
+    toast.info('提问箱', {
+      description: `收到来自 [${senderName}] 的提问`,
+      duration: Infinity,
       action: {
         label: '快速查看',
         onClick: () => {
@@ -60,7 +61,7 @@ export async function onReceivedQuestion(question: ResponseQAInfoToTarget) {
     })
     trySendNotification({
       title: '提问箱',
-      body: `收到来自 [${question.sender?.name || question.anonymousName || '匿名用户'}] 的提问`,
+      body: `收到来自 [${senderName}] 的提问`,
       extra: { type: 'question-box' },
     })
   }
@@ -71,10 +72,9 @@ export function onGoodsBuy(info: { data: ResponsePointOrder2OwnerModel; goods: R
   const order = info.data
   const goods = info.goods
   if (setting.settings.notificationSettings.enableTypes.includes('goods-buy')) {
-    window.$notification.info({
-      title: '礼物兑换',
+    toast.info('礼物兑换', {
       description: `${order.customer.name} 兑换了你的 [${goods.name}]，数量: ${order.count}，总价: ${order.point} 元`,
-      duration: 0,
+      duration: Infinity,
       action: {
         label: '查看详情',
         onClick: () => {
@@ -90,12 +90,11 @@ export function onGoodsBuy(info: { data: ResponsePointOrder2OwnerModel; goods: R
   }
 }
 
-export function onSendPrivateMessageFailed(receiverId: number, message: string, error: unknown) {
+export function onSendPrivateMessageFailed(receiverId: number, _message: string, error: unknown) {
   const setting = useSettings()
   if (setting.settings.notificationSettings.enableTypes.includes('message-failed')) {
     const errorMsg = error instanceof Error ? error.message : String(error)
-    window.$notification.error({
-      title: '私信发送失败',
+    toast.error('私信发送失败', {
       description: `向用户 ${receiverId} 发送私信失败: ${errorMsg}`,
       duration: 8000,
     })

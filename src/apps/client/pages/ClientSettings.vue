@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import Alert24Filled from '@vicons/fluent/es/Alert24Filled'
-import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
-import Info24Filled from '@vicons/fluent/es/Info24Filled'
-import People24Regular from '@vicons/fluent/es/People24Regular'
-import Save24Filled from '@vicons/fluent/es/Save24Filled'
-import Settings24Filled from '@vicons/fluent/es/Settings24Filled'
+import { invoke } from '@tauri-apps/api/core'
+import { Activity, Bell, HardDrive, Info, RefreshCw, Settings } from 'lucide-vue-next'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { ThemeType } from '@/api/client-types'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
-import LabelItem from '@/apps/client/components/LabelItem.vue'
-import BiliAccountManagerCard from '@/apps/client/components/settings/BiliAccountManagerCard.vue'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
+import ClientDiagnosticsPanel from '@/apps/client/components/settings/ClientDiagnosticsPanel.vue'
+import { checkUpdate, isCheckingUpdate } from '@/apps/client/data/initialize'
 import type { NotificationType } from '@/apps/client/store/useSettings'
 import { useSettings } from '@/apps/client/store/useSettings'
 import { isTauri } from '@/shared/config/api'
@@ -21,22 +18,41 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
-import { useMessage } from '@/shared/utils'
-import { useWebFetcher } from '@/store/useWebFetcher'
-
-// --- State ---
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
-if (route.query.tab === 'transcription') void router.replace({ name: 'client-transcription' })
-const currentTab = ref(route.query.tab === 'transcription' ? 'general' : (route.query.tab as string) || 'general')
+
+function redirectLegacyTab(tab: unknown) {
+  if (tab === 'transcription') {
+    void router.replace({ name: 'client-transcription' })
+    return true
+  }
+  if (tab === 'bili-accounts') {
+    void router.replace({ name: 'client-account-manage', query: { tab: 'pool' } })
+    return true
+  }
+  return false
+}
+
+const redirectedOnInit = redirectLegacyTab(route.query.tab)
+const currentTab = ref(redirectedOnInit ? 'general' : (route.query.tab as string) || 'general')
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (redirectLegacyTab(tab)) return
+    if (typeof tab === 'string' && tab) {
+      currentTab.value = tab
+    }
+  },
+)
+
 const isLoading = ref(true)
 const errorMsg = ref<string | null>(null)
 const titleClickCount = ref(0)
@@ -45,58 +61,24 @@ let resetTimeout: number | null = null
 const setting = useSettings()
 const currentVersion = ref(clientVersion.value || '1.0.0')
 
-// 更新检查
-const isCheckingUpdate = ref(false)
-const handleCheckUpdate = async () => {
-  isCheckingUpdate.value = true
-  try {
-    const { check } = await import('@tauri-apps/plugin-updater')
-    const update = await check()
-
-    if (update) {
-      message.info(`发现新版本 ${update.version}，正在下载更新...`)
-
-      // 下载并安装更新
-      await update.downloadAndInstall()
-
-      message.success('更新已下载，重启应用以完成更新')
-
-      // 询问是否立即重启
-      const { relaunch } = await import('@tauri-apps/plugin-process')
-      setTimeout(() => {
-        void useWebFetcher()
-          .Stop()
-          .catch((err) => console.warn('重启前停止 EventFetcher 失败:', err))
-          .then(() => relaunch())
-      }, 2000)
-    } else {
-      message.success('当前已是最新版本')
-    }
-  } catch (err: any) {
-    console.error('检查更新失败:', err)
-    message.error(`检查更新失败: ${err}`)
-  } finally {
-    isCheckingUpdate.value = false
-  }
-}
-
-// Navigation Options
 const navItems = [
-  { label: '常规设置', key: 'general', icon: Settings24Filled },
-  { label: 'B站账号管理', key: 'bili-accounts', icon: People24Regular },
-  { label: '系统通知', key: 'notification', icon: Alert24Filled },
-  { label: '数据备份', key: 'backup', icon: Save24Filled },
-  { label: '关于程序', key: 'about', icon: Info24Filled },
+  { label: '常规设置', key: 'general', icon: Settings },
+  { label: '系统通知', key: 'notification', icon: Bell },
+  { label: '数据备份', key: 'backup', icon: HardDrive },
+  { label: '诊断与日志', key: 'diagnostics', icon: Activity },
+  { label: '关于程序', key: 'about', icon: Info },
 ]
 
-// Theme
+const themeOptions = [
+  { label: '亮色', value: ThemeType.Light },
+  { label: '暗色', value: ThemeType.Dark },
+  { label: '跟随系统', value: ThemeType.Auto },
+]
+
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 
-// Autostart Settings
 const isStartOnBoot = ref(false)
 const isUpdatingAutostart = ref(false)
-
-// --- Lifecycle Hooks ---
 
 onMounted(async () => {
   isLoading.value = true
@@ -120,12 +102,10 @@ onMounted(async () => {
   isLoading.value = false
 })
 
-// --- Watchers for Side Effects ---
-
 watch(isStartOnBoot, async (newValue, oldValue) => {
   if (isLoading.value || newValue === oldValue) return
   if (!isTauri()) {
-    message.warning('非桌面客户端环境，无法配置开机自启')
+    toast.warning('非桌面客户端环境，无法配置开机自启')
     isStartOnBoot.value = oldValue
     return
   }
@@ -143,11 +123,21 @@ watch(isStartOnBoot, async (newValue, oldValue) => {
     console.error('Failed to update autostart status:', err)
     errorMsg.value = `设置开机启动失败: ${err instanceof Error ? err.message : '未知错误'}`
     isStartOnBoot.value = oldValue
-    message.error('设置开机启动失败')
+    toast.error('设置开机启动失败')
   } finally {
     isUpdatingAutostart.value = false
   }
 })
+
+async function handleWatchdogAutoReloadChange(val: boolean) {
+  setting.settings.watchdogAutoReload = val
+  await setting.save()
+  if (isTauri()) {
+    invoke('set_heartbeat_auto_reload', { enabled: val }).catch((err) => {
+      console.warn('[Settings] 同步看门狗自动重载配置失败:', err)
+    })
+  }
+}
 
 const notificationItems: Array<{ type: NotificationType; title: string; desc: string }> = [
   {
@@ -196,7 +186,6 @@ function toggleNotificationType(type: NotificationType, value: boolean) {
   setting.save()
 }
 
-// --- 隐藏开发者功能 ---
 function handleTitleClick() {
   titleClickCount.value++
 
@@ -210,13 +199,11 @@ function handleTitleClick() {
 
   if (titleClickCount.value === 10) {
     if (isTauri()) {
-      import('@tauri-apps/api/core').then(({ invoke }) => {
-        invoke('open_dev_tools')
-          .then(() => message.success('已打开 Dev Tools'))
-          .catch((e) => message.error(`打开 Dev Tools 失败: ${e}`))
-      })
+      invoke('open_dev_tools')
+        .then(() => toast.success('已打开 Dev Tools'))
+        .catch((e) => toast.error(`打开 Dev Tools 失败: ${e}`))
     } else {
-      message.info('当前为浏览器环境，请直接按 F12 打开开发者工具')
+      toast.info('当前为浏览器环境，请直接按 F12 打开开发者工具')
     }
   }
 }
@@ -234,7 +221,7 @@ function handleTitleClick() {
             客户端设置
           </span>
         </template>
-        <template #description> 配置系统启动行为、界面外观、桌面通知与数据备份 </template>
+        <template #description> 配置系统启动行为、界面外观、桌面通知、数据备份与运行诊断 </template>
       </ClientPageHeader>
     </Card>
 
@@ -252,7 +239,7 @@ function handleTitleClick() {
             >
               <component
                 :is="item.icon"
-                class="w-4 h-4"
+                class="size-4"
               />
               <span>{{ item.label }}</span>
             </Button>
@@ -264,9 +251,9 @@ function handleTitleClick() {
       <div class="md:col-span-3">
         <div
           v-if="isLoading"
-          class="flex-center p-8 text-xs text-[var(--muted-foreground)] gap-2"
+          class="flex-center p-8 text-xs text-muted-foreground gap-2"
         >
-          <Spin class="w-4 h-4" />
+          <Spin class="size-4" />
           <span>正在加载设置...</span>
         </div>
 
@@ -305,35 +292,50 @@ function handleTitleClick() {
                 <div class="flex flex-col gap-3">
                   <Card>
                     <CardHeader class="py-3 px-4">
-                      <CardTitle>启动偏好</CardTitle>
+                      <CardTitle>启动与稳定性</CardTitle>
                     </CardHeader>
                     <CardContent class="px-4 pb-4 flex flex-col gap-3">
-                      <LabelItem
-                        label="开机时自动启动应用"
-                        label-placement="left"
+                      <SettingRow
+                        variant="none"
+                        title="开机时自动启动应用"
+                        description="随操作系统登录自动在后台拉起客户端"
                       >
                         <Switch
                           :checked="isStartOnBoot"
                           :disabled="isLoading || isUpdatingAutostart"
-                          @update:checked="(val) => (isStartOnBoot = val)"
+                          @update:checked="(val) => (isStartOnBoot = Boolean(val))"
                         />
-                      </LabelItem>
+                      </SettingRow>
 
-                      <LabelItem
+                      <SettingRow
                         v-if="isStartOnBoot"
-                        label="启动后静默最小化到系统托盘"
-                        label-placement="left"
+                        variant="none"
+                        title="开机自启后最小化到托盘"
+                        description="仅在开机自启时静默隐藏窗口，手动双击启动仍会正常展示主界面"
                       >
                         <Switch
                           :checked="setting.settings.bootAsMinimized"
                           @update:checked="
                             (val) => {
-                              setting.settings.bootAsMinimized = val
+                              setting.settings.bootAsMinimized = Boolean(val)
                               setting.save()
                             }
                           "
                         />
-                      </LabelItem>
+                      </SettingRow>
+
+                      <Separator />
+
+                      <SettingRow
+                        variant="none"
+                        title="界面卡死时自动重载（看门狗自愈）"
+                        description="当主界面连续 60 秒未响应心跳时，由原生壳自动重载页面以恢复采集与服务"
+                      >
+                        <Switch
+                          :checked="Boolean(setting.settings.watchdogAutoReload)"
+                          @update:checked="(val) => void handleWatchdogAutoReloadChange(Boolean(val))"
+                        />
+                      </SettingRow>
                     </CardContent>
                   </Card>
 
@@ -346,71 +348,28 @@ function handleTitleClick() {
                         variant="none"
                         title="主题模式"
                       >
-                        <RadioGroup
-                          :model-value="themeType"
-                          class="flex items-center gap-3"
-                          @update:model-value="(val) => (themeType = val as ThemeType)"
-                        >
-                          <div class="flex items-center space-x-1.5">
-                            <RadioGroupItem
-                              id="theme-light"
-                              :value="ThemeType.Light"
-                            />
-                            <label
-                              for="theme-light"
-                              class="text-xs cursor-pointer"
-                              >亮色</label
-                            >
-                          </div>
-                          <div class="flex items-center space-x-1.5">
-                            <RadioGroupItem
-                              id="theme-dark"
-                              :value="ThemeType.Dark"
-                            />
-                            <label
-                              for="theme-dark"
-                              class="text-xs cursor-pointer"
-                              >暗色</label
-                            >
-                          </div>
-                          <div class="flex items-center space-x-1.5">
-                            <RadioGroupItem
-                              id="theme-auto"
-                              :value="ThemeType.Auto"
-                            />
-                            <label
-                              for="theme-auto"
-                              class="text-xs cursor-pointer"
-                              >跟随系统</label
-                            >
-                          </div>
-                        </RadioGroup>
+                        <div class="w-[160px]">
+                          <Select
+                            :model-value="themeType"
+                            @update:model-value="(val) => (themeType = val as ThemeType)"
+                          >
+                            <SelectTrigger class="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem
+                                v-for="opt in themeOptions"
+                                :key="opt.value"
+                                :value="opt.value"
+                              >
+                                {{ opt.label }}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </SettingRow>
                     </CardContent>
                   </Card>
-                </div>
-              </template>
-
-              <!-- B站账号管理 -->
-              <template v-else-if="currentTab === 'bili-accounts'">
-                <div class="flex flex-col gap-3">
-                  <div
-                    class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs flex items-center justify-between"
-                  >
-                    <span class="text-muted-foreground">
-                      B 站账号与主凭据已统一收录至左侧侧边栏专属页面，支持集中维护与批量续期。
-                    </span>
-                    <Button
-                      variant="link"
-                      size="xs"
-                      class="h-auto p-0 gap-1 text-primary shrink-0"
-                      @click="router.push({ name: 'client-account-manage', query: { tab: 'pool' } })"
-                    >
-                      <span>前往账号与凭据中心</span>
-                      <span class="text-[10px]">&rarr;</span>
-                    </Button>
-                  </div>
-                  <BiliAccountManagerCard />
                 </div>
               </template>
 
@@ -424,13 +383,13 @@ function handleTitleClick() {
                     <SettingRow
                       variant="none"
                       title="桌面通知总开关"
-                      description="开启后，选中的事件将在 Windows 桌面右下角推送通知"
+                      description="开启后，选中的事件将在桌面右下角推送通知"
                     >
                       <Switch
                         :checked="setting.settings.enableNotification"
                         @update:checked="
                           (val) => {
-                            setting.settings.enableNotification = val
+                            setting.settings.enableNotification = Boolean(val)
                             setting.save()
                           }
                         "
@@ -452,7 +411,7 @@ function handleTitleClick() {
                       >
                         <Switch
                           :checked="isNotificationTypeEnabled(item.type)"
-                          @update:checked="(val) => toggleNotificationType(item.type, val)"
+                          @update:checked="(val) => toggleNotificationType(item.type, Boolean(val))"
                         />
                       </SettingRow>
                     </div>
@@ -479,6 +438,18 @@ function handleTitleClick() {
                 </Card>
               </template>
 
+              <!-- 诊断与日志 -->
+              <template v-else-if="currentTab === 'diagnostics'">
+                <Card>
+                  <CardHeader class="py-3 px-4">
+                    <CardTitle>运行诊断与日志</CardTitle>
+                  </CardHeader>
+                  <CardContent class="px-4 pb-4">
+                    <ClientDiagnosticsPanel />
+                  </CardContent>
+                </Card>
+              </template>
+
               <!-- 关于程序 -->
               <template v-else-if="currentTab === 'about'">
                 <Card>
@@ -496,25 +467,25 @@ function handleTitleClick() {
                       </span>
                     </div>
 
-                    <div class="flex flex-col gap-2 text-[13px]">
+                    <div class="flex flex-col gap-2 text-xs">
                       <div class="flex-between py-1.5 border-b border-dashed border-border">
-                        <span class="text-xs text-muted-foreground">作者</span>
+                        <span class="text-muted-foreground">作者</span>
                         <a
                           href="https://space.bilibili.com/10021741"
                           target="_blank"
-                          class="text-xs text-primary hover:underline"
+                          class="text-primary hover:underline"
                         >
                           Megghy
                         </a>
                       </div>
 
                       <div class="flex-between py-1.5 border-b border-dashed border-border">
-                        <span class="text-xs text-muted-foreground">开源仓库</span>
+                        <span class="text-muted-foreground">开源仓库</span>
                         <div class="flex items-center gap-2">
                           <a
                             href="https://github.com/Megghy/vtsuru.live"
                             target="_blank"
-                            class="text-xs text-primary hover:underline"
+                            class="text-primary hover:underline"
                           >
                             Web 平台
                           </a>
@@ -522,7 +493,7 @@ function handleTitleClick() {
                           <a
                             href="https://github.com/Megghy/vtsuru-fetcher-client"
                             target="_blank"
-                            class="text-xs text-primary hover:underline"
+                            class="text-primary hover:underline"
                           >
                             Tauri 客户端
                           </a>
@@ -530,32 +501,31 @@ function handleTitleClick() {
                       </div>
 
                       <div class="flex-between py-1.5 border-b border-dashed border-border">
-                        <span class="text-xs text-muted-foreground">交流与反馈群</span>
-                        <span class="font-bold text-xs text-foreground">873260337</span>
+                        <span class="text-muted-foreground">交流与反馈群</span>
+                        <span class="font-bold text-foreground">873260337</span>
                       </div>
                     </div>
 
                     <Separator />
 
-                    <div class="flex-between">
-                      <div>
-                        <span class="font-bold text-xs text-foreground">在线检查更新</span>
-                        <div class="text-xs text-muted-foreground mt-0.5">查询服务端最新客户端版本并自动更新</div>
-                      </div>
+                    <SettingRow
+                      variant="none"
+                      title="在线检查更新"
+                      description="查询服务端最新客户端版本并自动下载安装"
+                    >
                       <Button
                         variant="secondary"
                         class="gap-1.5"
                         :disabled="isCheckingUpdate"
-                        @click="handleCheckUpdate"
+                        @click="void checkUpdate(true)"
                       >
-                        <component
-                          :is="ArrowSync24Regular"
-                          class="w-4 h-4"
+                        <RefreshCw
+                          class="size-3.5"
                           :class="{ 'animate-spin': isCheckingUpdate }"
                         />
                         <span>检查更新</span>
                       </Button>
-                    </div>
+                    </SettingRow>
                   </CardContent>
                 </Card>
               </template>

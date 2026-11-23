@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
-import { Card, CardContent } from '@/shared/ui/card'
-import { Separator } from '@/shared/ui/separator'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 
+import type { Placeholder } from './placeholders'
 import AdvancedSettings from './settings/AdvancedSettings.vue'
 import AudioSettings from './settings/AudioSettings.vue'
 import BasicSettings from './settings/BasicSettings.vue'
@@ -22,50 +23,36 @@ import SuperChatSettings from './settings/SuperChatSettings.vue'
 import TemplateSettings from './settings/TemplateSettings.vue'
 import VtsSettings from './settings/VtsSettings.vue'
 
-const props = defineProps({
-  action: {
-    type: Object as () => AutoActionItem,
-    required: true,
+const props = withDefaults(
+  defineProps<{
+    action: AutoActionItem
+    hideName?: boolean
+    hideEnabled?: boolean
+    hideUserFilter?: boolean
+    hideTriggerSettings?: boolean
+    customTestContext?: Record<string, any>
+    extraPlaceholders?: Placeholder[]
+  }>(),
+  {
+    hideName: false,
+    hideEnabled: false,
+    hideUserFilter: false,
+    hideTriggerSettings: false,
+    customTestContext: undefined,
+    extraPlaceholders: undefined,
   },
-  hideName: {
-    type: Boolean,
-    default: false,
-  },
-  hideEnabled: {
-    type: Boolean,
-    default: false,
-  },
-  customTestContext: {
-    type: Object,
-    default: undefined,
-  },
-  hideUserFilter: {
-    type: Boolean,
-    default: false,
-  },
-})
+)
 
-const showTemplate = computed(() => {
-  return [ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG, ActionType.EXECUTE_COMMAND].includes(
-    props.action.actionType,
-  )
-})
+const showTemplate = computed(() =>
+  [ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG].includes(props.action.actionType),
+)
 
-const showVtsSettings = computed(() => {
-  return [
-    ActionType.VTS_HOTKEY,
-    ActionType.VTS_PRESET,
-    ActionType.VTS_DROP_ITEM,
-    ActionType.VTS_PARAM_ADD,
-    ActionType.VTS_MACRO,
-    ActionType.VTS_ACCESSORY,
-  ].includes(props.action.actionType)
-})
-
+const showVtsSettings = computed(() => VTS_ACTION_TYPES.has(props.action.actionType))
 const showAudioSettings = computed(() => props.action.actionType === ActionType.PLAY_AUDIO)
 const showPngtuberSettings = computed(() => props.action.actionType === ActionType.PNGTUBER_EXPRESSION)
 
 const TriggerSettings = computed(() => {
+  if (props.hideTriggerSettings) return null
   switch (props.action.triggerType) {
     case TriggerType.DANMAKU:
       return DanmakuSettings
@@ -88,23 +75,22 @@ const TriggerSettings = computed(() => {
   }
 })
 
-function getAdvancedSummary() {
+const advancedSummary = computed(() => {
   const summaries: string[] = []
-  const { triggerConfig, ignoreCooldown, actionConfig, logicalExpression, executeCommand } = props.action
+  const { triggerConfig, ignoreCooldown, actionConfig, logicalExpression } = props.action
 
-  if (!props.hideUserFilter && triggerConfig.userFilterEnabled) summaries.push('用户过滤')
-  if (!ignoreCooldown && (actionConfig.cooldownSeconds > 0 || actionConfig.delaySeconds > 0))
-    summaries.push('冷却/延迟')
-  if (logicalExpression) summaries.push('逻辑条件')
-  if (executeCommand) summaries.push('自定义JS')
+  if (!props.hideUserFilter && triggerConfig.userFilterEnabled) summaries.push('用户筛选')
+  if (!ignoreCooldown && (actionConfig.cooldownSeconds ?? 0) > 0) summaries.push(`冷却 ${actionConfig.cooldownSeconds}s`)
+  if (ignoreCooldown) summaries.push('忽略单条冷却')
+  if ((actionConfig.delaySeconds ?? 0) > 0) summaries.push(`延迟 ${actionConfig.delaySeconds}s`)
+  if (logicalExpression?.trim()) summaries.push('逻辑表达式')
 
-  if (summaries.length === 0) return ''
-  return `(${summaries.join(', ')})`
-}
+  return summaries.length > 0 ? `(${summaries.join(' · ')})` : ''
+})
 </script>
 
 <template>
-  <div class="auto-action-editor flex flex-col gap-4">
+  <div class="auto-action-editor flex flex-col gap-3.5">
     <!-- 1. 基础设置 -->
     <BasicSettings
       :action="action"
@@ -112,33 +98,46 @@ function getAdvancedSummary() {
       :hide-enabled="hideEnabled"
     />
 
-    <!-- 2. 内容配置 (模板或VTS) -->
-    <Card
-      v-if="showTemplate || showVtsSettings || showPngtuberSettings || showAudioSettings"
-      class="content-settings-card border-none bg-muted/40"
-    >
-      <CardContent class="p-0">
-        <TemplateSettings
-          v-if="showTemplate"
+    <!-- 2. 触发条件（直接展开呈现，不再深埋在折叠面板里） -->
+    <Card v-if="TriggerSettings">
+      <CardHeader class="p-3 border-b">
+        <CardTitle class="text-xs font-semibold">触发条件配置</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3">
+        <component
+          :is="TriggerSettings"
           :action="action"
-          :custom-test-context="customTestContext"
-        />
-        <AudioSettings
-          v-if="showAudioSettings"
-          :action="action"
-        />
-        <PngtuberSettings
-          v-if="showPngtuberSettings"
-          :action="action"
-        />
-        <VtsSettings
-          v-if="showVtsSettings"
-          :action="action"
+          class="w-full"
         />
       </CardContent>
     </Card>
 
-    <!-- 3. 高级设置 (触发器特定 & 通用高级) -->
+    <!-- 3. 执行内容 (模板 / 音效 / PNGtuber / VTS) -->
+    <div
+      v-if="showTemplate || showVtsSettings || showPngtuberSettings || showAudioSettings"
+      class="content-settings-section"
+    >
+      <TemplateSettings
+        v-if="showTemplate"
+        :action="action"
+        :custom-test-context="customTestContext"
+        :extra-placeholders="extraPlaceholders"
+      />
+      <AudioSettings
+        v-if="showAudioSettings"
+        :action="action"
+      />
+      <PngtuberSettings
+        v-if="showPngtuberSettings"
+        :action="action"
+      />
+      <VtsSettings
+        v-if="showVtsSettings"
+        :action="action"
+      />
+    </div>
+
+    <!-- 4. 通用高级设置 (折叠面板) -->
     <Accordion
       type="single"
       collapsible
@@ -148,42 +147,22 @@ function getAdvancedSummary() {
         value="advanced"
         class="border-none"
       >
-        <AccordionTrigger class="py-3 text-sm hover:no-underline">
+        <AccordionTrigger class="py-3 text-xs font-semibold hover:no-underline">
           <div class="flex items-center gap-2">
-            <span>高级规则与触发条件</span>
-            <span class="text-xs text-muted-foreground font-normal">
-              {{ getAdvancedSummary() }}
+            <span>通用高级设置</span>
+            <span
+              v-if="advancedSummary"
+              class="text-[11px] text-muted-foreground font-normal"
+            >
+              {{ advancedSummary }}
             </span>
           </div>
         </AccordionTrigger>
-        <AccordionContent class="pt-2 pb-4">
-          <div class="flex flex-col gap-4">
-            <!-- 触发器特定设置 -->
-            <component
-              :is="TriggerSettings"
-              v-if="TriggerSettings"
-              :action="action"
-              class="w-full"
-            />
-
-            <div
-              v-if="TriggerSettings"
-              class="relative my-2 text-center"
-            >
-              <Separator />
-              <span
-                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground"
-              >
-                通用高级设置
-              </span>
-            </div>
-
-            <!-- 通用高级设置 -->
-            <AdvancedSettings
-              :action="action"
-              :hide-user-filter="hideUserFilter"
-            />
-          </div>
+        <AccordionContent class="pt-1 pb-3">
+          <AdvancedSettings
+            :action="action"
+            :hide-user-filter="hideUserFilter"
+          />
         </AccordionContent>
       </AccordionItem>
     </Accordion>

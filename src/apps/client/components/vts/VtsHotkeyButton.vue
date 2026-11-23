@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MoreHorizontal } from 'lucide-vue-next'
+
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import type { VtsHotkeyCustomization } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
@@ -21,57 +23,81 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <Popover>
-    <PopoverTrigger as-child>
-      <Button
-        class="w-full justify-start px-2.5 truncate"
-        :disabled="disabled"
-        :variant="armed ? 'destructive' : 'outline'"
-        @click="emit('trigger')"
-      >
-        <span
-          v-if="custom?.color"
-          class="size-2.5 rounded-full mr-1.5 shrink-0"
-          :style="{ backgroundColor: custom.color }"
-        />
-        <img
-          v-if="custom?.iconDataUrl"
-          class="size-3.5 rounded-[3px] mr-1.5 object-cover shrink-0"
-          :src="custom.iconDataUrl"
-          alt=""
-        />
-        <span class="overflow-hidden text-ellipsis truncate">{{
-          armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID
-        }}</span>
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent class="w-72 flex flex-col gap-2">
-      <div>
-        <div class="font-semibold text-sm">{{ hk.name }}</div>
-        <div
-          v-if="hk.description"
-          class="text-muted-foreground mt-0.5"
+  <div class="flex items-center gap-1 min-w-0">
+    <Button
+      class="flex-1 min-w-0 justify-start px-2.5 truncate"
+      :disabled="disabled"
+      :variant="armed ? 'destructive' : 'outline'"
+      @click="emit('trigger')"
+    >
+      <span
+        v-if="custom?.color"
+        class="size-2.5 rounded-full mr-1.5 shrink-0"
+        :style="{ backgroundColor: custom.color }"
+      />
+      <img
+        v-if="custom?.iconDataUrl"
+        class="size-3.5 rounded-[3px] mr-1.5 object-cover shrink-0"
+        :src="custom.iconDataUrl"
+        alt=""
+      />
+      <span class="overflow-hidden text-ellipsis truncate">{{
+        armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID
+      }}</span>
+    </Button>
+
+    <Popover>
+      <PopoverTrigger as-child>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          class="shrink-0 text-muted-foreground hover:text-foreground"
+          title="热键选项与详情"
         >
-          {{ hk.description }}
+          <MoreHorizontal class="size-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent class="w-72 flex flex-col gap-2">
+        <div>
+          <div class="font-semibold text-sm">{{ hk.name }}</div>
+          <div
+            v-if="hk.description"
+            class="text-muted-foreground mt-0.5 text-xs"
+          >
+            {{ hk.description }}
+          </div>
+          <div
+            v-if="hk.type"
+            class="text-muted-foreground mt-0.5 text-xs"
+          >
+            类型: {{ hk.type }}
+          </div>
         </div>
-        <div
-          v-if="hk.type"
-          class="text-muted-foreground mt-0.5"
-        >
-          类型: {{ hk.type }}
+        <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border">
+          <Button
+            size="xs"
+            variant="secondary"
+            :disabled="onDeck"
+            @click="emit('add-to-deck')"
+          >
+            {{ onDeck ? '已在操作台' : '加入操作台' }}
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            @click="emit('toggle-pinned')"
+          >
+            {{ custom?.pinned ? '取消置顶' : '置顶' }}
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            @click="emit('edit')"
+          >
+            自定义外观
+          </Button>
         </div>
-      </div>
-      <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border">
-        <Button size="xs" variant="secondary" :disabled="onDeck" @click="emit('add-to-deck')">
-          {{ onDeck ? '已在操作台' : '加入操作台' }}
-        </Button>
-        <Button size="xs" variant="outline" @click="emit('toggle-pinned')">
-          {{ custom?.pinned ? '取消置顶' : '置顶' }}
-        </Button>
-        <Button size="xs" variant="outline" @click="emit('edit')">
-          自定义外观
-        </Button>
-      </div>
-    </PopoverContent>
-  </Popover>
+      </PopoverContent>
+    </Popover>
+  </div>
 </template>

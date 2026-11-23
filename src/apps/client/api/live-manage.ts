@@ -2,7 +2,24 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import CryptoJS from 'crypto-js'
 
 import { QueryBiliAPI } from '../data/utils'
+import { useBiliAccountManager } from '../store/useBiliAccountManager'
 import { useBiliCookie } from '../store/useBiliCookie'
+
+/**
+ * 统一获取直播管理（主播主账号）凭证：优先使用多账号池中指定的主账号，兼容回退旧主 Cookie
+ */
+async function getMainManageCookie(): Promise<string> {
+  const accountMgr = useBiliAccountManager()
+  const poolMainCookie = accountMgr.mainAccount?.cookie
+  if (poolMainCookie) {
+    return poolMainCookie
+  }
+  const fallback = await useBiliCookie().getBiliCookie()
+  if (!fallback) {
+    throw new Error('未登录或主播管理账号 Cookie 无效')
+  }
+  return fallback
+}
 
 /**
  * 直播姬版本信息
@@ -192,12 +209,7 @@ export enum StartLiveErrorCode {
  * 开始直播
  */
 export async function startLive(params: StartLiveParams): Promise<StartLiveResponse> {
-  const biliCookieStore = useBiliCookie()
-  const cookie = await biliCookieStore.getBiliCookie()
-
-  if (!cookie) {
-    throw new Error('未登录或Cookie无效')
-  }
+  const cookie = await getMainManageCookie()
 
   // 从cookie中提取bili_jct作为csrf
   const csrf = extractCsrfFromCookie(cookie)
@@ -268,12 +280,7 @@ export interface StopLiveResponse {
  * 关闭直播
  */
 export async function stopLive(params: StopLiveParams): Promise<StopLiveResponse> {
-  const biliCookieStore = useBiliCookie()
-  const cookie = await biliCookieStore.getBiliCookie()
-
-  if (!cookie) {
-    throw new Error('未登录或Cookie无效')
-  }
+  const cookie = await getMainManageCookie()
 
   const csrf = extractCsrfFromCookie(cookie)
 
@@ -322,12 +329,7 @@ export interface UpdateRoomResponse {
  * 更新直播间信息
  */
 export async function updateRoom(params: UpdateRoomParams): Promise<UpdateRoomResponse> {
-  const biliCookieStore = useBiliCookie()
-  const cookie = await biliCookieStore.getBiliCookie()
-
-  if (!cookie) {
-    throw new Error('未登录或Cookie无效')
-  }
+  const cookie = await getMainManageCookie()
 
   const csrf = extractCsrfFromCookie(cookie)
 
@@ -404,12 +406,7 @@ export interface UpdateRoomNewsResponse {
 }
 
 export async function updateRoomNews(params: UpdateRoomNewsParams): Promise<UpdateRoomNewsResponse> {
-  const biliCookieStore = useBiliCookie()
-  const cookie = await biliCookieStore.getBiliCookie()
-
-  if (!cookie) {
-    throw new Error('未登录或Cookie无效')
-  }
+  const cookie = await getMainManageCookie()
 
   const csrf = extractCsrfFromCookie(cookie)
   const uid = extractUidFromCookie(cookie)
@@ -450,12 +447,7 @@ export interface UploadCoverResponse {
 }
 
 export async function uploadCover(file: File): Promise<UploadCoverResponse> {
-  const biliCookieStore = useBiliCookie()
-  const cookie = await biliCookieStore.getBiliCookie()
-
-  if (!cookie) {
-    throw new Error('未登录或Cookie无效')
-  }
+  const cookie = await getMainManageCookie()
 
   const csrf = extractCsrfFromCookie(cookie)
 
@@ -514,12 +506,7 @@ export interface UpdateCoverResponse {
 }
 
 export async function updateCover(coverUrl: string): Promise<UpdateCoverResponse> {
-  const biliCookieStore = useBiliCookie()
-  const cookie = await biliCookieStore.getBiliCookie()
-
-  if (!cookie) {
-    throw new Error('未登录或Cookie无效')
-  }
+  const cookie = await getMainManageCookie()
 
   const csrf = extractCsrfFromCookie(cookie)
 

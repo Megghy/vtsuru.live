@@ -6,6 +6,6 @@
  * OpenAPI spec version: v1
  */
 
-export interface RenameOrgModel {
-  name: string
+export type PostApiObsSceneAssetsUploadBody = {
+  file?: Blob | File
 }

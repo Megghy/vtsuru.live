@@ -1,25 +1,31 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import Board24Filled from '@vicons/fluent/es/Board24Filled'
-import Chat24Filled from '@vicons/fluent/es/Chat24Filled'
-import ChevronDown16Regular from '@vicons/fluent/es/ChevronDown16Regular'
-import ChevronLeft16Regular from '@vicons/fluent/es/ChevronLeft16Regular'
-import ChevronRight16Regular from '@vicons/fluent/es/ChevronRight16Regular'
-import CloudArchive24Filled from '@vicons/fluent/es/CloudArchive24Filled'
-import Cookies24Filled from '@vicons/fluent/es/Cookies24Filled'
-import FlashAuto24Filled from '@vicons/fluent/es/FlashAuto24Filled'
-import Live24Filled from '@vicons/fluent/es/Live24Filled'
-import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
-import PeopleSearch24Filled from '@vicons/fluent/es/PeopleSearch24Filled'
-import PersonAccounts24Filled from '@vicons/fluent/es/PersonAccounts24Filled'
-import PlugConnected24Filled from '@vicons/fluent/es/PlugConnected24Filled'
-import Record24Filled from '@vicons/fluent/es/Record24Filled'
-import Settings24Filled from '@vicons/fluent/es/Settings24Filled'
-import VideoPerson24Filled from '@vicons/fluent/es/VideoPerson24Filled'
-import CheckmarkCircle from '@vicons/ionicons5/es/CheckmarkCircle'
-import CloseCircle from '@vicons/ionicons5/es/CloseCircle'
-import Home from '@vicons/ionicons5/es/Home'
-import { Search } from 'lucide-vue-next'
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  AudioWaveform,
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CloudUpload,
+  Cookie,
+  Home,
+  LayoutDashboard,
+  MessageSquare,
+  Mic,
+  Plug,
+  Radio,
+  RefreshCw,
+  Search,
+  Settings,
+  Smile,
+  Sparkles,
+  UserCog,
+  Users,
+  XCircle,
+  Zap,
+} from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -28,19 +34,28 @@ import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/acc
 import ClientStatusBar from '@/apps/client/components/ClientStatusBar.vue'
 import SpeechMiniController from '@/apps/client/components/SpeechMiniController.vue'
 import WindowBar from '@/apps/client/components/WindowBar.vue'
-import { clientInited, clientInitStage, initAll, OnClientUnmounted } from '@/apps/client/data/initialize'
+import {
+  checkUpdate,
+  clientInited,
+  clientInitStage,
+  initAll,
+  isCheckingUpdate,
+  isClientVersionOutdated,
+  OnClientUnmounted,
+} from '@/apps/client/data/initialize'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import ThemeToggleButton from '@/shared/components/ThemeToggleButton.vue'
 import { useCommandPalette } from '@/shared/composables/useCommandPalette'
-import { CN_HOST, CURRENT_HOST, isDev, isTauri } from '@/shared/config'
+import { clientVersion, CN_HOST, CURRENT_HOST, isDev, isTauri, REQUIRED_CLIENT_VERSION } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Spin } from '@/shared/ui/spin'
@@ -83,6 +98,10 @@ function goCookieManagement() {
   router.push({ name: 'client-account-manage' })
 }
 
+function goDiagnostics() {
+  router.push({ name: 'client-settings', query: { tab: 'diagnostics' } })
+}
+
 function formatOrigin(origin: string) {
   if (!origin) return '未知来源'
   try {
@@ -111,6 +130,8 @@ const routeNameToMenuKey: Record<string, string> = {
   'client-gift-window-manage': 'gift-window-manage',
   'client-auto-action-manage': 'danmaku-auto-action-manage',
   'client-vts': 'vts',
+  'client-pngtuber': 'pngtuber',
+  'client-pngtuber-model': 'pngtuber',
   'client-read-danmaku': 'read-danmaku',
   'client-transcription': 'transcription',
   'client-fans-viewer': 'fans-viewer',
@@ -141,7 +162,7 @@ async function login() {
     } else if (!result.isBiliAuthed) {
       toast.error('B站主播码未绑定, 请先在网站管理页进行绑定')
     } else {
-      toast.success('登陆成功')
+      toast.success('登录成功')
       ACCOUNT.value = result
     }
   } catch (error) {
@@ -154,36 +175,37 @@ async function login() {
 
 const menuItems = [
   { key: 'go-back-home', name: 'client-index', label: '主页', icon: Home },
-  { key: 'account-manage', name: 'client-account-manage', label: '账号与凭据', icon: PersonAccounts24Filled },
-  { key: 'fetcher', name: 'client-fetcher', label: 'EventFetcher', icon: CloudArchive24Filled },
-  { key: 'live-manage', name: 'client-live-manage', label: '直播管理', icon: Live24Filled },
-  { key: 'live-dashboard', name: 'client-live-dashboard', label: '中控台', icon: Board24Filled },
+  { key: 'account-manage', name: 'client-account-manage', label: '账号与凭据', icon: UserCog },
+  { key: 'fetcher', name: 'client-fetcher', label: 'EventFetcher', icon: CloudUpload },
+  { key: 'live-manage', name: 'client-live-manage', label: '直播管理', icon: Radio },
+  { key: 'live-dashboard', name: 'client-live-dashboard', label: '中控台', icon: LayoutDashboard },
   {
     key: 'live-windows',
     label: '直播浮窗',
-    icon: Chat24Filled,
+    icon: MessageSquare,
     isGroup: true,
     children: [
       {
         key: 'danmaku-window-manage',
         name: 'client-danmaku-window-manage',
         label: '弹幕机',
-        hasIndicator: () => danmakuWindow.danmakuWindow != null,
+        hasIndicator: () => danmakuWindow.isDanmakuWindowOpen,
       },
       {
         key: 'gift-window-manage',
         name: 'client-gift-window-manage',
         label: '礼物与排行',
-        hasIndicator: () => giftWindow.giftWindow != null,
+        hasIndicator: () => giftWindow.isGiftWindowOpen,
       },
     ],
   },
-  { key: 'danmaku-auto-action-manage', name: 'client-auto-action-manage', label: '自动操作', icon: FlashAuto24Filled },
-  { key: 'vts', name: 'client-vts', label: 'VTS 控制', icon: VideoPerson24Filled },
-  { key: 'read-danmaku', name: 'client-read-danmaku', label: '读弹幕', icon: Mic24Filled },
-  { key: 'transcription', name: 'client-transcription', label: '语音转写', icon: Record24Filled },
-  { key: 'fans-viewer', name: 'client-fans-viewer', label: '粉丝查看', icon: PeopleSearch24Filled },
-  { key: 'settings', name: 'client-settings', label: '设置', icon: Settings24Filled },
+  { key: 'danmaku-auto-action-manage', name: 'client-auto-action-manage', label: '自动操作', icon: Zap },
+  { key: 'vts', name: 'client-vts', label: 'VTS 控制', icon: Smile },
+  { key: 'pngtuber', name: 'client-pngtuber', label: 'PNGtuber', icon: Sparkles },
+  { key: 'read-danmaku', name: 'client-read-danmaku', label: '读弹幕', icon: Mic },
+  { key: 'transcription', name: 'client-transcription', label: '语音转写', icon: AudioWaveform },
+  { key: 'fans-viewer', name: 'client-fans-viewer', label: '粉丝查看', icon: Users },
+  { key: 'settings', name: 'client-settings', label: '设置', icon: Settings },
 ]
 
 onMounted(() => {
@@ -196,7 +218,7 @@ onMounted(() => {
 <template>
   <div
     class="manage-theme bg-background text-foreground h-screen flex flex-col overflow-hidden"
-    :style="[manageCssVars, { '--client-titlebar-height': '30px' }]"
+    :style="[manageCssVars, { '--client-titlebar-height': '36px' }]"
   >
     <WindowBar />
 
@@ -208,7 +230,7 @@ onMounted(() => {
       >
         <div class="flex flex-col items-center gap-3">
           <Spin size="large" />
-          <div class="text-muted-foreground text-[13px]">
+          <div class="text-muted-foreground text-xs">
             {{ clientInitStage || '初始化中...' }}
           </div>
         </div>
@@ -230,28 +252,28 @@ onMounted(() => {
         </CardHeader>
 
         <CardContent class="space-y-4">
-          <div class="space-y-2">
-            <div class="flex-between">
-              <span class="text-xs font-medium text-foreground">Token</span>
+          <FormField
+            label="Token"
+            description="获取方式：登录网页端后，在「管理后台主页」的个人信息卡片下方复制 Token。"
+          >
+            <template #extra>
               <Button
                 variant="link"
-                class="h-auto p-0 text-xs gap-0.5"
+                size="xs"
+                class="h-auto p-0 gap-0.5"
                 @click="openManagePage"
               >
                 <span>前往管理后台获取</span>
-                <span class="text-[10px]">&nearr;</span>
+                <ArrowUpRight class="size-3" />
               </Button>
-            </div>
+            </template>
             <Input
               v-model="token"
               type="password"
               placeholder="请输入 Token"
               @keyup.enter="login"
             />
-            <p class="text-[11px] text-muted-foreground leading-relaxed">
-              获取方式：登录网页端后，在「管理后台主页」的个人信息卡片下方复制 Token。
-            </p>
-          </div>
+          </FormField>
 
           <Button
             class="w-full"
@@ -273,7 +295,7 @@ onMounted(() => {
     <div
       v-else
       class="main-layout flex flex-1 min-h-0 overflow-hidden"
-      @vue:mounted="initAll(true)"
+      @vue:mounted="initAll()"
     >
       <!-- 左侧边栏 -->
       <aside
@@ -302,11 +324,11 @@ onMounted(() => {
                     class="rounded-full"
                     aria-label="EventFetcher 状态"
                   >
-                    <CheckmarkCircle
+                    <CheckCircle2
                       v-if="webfetcher.state === 'connected'"
                       class="size-4 text-emerald-500"
                     />
-                    <CloseCircle
+                    <XCircle
                       v-else
                       class="size-4 text-destructive"
                     />
@@ -345,7 +367,7 @@ onMounted(() => {
                       aria-label="折叠边栏"
                       @click="siderCollapsed = true"
                     >
-                      <ChevronLeft16Regular class="size-3.5" />
+                      <ChevronLeft class="size-3.5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>折叠边栏</TooltipContent>
@@ -361,7 +383,7 @@ onMounted(() => {
                   aria-label="展开边栏"
                   @click="siderCollapsed = false"
                 >
-                  <ChevronRight16Regular class="size-3.5" />
+                  <ChevronRight class="size-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>展开边栏</TooltipContent>
@@ -369,7 +391,7 @@ onMounted(() => {
           </div>
 
           <!-- 导航菜单 -->
-          <div class="sider-menu flex-1 overflow-y-auto px-2 py-3 space-y-1">
+          <div class="sider-menu flex-1 overflow-y-auto scrollbar-thin px-2 py-3 space-y-1">
             <template
               v-for="item in menuItems"
               :key="item.key"
@@ -394,9 +416,9 @@ onMounted(() => {
                     class="flex-1 text-left"
                     >{{ item.label }}</span
                   >
-                  <ChevronDown16Regular
+                  <ChevronDown
                     v-if="!siderCollapsed"
-                    class="size-3 transition-transform"
+                    class="size-3 transition-transform duration-150"
                     :class="{ '-rotate-90': !liveWindowsOpen }"
                   />
                 </Button>
@@ -409,7 +431,7 @@ onMounted(() => {
                     v-for="sub in item.children"
                     :key="sub.key"
                     :to="{ name: sub.name }"
-                    class="flex-between px-2.5 py-1.5 rounded-md text-xs transition"
+                    class="flex-between px-2.5 py-1.5 rounded-md text-xs transition-colors"
                     :class="
                       activeMenuKey === sub.key
                         ? 'bg-primary/10 text-primary font-semibold'
@@ -429,7 +451,7 @@ onMounted(() => {
               <RouterLink
                 v-else
                 :to="{ name: item.name }"
-                class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition"
+                class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors"
                 :class="[
                   activeMenuKey === item.key
                     ? 'bg-primary/10 text-primary font-semibold'
@@ -449,14 +471,30 @@ onMounted(() => {
 
           <!-- 底部状态区 (仅展开时显示) -->
           <div
-            v-if="!siderCollapsed && rpcServer.running"
+            v-if="!siderCollapsed && (rpcServer.running || rpcServer.lastError)"
             class="sider-status-list p-2 mx-2 mb-2 rounded border bg-muted/20"
           >
-            <Popover>
+            <div
+              v-if="rpcServer.lastError"
+              class="flex-between gap-1.5 text-xs text-destructive cursor-pointer"
+              @click="goDiagnostics"
+            >
+              <div class="flex items-center gap-1.5 min-w-0">
+                <AlertTriangle class="size-3.5 shrink-0" />
+                <span class="truncate text-[11px]">本地接口异常</span>
+              </div>
+              <Badge
+                variant="destructive"
+                size="xs"
+              >
+                查看
+              </Badge>
+            </div>
+            <Popover v-else>
               <PopoverTrigger as-child>
                 <div class="status-row status-row--hoverable flex-between text-xs cursor-pointer select-none">
                   <div class="status-row-label flex items-center gap-1.5 min-w-0">
-                    <PlugConnected24Filled
+                    <Plug
                       class="size-3.5 shrink-0"
                       :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
                     />
@@ -492,9 +530,8 @@ onMounted(() => {
                   <div class="flex-between gap-2">
                     <span class="font-medium text-foreground truncate">{{ formatOrigin(conn.origin) }}</span>
                     <Badge
-                      variant="success"
-                      class="text-[9px] h-3.5 px-1"
-                      :class="conn.subscribed ? ' ' : ''"
+                      :variant="conn.subscribed ? 'success' : 'secondary'"
+                      size="xs"
                     >
                       {{ conn.subscribed ? '已订阅' : '未订阅' }}
                     </Badge>
@@ -512,7 +549,7 @@ onMounted(() => {
           >
             <div class="cookie-status-header flex-between text-xs">
               <div class="status-row-label flex items-center gap-1.5 min-w-0">
-                <Cookies24Filled
+                <Cookie
                   class="size-3.5 shrink-0"
                   :class="
                     cookieStatusType === 'success'
@@ -525,15 +562,8 @@ onMounted(() => {
                 <span class="font-medium text-foreground text-[11px]">B站 Cookie</span>
               </div>
               <Badge
-                variant="success"
+                :variant="cookieStatusType === 'success' ? 'success' : cookieStatusType === 'error' ? 'destructive' : 'warning'"
                 size="xs"
-                :class="
-                  cookieStatusType === 'success'
-                    ? ' '
-                    : cookieStatusType === 'error'
-                      ? 'border-destructive/40 text-destructive bg-destructive/10'
-                      : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
-                "
               >
                 {{ cookieStatusText }}
               </Badge>
@@ -542,7 +572,7 @@ onMounted(() => {
               v-if="cookieStatusType !== 'success'"
               size="xs"
               variant="outline"
-              class="w-full text-[10px]"
+              class="w-full"
               @click="goCookieManagement"
             >
               前往处理
@@ -552,8 +582,34 @@ onMounted(() => {
       </aside>
 
       <!-- 右侧主内容 -->
-      <main class="main-layout-content flex-1 min-w-0 overflow-y-auto bg-background">
-        <div class="client-page h-full">
+      <main class="main-layout-content flex-1 min-w-0 flex flex-col overflow-hidden bg-background">
+        <!-- 客户端壳版本过旧常驻提示条 -->
+        <div
+          v-if="isClientVersionOutdated"
+          class="flex-between gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs shrink-0"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <AlertTriangle class="size-3.5 shrink-0" />
+            <span class="truncate">
+              当前桌面客户端版本 (v{{ clientVersion }}) 低于推荐版本 (v{{ REQUIRED_CLIENT_VERSION }})，部分新功能（如诊断/语音转写/本地 RPC）可能受限。
+            </span>
+          </div>
+          <Button
+            size="xs"
+            variant="outline"
+            class="shrink-0 gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/15"
+            :disabled="isCheckingUpdate"
+            @click="void checkUpdate(true)"
+          >
+            <RefreshCw
+              class="size-3"
+              :class="{ 'animate-spin': isCheckingUpdate }"
+            />
+            <span>立即更新</span>
+          </Button>
+        </div>
+
+        <div class="client-page flex-1 min-h-0 overflow-y-auto scrollbar-thin">
           <RouterView v-slot="{ Component, route: viewRoute }">
             <KeepAlive>
               <div

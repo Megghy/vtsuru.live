@@ -40,6 +40,7 @@ export interface ClientBackupManifest {
   createdAt: number
   clientVersion: string
   encoding: 'superjson'
+  includesSensitiveCredentials?: boolean
   modules: Record<ClientBackupModule, ClientBackupManifestModule>
 }
 
@@ -101,6 +102,38 @@ function compareVersions(left: string, right: string): number {
     if (diff !== 0) return diff
   }
   return 0
+}
+
+const EXPLICIT_SENSITIVE_KEYS = new Set([
+  'user.bilibili.cookie',
+  'user.bilibili.cookie_cloud',
+  'user.bilibili.accounts_pool',
+  'user.bilibili.multi_cookie_cloud',
+  'webfetcher.rtmpInfo',
+  'obs.password',
+])
+
+const SENSITIVE_KEY_PATTERN = /(cookie|token|password|secret|credential)/i
+
+function isSensitiveStorageKey(key: string): boolean {
+  if (EXPLICIT_SENSITIVE_KEYS.has(key)) return true
+  if (key === 'settings' || key.startsWith('autoAction.') || key.startsWith('autoAction_')) return false
+  return SENSITIVE_KEY_PATTERN.test(key)
+}
+
+function sanitizeTranscriptionSettings(value: unknown): unknown {
+  if (!value || typeof value !== 'object') return value
+  const cloned = structuredClone(value) as { profiles?: Array<Record<string, unknown>> }
+  if (Array.isArray(cloned.profiles)) {
+    for (const profile of cloned.profiles) {
+      if (profile && typeof profile === 'object') {
+        if ('secretId' in profile) profile.secretId = ''
+        if ('secretKey' in profile) profile.secretKey = ''
+        if ('apiKey' in profile) profile.apiKey = ''
+      }
+    }
+  }
+  return cloned
 }
 
 function partitionKey(key: string): ClientBackupModule {
@@ -280,9 +313,11 @@ export const useClientBackup = defineStore('clientBackup', () => {
   }
 
   async function buildBackupArchive() {
-    await useSettings().save()
+    const settingsStore = useSettings()
+    await settingsStore.save()
     await persistedFlush()
 
+    const includeSensitive = Boolean(settingsStore.settings.backup.includeSensitiveCredentials)
     const createdAt = Date.now()
     const grouped: Record<ClientBackupModule, Array<[string, unknown]>> = {
       tauriStore: [],
@@ -291,8 +326,16 @@ export const useClientBackup = defineStore('clientBackup', () => {
       autoActionUserData: [],
       autoActionHistory: [],
     }
-    for (const [key, value] of await persistedEntries()) {
-      grouped[partitionKey(String(key))].push([String(key), value])
+    for (const [rawKey, value] of await persistedEntries()) {
+      const key = String(rawKey)
+      const module = partitionKey(key)
+      if (!includeSensitive && isSensitiveStorageKey(key)) {
+        continue
+      }
+      const finalValue = !includeSensitive && key === 'transcription.settings'
+        ? sanitizeTranscriptionSettings(value)
+        : value
+      grouped[module].push([key, finalValue])
     }
     const tauriStoreEntries = grouped.tauriStore
     const persistEntries = grouped.persistKv
@@ -306,6 +349,7 @@ export const useClientBackup = defineStore('clientBackup', () => {
       createdAt,
       clientVersion: currentVersion.value,
       encoding: 'superjson',
+      includesSensitiveCredentials: includeSensitive,
       modules: {
         tauriStore: { file: MODULE_FILES.tauriStore, count: tauriStoreEntries.length },
         persistKv: { file: MODULE_FILES.persistKv, count: persistEntries.length },
@@ -385,10 +429,14 @@ export const useClientBackup = defineStore('clientBackup', () => {
     }
   }
 
-  async function restoreModule(module: ClientBackupModule, moduleEntries: Array<[string, unknown]>) {
+  async function restoreModule(
+    module: ClientBackupModule,
+    moduleEntries: Array<[string, unknown]>,
+    preserveSensitiveKeys = false,
+  ) {
     const currentKeys = (await persistedEntries())
       .map(([key]) => String(key))
-      .filter((key) => partitionKey(key) === module)
+      .filter((key) => partitionKey(key) === module && (!preserveSensitiveKeys || !isSensitiveStorageKey(key)))
     await persistedRemoveKeys(currentKeys)
     const normalized = moduleEntries.map(([key, value]) => {
       const nextKey = String(key)
@@ -412,10 +460,11 @@ export const useClientBackup = defineStore('clientBackup', () => {
     try {
       const zip = await parseZip(await readFile(filePath))
       const manifest = await readManifestFromZip(zip)
+      const preserveSensitive = manifest.includesSensitiveCredentials === false
 
       for (const module of modules) {
         const payload = await readModulePayload<Array<[string, unknown]>>(zip, manifest, module)
-        await restoreModule(module, payload)
+        await restoreModule(module, payload, preserveSensitive)
       }
 
       return manifest

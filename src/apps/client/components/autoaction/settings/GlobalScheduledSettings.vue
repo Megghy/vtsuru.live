@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -8,51 +6,47 @@ import { SettingRow } from '@/shared/ui/setting-row'
 
 const autoActionStore = useAutoAction()
 
-// 定时模式选项
 const schedulingModeOptions = [
-  { label: '随机模式 (随机选择符合条件的操作)', value: 'random' },
-  { label: '顺序模式 (按列表顺序循环执行操作)', value: 'sequential' },
+  { label: '随机模式（每次随机选择一条符合条件的规则）', value: 'random' },
+  { label: '顺序模式（按规则列表顺序依次循环执行）', value: 'sequential' },
 ]
-
-// 监听变化，触发定时器重启（如果间隔改变）
-watch(
-  () => autoActionStore.globalIntervalSeconds,
-  () => {
-    autoActionStore.restartGlobalTimer() // 确保间隔改变时定时器更新
-  },
-)
 </script>
 
 <template>
   <Card>
     <CardHeader class="p-3 border-b">
-      <CardTitle>全局定时器配置</CardTitle>
+      <CardTitle class="text-xs font-semibold">全局定时器配置</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3 space-y-3">
-      <Alert size="sm" variant="info">
+      <Alert
+        size="sm"
+        variant="info"
+      >
         <AlertDescription class="m-0">
-          这里的设置将应用于所有启用了“使用全局设置”的定时触发操作。这些操作将共享同一个计时周期。
+          应用于所有开启“使用全局定时器”的定时规则，共享同一计时周期。修改间隔后会自动重置计时器。
         </AlertDescription>
       </Alert>
 
       <div class="space-y-2">
         <SettingRow
           type="number"
-          title="全局发送间隔"
+          variant="compact"
+          title="全局发送间隔 (秒)"
           hint="每隔多少秒触发一次全局定时任务"
           :min="10"
           :max="7200"
           :model-value="autoActionStore.globalIntervalSeconds"
-          @change="(val) => (autoActionStore.globalIntervalSeconds = Number(val) || 300)"
+          @update:model-value="autoActionStore.globalIntervalSeconds = Number($event) || 300"
         />
 
         <SettingRow
           type="select"
-          title="全局发送模式"
+          variant="compact"
+          title="全局轮询模式"
           :options="schedulingModeOptions"
           :model-value="autoActionStore.globalSchedulingMode"
-          @change="(val) => (autoActionStore.globalSchedulingMode = val as any)"
+          @update:model-value="autoActionStore.globalSchedulingMode = ($event as 'random' | 'sequential') || 'random'"
         />
       </div>
     </CardContent>

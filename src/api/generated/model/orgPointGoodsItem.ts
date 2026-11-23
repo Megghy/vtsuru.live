@@ -5,6 +5,7 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { GoodsStatus } from './goodsStatus'
 
 export interface OrgPointGoodsItem {
   id: number
@@ -13,4 +14,8 @@ export interface OrgPointGoodsItem {
   description?: string | null
   price: number
   stock: number
+  streamerId: number
+  /** @nullable */
+  streamerName?: string | null
+  status: GoodsStatus
 }

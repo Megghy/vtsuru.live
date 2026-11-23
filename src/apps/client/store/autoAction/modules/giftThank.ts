@@ -6,6 +6,27 @@ import { executeActions, filterValidActions } from '../actionUtils'
 import type { AutoActionItem, RuntimeState } from '../types'
 import { TriggerType } from '../types'
 
+export function matchesGiftTrigger(action: AutoActionItem, event: EventModel): boolean {
+  const giftName = event.msg
+  const rawPrice = event.price || 0
+  const giftValue = Math.abs(rawPrice)
+  const { filterMode, filterGiftNames, minValue } = action.triggerConfig
+
+  if (filterMode === 'free' && rawPrice <= 0) {
+    return false
+  }
+  if (filterMode === 'blacklist' && filterGiftNames?.includes(giftName)) {
+    return false
+  }
+  if (filterMode === 'whitelist' && !filterGiftNames?.includes(giftName)) {
+    return false
+  }
+  if (filterMode !== 'none' && minValue && giftValue < minValue) {
+    return false
+  }
+  return true
+}
+
 /**
  * 礼物感谢模块
  * @param isLive 是否处于直播状态
@@ -33,11 +54,6 @@ export function useGiftThank(
 
     // 使用通用执行函数处理礼物事件
     if (giftActions.length > 0 && roomId.value) {
-      // 礼物基本信息
-      const giftName = event.msg
-      // EventModel.price 在当前实现中已统一为 “元”（礼物为总价值）
-      const giftValue = Math.abs(event.price || 0)
-
       executeActions(
         giftActions,
         event,
@@ -47,33 +63,7 @@ export function useGiftThank(
         { sendLiveDanmaku },
         {
           isTest,
-          customFilters: [
-            // 礼物过滤逻辑
-            (action, _context) => {
-              // 黑名单模式
-              if (
-                action.triggerConfig.filterMode === 'blacklist' &&
-                action.triggerConfig.filterGiftNames?.includes(giftName)
-              ) {
-                return false
-              }
-
-              // 白名单模式
-              if (
-                action.triggerConfig.filterMode === 'whitelist' &&
-                !action.triggerConfig.filterGiftNames?.includes(giftName)
-              ) {
-                return false
-              }
-
-              // 礼物价值过滤
-              if (action.triggerConfig.minValue && giftValue < action.triggerConfig.minValue) {
-                return false
-              }
-
-              return true
-            },
-          ],
+          customFilters: [(action) => matchesGiftTrigger(action, event)],
         },
       )
     }

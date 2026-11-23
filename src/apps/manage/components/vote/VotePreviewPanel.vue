@@ -82,7 +82,25 @@ watch(
   },
 )
 
-function applyConfigPresentation(data: VoteOBSDataModel): VoteOBSDataModel {
+type PresentationFields =
+  | 'theme'
+  | 'displayPosition'
+  | 'roundedCorners'
+  | 'borderRadius'
+  | 'fontFamily'
+  | 'fontScale'
+  | 'cardOpacity'
+  | 'backdropBlur'
+  | 'accentColor'
+  | 'leadingColor'
+  | 'duelLeftColor'
+  | 'duelRightColor'
+  | 'showRecentVoter'
+  | 'resultMode'
+
+function applyConfigPresentation(
+  data: Omit<VoteOBSDataModel, PresentationFields> & Partial<Pick<VoteOBSDataModel, PresentationFields>>,
+): VoteOBSDataModel {
   const c = props.config
   return {
     ...data,

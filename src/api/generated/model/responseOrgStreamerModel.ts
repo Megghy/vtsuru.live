@@ -11,6 +11,9 @@ import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 export interface ResponseOrgStreamerModel {
   streamer: ResponseUserBasicInfo
   status: OrgStreamerStatuses
+  allowPointManage: boolean
+  /** @nullable */
+  note?: string | null
   addedAt: number
   /** @nullable */
   respondedAt?: number | null

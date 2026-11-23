@@ -11,5 +11,6 @@ import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 export interface ResponseOrgMemberModel {
   user: ResponseUserBasicInfo
   role: OrgMemberRoles
+  canViewRevenue: boolean
   joinedAt: number
 }

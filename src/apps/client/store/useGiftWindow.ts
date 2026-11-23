@@ -1,16 +1,13 @@
 import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { onScopeDispose, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
 import { getApiLiveCurrent, getApiLiveRanking } from '@/api/generated/live/live'
-import type {
-  ResponseLiveInfoModel,
-  ResponseLiveRankingEntryModel,
-} from '@/api/generated/model'
+import type { ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/generated/model'
 import { EventDataTypes, GuardLevel } from '@/api/generated/model'
 import { QueryBiliAPI } from '@/apps/client/data/utils'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
@@ -19,138 +16,44 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
-export type GiftSortBy = 'time' | 'price' | 'num'
-export type GiftFilterType = 'Gift' | 'SC' | 'Guard'
-export type RankViewMode = 'thank_summary' | 'rank' | 'online_guard' | 'online_viewers'
+import { DEFAULT_OVERLAY_POSITION, ensureOverlayWindow, normalizePaidYuan } from '../utils/overlayWindow'
+import type {
+  GiftEntry,
+  GiftFilterType,
+  GiftSortBy,
+  GiftWindowBCData,
+  GiftWindowSettings,
+  OnlineGuardEntry,
+  OnlineViewerEntry,
+  RankEntry,
+  RankViewMode,
+  ThankSummaryItem,
+  UserActivityState,
+} from './giftWindowTypes'
+import { DEFAULT_GIFT_WINDOW_SETTINGS, GIFT_WINDOW_BROADCAST_CHANNEL } from './giftWindowTypes'
+import {
+  buildOnlineGuardList,
+  buildOnlineViewerList,
+  buildRankedList,
+  buildThankSummaryList,
+  createMockGiftEvent,
+  isUserOnlineByThreshold,
+  sortGiftEntries,
+} from './giftWindowUtils'
 
-export interface GiftWindowSettings {
-  width: number
-  height: number
-  x: number
-  y: number
-  opacity: number
-  fontSize: number
-  backgroundColor: string
-  windowBackgroundColor: string
-  textColor: string
-  highlightColor: string
-  alwaysOnTop: boolean
-  interactive: boolean
-  borderRadius: number
-  itemSpacing: number
-  maxItemCount: number
-  autoDisappearTime: number
-  mergeWindowSeconds: number
-  showAvatar: boolean
-  showPrice: boolean
-  showTime: boolean
-  filterTypes: GiftFilterType[]
-  sortBy: GiftSortBy
-  minPrice: number
-  reverseOrder: boolean
-  compactMode: boolean
-  showGiftList: boolean
-  showRanking: boolean
-  rankDisplayCount: number
-  rankViewMode: RankViewMode
-  showScrollbar: boolean
-  onlineThresholdMinutes: number
-  contentProtected?: boolean
+export type {
+  GiftEntry,
+  GiftFilterType,
+  GiftSortBy,
+  GiftWindowBCData,
+  GiftWindowSettings,
+  OnlineGuardEntry,
+  OnlineViewerEntry,
+  RankEntry,
+  RankViewMode,
+  ThankSummaryItem,
 }
-
-export interface GiftEntry {
-  id: string
-  uid: number
-  uname: string
-  uface: string
-  giftName: string
-  giftIcon?: string
-  totalNum: number
-  totalPrice: number
-  type: EventDataTypes
-  guardLevel: GuardLevel
-  firstTime: number
-  lastUpdateTime: number
-  disappearAt?: number
-}
-
-export const GIFT_WINDOW_BROADCAST_CHANNEL = 'channel.gift.window'
-
-export interface RankEntry {
-  id: string
-  uid: number
-  uname: string
-  uface: string
-  totalPaid: number
-  score: number
-  guardLevel: GuardLevel
-  isOnline: boolean
-  lastActiveTime: number
-}
-
-export interface OnlineGuardEntry {
-  id: string
-  uid: number
-  uname: string
-  uface: string
-  guardLevel: GuardLevel
-  lastActiveTime: number
-  lastAction: string
-  totalPaid: number
-  rankIndex?: number
-}
-
-export interface OnlineViewerEntry {
-  id: string
-  uid: number
-  uname: string
-  uface: string
-  guardLevel: GuardLevel
-  isFormerGuard: boolean
-  medalName?: string
-  medalLevel?: number
-  score?: number
-  isOnline: boolean
-  lastActiveTime: number
-  lastAction: string
-}
-
-export interface ThankSummaryItem {
-  id: string
-  uid: number
-  uname: string
-  uface: string
-  totalPaid: number
-  guardLevel: GuardLevel
-  isOnline: boolean
-  lastActiveTime: number
-  isTopRank: boolean
-  rankIndex?: number
-  isGuardOnly: boolean
-}
-
-export type GiftWindowBCData =
-  | { type: 'gift-list'; data: GiftEntry[] }
-  | { type: 'rank-list'; data: RankEntry[] }
-  | { type: 'online-guard-list'; data: OnlineGuardEntry[] }
-  | { type: 'online-viewer-list'; data: OnlineViewerEntry[] }
-  | { type: 'update-setting'; data: GiftWindowSettings }
-  | { type: 'window-ready' }
-  | { type: 'clear' }
-
-interface UserActivityState {
-  id: string
-  uid: number
-  uname: string
-  uface: string
-  guardLevel: GuardLevel
-  isFormerGuard?: boolean
-  medalName?: string
-  medalLevel?: number
-  score?: number
-  lastActiveTime: number
-  lastAction: string
-}
+export { GIFT_WINDOW_BROADCAST_CHANNEL }
 
 const TYPE_TO_FILTER: Partial<Record<EventDataTypes, GiftFilterType>> = {
   [EventDataTypes.Gift]: 'Gift',
@@ -160,40 +63,7 @@ const TYPE_TO_FILTER: Partial<Record<EventDataTypes, GiftFilterType>> = {
 
 export const useGiftWindow = defineStore('giftWindow', () => {
   const giftWindow = ref<WebviewWindow>()
-  const settings = usePersistedStorage<GiftWindowSettings>('Setting.GiftWindow', {
-    width: 340,
-    height: 560,
-    x: 100,
-    y: 100,
-    opacity: 0.95,
-    fontSize: 14,
-    backgroundColor: 'rgba(20,20,30,0.85)',
-    windowBackgroundColor: 'rgba(10,10,20,0.6)',
-    textColor: '#ffffff',
-    highlightColor: '#fbbf24',
-    alwaysOnTop: true,
-    interactive: false,
-    borderRadius: 10,
-    itemSpacing: 8,
-    maxItemCount: 30,
-    autoDisappearTime: 60,
-    mergeWindowSeconds: 10,
-    showAvatar: true,
-    showPrice: true,
-    showTime: true,
-    filterTypes: ['Gift', 'SC', 'Guard'],
-    sortBy: 'time',
-    minPrice: 0,
-    reverseOrder: false,
-    compactMode: false,
-    showGiftList: true,
-    showRanking: true,
-    rankDisplayCount: 50,
-    rankViewMode: 'thank_summary',
-    showScrollbar: true,
-    onlineThresholdMinutes: 20,
-    contentProtected: false,
-  })
+  const settings = usePersistedStorage<GiftWindowSettings>('Setting.GiftWindow', { ...DEFAULT_GIFT_WINDOW_SETTINGS })
 
   const danmakuClient = useDanmakuClient()
   const accountInfo = useAccount()
@@ -204,20 +74,27 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   const userActivityMap = ref(new Map<string, UserActivityState>())
   const formerGuardsSet = ref<Set<number>>(new Set())
   const currentLive = ref<ResponseLiveInfoModel | null>(null)
+
   let bc: BroadcastChannel | undefined
   let isInited = false
-  let initPromise: Promise<void> | null = null
   let isSyncingLive = false
   let _goldRankTimerId: ReturnType<typeof setInterval> | null = null
   let _cleanupTimerId: ReturnType<typeof setInterval> | null = null
   let _refreshOnlineTimerId: ReturnType<typeof setInterval> | null = null
   let _syncLiveTimerId: ReturnType<typeof setInterval> | null = null
   let _moveResizeSaveTimer: ReturnType<typeof setTimeout> | null = null
-  const unlistenHandles: Array<() => void> = []
+  const storeUnlistens: Array<() => void> = []
+  const windowUnlistens: Array<() => void> = []
+
+  function clearWindowListeners() {
+    for (const fn of windowUnlistens) fn()
+    windowUnlistens.length = 0
+  }
 
   onScopeDispose(() => {
-    for (const fn of unlistenHandles) fn()
-    unlistenHandles.length = 0
+    clearWindowListeners()
+    for (const fn of storeUnlistens) fn()
+    storeUnlistens.length = 0
     if (_goldRankTimerId) clearInterval(_goldRankTimerId)
     if (_cleanupTimerId) clearInterval(_cleanupTimerId)
     if (_refreshOnlineTimerId) clearInterval(_refreshOnlineTimerId)
@@ -231,42 +108,92 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     bc?.close()
     bc = undefined
     isInited = false
-    initPromise = null
   })
-
-  function closeWindow() {
-    giftWindow.value?.hide()
-    isWindowOpened.value = false
-  }
-
-  function openWindow() {
-    if (!isInited) init()
-    applyWindowSettings()
-    void fetchOnlineGoldRank()
-    giftWindow.value?.show()
-    isWindowOpened.value = true
-  }
-
-  function setSize(width: number, height: number) {
-    settings.value.width = width
-    settings.value.height = height
-    giftWindow.value?.setSize(new PhysicalSize(width, height))
-  }
-
-  function setPosition(x: number, y: number) {
-    settings.value.x = x
-    settings.value.y = y
-    giftWindow.value?.setPosition(new PhysicalPosition(x, y))
-  }
-
-  function updateWindowPosition() {
-    giftWindow.value?.setPosition(new PhysicalPosition(settings.value.x, settings.value.y))
-  }
 
   async function applyWindowSettings() {
     await giftWindow.value?.setAlwaysOnTop(settings.value.alwaysOnTop)
     await giftWindow.value?.setIgnoreCursorEvents(settings.value.interactive)
     await giftWindow.value?.setContentProtected(settings.value.contentProtected ?? false)
+  }
+
+  async function bindWindowEvents(win: WebviewWindow) {
+    clearWindowListeners()
+    const debouncedPatch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>> = {}
+    const queueWindowPatch = (patch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>>) => {
+      Object.assign(debouncedPatch, patch)
+      if (_moveResizeSaveTimer) clearTimeout(_moveResizeSaveTimer)
+      _moveResizeSaveTimer = setTimeout(() => {
+        _moveResizeSaveTimer = null
+        Object.assign(settings.value, { ...debouncedPatch })
+      }, 300)
+    }
+
+    windowUnlistens.push(
+      await win.onCloseRequested((event) => {
+        event.preventDefault()
+        void closeWindow()
+      }),
+      await win.onMoved(({ payload: pos }) => queueWindowPatch({ x: pos.x, y: pos.y })),
+      await win.onResized(({ payload: size }) => queueWindowPatch({ width: size.width, height: size.height })),
+    )
+  }
+
+  async function openWindow() {
+    if (!isInited) init()
+    try {
+      const s = settings.value
+      const win = await ensureOverlayWindow({
+        label: 'gift-window',
+        url: 'gift-window',
+        title: 'VTsuru 礼物窗口',
+        width: s.width || 340,
+        height: s.height || 560,
+        x: s.x ?? DEFAULT_OVERLAY_POSITION.x,
+        y: s.y ?? DEFAULT_OVERLAY_POSITION.y,
+        resizable: true,
+        alwaysOnTop: s.alwaysOnTop,
+      })
+      if (!win) return
+      giftWindow.value = win
+      await bindWindowEvents(win)
+      await applyWindowSettings()
+      void fetchOnlineGoldRank()
+      await win.show()
+      isWindowOpened.value = true
+      postBroadcastMessage(bc, { type: 'update-setting', data: s } satisfies GiftWindowBCData)
+      sendGiftList()
+      sendRankList()
+      sendOnlineGuardList()
+      sendOnlineViewerList()
+    } catch (err) {
+      toast.error('打开礼物窗口失败', { description: String(err) })
+    }
+  }
+
+  async function closeWindow() {
+    isWindowOpened.value = false
+    clearWindowListeners()
+    const win = giftWindow.value
+    giftWindow.value = undefined
+    if (win) {
+      await win.destroy().catch(() => win.hide().catch(() => {}))
+    }
+  }
+
+  function setSize(width: number, height: number) {
+    settings.value.width = width
+    settings.value.height = height
+    void giftWindow.value?.setSize(new PhysicalSize(width, height))
+  }
+
+  function setPosition(x: number, y: number) {
+    settings.value.x = x
+    settings.value.y = y
+    void giftWindow.value?.setPosition(new PhysicalPosition(x, y))
+  }
+
+  function updateWindowPosition() {
+    void giftWindow.value?.setPosition(new PhysicalPosition(settings.value.x, settings.value.y))
   }
 
   function resolveUserId(data: EventModel): string {
@@ -281,15 +208,10 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const existing = userActivityMap.value.get(id)
     const guardLevel =
       data.guard_level && data.guard_level > 0 ? data.guard_level : (existing?.guardLevel ?? GuardLevel.None)
-
-    if (guardLevel > 0 && data.uid) {
-      formerGuardsSet.value.add(data.uid)
-    }
+    if (guardLevel > 0 && data.uid) formerGuardsSet.value.add(data.uid)
 
     const uid = data.uid || existing?.uid || 0
     const wasGuard = (uid > 0 && formerGuardsSet.value.has(uid)) || existing?.isFormerGuard || false
-    const medalName = data.fans_medal_name || existing?.medalName
-    const medalLevel = data.fans_medal_level || existing?.medalLevel
 
     userActivityMap.value.set(id, {
       id,
@@ -298,14 +220,13 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       uface: data.uface || existing?.uface || '',
       guardLevel,
       isFormerGuard: guardLevel === GuardLevel.None && wasGuard,
-      medalName,
-      medalLevel,
+      medalName: data.fans_medal_name || existing?.medalName,
+      medalLevel: data.fans_medal_level || existing?.medalLevel,
       score: existing?.score || 0,
       lastActiveTime: now,
       lastAction: actionName,
     })
 
-    // 同步更新 rankMap 里的用户信息与在线状态
     const rankItem = rankMap.value.get(id)
     if (rankItem) {
       if (data.uname) rankItem.uname = data.uname
@@ -318,16 +239,14 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
   function onGiftEvent(data: EventModel) {
     if (!isWindowOpened.value) return
-
     const filterKey = TYPE_TO_FILTER[data.type]
     if (!filterKey || !settings.value.filterTypes.includes(filterKey)) return
 
-    const price = data.price
-    if (price < settings.value.minPrice) return
+    const priceYuan = normalizePaidYuan(data.price)
+    if (priceYuan < settings.value.minPrice) return
 
     const now = Date.now()
     const mergeMs = settings.value.mergeWindowSeconds * 1000
-
     const existing =
       data.type === EventDataTypes.Gift
         ? giftList.value.find(
@@ -341,13 +260,13 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
     if (existing) {
       existing.totalNum += data.num || 1
-      existing.totalPrice += price
+      existing.totalPrice = Math.round((existing.totalPrice + priceYuan) * 100) / 100
       existing.lastUpdateTime = now
       if (settings.value.autoDisappearTime > 0) {
         existing.disappearAt = now + settings.value.autoDisappearTime * 1000
       }
     } else {
-      const entry: GiftEntry = {
+      giftList.value.unshift({
         id: `${data.uid}_${data.msg}_${now}`,
         uid: data.uid,
         uname: data.uname,
@@ -355,41 +274,19 @@ export const useGiftWindow = defineStore('giftWindow', () => {
         giftName: data.msg,
         giftIcon: data.gift_icon,
         totalNum: data.num || 1,
-        totalPrice: price,
+        totalPrice: priceYuan,
         type: data.type,
         guardLevel: data.guard_level,
         firstTime: now,
         lastUpdateTime: now,
         disappearAt: settings.value.autoDisappearTime > 0 ? now + settings.value.autoDisappearTime * 1000 : undefined,
-      }
-      giftList.value.unshift(entry)
+      })
       if (giftList.value.length > settings.value.maxItemCount) {
         giftList.value.splice(settings.value.maxItemCount)
       }
     }
 
     sendGiftList()
-  }
-
-  function getSortedList(): GiftEntry[] {
-    const list = [...giftList.value]
-    switch (settings.value.sortBy) {
-      case 'price':
-        list.sort((a, b) => b.totalPrice - a.totalPrice)
-        break
-      case 'num':
-        list.sort((a, b) => b.totalNum - a.totalNum)
-        break
-      default:
-        list.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime)
-        break
-    }
-    if (settings.value.reverseOrder) list.reverse()
-    return list
-  }
-
-  function sendGiftList() {
-    postBroadcastMessage(bc, { type: 'gift-list', data: getSortedList() } satisfies GiftWindowBCData)
   }
 
   function updateRank(data: EventModel) {
@@ -424,108 +321,37 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     entry.isOnline = true
 
     if (data.type === EventDataTypes.Gift || data.type === EventDataTypes.SC || data.type === EventDataTypes.Guard) {
-      entry.totalPaid += data.price
+      const paidYuan = normalizePaidYuan(data.price)
+      entry.totalPaid = Math.round((entry.totalPaid + paidYuan) * 100) / 100
     }
     entry.score = entry.totalPaid
     sendRankList()
     sendOnlineGuardList()
   }
 
-  function isUserOnline(lastActiveTime: number): boolean {
-    if (!lastActiveTime) return false
-    const thresholdMs = (settings.value.onlineThresholdMinutes || 20) * 60 * 1000
-    return Date.now() - lastActiveTime <= thresholdMs
-  }
-
   function getRankedList(): RankEntry[] {
-    const list = Array.from(rankMap.value.values()).map((item) => {
-      const act = userActivityMap.value.get(item.id)
-      const lastActive = Math.max(item.lastActiveTime || 0, act?.lastActiveTime || 0)
-      const guardLevel = item.guardLevel > 0 ? item.guardLevel : (act?.guardLevel ?? GuardLevel.None)
-      return {
-        ...item,
-        guardLevel,
-        lastActiveTime: lastActive,
-        isOnline: isUserOnline(lastActive),
-      }
-    })
-
-    return list.toSorted((a, b) => b.score - a.score).slice(0, settings.value.rankDisplayCount || 50)
+    return buildRankedList(rankMap.value, userActivityMap.value, settings.value)
   }
 
   function getOnlineGuardList(): OnlineGuardEntry[] {
-    const rankList = getRankedList()
-    const rankIndexMap = new Map<string, number>()
-    rankList.forEach((r, idx) => rankIndexMap.set(r.id, idx + 1))
-
-    const list: OnlineGuardEntry[] = []
-
-    for (const [id, act] of userActivityMap.value.entries()) {
-      if (act.guardLevel > 0 && isUserOnline(act.lastActiveTime)) {
-        const rankItem = rankMap.value.get(id)
-        const totalPaid = rankItem?.totalPaid || 0
-        list.push({
-          id,
-          uid: act.uid,
-          uname: act.uname,
-          uface: act.uface,
-          guardLevel: act.guardLevel,
-          lastActiveTime: act.lastActiveTime,
-          lastAction: act.lastAction,
-          totalPaid,
-          rankIndex: rankIndexMap.get(id),
-        })
-      }
-    }
-
-    // 排序：总督 (1) > 提督 (2) > 舰长 (3)，同等级按最近活跃时间排序
-    list.sort((a, b) => {
-      if (a.guardLevel !== b.guardLevel) {
-        return a.guardLevel - b.guardLevel
-      }
-      return b.lastActiveTime - a.lastActiveTime
-    })
-
-    return list
+    return buildOnlineGuardList(
+      rankMap.value,
+      userActivityMap.value,
+      getRankedList(),
+      settings.value.onlineThresholdMinutes,
+    )
   }
 
   function getThankSummaryList(): ThankSummaryItem[] {
-    const ranked = getRankedList()
-    const onlineGuards = getOnlineGuardList()
-    const rankedIds = new Set(ranked.map((r) => r.id))
+    return buildThankSummaryList(getRankedList(), getOnlineGuardList())
+  }
 
-    const items: ThankSummaryItem[] = ranked.map((r, idx) => ({
-      id: r.id,
-      uid: r.uid,
-      uname: r.uname,
-      uface: r.uface,
-      totalPaid: r.totalPaid,
-      guardLevel: r.guardLevel,
-      isOnline: r.isOnline,
-      lastActiveTime: r.lastActiveTime,
-      isTopRank: true,
-      rankIndex: idx + 1,
-      isGuardOnly: false,
-    }))
+  function getOnlineViewerList(): OnlineViewerEntry[] {
+    return buildOnlineViewerList(userActivityMap.value, settings.value.onlineThresholdMinutes)
+  }
 
-    // 查找不在 Top 50 中的其他在场舰长
-    const additionalGuards = onlineGuards.filter((g) => !rankedIds.has(g.id))
-    for (const g of additionalGuards) {
-      items.push({
-        id: g.id,
-        uid: g.uid,
-        uname: g.uname,
-        uface: g.uface,
-        totalPaid: g.totalPaid,
-        guardLevel: g.guardLevel,
-        isOnline: true,
-        lastActiveTime: g.lastActiveTime,
-        isTopRank: false,
-        isGuardOnly: true,
-      })
-    }
-
-    return items
+  function sendGiftList() {
+    postBroadcastMessage(bc, { type: 'gift-list', data: sortGiftEntries(giftList.value, settings.value) } satisfies GiftWindowBCData)
   }
 
   function sendRankList() {
@@ -536,62 +362,6 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     postBroadcastMessage(bc, { type: 'online-guard-list', data: getOnlineGuardList() } satisfies GiftWindowBCData)
   }
 
-  function getOnlineViewerList(): OnlineViewerEntry[] {
-    const list: OnlineViewerEntry[] = []
-    const now = Date.now()
-    const thresholdMs = (settings.value.onlineThresholdMinutes || 20) * 60 * 1000
-
-    for (const [id, act] of userActivityMap.value.entries()) {
-      const isOnline = now - act.lastActiveTime < thresholdMs
-      // 未在超时窗口内的纯黑听用户不展示
-      if (!isOnline && act.lastAction === '在线黑听') continue
-
-      list.push({
-        id,
-        uid: act.uid,
-        uname: act.uname,
-        uface: act.uface,
-        guardLevel: act.guardLevel,
-        isFormerGuard: act.isFormerGuard,
-        medalName: act.medalName,
-        medalLevel: act.medalLevel,
-        score: act.score,
-        isOnline,
-        lastActiveTime: act.lastActiveTime,
-        lastAction: act.lastAction,
-      })
-    }
-
-    // 智能排序：
-    // 1. 现任大航海优先 (总督 1 > 提督 2 > 舰长 3)
-    // 2. 曾任大航海 (老舰长)
-    // 3. 粉丝牌勋章等级 (从高到低)
-    // 4. 最近活跃时间 / 高能分
-    list.sort((a, b) => {
-      if (a.guardLevel > 0 && b.guardLevel > 0) {
-        if (a.guardLevel !== b.guardLevel) return a.guardLevel - b.guardLevel
-      } else if (a.guardLevel > 0) {
-        return -1
-      } else if (b.guardLevel > 0) {
-        return 1
-      }
-
-      if (a.isFormerGuard !== b.isFormerGuard) {
-        return a.isFormerGuard ? -1 : 1
-      }
-
-      const medalA = a.medalLevel || 0
-      const medalB = b.medalLevel || 0
-      if (medalA !== medalB) {
-        return medalB - medalA
-      }
-
-      return b.lastActiveTime - a.lastActiveTime
-    })
-
-    return list
-  }
-
   function sendOnlineViewerList() {
     postBroadcastMessage(bc, { type: 'online-viewer-list', data: getOnlineViewerList() } satisfies GiftWindowBCData)
   }
@@ -600,42 +370,25 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     try {
       const roomId = accountInfo.value?.biliRoomId
       const ruid = accountInfo.value?.biliId || biliCookie.uId
-
-      if (!roomId || !ruid) return
-
-      // 非 Tauri 桌面端环境（普通浏览器）直连 B 站 API 会被跨域拦截，直接跳过
-      if (!isTauri) return
+      if (!roomId || !ruid || !isTauri()) return
 
       const url = `https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?ruid=${ruid}&roomId=${roomId}&page=1&pageSize=50`
       const cookie = (await biliCookie.getBiliCookie()) || ''
-      // 统一通过 QueryBiliAPI 注入合法 User-Agent / Referer / Cookie，避免风控阻断
       const resp = await QueryBiliAPI(url, 'GET', cookie, true)
-      if (!resp.ok) {
-        console.warn(`[GiftWindow] 获取高能榜响应状态码异常: ${resp.status}`)
-        return
-      }
+      if (!resp.ok) return
 
-      // 安全读取响应文本并解析，规避流提前终止导致的可读流关闭异常
       const text = await resp.text()
-      if (!text || !text.trim()) return
-
+      if (!text.trim()) return
       const json = JSON.parse(text) as {
         code: number
-        message?: string
         data?: {
-          onlineNum?: number
           OnlineRankItem?: Array<{
-            userRank: number
             uid: number
             name: string
             face: string
             score: number
             guard_level: number
-            medal_info?: {
-              guard_level: number
-              medal_level: number
-              medal_name: string
-            }
+            medal_info?: { guard_level: number; medal_level: number; medal_name: string }
           }>
         }
       }
@@ -647,17 +400,10 @@ export const useGiftWindow = defineStore('giftWindow', () => {
           const existing = userActivityMap.value.get(id)
           const guardLevel =
             item.guard_level > 0 ? (item.guard_level as GuardLevel) : (existing?.guardLevel ?? GuardLevel.None)
+          if (guardLevel > 0) formerGuardsSet.value.add(item.uid)
 
-          if (guardLevel > 0) {
-            formerGuardsSet.value.add(item.uid)
-          }
-
-          const medalGuard = item.medal_info?.guard_level ?? 0
           const wasGuard =
-            formerGuardsSet.value.has(item.uid) ||
-            medalGuard > 0 ||
-            existing?.isFormerGuard ||
-            false
+            formerGuardsSet.value.has(item.uid) || (item.medal_info?.guard_level ?? 0) > 0 || existing?.isFormerGuard || false
 
           userActivityMap.value.set(id, {
             id,
@@ -697,7 +443,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
             totalPaid: entry.totalPaid,
             score: entry.totalPaid,
             guardLevel: act?.guardLevel ?? GuardLevel.None,
-            isOnline: isUserOnline(lastActive),
+            isOnline: isUserOnlineByThreshold(lastActive, settings.value.onlineThresholdMinutes),
             lastActiveTime: lastActive,
           },
         ]
@@ -753,7 +499,6 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   }
 
   function refreshOnlineStatus() {
-    // 定期刷新在线状态广播
     if (rankMap.value.size > 0 || userActivityMap.value.size > 0) {
       sendRankList()
       sendOnlineGuardList()
@@ -761,152 +506,74 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     }
   }
 
-  async function init() {
+  function init() {
     if (isInited) return
-    if (initPromise) return initPromise
-    initPromise = (async () => {
-      giftWindow.value = (await getAllWebviewWindows()).find((w) => w.label === 'gift-window')
-      if (!giftWindow.value) return
+    isInited = true
 
-      const scheduleWindowSave = (patch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>>) => {
-        Object.assign(settings.value, patch)
+    bc = new BroadcastChannel(GIFT_WINDOW_BROADCAST_CHANNEL)
+    bc.onmessage = (event: MessageEvent<GiftWindowBCData>) => {
+      if (event.data.type === 'window-ready') {
+        postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
+        sendGiftList()
+        sendRankList()
+        sendOnlineGuardList()
+        sendOnlineViewerList()
+        void fetchOnlineGoldRank()
       }
-      const debouncedPatch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>> = {}
-      const queueWindowPatch = (patch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>>) => {
-        Object.assign(debouncedPatch, patch)
-        if (_moveResizeSaveTimer) clearTimeout(_moveResizeSaveTimer)
-        _moveResizeSaveTimer = setTimeout(() => {
-          _moveResizeSaveTimer = null
-          scheduleWindowSave({ ...debouncedPatch })
-        }, 300)
-      }
+    }
 
-      unlistenHandles.push(
-        await giftWindow.value.onCloseRequested((event) => {
-          event.preventDefault()
-          closeWindow()
-        }),
-        await giftWindow.value.onMoved(({ payload: pos }) => {
-          queueWindowPatch({ x: pos.x, y: pos.y })
-        }),
-        await giftWindow.value.onResized(({ payload: size }) => {
-          queueWindowPatch({ width: size.width, height: size.height })
-        }),
-      )
+    if (_goldRankTimerId) clearInterval(_goldRankTimerId)
+    _goldRankTimerId = setInterval(() => void fetchOnlineGoldRank(), 30_000)
 
-      bc = new BroadcastChannel(GIFT_WINDOW_BROADCAST_CHANNEL)
-      bc.onmessage = (event: MessageEvent<GiftWindowBCData>) => {
-        if (event.data.type === 'window-ready') {
-          postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
-          sendGiftList()
-          sendRankList()
-          sendOnlineGuardList()
-          sendOnlineViewerList()
-          void fetchOnlineGoldRank()
-        }
-      }
-      postBroadcastMessage(bc, { type: 'window-ready' } satisfies GiftWindowBCData)
-      postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
-      void fetchOnlineGoldRank()
+    const onDanmaku = (e: EventModel) => recordUserActivity(e, '发弹幕')
+    const onEnter = (e: EventModel) => recordUserActivity(e, '进入直播间')
+    const onLike = (e: EventModel) => recordUserActivity(e, '点赞')
+    const onPaid = (action: string) => (e: EventModel) => {
+      recordUserActivity(e, action)
+      onGiftEvent(e)
+      updateRank(e)
+    }
+    const onGift = onPaid('送出礼物')
+    const onSc = onPaid('发送SC')
+    const onGuard = onPaid('开通大航海')
 
-      if (_goldRankTimerId) clearInterval(_goldRankTimerId)
-      _goldRankTimerId = setInterval(fetchOnlineGoldRank, 30 * 1000)
+    danmakuClient.onEvent('danmaku', onDanmaku)
+    danmakuClient.onEvent('enter', onEnter)
+    danmakuClient.onEvent('like', onLike)
+    danmakuClient.onEvent('gift', onGift)
+    danmakuClient.onEvent('sc', onSc)
+    danmakuClient.onEvent('guard', onGuard)
+    storeUnlistens.push(
+      () => danmakuClient.offEvent('danmaku', onDanmaku),
+      () => danmakuClient.offEvent('enter', onEnter),
+      () => danmakuClient.offEvent('like', onLike),
+      () => danmakuClient.offEvent('gift', onGift),
+      () => danmakuClient.offEvent('sc', onSc),
+      () => danmakuClient.offEvent('guard', onGuard),
+    )
 
-      // 全量事件监听以追踪用户在场活跃状态与大航海
-      const onDanmaku = (e: EventModel) => recordUserActivity(e, '发弹幕')
-      const onEnter = (e: EventModel) => recordUserActivity(e, '进入直播间')
-      const onLike = (e: EventModel) => recordUserActivity(e, '点赞')
-      const onGift = (e: EventModel) => {
-        recordUserActivity(e, '送出礼物')
-        onGiftEvent(e)
-        updateRank(e)
-      }
-      const onSc = (e: EventModel) => {
-        recordUserActivity(e, '发送SC')
-        onGiftEvent(e)
-        updateRank(e)
-      }
-      const onGuard = (e: EventModel) => {
-        recordUserActivity(e, '开通大航海')
-        onGiftEvent(e)
-        updateRank(e)
-      }
+    const stopSettingsWatch = watch(
+      () => settings.value,
+      (v) => {
+        postBroadcastMessage(bc, { type: 'update-setting', data: v } satisfies GiftWindowBCData)
+        if (giftWindow.value) void applyWindowSettings()
+        sendGiftList()
+        sendRankList()
+        sendOnlineGuardList()
+        sendOnlineViewerList()
+      },
+      { deep: true },
+    )
+    storeUnlistens.push(stopSettingsWatch)
 
-      danmakuClient.onEvent('danmaku', onDanmaku)
-      danmakuClient.onEvent('enter', onEnter)
-      danmakuClient.onEvent('like', onLike)
-      danmakuClient.onEvent('gift', onGift)
-      danmakuClient.onEvent('sc', onSc)
-      danmakuClient.onEvent('guard', onGuard)
-      unlistenHandles.push(
-        () => danmakuClient.offEvent('danmaku', onDanmaku),
-        () => danmakuClient.offEvent('enter', onEnter),
-        () => danmakuClient.offEvent('like', onLike),
-        () => danmakuClient.offEvent('gift', onGift),
-        () => danmakuClient.offEvent('sc', onSc),
-        () => danmakuClient.offEvent('guard', onGuard),
-      )
-
-      const stopSettingsWatch = watch(
-        () => settings,
-        (v) => {
-          postBroadcastMessage(bc, { type: 'update-setting', data: v.value } satisfies GiftWindowBCData)
-          applyWindowSettings()
-          sendGiftList()
-          sendRankList()
-          sendOnlineGuardList()
-          sendOnlineViewerList()
-        },
-        { deep: true },
-      )
-      unlistenHandles.push(stopSettingsWatch)
-
-      _cleanupTimerId = setInterval(cleanupExpired, 1000)
-      _refreshOnlineTimerId = setInterval(refreshOnlineStatus, 15_000)
-      void syncCurrentLive()
-      _syncLiveTimerId = setInterval(() => void syncCurrentLive(), 30_000)
-      isInited = true
-    })().finally(() => {
-      initPromise = null
-    })
-    return initPromise
+    _cleanupTimerId = setInterval(cleanupExpired, 1000)
+    _refreshOnlineTimerId = setInterval(refreshOnlineStatus, 15_000)
+    void syncCurrentLive()
+    _syncLiveTimerId = setInterval(() => void syncCurrentLive(), 30_000)
   }
 
   function sendTestGift() {
-    const types = [EventDataTypes.Gift, EventDataTypes.SC, EventDataTypes.Guard]
-    const t = types[Math.floor(Math.random() * types.length)]
-    const gifts = ['小花花', '辣条', '能量饮料', '小星星', '告白气球']
-    const mockUid = Math.floor(Math.random() * 100000)
-    const mockEvent: EventModel = {
-      type: t,
-      uid: mockUid,
-      uname: `测试用户${Math.floor(Math.random() * 100)}`,
-      uface: 'https://i0.hdslb.com/bfs/face/member/noface.jpg',
-      msg:
-        t === EventDataTypes.Guard
-          ? '开通了舰长'
-          : t === EventDataTypes.SC
-            ? '感谢主播！'
-            : gifts[Math.floor(Math.random() * gifts.length)],
-      num: t === EventDataTypes.Gift ? Math.floor(Math.random() * 20) + 1 : 1,
-      price:
-        t === EventDataTypes.SC
-          ? [30, 50, 100, 500][Math.floor(Math.random() * 4)]
-          : t === EventDataTypes.Guard
-            ? 198
-            : [100, 1000, 5000][Math.floor(Math.random() * 3)],
-      guard_level:
-        t === EventDataTypes.Guard
-          ? [GuardLevel.Zongdu, GuardLevel.Tidu, GuardLevel.Jianzhang][Math.floor(Math.random() * 3)]
-          : GuardLevel.None,
-      open_id: '',
-      time: Date.now(),
-      fans_medal_level: 0,
-      fans_medal_name: '',
-      fans_medal_wearing_status: false,
-      ouid: String(mockUid),
-    }
-
+    const mockEvent = createMockGiftEvent()
     recordUserActivity(mockEvent, '测试送礼')
     onGiftEvent(mockEvent)
     updateRank(mockEvent)

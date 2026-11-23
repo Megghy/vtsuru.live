@@ -228,7 +228,11 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       snapshotTimer = null
       void postApiMusicRequestUpdateWaiting({
         playing: currentOriginMusic.value
-          ? { from: currentOriginMusic.value.from, music: currentOriginMusic.value.music }
+          ? {
+              from: currentOriginMusic.value.from,
+              music: currentOriginMusic.value.music,
+              isPinned: Boolean(currentOriginMusic.value.isPinned),
+            }
           : undefined,
         waiting: waitingMusics.value.map((w) => ({
           from: w.from,

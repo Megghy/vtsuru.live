@@ -11,4 +11,7 @@ export interface CreateOrgStreamerInviteModel {
   expireDays?: number | null
   /** @nullable */
   targetStreamerUserId?: number | null
+  /** @nullable */
+  maxUses?: number | null
+  allowPointManage: boolean
 }
