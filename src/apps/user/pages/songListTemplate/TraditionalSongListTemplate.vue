@@ -150,6 +150,7 @@ function requestSong(song: ResponseSongModel) {
         class="content-frame max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto px-[clamp(12px,2vw,24px)] py-6 space-y-5"
       >
         <header
+          data-site-surface="card"
           class="profile-panel flex flex-wrap items-center gap-5 p-5 sm:p-6 rounded-[var(--vtsuru-page-radius,var(--radius))] bg-card/85 backdrop-blur-md border border-border/80 shadow-xs"
         >
           <SmartImage
@@ -218,6 +219,7 @@ function requestSong(song: ResponseSongModel) {
         </div>
 
         <main
+          data-site-surface="card"
           class="song-panel p-4 sm:p-5 rounded-[var(--vtsuru-page-radius,var(--radius))] bg-card/85 backdrop-blur-md border border-border/80 shadow-xs space-y-4"
         >
           <SongListFilterToolbar

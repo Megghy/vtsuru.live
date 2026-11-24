@@ -53,6 +53,7 @@ const borderTitleAlignClass = computed(() => {
 <template>
   <div
     class="vtsuru-block-card relative flex flex-col h-full min-w-0 rounded-[var(--radius)] bg-card border shadow-[var(--ui-shadow,none)] overflow-hidden backdrop-blur-[var(--user-page-card-blur,12px)]"
+    :data-site-surface="isUnframed || isUnbackgrounded ? undefined : 'card'"
     :class="{
       'text-foreground': isUnbackgrounded,
       'text-card-foreground': !isUnbackgrounded,

@@ -1,5 +1,6 @@
 import { defineAsyncComponent, markRaw } from 'vue'
 
+import { SITE_TEMPLATES } from '@/apps/user-page/site-templates/registry'
 import type { TemplateCapability } from './templateCapabilities'
 
 export interface TemplateMapType {
@@ -146,15 +147,16 @@ export const ScheduleTemplateMap: TemplateMapType = {
   },
 }
 
-export const IndexTemplateMap: TemplateMapType = {
-  default: {
-    name: '直播档案',
-    component: markRaw(
-      defineAsyncComponent(async () => import('@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue')),
-    ),
-    capabilities: ['backgroundImage', 'characterArtwork', 'showName', 'showCover', 'songCount'],
-  },
-}
+export const IndexTemplateMap: TemplateMapType = Object.fromEntries(
+  SITE_TEMPLATES.map((tpl) => [
+    tpl.id,
+    {
+      name: tpl.name,
+      component: tpl.homeComponent,
+      capabilities: tpl.capabilities,
+    },
+  ]),
+)
 
 export const SongListTemplateMap: TemplateMapType = {
   card: {

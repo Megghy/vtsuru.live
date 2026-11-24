@@ -109,6 +109,7 @@ function handleRandomPick() {
       <!-- 侧边筛选栏（桌面 sticky，移动端紧凑可折叠） -->
       <aside class="filter-panel md:sticky md:top-4 md:self-start">
         <div
+          data-site-surface="card"
           class="rounded-[var(--vtsuru-page-radius,var(--radius))] border border-border/80 bg-card/85 p-3.5 space-y-3 md:max-h-[85vh] md:overflow-y-auto scrollbar-thin"
         >
           <header class="filter-heading flex-between pb-2 border-b border-border/60">

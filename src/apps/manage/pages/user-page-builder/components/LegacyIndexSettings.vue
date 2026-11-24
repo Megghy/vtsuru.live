@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 
-import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
+import { SaveSetting, useAccount } from '@/api/account'
 import type { ResponseUserIndexModel, VideoData } from '@/api/generated/model'
 import {
   getApiUserIndexGet,
@@ -10,8 +10,13 @@ import {
   postApiUserIndexDeleteVideo,
   postApiUserIndexUpdateSetting,
 } from '@/api/generated/user-index/user-index'
+import {
+  getSiteTemplate,
+  resolveSiteTemplateId,
+  SITE_TEMPLATES,
+  type SiteTemplateId,
+} from '@/apps/user-page/site-templates/registry'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
-import { IndexTemplateMap } from '@/shared/config/templates'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -25,22 +30,25 @@ import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 
+import { UserPageEditorKey } from '../context'
+
 const accountInfo = useAccount()
+const editor = inject(UserPageEditorKey, null)
 const message = useMessage()
 
-const selectedIndexTemplateKey = computed({
-  get: () => accountInfo.value.settings.indexTemplate || 'default',
-  set: (val: string) => {
-    accountInfo.value.settings.indexTemplate = val
+const selectedIndexTemplateKey = computed<SiteTemplateId>({
+  get: () => resolveSiteTemplateId(editor?.settings.value.siteTemplate),
+  set: (val) => {
+    if (!editor) return
+    if (val === 'default') delete editor.settings.value.siteTemplate
+    else editor.settings.value.siteTemplate = val
   },
 })
 
-const selectedIndexTemplate = computed(
-  () => IndexTemplateMap[selectedIndexTemplateKey.value] || IndexTemplateMap.default,
-)
-const indexTemplateOptions = Object.entries(IndexTemplateMap).map(([key, item]) => ({
-  label: item.name,
-  value: key,
+const selectedIndexTemplate = computed(() => getSiteTemplate(selectedIndexTemplateKey.value))
+const indexTemplateOptions = SITE_TEMPLATES.map((item) => ({
+  label: `${item.name} · ${item.shellLabel}`,
+  value: item.id,
 }))
 const showTemplatePreview = ref(false)
 
@@ -105,15 +113,10 @@ async function updateIndexSettings() {
   }
 }
 
-async function saveIndexTemplate(templateKey: string) {
-  accountInfo.value.settings.indexTemplate = templateKey
-  try {
-    const response = await SaveAccountSettings()
-    if (response.code !== 200) throw new Error(response.message || '保存失败')
-    message.success('已切换主页模板')
-  } catch (err) {
-    message.error((err as Error).message || String(err))
-  }
+function saveIndexTemplate(templateKey: string) {
+  const resolved = resolveSiteTemplateId(templateKey)
+  selectedIndexTemplateKey.value = resolved
+  message.success(`已切换整站模板为「${getSiteTemplate(resolved).name}」，发布后生效`)
 }
 
 async function addVideo() {
@@ -329,19 +332,19 @@ onMounted(() => {
   <div class="flex flex-col gap-4">
     <Alert class="bg-muted/60">
       <AlertDescription class="text-xs">
-        经典模板的模板选择、公告、视频与外链会直接同步至主播账号配置并立即生效，不经过右侧草稿/发布流程。
+        整站模板随页面草稿与发布同步生效；下方的公告、视频与外链直接同步至主播账号数据。
       </AlertDescription>
     </Alert>
 
-    <!-- 主页模板 -->
+    <!-- 整站展示模板 -->
     <div class="flex flex-col gap-2">
-      <div class="text-xs font-semibold text-muted-foreground uppercase">主页模板</div>
+      <div class="text-xs font-semibold text-muted-foreground uppercase">整站展示模板</div>
       <div class="flex flex-col gap-2.5 p-3 border border-border rounded-lg bg-muted">
         <div class="flex min-w-0 flex-col gap-1">
           <div class="text-foreground text-sm font-semibold">
             {{ selectedIndexTemplate.name }}
           </div>
-          <div class="text-muted-foreground text-xs leading-normal">支持头图、头像框、荣誉、直播状态和精选内容。</div>
+          <div class="text-muted-foreground text-xs leading-normal">{{ selectedIndexTemplate.tagline }}</div>
         </div>
         <div class="flex items-center gap-2 w-full">
           <Select
@@ -643,9 +646,12 @@ onMounted(() => {
         <DialogTitle class="text-sm">主页模板预览 - {{ selectedIndexTemplate.name }}</DialogTitle>
         <DialogDescription class="sr-only">预览所选经典主页模板的展示效果。</DialogDescription>
       </DialogHeader>
-      <div class="flex-1 overflow-y-auto mt-2 border border-border rounded-lg p-2 bg-background">
+      <div
+        class="builder-site-template-scope flex-1 overflow-y-auto mt-2 border border-border rounded-lg bg-background"
+        :data-site-template="selectedIndexTemplateKey"
+      >
         <component
-          :is="selectedIndexTemplate.component"
+          :is="selectedIndexTemplate.homeComponent"
           :user-info="accountInfo"
           :bili-info="undefined"
         />

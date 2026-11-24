@@ -91,10 +91,11 @@ async function saveScheduleImage() {
 
 <template>
   <nav
+    data-site-surface="bar"
     class="schedule-week-toolbar flex-between flex-wrap gap-3 w-full p-2.5 px-3 bg-card border border-border rounded-lg text-card-foreground"
     aria-label="日程周次与导出"
   >
-    <div class="flex items-center gap-2 flex-1 min-w-0">
+    <div class="flex items-center gap-2 flex-1 min-w-[240px]">
       <Button
         variant="secondary"
         size="icon"

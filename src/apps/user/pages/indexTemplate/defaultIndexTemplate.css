@@ -64,9 +64,10 @@
   background: var(--background);
   box-shadow: 0 16px 36px color-mix(in srgb, var(--foreground) 16%, transparent);
 }
-.portrait-frame img,
-.portrait-frame > div {
+.portrait-frame__avatar {
   display: block;
+  width: 100%;
+  height: 100%;
   z-index: 1;
 }
 .portrait-frame__overlay {
@@ -456,15 +457,6 @@ a.notice-strip--reserve:hover {
     height: 138px;
     margin-top: -69px;
   }
-  .portrait-frame img,
-  .portrait-frame > div {
-    width: 126px !important;
-    height: 126px !important;
-  }
-  .portrait-frame__overlay {
-    width: 138%;
-    height: 138%;
-  }
   .profile-actions {
     max-width: 58%;
   }
@@ -483,42 +475,33 @@ a.notice-strip--reserve:hover {
     padding: 0 18px 32px;
   }
   .profile-hub {
-    align-items: flex-end;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
   }
   .portrait-frame {
-    width: 116px;
-    height: 116px;
-    margin-top: -58px;
-    border-width: 6px;
-  }
-  .portrait-frame img,
-  .portrait-frame > div {
-    width: 104px !important;
-    height: 104px !important;
-  }
-  .portrait-frame__overlay {
-    width: 138%;
-    height: 138%;
+    width: 108px;
+    height: 108px;
+    margin-top: -54px;
+    border-width: 5px;
   }
   .live-mark {
     right: -8px;
     bottom: 5px;
   }
   .profile-actions {
+    width: 100%;
     max-width: none;
-    flex: 1;
+    justify-content: flex-start;
+    padding-bottom: 0;
+    gap: 8px;
   }
   .profile-actions button,
   .profile-action {
-    width: 100%;
-  }
-  .profile-actions button:first-child:last-child,
-  .profile-action:first-child:last-child {
-    width: auto;
+    flex: 1 1 auto;
   }
   .identity {
-    margin-top: 18px;
+    margin-top: 20px;
   }
   .identity h1 {
     font-size: 42px;

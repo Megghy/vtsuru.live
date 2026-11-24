@@ -63,6 +63,7 @@ export interface ResolvedUserPageAppearance {
     large: string
   }
   pageMaxWidth: string
+  hasExplicitPageMaxWidth: boolean
 }
 
 const borderWidths: Record<PageBorderStrength, string> = {
@@ -117,8 +118,10 @@ export function resolveUserPageAppearance(theme: unknown): ResolvedUserPageAppea
     theme && typeof theme === 'object' && !Array.isArray(theme)
       ? (theme as Record<string, unknown>).pageMaxWidth
       : undefined
-  const pageMaxWidth =
-    typeof rawMaxWidth === 'string' && isValidPageMaxWidth(rawMaxWidth) ? rawMaxWidth.trim() || '820px' : '820px'
+  const normalizedMaxWidth =
+    typeof rawMaxWidth === 'string' && isValidPageMaxWidth(rawMaxWidth) ? rawMaxWidth.trim() : ''
+  const hasExplicitPageMaxWidth = normalizedMaxWidth.length > 0
+  const pageMaxWidth = normalizedMaxWidth || '820px'
   const rawOpacity = readNumber(theme, 'surfaceOpacity', -1, 15, 100)
 
   return {
@@ -133,5 +136,6 @@ export function resolveUserPageAppearance(theme: unknown): ResolvedUserPageAppea
     controlSize,
     controlHeights: controlHeights[controlSize],
     pageMaxWidth,
+    hasExplicitPageMaxWidth,
   }
 }

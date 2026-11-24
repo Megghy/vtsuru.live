@@ -6,13 +6,15 @@ import { ImagePreview } from '@/shared/ui/image-preview'
 defineProps<{
   video: VideoData
   width?: number
+  fullWidth?: boolean
 }>()
 </script>
 
 <template>
   <Card
     class="overflow-hidden hover:shadow-md transition-shadow group flex flex-col"
-    :style="`max-width: ${width ?? 300}px;`"
+    :class="fullWidth && 'w-full'"
+    :style="fullWidth ? undefined : `max-width: ${width ?? 300}px;`"
   >
     <div class="aspect-video w-full overflow-hidden bg-muted">
       <ImagePreview

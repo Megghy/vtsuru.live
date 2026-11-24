@@ -180,7 +180,7 @@ onUnmounted(() => {
   </Card>
 
   <template v-else>
-    <div class="forum-container max-w-5xl mx-auto space-y-4 py-4 px-2">
+    <div class="forum-container w-full max-w-5xl mx-auto space-y-4 py-4 px-2">
       <Card class="shadow-xs">
         <CardHeader class="p-4">
           <CardTitle class="text-base font-bold text-foreground">{{ forumInfo.name }}</CardTitle>

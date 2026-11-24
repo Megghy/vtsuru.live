@@ -52,6 +52,9 @@ const componentType = computed(
 const selectedTemplate = computed(
   () => ScheduleTemplateMap[componentType.value] ?? ScheduleTemplateMap.default ?? ScheduleTemplateMap[''],
 )
+const isIndependentScheduleTemplate = computed(
+  () => !!componentType.value && componentType.value !== 'default' && componentType.value !== 'timegrid',
+)
 const isLoading = computed(() => loadingData.value || loadingConfig.value)
 
 async function loadSchedule() {
@@ -126,7 +129,7 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
   />
   <div
     v-else
-    class="grid grid-cols-[minmax(0,1fr)] gap-[var(--vtsuru-page-spacing)] min-w-0 pb-5 max-[520px]:pb-3"
+    class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto grid grid-cols-[minmax(0,1fr)] gap-[var(--vtsuru-page-spacing)] min-w-0 pb-5 max-[520px]:pb-3"
   >
     <BiliLiveReservePanel
       v-if="biliReserve.items.length"
@@ -135,13 +138,18 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
       :interval-minutes="biliReserve.intervalMinutes"
       :live-room-url="liveRoomUrl"
     />
-    <component
-      :is="selectedTemplate.component"
-      :bili-info="biliInfo"
-      :user-info="userInfo"
-      :data="displayData"
-      v-bind="selectedTemplate.settingName ? { config: currentConfig } : {}"
-    />
+    <div
+      :data-site-template-isolate="isIndependentScheduleTemplate ? 'true' : undefined"
+      class="min-w-0"
+    >
+      <component
+        :is="selectedTemplate.component"
+        :bili-info="biliInfo"
+        :user-info="userInfo"
+        :data="displayData"
+        v-bind="selectedTemplate.settingName ? { config: currentConfig } : {}"
+      />
+    </div>
     <ScheduleSubscription
       v-if="userInfo?.id"
       docked

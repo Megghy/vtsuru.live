@@ -136,6 +136,7 @@ async function submit() {
   <section
     class="question-composer"
     :class="{ 'is-embedded': embedded }"
+    :data-site-surface="embedded ? undefined : 'card'"
   >
     <header class="composer-header">
       <Avatar class="size-12">

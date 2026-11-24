@@ -404,6 +404,8 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
     <!-- 移动端吸底快捷栏，选中下方曲目时无需滚回页顶 -->
     <div
       v-if="selectedSong"
+      data-site-sticky="bottom"
+      data-site-surface="bar"
       class="md:hidden sticky bottom-2 z-20 flex items-center justify-between gap-2 p-2.5 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-md"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1">

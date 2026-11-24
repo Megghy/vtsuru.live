@@ -39,6 +39,14 @@ import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
 import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
+import '@/apps/user-page/site-templates/surfaces.css'
+import SiteTemplateEffects from '@/apps/user-page/site-templates/SiteTemplateEffects.vue'
+import SiteTemplateShell from '@/apps/user-page/site-templates/SiteTemplateShell.vue'
+import {
+  getSiteTemplate,
+  mergeThemeWithSiteTemplate,
+  resolveSiteTemplateId,
+} from '@/apps/user-page/site-templates/registry'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
 import type { BiliProfile, BiliProfileStatus, UserPagesSettings } from '@/apps/user-page/types'
@@ -239,6 +247,15 @@ usePublicPageSeo({ title: seoTitle, description: seoDescription, image: seoImage
 
 type PageThemeMode = 'auto' | 'light' | 'dark'
 
+const activeSiteTemplateId = computed(() => resolveSiteTemplateId(userPagesSettings.value?.siteTemplate))
+const activeSiteTemplate = computed(() => getSiteTemplate(activeSiteTemplateId.value))
+const activeShellMode = computed(() => activeSiteTemplate.value.shellMode)
+
+const templateDefaultThemeMode = computed<PageThemeMode>(() => {
+  const m = activeSiteTemplate.value.themeDefaults.pageThemeMode
+  return m === 'light' || m === 'dark' ? m : 'auto'
+})
+
 const globalThemeMode = computed<PageThemeMode>(() => {
   const m = (userPagesSettings.value as any)?.theme?.pageThemeMode
   return m === 'auto' || m === 'light' || m === 'dark' ? m : 'auto'
@@ -258,7 +275,8 @@ const blockThemeMode = computed<PageThemeMode>(() => {
 const pageThemeMode = computed<PageThemeMode>(() => {
   if (blockThemeMode.value !== 'auto') return blockThemeMode.value
   if (pageOverrideThemeMode.value !== 'auto') return pageOverrideThemeMode.value
-  return globalThemeMode.value
+  if (globalThemeMode.value !== 'auto') return globalThemeMode.value
+  return templateDefaultThemeMode.value
 })
 
 const homeAppearanceTheme = computed(() => {
@@ -268,10 +286,11 @@ const homeAppearanceTheme = computed(() => {
 
 const layoutTheme = computed(() => {
   const isBuiltInPage = !['user-index', 'user-page'].includes(route.name?.toString() ?? '')
-  return {
-    ...(userPagesSettings.value as any)?.theme,
-    ...(isBuiltInPage ? homeAppearanceTheme.value : (currentUserPageConfig.value as any)?.theme),
-  }
+  return mergeThemeWithSiteTemplate(
+    activeSiteTemplateId.value,
+    (userPagesSettings.value as any)?.theme,
+    isBuiltInPage ? homeAppearanceTheme.value : (currentUserPageConfig.value as any)?.theme,
+  )
 })
 
 useGoogleFont(
@@ -557,11 +576,41 @@ function scrollToTop() {
     v-else
     class="page-root"
     :class="[layoutPageBgClass, { 'page-root--immersive': isImmersiveCustomPage }]"
+    :data-site-template="activeSiteTemplateId"
+    :data-shell-mode="activeShellMode"
     :style="[layoutUiVars, layoutPageBgVars]"
   >
-    <!-- 顶部导航栏 -->
+    <SiteTemplateEffects :template-id="activeSiteTemplateId" />
+
+    <!-- 非经典侧栏整站模板导航壳 -->
+    <SiteTemplateShell
+      v-if="!isImmersiveCustomPage && activeShellMode !== 'classic-sidebar'"
+      :template-id="activeSiteTemplateId"
+      :shell-mode="activeShellMode"
+      :user-info="userInfo"
+      :bili-info="biliUserInfo"
+      :nav-groups="navGroups"
+      :active-menu-key="activeMenuKey"
+      :is-owner="isOwner"
+      :is-dark="effectiveIsDark"
+      :theme-locked="pageThemeMode !== 'auto'"
+      :theme-switch-title="themeSwitchTitle"
+      :is-loading="isLoading"
+      :is-logged-in="!!accountInfo?.id"
+      :workspace-label="WORKSPACE_LABELS[lastWorkspace]"
+      :follow-state="userInfo ? follows.states.value[userInfo.id] : undefined"
+      :follow-error="follows.error.value"
+      @toggle-theme="toggleUserTheme"
+      @open-login="registerAndLoginModalVisiable = true"
+      @open-builder="$router.push({ name: 'manage-userPageBuilder' })"
+      @open-following="$router.push({ name: 'live-directory', query: { tab: 'following' } })"
+      @open-workspace="enterLastWorkspace"
+      @follow-changed="follows.refresh"
+    />
+
+    <!-- 经典顶部导航栏 -->
     <header
-      v-if="!isImmersiveCustomPage"
+      v-if="!isImmersiveCustomPage && activeShellMode === 'classic-sidebar'"
       class="layout-header"
     >
       <div class="layout-header__inner">
@@ -652,9 +701,9 @@ function scrollToTop() {
 
     <!-- 主体布局 (包含侧边栏和内容区) -->
     <div class="main-layout-body">
-      <!-- 左侧边栏 -->
+      <!-- 左侧边栏（仅经典侧栏壳层渲染） -->
       <aside
-        v-if="!isImmersiveCustomPage"
+        v-if="!isImmersiveCustomPage && activeShellMode === 'classic-sidebar'"
         ref="sider"
         class="user-sider"
         :class="{ collapsed: siderCollapsed }"
@@ -931,6 +980,7 @@ function scrollToTop() {
                   :class="{
                     'max-w-[var(--vtsuru-page-max-width,820px)]': !isImmersiveCustomPage,
                     '[--vtsuru-page-max-width:880px]': viewRoute.meta.pageWidth === 'md',
+                    '[--vtsuru-page-max-width:1080px]': viewRoute.meta.pageWidth === 'lg',
                     '[--vtsuru-page-max-width:1440px]': viewRoute.meta.pageWidth === 'xl',
                   }"
                 >
@@ -1083,7 +1133,7 @@ function scrollToTop() {
   filter: blur(var(--user-page-bg-blur, 0px));
 }
 
-.page-root.bg-host > * {
+.page-root.bg-host > .main-layout-body {
   position: relative;
   z-index: 1;
 }
@@ -1322,6 +1372,10 @@ function scrollToTop() {
 .viewer-page-content {
   min-height: 100%;
   padding: var(--vtsuru-content-padding);
+}
+
+.viewer-page-content--edge {
+  padding: 0;
 }
 
 .page-root--immersive .viewer-page-content {

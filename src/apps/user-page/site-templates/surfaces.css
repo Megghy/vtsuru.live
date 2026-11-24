@@ -1,0 +1,582 @@
+/* ============================================================================
+ * 整站展示模板（Site Template Pack）公共画布底纹与全站子页组件设计语言
+ * 作用域：
+ *   - 整站画布：.page-root[data-site-template="..."] / .builder-site-template-scope[data-site-template="..."]
+ *   - 子页控件：仅限 .viewer-page-content / .preview-content 内，不污染导航壳与管理后台
+ *   - 独立隔离：跳过 [data-site-template-isolate='true'] 内的独立美术画风模板（如卡通/霓虹日程）
+ * 原则：全部基于 shadcn 语义变量与 color-mix(in oklch, ...) 派生，不硬编码亮暗灰阶。
+ * ============================================================================ */
+
+/* ============================================================================
+ * 1. Broadcast HUD（信号控制台）
+ * ============================================================================ */
+.page-root[data-site-template='broadcast-hud'],
+.builder-site-template-scope[data-site-template='broadcast-hud'] {
+  --site-font-display: 'Space Grotesk', var(--vtsuru-page-font-family, system-ui, sans-serif);
+  --site-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --hud-line: color-mix(in oklch, var(--primary) 30%, var(--border));
+  --hud-line-soft: color-mix(in oklch, var(--primary) 12%, transparent);
+  --hud-glow: color-mix(in oklch, var(--primary) 18%, transparent);
+}
+
+.page-root[data-site-template='broadcast-hud']:not(.bg-host),
+.builder-site-template-scope[data-site-template='broadcast-hud']:not(.bg-host) {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(64rem 34rem at 14% -8%, color-mix(in oklch, var(--primary) 16%, transparent), transparent 62%),
+    radial-gradient(48rem 28rem at 92% 4%, color-mix(in oklch, var(--primary) 9%, transparent), transparent 60%),
+    linear-gradient(to right, var(--hud-line-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--hud-line-soft) 1px, transparent 1px);
+  background-size: auto, auto, 36px 36px, 36px 36px;
+  background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+}
+
+:is(
+  .page-root[data-site-template='broadcast-hud'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='broadcast-hud'] .preview-content
+)
+  :is([data-slot='card'], [data-site-surface='card'], [data-site-surface='bar'], .song-card, .cover-card):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 2px;
+  border-color: var(--hud-line);
+  background: color-mix(in oklch, var(--card) 86%, transparent);
+  box-shadow:
+    inset 0 2px 0 color-mix(in oklch, var(--primary) 42%, transparent),
+    0 10px 26px -18px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+}
+
+:is(
+  .page-root[data-site-template='broadcast-hud'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='broadcast-hud'] .preview-content
+)
+  [data-slot='card']
+  > [data-slot='card-header']:not([data-site-template-isolate='true'] *) {
+  border-bottom: 1px solid color-mix(in oklch, var(--primary) 22%, var(--border));
+  background: color-mix(in oklch, var(--primary) 6%, transparent);
+}
+
+:is(
+  .page-root[data-site-template='broadcast-hud'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='broadcast-hud'] .preview-content
+)
+  :is([data-slot='card-title'], h1, h2):not([data-site-template-isolate='true'] *) {
+  font-family: var(--site-font-display);
+  letter-spacing: 0.02em;
+}
+
+:is(
+  .page-root[data-site-template='broadcast-hud'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='broadcast-hud'] .preview-content
+)
+  :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger']):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 2px;
+  border-color: color-mix(in oklch, var(--primary) 30%, var(--border));
+  background: color-mix(in oklch, var(--background) 84%, transparent);
+}
+
+:is(
+  .page-root[data-site-template='broadcast-hud'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='broadcast-hud'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary'],
+    [data-slot='badge']
+  ):not([data-site-template-isolate='true'] *) {
+  border-radius: 2px;
+  font-family: var(--site-font-mono);
+  letter-spacing: 0.03em;
+}
+
+/* ============================================================================
+ * 2. Editorial Zine（特设画报）
+ * ============================================================================ */
+.page-root[data-site-template='editorial-zine'],
+.builder-site-template-scope[data-site-template='editorial-zine'] {
+  --site-font-display: 'Syne', 'Noto Serif SC', Georgia, serif;
+  --site-font-serif: 'Noto Serif SC', Georgia, 'Songti SC', serif;
+  --zine-rule: color-mix(in oklch, var(--foreground) 20%, transparent);
+  --zine-rule-strong: color-mix(in oklch, var(--foreground) 72%, transparent);
+  --zine-paper: color-mix(in oklch, var(--background) 92%, var(--primary) 4%);
+}
+
+.page-root[data-site-template='editorial-zine']:not(.bg-host),
+.builder-site-template-scope[data-site-template='editorial-zine']:not(.bg-host) {
+  background-color: var(--zine-paper);
+  background-image:
+    radial-gradient(color-mix(in oklch, var(--foreground) 5%, transparent) 1px, transparent 0),
+    linear-gradient(to right, color-mix(in oklch, var(--foreground) 3.5%, transparent) 1px, transparent 1px);
+  background-size: 20px 20px, 120px 100%;
+}
+
+:is(
+  .page-root[data-site-template='editorial-zine'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='editorial-zine'] .preview-content
+)
+  :is([data-slot='card'], [data-site-surface='card'], [data-site-surface='bar'], .song-card, .cover-card):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 0;
+  border-color: var(--zine-rule);
+  border-top: 2px solid var(--zine-rule-strong);
+  background: color-mix(in oklch, var(--card) 94%, var(--zine-paper));
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:is(
+  .page-root[data-site-template='editorial-zine'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='editorial-zine'] .preview-content
+)
+  [data-slot='card']
+  > [data-slot='card-header']:not([data-site-template-isolate='true'] *) {
+  border-bottom: 1px solid var(--zine-rule);
+}
+
+:is(
+  .page-root[data-site-template='editorial-zine'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='editorial-zine'] .preview-content
+)
+  :is([data-slot='card-title'], h1, h2):not([data-site-template-isolate='true'] *) {
+  font-family: var(--site-font-display);
+  letter-spacing: -0.01em;
+}
+
+:is(
+  .page-root[data-site-template='editorial-zine'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='editorial-zine'] .preview-content
+)
+  :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger']):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 0;
+  border-color: color-mix(in oklch, var(--foreground) 28%, transparent);
+}
+
+:is(
+  .page-root[data-site-template='editorial-zine'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='editorial-zine'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary'],
+    [data-slot='badge']
+  ):not([data-site-template-isolate='true'] *) {
+  border-radius: 0;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================================
+ * 3. Liquid Prism（液态棱镜）
+ * ============================================================================ */
+.page-root[data-site-template='liquid-prism'],
+.builder-site-template-scope[data-site-template='liquid-prism'] {
+  --site-font-display: 'Space Grotesk', 'Plus Jakarta Sans', var(--vtsuru-page-font-family, system-ui, sans-serif);
+  --prism-accent-a: var(--primary);
+  --prism-accent-b: color-mix(in oklch, var(--primary) 55%, #38bdf8 45%);
+  --prism-accent-c: color-mix(in oklch, var(--primary) 55%, #f472b6 45%);
+  --prism-glass-bg: color-mix(in oklch, var(--card) 72%, transparent);
+  --prism-glass-border: color-mix(in oklch, var(--foreground) 16%, transparent);
+  --prism-glass-highlight: color-mix(in srgb, white 34%, transparent);
+}
+
+.page-root[data-site-template='liquid-prism']:not(.bg-host),
+.builder-site-template-scope[data-site-template='liquid-prism']:not(.bg-host) {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(46rem 34rem at 12% 8%, color-mix(in oklch, var(--prism-accent-a) 22%, transparent), transparent 64%),
+    radial-gradient(42rem 32rem at 88% 16%, color-mix(in oklch, var(--prism-accent-b) 18%, transparent), transparent 62%),
+    radial-gradient(38rem 28rem at 50% 92%, color-mix(in oklch, var(--prism-accent-c) 15%, transparent), transparent 66%);
+}
+
+:is(
+  .page-root[data-site-template='liquid-prism'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='liquid-prism'] .preview-content
+)
+  :is([data-slot='card'], [data-site-surface='card'], [data-site-surface='bar'], .song-card, .cover-card):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 20px;
+  background: var(--prism-glass-bg);
+  border-color: var(--prism-glass-border);
+  backdrop-filter: blur(22px) saturate(175%);
+  -webkit-backdrop-filter: blur(22px) saturate(175%);
+  box-shadow:
+    inset 0 1px 0 var(--prism-glass-highlight),
+    0 16px 36px -18px color-mix(in oklch, var(--primary) 34%, rgba(0, 0, 0, 0.36));
+}
+
+:is(
+  .page-root[data-site-template='liquid-prism'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='liquid-prism'] .preview-content
+)
+  :is([data-slot='card-title'], h1, h2):not([data-site-template-isolate='true'] *) {
+  font-family: var(--site-font-display);
+}
+
+:is(
+  .page-root[data-site-template='liquid-prism'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='liquid-prism'] .preview-content
+)
+  :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger']):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 14px;
+  border-color: color-mix(in oklch, var(--foreground) 16%, transparent);
+  background: color-mix(in oklch, var(--background) 62%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+:is(
+  .page-root[data-site-template='liquid-prism'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='liquid-prism'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary'],
+    [data-slot='badge']
+  ):not([data-site-template-isolate='true'] *) {
+  border-radius: 999px;
+}
+
+:is(
+  .page-root[data-site-template='liquid-prism'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='liquid-prism'] .preview-content
+)
+  [data-slot='button'][data-variant='default']:not([data-site-template-isolate='true'] *) {
+  box-shadow: 0 8px 22px -8px color-mix(in oklch, var(--primary) 72%, transparent);
+}
+
+/* ============================================================================
+ * 4. Acid Desktop 2000（酸性桌面）
+ * ============================================================================ */
+.page-root[data-site-template='acid-desktop'],
+.builder-site-template-scope[data-site-template='acid-desktop'] {
+  --site-font-pixel: 'Silkscreen', 'JetBrains Mono', ui-monospace, monospace;
+  --site-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --acid-border: color-mix(in oklch, var(--primary) 62%, var(--foreground));
+  --acid-shadow: 4px 4px 0 color-mix(in oklch, var(--primary) 55%, rgba(0, 0, 0, 0.85));
+}
+
+.page-root[data-site-template='acid-desktop']:not(.bg-host),
+.builder-site-template-scope[data-site-template='acid-desktop']:not(.bg-host) {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(color-mix(in oklch, var(--primary) 20%, transparent) 1px, transparent 0),
+    radial-gradient(44rem 30rem at 85% 12%, color-mix(in oklch, var(--primary) 13%, transparent), transparent 60%);
+  background-size: 18px 18px, auto;
+}
+
+:is(
+  .page-root[data-site-template='acid-desktop'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='acid-desktop'] .preview-content
+)
+  :is([data-slot='card'], [data-site-surface='card'], [data-site-surface='bar'], .song-card, .cover-card):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 2px;
+  border: 2px solid var(--acid-border);
+  border-top: 4px solid var(--primary);
+  background: var(--card);
+  box-shadow: var(--acid-shadow);
+  backdrop-filter: none;
+}
+
+:is(
+  .page-root[data-site-template='acid-desktop'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='acid-desktop'] .preview-content
+)
+  [data-slot='card']
+  > [data-slot='card-header']:not([data-site-template-isolate='true'] *) {
+  background: color-mix(in oklch, var(--primary) 16%, var(--background));
+  border-bottom: 2px solid var(--acid-border);
+}
+
+:is(
+  .page-root[data-site-template='acid-desktop'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='acid-desktop'] .preview-content
+)
+  :is([data-slot='card-title'], h1, h2):not([data-site-template-isolate='true'] *) {
+  font-family: var(--site-font-pixel);
+  letter-spacing: 0.03em;
+}
+
+:is(
+  .page-root[data-site-template='acid-desktop'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='acid-desktop'] .preview-content
+)
+  :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger']):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 2px;
+  border: 1.5px solid color-mix(in oklch, var(--foreground) 42%, transparent);
+  font-family: var(--site-font-mono);
+}
+
+:is(
+  .page-root[data-site-template='acid-desktop'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='acid-desktop'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary']
+  ):not([data-site-template-isolate='true'] *) {
+  border-radius: 2px;
+  font-family: var(--site-font-mono);
+  font-weight: 700;
+  border: 1.5px solid color-mix(in oklch, var(--foreground) 52%, transparent);
+  box-shadow: 2px 2px 0 color-mix(in oklch, var(--primary) 45%, rgba(0, 0, 0, 0.8));
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+:is(
+  .page-root[data-site-template='acid-desktop'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='acid-desktop'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary']
+  ):not([data-site-template-isolate='true'] *):hover:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 color-mix(in oklch, var(--primary) 45%, rgba(0, 0, 0, 0.8));
+}
+
+:is(
+  .page-root[data-site-template='acid-desktop'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='acid-desktop'] .preview-content
+)
+  [data-slot='badge']:not([data-site-template-isolate='true'] *) {
+  border-radius: 2px;
+  font-family: var(--site-font-mono);
+}
+
+/* ============================================================================
+ * 5. Raw Brutalist（粗野海报）
+ * ============================================================================ */
+.page-root[data-site-template='raw-brutalist'],
+.builder-site-template-scope[data-site-template='raw-brutalist'] {
+  --site-font-display: 'Space Grotesk', var(--vtsuru-page-font-family, system-ui, sans-serif);
+  --site-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --brutal-ink: color-mix(in oklch, var(--foreground) 92%, transparent);
+  --brutal-paper: color-mix(in oklch, var(--background) 92%, var(--foreground) 4%);
+  --brutal-shadow: 4px 4px 0 var(--brutal-ink);
+}
+
+.page-root[data-site-template='raw-brutalist']:not(.bg-host),
+.builder-site-template-scope[data-site-template='raw-brutalist']:not(.bg-host) {
+  background-color: var(--brutal-paper);
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--foreground) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 7%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+:is(
+  .page-root[data-site-template='raw-brutalist'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='raw-brutalist'] .preview-content
+)
+  :is([data-slot='card'], [data-site-surface='card'], [data-site-surface='bar'], .song-card, .cover-card):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border: 2px solid var(--brutal-ink);
+  border-radius: 0;
+  background: var(--card);
+  box-shadow: var(--brutal-shadow);
+  backdrop-filter: none;
+}
+
+:is(
+  .page-root[data-site-template='raw-brutalist'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='raw-brutalist'] .preview-content
+)
+  [data-slot='card']
+  > [data-slot='card-header']:not([data-site-template-isolate='true'] *) {
+  border-bottom: 2px solid var(--brutal-ink);
+  background: color-mix(in oklch, var(--foreground) 4%, var(--card));
+}
+
+:is(
+  .page-root[data-site-template='raw-brutalist'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='raw-brutalist'] .preview-content
+)
+  :is([data-slot='card-title'], h1, h2):not([data-site-template-isolate='true'] *) {
+  font-family: var(--site-font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+:is(
+  .page-root[data-site-template='raw-brutalist'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='raw-brutalist'] .preview-content
+)
+  :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger']):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 0;
+  border: 2px solid var(--brutal-ink);
+}
+
+:is(
+  .page-root[data-site-template='raw-brutalist'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='raw-brutalist'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary']
+  ):not([data-site-template-isolate='true'] *) {
+  border-radius: 0;
+  border: 2px solid var(--brutal-ink);
+  font-family: var(--site-font-mono);
+  font-weight: 700;
+  box-shadow: 3px 3px 0 var(--brutal-ink);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+:is(
+  .page-root[data-site-template='raw-brutalist'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='raw-brutalist'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary']
+  ):not([data-site-template-isolate='true'] *):hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--brutal-ink);
+}
+
+:is(
+  .page-root[data-site-template='raw-brutalist'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='raw-brutalist'] .preview-content
+)
+  [data-slot='badge']:not([data-site-template-isolate='true'] *) {
+  border-radius: 0;
+  border: 1.5px solid var(--brutal-ink);
+  font-family: var(--site-font-mono);
+  font-weight: 700;
+}
+
+/* ============================================================================
+ * 6. Kinetic Stage（宽银幕舞台）
+ * ============================================================================ */
+.page-root[data-site-template='kinetic-stage'],
+.builder-site-template-scope[data-site-template='kinetic-stage'] {
+  --site-font-display: 'Syne', var(--vtsuru-page-font-family, system-ui, sans-serif);
+  --stage-glow: color-mix(in oklch, var(--primary) 18%, transparent);
+  --stage-line: color-mix(in oklch, var(--foreground) 14%, transparent);
+}
+
+.page-root[data-site-template='kinetic-stage']:not(.bg-host),
+.builder-site-template-scope[data-site-template='kinetic-stage']:not(.bg-host) {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(60rem 28rem at 50% -6%, var(--stage-glow), transparent 64%),
+    radial-gradient(40rem 26rem at 85% 95%, color-mix(in oklch, var(--primary) 10%, transparent), transparent 68%);
+}
+
+:is(
+  .page-root[data-site-template='kinetic-stage'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='kinetic-stage'] .preview-content
+)
+  :is([data-slot='card'], [data-site-surface='card'], [data-site-surface='bar'], .song-card, .cover-card):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 14px;
+  border-color: var(--stage-line);
+  background: color-mix(in oklch, var(--card) 82%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklch, var(--primary) 16%, transparent),
+    0 14px 36px -22px rgba(0, 0, 0, 0.55);
+}
+
+:is(
+  .page-root[data-site-template='kinetic-stage'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='kinetic-stage'] .preview-content
+)
+  [data-slot='card']
+  > [data-slot='card-header']:not([data-site-template-isolate='true'] *) {
+  border-bottom: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+:is(
+  .page-root[data-site-template='kinetic-stage'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='kinetic-stage'] .preview-content
+)
+  :is([data-slot='card-title'], h1, h2):not([data-site-template-isolate='true'] *) {
+  font-family: var(--site-font-display);
+  letter-spacing: 0.01em;
+}
+
+:is(
+  .page-root[data-site-template='kinetic-stage'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='kinetic-stage'] .preview-content
+)
+  :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger']):not(
+    [data-site-template-isolate='true'] *
+  ) {
+  border-radius: 10px;
+  border-color: color-mix(in oklch, var(--foreground) 16%, transparent);
+  background: color-mix(in oklch, var(--background) 78%, transparent);
+}
+
+:is(
+  .page-root[data-site-template='kinetic-stage'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='kinetic-stage'] .preview-content
+)
+  :is(
+    [data-slot='button'][data-variant='default'],
+    [data-slot='button'][data-variant='outline'],
+    [data-slot='button'][data-variant='secondary'],
+    [data-slot='badge']
+  ):not([data-site-template-isolate='true'] *) {
+  border-radius: 999px;
+}
+
+:is(
+  .page-root[data-site-template='kinetic-stage'] .viewer-page-content,
+  .builder-site-template-scope[data-site-template='kinetic-stage'] .preview-content
+)
+  [data-slot='button'][data-variant='default']:not([data-site-template-isolate='true'] *) {
+  box-shadow: 0 10px 24px -10px color-mix(in oklch, var(--primary) 75%, transparent);
+}
+
+/* ============================================================================
+ * 悬浮 Dock / OS 底栏模式底部安全留白与子页吸底条避让
+ * ============================================================================ */
+.page-root[data-shell-mode='floating-dock'] .viewer-page-content:not(.viewer-page-content--edge),
+.page-root[data-shell-mode='os-desktop'] .viewer-page-content:not(.viewer-page-content--edge) {
+  padding-bottom: 96px;
+}
+
+.page-root[data-shell-mode='floating-dock'] [data-site-sticky='bottom'] {
+  bottom: 76px;
+}
+
+.page-root[data-shell-mode='os-desktop'] [data-site-sticky='bottom'] {
+  bottom: 56px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :is(
+    .page-root[data-site-template='liquid-prism'] .viewer-page-content,
+    .builder-site-template-scope[data-site-template='liquid-prism'] .preview-content
+  )
+    :is([data-slot='card'], [data-site-surface='card'], [data-site-surface='bar']):not(
+      [data-site-template-isolate='true'] *
+    ) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--card);
+  }
+}

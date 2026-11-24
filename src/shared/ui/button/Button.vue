@@ -26,6 +26,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 <template>
   <Primitive
+    data-slot="button"
+    :data-variant="variant || 'default'"
     :as="as"
     :type="!asChild && as === 'button' ? type : undefined"
     :as-child="asChild"

@@ -9,9 +9,13 @@ import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
+import {
+  getSiteTemplate,
+  mergeThemeWithSiteTemplate,
+  resolveSiteTemplateId,
+} from '@/apps/user-page/site-templates/registry'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { BiliProfile, BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
-import { IndexTemplateMap } from '@/shared/config/templates'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Button } from '@/shared/ui/button'
 import { isDarkMode } from '@/shared/utils'
@@ -54,39 +58,41 @@ watch(blockValidation, (validation) => {
   }
 })
 
+const activeSiteTemplateId = computed(() => resolveSiteTemplateId(settings.value?.siteTemplate))
+const activeSiteTemplate = computed(() => getSiteTemplate(activeSiteTemplateId.value))
+
 const mergedBlockProject = computed(() => {
   if (renderMode.value !== 'block') return null
   const validation = blockValidation.value
   if (!validation?.ok) return null
   return {
     ...validation.project,
-    theme: {
-      ...settings.value?.theme,
-      ...pageConfig.value?.theme,
-      ...validation.project.theme,
-    },
+    theme: mergeThemeWithSiteTemplate(
+      activeSiteTemplateId.value,
+      settings.value?.theme as Record<string, unknown> | undefined,
+      pageConfig.value?.theme as Record<string, unknown> | undefined,
+      validation.project.theme as Record<string, unknown> | undefined,
+    ),
   }
-})
-
-const effectiveIsDark = computed(() => {
-  const modes = [
-    mergedBlockProject.value?.theme?.pageThemeMode,
-    pageConfig.value?.theme?.pageThemeMode,
-    settings.value?.theme?.pageThemeMode,
-  ]
-  const mode = modes.find((value) => value === 'light' || value === 'dark')
-  return resolvePageThemeIsDark(mode, isDarkMode.value)
 })
 
 const contentTheme = computed(
   () =>
-    mergedBlockProject.value?.theme ?? {
-      ...settings.value?.theme,
-      ...pageConfig.value?.theme,
-    },
+    (mergedBlockProject.value?.theme as Record<string, unknown> | undefined) ??
+    mergeThemeWithSiteTemplate(
+      activeSiteTemplateId.value,
+      settings.value?.theme as Record<string, unknown> | undefined,
+      pageConfig.value?.theme as Record<string, unknown> | undefined,
+    ),
 )
 
-useGoogleFont(computed(() => contentTheme.value.fontFamily))
+const effectiveIsDark = computed(() => {
+  const mode = contentTheme.value.pageThemeMode
+  const resolved = mode === 'light' || mode === 'dark' ? mode : undefined
+  return resolvePageThemeIsDark(resolved, isDarkMode.value)
+})
+
+useGoogleFont(computed(() => (typeof contentTheme.value.fontFamily === 'string' ? contentTheme.value.fontFamily : undefined)))
 
 const pageBackground = computed(() => resolvePageBackground(pageConfig.value?.background))
 const globalBackground = computed(() => resolvePageBackground(settings.value?.background))
@@ -109,11 +115,7 @@ const contentBackgroundClass = computed(() => ({
   'bg-host': !!contentBackground.value,
   'bg-blur': contentBackground.value?.blurMode === 'background',
 }))
-const indexTemplateComponent = computed(
-  () =>
-    IndexTemplateMap[props.userInfo?.extra?.templateTypes?.index || 'default']?.component ??
-    IndexTemplateMap.default.component,
-)
+const indexTemplateComponent = computed(() => activeSiteTemplate.value.homeComponent)
 const contentClass = computed(() => ({
   'glass-surface': contentBackground.value?.blurMode === 'glass',
 }))

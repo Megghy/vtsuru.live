@@ -356,6 +356,7 @@ onMounted(async () => {
     >
       <div
         v-if="isOwner"
+        data-site-surface="bar"
         class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-card/85 px-3 py-2 text-xs"
       >
         <span class="text-muted-foreground">当前正在浏览你的公开歌单展示页</span>
@@ -391,6 +392,7 @@ onMounted(async () => {
       <!-- 积分点歌与插队状态栏 -->
       <div
         v-if="hasPointFeatures"
+        data-site-surface="bar"
         class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-card/85 px-3 py-2 text-xs"
       >
         <div class="flex flex-wrap items-center gap-2">

@@ -2,14 +2,10 @@
 import ArrowUpOutline from '@vicons/ionicons5/es/ArrowUpOutline'
 import CalendarOutline from '@vicons/ionicons5/es/CalendarOutline'
 import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
-import PlayOutline from '@vicons/ionicons5/es/PlayOutline'
 import RadioOutline from '@vicons/ionicons5/es/RadioOutline'
 import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
-import { computed, ref } from 'vue'
 
-import { useAccount } from '@/api/account'
-import type { ResponseUserIndexModel, ResponseUserInfo } from '@/api/generated/model'
-import { getApiUserIndexGet } from '@/api/generated/user-index/user-index'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import type { BiliProfile } from '@/apps/user-page/types'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
@@ -18,9 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Spin } from '@/shared/ui/spin'
-import { toast } from '@/shared/utils'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
+
+import { useIndexTemplateData } from './useIndexTemplateData'
 
 const props = defineProps<{
   userInfo: ResponseUserInfo | undefined
@@ -28,107 +25,28 @@ const props = defineProps<{
 }>()
 defineExpose({ Config, DefaultConfig })
 
-const accountInfo = useAccount()
-const isLoading = ref(true)
-const showHeaderImage = ref(true)
-const showAvatarFrame = ref(true)
-const indexInfo = ref<ResponseUserIndexModel>({ links: {}, videos: [], notification: '' })
-
-// 未绑定 B 站时不展示头像（避免占位空头像）
-const hasBiliBinding = computed(() => !!props.userInfo?.biliId)
-const avatar = computed(() => {
-  if (!hasBiliBinding.value) return ''
-  return props.userInfo?.streamerInfo?.faceUrl || props.userInfo?.faceUrl || props.biliInfo?.face || ''
-})
-const headerImage = computed(
-  () => props.biliInfo?.top_photo || props.biliInfo?.top_photo_v2 || props.userInfo?.streamerInfo?.coverUrl || '',
-)
-const avatarFrame = computed(() => {
-  if (!hasBiliBinding.value) return ''
-  return (
-    props.biliInfo?.pendant?.image_enhance_frame ||
-    props.biliInfo?.pendant?.image_enhance ||
-    props.biliInfo?.pendant?.image ||
-    ''
-  )
-})
-const nameplateText = computed(() => props.biliInfo?.nameplate?.name || '')
-const honorText = computed(
-  () =>
-    props.biliInfo?.Official?.title ||
-    props.biliInfo?.Official?.desc ||
-    props.biliInfo?.official?.title ||
-    props.biliInfo?.official?.desc ||
-    props.biliInfo?.official_verify?.desc ||
-    props.biliInfo?.vip?.label?.text ||
-    '',
-)
-const level = computed(() => props.biliInfo?.level_info?.current_level ?? props.biliInfo?.level ?? '')
-const streamerName = computed(
-  () => props.userInfo?.streamerInfo?.name || props.biliInfo?.name || props.userInfo?.name || '未命名主播',
-)
-const signature = computed(
-  () => props.biliInfo?.sign || props.userInfo?.streamerInfo?.title || '在自己的频道里，认真生活，尽兴直播。',
-)
-const nameSizeClass = computed(() => {
-  const width = Array.from(String(streamerName.value)).reduce(
-    (total, char) => total + ((char.codePointAt(0) ?? 0) <= 0xff ? 1 : 2),
-    0,
-  )
-  if (width > 24) return 'is-long'
-  if (width > 14) return 'is-medium'
-  return ''
-})
-const isOwner = computed(() => props.userInfo?.id === accountInfo.value?.id)
-const isStreaming = computed(() => props.userInfo?.streamerInfo?.isStreaming === true)
-const liveReserve = computed(() => props.userInfo?.liveReserve)
-const liveReserveLabel = computed(() => {
-  if (!liveReserve.value) return ''
-  return `${formatBiliLiveReserveTime(liveReserve.value.planStart)} · ${liveReserve.value.title}`
-})
-
-function formatCount(value: number) {
-  return value >= 10000 ? `${(value / 10000).toFixed(1)}万` : value.toLocaleString()
-}
-
-const profileStats = computed(() => {
-  const values = [
-    { label: '关注者', value: props.biliInfo?.fans ?? props.biliInfo?.follower ?? props.biliInfo?.follower_count },
-    { label: '投稿', value: props.biliInfo?.archive_count ?? props.biliInfo?.video },
-    { label: '获赞', value: props.biliInfo?.likes ?? props.biliInfo?.like_num },
-  ]
-  return values
-    .filter((item): item is { label: string; value: number } => typeof item.value === 'number' && item.value > 0)
-    .map((item) => ({ ...item, text: formatCount(item.value) }))
-})
-
-const orderedLinks = computed(() => {
-  const entries = Object.entries(indexInfo.value.links || {})
-  const order = accountInfo.value?.settings?.index?.linkOrder
-  if (!order?.length) return entries
-  const map = new Map(entries)
-  return order.filter((key) => map.has(key)).map((key) => [key, map.get(key)!]) as [string, string][]
-})
-
-async function loadIndexInfo() {
-  try {
-    const data = await getApiUserIndexGet({
-      id: props.userInfo?.name,
-    })
-    if (data.code === 200) indexInfo.value = data.data
-    else if (data.code !== 404) toast.error(`无法获取主页数据: ${data.message}`)
-  } catch (error) {
-    toast.error(`无法获取主页数据: ${error}`)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-function navigate(url: string) {
-  window.open(url, '_blank', 'noopener,noreferrer')
-}
-
-void loadIndexInfo()
+const {
+  isLoading,
+  showHeaderImage,
+  showAvatarFrame,
+  indexInfo,
+  avatar,
+  headerImage,
+  avatarFrame,
+  nameplateText,
+  honorText,
+  level,
+  streamerName,
+  signature,
+  nameSizeClass,
+  isOwner,
+  isStreaming,
+  liveReserve,
+  liveReserveLabel,
+  profileStats,
+  orderedLinks,
+  navigate,
+} = useIndexTemplateData(props)
 </script>
 
 <script lang="ts">
@@ -167,7 +85,7 @@ export const Config = defineTemplateConfig([])
               v-if="avatar"
               class="portrait-frame relative flex-center"
             >
-              <Avatar class="size-36 border-4 border-background shadow-md">
+              <Avatar class="portrait-frame__avatar border-4 border-background shadow-md">
                 <AvatarImage
                   :src="avatar"
                   referrerpolicy="no-referrer"
@@ -391,14 +309,10 @@ export const Config = defineTemplateConfig([])
                 :key="video.id"
                 class="video-item"
               >
-                <SimpleVideoCard :video="video" />
-                <span class="video-item__label">
-                  <component
-                    :is="PlayOutline"
-                    class="size-3.5 inline mr-1"
-                  />
-                  {{ video.title }}
-                </span>
+                <SimpleVideoCard
+                  :video="video"
+                  full-width
+                />
               </div>
             </div>
           </section>

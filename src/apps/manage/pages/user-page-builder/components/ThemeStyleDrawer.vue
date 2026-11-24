@@ -5,6 +5,11 @@ import { computed, defineAsyncComponent, inject, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import type { PageThemeMode } from '@/apps/user-page/block/schema'
 import { extractThemeFromImage, type ExtractedThemePalette } from '@/apps/user-page/colorExtraction'
+import {
+  resolveSiteTemplateId,
+  SITE_TEMPLATES,
+  type SiteTemplateId,
+} from '@/apps/user-page/site-templates/registry'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
@@ -56,6 +61,20 @@ watch(
 )
 
 const isPageScope = computed(() => !isCurrentHome.value && currentScope.value === 'page')
+
+const activeSiteTemplateId = computed<SiteTemplateId>({
+  get: () => resolveSiteTemplateId(editor.settings.value.siteTemplate),
+  set: (id) => {
+    if (id === 'default') delete editor.settings.value.siteTemplate
+    else editor.settings.value.siteTemplate = id
+  },
+})
+
+function selectSiteTemplate(id: SiteTemplateId) {
+  activeSiteTemplateId.value = id
+  const tpl = SITE_TEMPLATES.find((item) => item.id === id)
+  if (tpl) message.success(`已切换整站模板为「${tpl.name}」（保存并发布后生效）`)
+}
 
 const PAGE_BG_LEGACY_KEYS = [
   'pageBackgroundType',
@@ -420,6 +439,53 @@ function clearCurrentTheme() {
           </template>
         </div>
 
+        <!-- 整站展示模板（仅全局作用域） -->
+        <div
+          v-if="!isPageScope"
+          class="flex flex-col gap-2"
+        >
+          <div class="flex-between">
+            <span class="text-xs font-semibold text-foreground">整站展示模板</span>
+            <span class="text-[11px] text-muted-foreground">作用于导航壳、全部子页与经典主页</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              v-for="tpl in SITE_TEMPLATES"
+              :key="tpl.id"
+              type="button"
+              class="group relative flex flex-col gap-1.5 rounded-lg border p-2.5 text-left transition-colors duration-150"
+              :class="
+                activeSiteTemplateId === tpl.id
+                  ? 'border-primary bg-primary/8'
+                  : 'border-border bg-card hover:border-foreground/30 hover:bg-muted/50'
+              "
+              @click="selectSiteTemplate(tpl.id)"
+            >
+              <div class="flex-between gap-1.5">
+                <div class="flex items-center gap-1">
+                  <span
+                    v-for="(swatch, sIdx) in tpl.previewSwatches"
+                    :key="sIdx"
+                    class="size-3 rounded-full border border-border/60"
+                    :style="{ backgroundColor: swatch }"
+                  />
+                </div>
+                <span class="text-[10px] text-muted-foreground">{{ tpl.shellLabel }}</span>
+              </div>
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-xs font-semibold text-foreground truncate">{{ tpl.name }}</span>
+                <Check
+                  v-if="activeSiteTemplateId === tpl.id"
+                  class="size-3.5 text-primary shrink-0"
+                />
+              </div>
+              <p class="text-[11px] leading-snug text-muted-foreground line-clamp-2 m-0">
+                {{ tpl.tagline }}
+              </p>
+            </button>
+          </div>
+        </div>
+
         <!-- 智能提取板块 -->
         <div
           class="bg-primary/5 border border-dashed border-border rounded-lg py-2.5 px-3.5"
@@ -568,7 +634,7 @@ function clearCurrentTheme() {
                   <SelectValue placeholder="主题模式" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto">跟随站点 (自适应)</SelectItem>
+                  <SelectItem value="auto">模板默认 / 跟随站点</SelectItem>
                   <SelectItem value="light">强制浅色</SelectItem>
                   <SelectItem value="dark">强制深色</SelectItem>
                 </SelectContent>

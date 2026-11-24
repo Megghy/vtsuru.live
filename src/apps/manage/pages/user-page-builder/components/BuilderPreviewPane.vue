@@ -20,8 +20,12 @@ import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import { fetchBiliProfile } from '@/apps/user-page/api'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import CustomPageRenderer from '@/apps/user-page/components/CustomPageRenderer.vue'
+import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITIONS } from '@/apps/user-page/featureNavigation'
+import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
-import { IndexTemplateMap } from '@/shared/config/templates'
+import '@/apps/user-page/site-templates/surfaces.css'
+import SiteTemplateEffects from '@/apps/user-page/site-templates/SiteTemplateEffects.vue'
+import SiteTemplateShell, { type ShellNavGroup } from '@/apps/user-page/site-templates/SiteTemplateShell.vue'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -66,12 +70,6 @@ const previewMode = ref<'select' | 'interact'>('select')
 const simulatedLiveState = ref<'actual' | 'live' | 'offline'>('actual')
 const simulatedNow = ref<number | null>(null)
 const showPublicShell = ref(false)
-
-const legacyIndexTemplate = computed(
-  () =>
-    IndexTemplateMap[editor.account.value?.settings.indexTemplate || 'default']?.component ??
-    IndexTemplateMap.default.component,
-)
 const actualNow = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) })
 
 const simulatedNowInput = computed({
@@ -142,6 +140,8 @@ watch(
 )
 
 const {
+  siteTemplateId: previewSiteTemplateId,
+  siteTemplate: previewSiteTemplate,
   mergedTheme: previewMergedTheme,
   effectiveIsDark: previewEffectiveIsDark,
   resolvedBackground: previewBg,
@@ -154,6 +154,39 @@ const {
   currentPage: () => editor.currentPage.value,
   currentProject: () => editor.currentProject.value,
 })
+
+const legacyIndexTemplate = computed(() => previewSiteTemplate.value.homeComponent)
+
+const previewNavGroups = computed<ShellNavGroup[]>(() => {
+  const user = editor.account.value as any
+  const coreItems = [
+    { key: 'home', label: '主页', icon: Home },
+    ...USER_FEATURE_DEFINITIONS.filter((feature) => {
+      if (feature.key === 'forum') return false
+      const enabled = getEnabledUserFunctions(user)
+      return isUserFeatureEnabled(feature, enabled)
+    })
+      .slice(0, 5)
+      .map((feature) => ({
+        key: feature.routeName,
+        label: feature.label,
+        icon: feature.icon,
+      })),
+  ]
+  const pageItems = Object.entries(editor.settings.value.pages ?? {})
+    .filter(([, cfg]) => cfg?.navVisible !== false)
+    .slice(0, 4)
+    .map(([slug, cfg]) => ({
+      key: slug,
+      label: cfg?.title?.trim() || `/${slug}`,
+      icon: resolveUserPageNavIcon(cfg?.navIcon),
+    }))
+  const groups: ShellNavGroup[] = [{ key: 'user-core', label: '导航', items: coreItems }]
+  if (pageItems.length) groups.push({ key: 'user-pages', label: '页面', items: pageItems })
+  return groups
+})
+
+const previewActiveMenuKey = computed(() => (editor.currentKey.value === 'home' ? 'home' : editor.currentKey.value))
 
 useScopedCustomCssPreview('.builder-preview-custom-css-scope', previewCustomCss)
 
@@ -410,105 +443,145 @@ watch(
             <div :class="previewBgClass" />
           </template>
 
-          <!-- 可选：真实公开页顶栏 / 侧栏壳子占位 -->
           <div
-            v-if="showPublicShell && !isImmersiveCustom"
-            class="sticky top-0 z-20 flex items-center justify-between px-3 h-10 border-b border-border bg-background/80 backdrop-blur-md text-xs text-muted-foreground select-none pointer-events-none"
+            class="builder-site-template-scope min-h-full flex flex-col"
+            :class="{ 'bg-host': !!previewBg }"
+            :data-site-template="previewSiteTemplateId"
+            :data-shell-mode="previewSiteTemplate.shellMode"
           >
-            <div class="flex items-center gap-2 font-semibold text-foreground">
-              <PanelLeft class="size-3.5 text-primary" />
-              <span>VTSURU · @{{ editor.account.value.name || 'streamer' }}</span>
-            </div>
-            <span>公开页顶栏占位</span>
-          </div>
+            <SiteTemplateEffects :template-id="previewSiteTemplateId" />
 
-          <Transition
-            name="fade-slide"
-            mode="out-in"
-          >
+            <!-- 整站模板专属导航壳（非经典侧栏时默认所见即所得呈现） -->
+            <SiteTemplateShell
+              v-if="!isImmersiveCustom && previewSiteTemplate.shellMode !== 'classic-sidebar'"
+              :template-id="previewSiteTemplateId"
+              :shell-mode="previewSiteTemplate.shellMode"
+              :user-info="editor.account.value as any"
+              :bili-info="biliProfileQuery.data.value"
+              :nav-groups="previewNavGroups"
+              :active-menu-key="previewActiveMenuKey"
+              :is-dark="previewEffectiveIsDark"
+              preview
+              placement="top"
+            />
+
+            <!-- 经典侧栏模式下可选占位条 -->
             <div
-              :key="
-                editor.currentPage.value.mode === 'block' && editor.currentProject.value
-                  ? 'block'
-                  : editor.currentPage.value.mode
-              "
-              class="preview-content relative"
+              v-else-if="showPublicShell && !isImmersiveCustom"
+              class="sticky top-0 z-20 flex items-center justify-between px-3 h-10 border-b border-border bg-background/80 backdrop-blur-md text-xs text-muted-foreground select-none pointer-events-none"
             >
-              <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
-                <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
-                  <BlockPageRenderer
-                    :project="previewMergedProject"
-                    :user-info="editor.account.value"
-                    :bili-info="biliProfileQuery.data.value"
-                    :bili-status="biliProfileStatus"
-                    :is-dark="previewEffectiveIsDark"
-                    :canvas-color="previewCanvasColor"
-                    :highlight-block-id="previewHighlightBlockId"
-                    :selected-block-ids="editor.selectedBlockIds.value"
-                    :editor-mode="previewMode"
-                    :visibility-context="previewVisibilityContext"
-                    @select-block="selectPreviewBlock"
-                    @hover-block="editor.hoveredBlockId.value = $event"
-                  />
-                </div>
-              </template>
-              <CustomPageRenderer
-                v-else-if="editor.currentPage.value.mode === 'custom' && editor.currentPage.value.custom"
-                :config="editor.currentPage.value.custom"
-                :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
-                :user-info="editor.account.value"
-                :bili-info="biliProfileQuery.data.value ?? undefined"
-              />
-              <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                <component
-                  :is="legacyIndexTemplate"
-                  :user-info="editor.account.value as any"
-                  :bili-info="biliProfileQuery.data.value"
+              <div class="flex items-center gap-2 font-semibold text-foreground">
+                <PanelLeft class="size-3.5 text-primary" />
+                <span>VTSURU · @{{ editor.account.value.name || 'streamer' }}</span>
+              </div>
+              <span>经典侧栏模式占位</span>
+            </div>
+
+            <Transition
+              name="fade-slide"
+              mode="out-in"
+            >
+              <div
+                :key="
+                  editor.currentPage.value.mode === 'block' && editor.currentProject.value
+                    ? 'block'
+                    : `${editor.currentPage.value.mode}:${previewSiteTemplateId}`
+                "
+                class="preview-content relative flex-1"
+              >
+                <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
+                  <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
+                    <BlockPageRenderer
+                      :project="previewMergedProject"
+                      :user-info="editor.account.value"
+                      :bili-info="biliProfileQuery.data.value"
+                      :bili-status="biliProfileStatus"
+                      :is-dark="previewEffectiveIsDark"
+                      :canvas-color="previewCanvasColor"
+                      :highlight-block-id="previewHighlightBlockId"
+                      :selected-block-ids="editor.selectedBlockIds.value"
+                      :editor-mode="previewMode"
+                      :visibility-context="previewVisibilityContext"
+                      @select-block="selectPreviewBlock"
+                      @hover-block="editor.hoveredBlockId.value = $event"
+                    />
+                  </div>
+                </template>
+                <CustomPageRenderer
+                  v-else-if="editor.currentPage.value.mode === 'custom' && editor.currentPage.value.custom"
+                  :config="editor.currentPage.value.custom"
+                  :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
+                  :user-info="editor.account.value"
+                  :bili-info="biliProfileQuery.data.value ?? undefined"
                 />
-              </template>
-              <template v-else-if="editor.currentPage.value.mode === 'contrib'">
-                <div class="contrib-preview-placeholder flex-center min-h-[320px] p-6">
-                  <div
-                    class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
-                  >
-                    <Code2 class="size-10 text-primary mb-2" />
-                    <div class="text-sm font-semibold mb-1">
-                      扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
-                    </div>
-                    <div class="text-xs text-muted-foreground leading-relaxed">
-                      扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId
-                      与相关属性，保存后可在外部预览中查看实际渲染效果。
-                    </div>
-                    <div class="flex justify-center mt-3.5">
-                      <Button
-                        class="gap-1.5"
-                        @click="editor.openPreview"
-                      >
-                        <ExternalLink class="size-3.5" />
-                        在对外页面中预览
-                      </Button>
+                <template v-else-if="editor.currentPage.value.mode === 'legacy'">
+                  <component
+                    :is="legacyIndexTemplate"
+                    :user-info="editor.account.value as any"
+                    :bili-info="biliProfileQuery.data.value"
+                  />
+                </template>
+                <template v-else-if="editor.currentPage.value.mode === 'contrib'">
+                  <div class="contrib-preview-placeholder flex-center min-h-[320px] p-6">
+                    <div
+                      class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
+                    >
+                      <Code2 class="size-10 text-primary mb-2" />
+                      <div class="text-sm font-semibold mb-1">
+                        扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
+                      </div>
+                      <div class="text-xs text-muted-foreground leading-relaxed">
+                        扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId
+                        与相关属性，保存后可在外部预览中查看实际渲染效果。
+                      </div>
+                      <div class="flex justify-center mt-3.5">
+                        <Button
+                          class="gap-1.5"
+                          @click="editor.openPreview"
+                        >
+                          <ExternalLink class="size-3.5" />
+                          在对外页面中预览
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </template>
-              <template v-else>
-                <Alert class="m-4">
-                  <AlertDescription>
-                    当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
-                  </AlertDescription>
-                </Alert>
-              </template>
+                </template>
+                <template v-else>
+                  <Alert class="m-4">
+                    <AlertDescription>
+                      当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
+                    </AlertDescription>
+                  </Alert>
+                </template>
 
-              <!-- 沉浸模式 Dock 占位提示 -->
-              <div
-                v-if="showPublicShell && isImmersiveCustom"
-                class="pointer-events-none fixed bottom-4 right-4 z-30 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/85 backdrop-blur-md px-3 py-1.5 text-xs text-foreground shadow-md"
-              >
-                <Home class="size-3.5 text-primary" />
-                <span>沉浸模式悬浮 Dock 占位</span>
+                <!-- 沉浸模式 Dock 占位提示 -->
+                <div
+                  v-if="showPublicShell && isImmersiveCustom"
+                  class="pointer-events-none fixed bottom-4 right-4 z-30 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/85 backdrop-blur-md px-3 py-1.5 text-xs text-foreground shadow-md"
+                >
+                  <Home class="size-3.5 text-primary" />
+                  <span>沉浸模式悬浮 Dock 占位</span>
+                </div>
               </div>
-            </div>
-          </Transition>
+            </Transition>
+
+            <!-- 悬浮 Dock / OS 底栏壳层底部导航条（预览内 sticky 贴底） -->
+            <SiteTemplateShell
+              v-if="
+                !isImmersiveCustom &&
+                (previewSiteTemplate.shellMode === 'floating-dock' || previewSiteTemplate.shellMode === 'os-desktop')
+              "
+              :template-id="previewSiteTemplateId"
+              :shell-mode="previewSiteTemplate.shellMode"
+              :user-info="editor.account.value as any"
+              :bili-info="biliProfileQuery.data.value"
+              :nav-groups="previewNavGroups"
+              :active-menu-key="previewActiveMenuKey"
+              :is-dark="previewEffectiveIsDark"
+              preview
+              placement="bottom"
+            />
+          </div>
         </PhonePreview>
       </div>
     </CardContent>

@@ -87,6 +87,8 @@ onBeforeUnmount(() => {
 
 <template>
   <aside
+    :data-site-sticky="docked ? 'bottom' : undefined"
+    :data-site-surface="docked ? 'bar' : 'card'"
     class="flex flex-wrap items-center gap-4 w-full p-3.5 border border-border/80 rounded-lg text-card-foreground bg-card transition-all"
     :class="[
       docked

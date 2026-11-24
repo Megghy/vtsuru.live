@@ -107,6 +107,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
 
     <div
       v-if="!displayWeeks.length"
+      data-site-surface="card"
       class="schedule-empty"
     >
       <span class="schedule-empty__icon">
@@ -122,6 +123,7 @@ const streamerName = computed(() => props.userInfo?.name || '主播')
         :key="week.key"
       >
         <article
+          data-site-surface="card"
           class="schedule-week"
           :class="week.featured ? 'is-featured' : ['is-other', { 'is-past': week.isPast }]"
         >

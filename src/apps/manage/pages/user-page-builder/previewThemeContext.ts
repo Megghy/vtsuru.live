@@ -7,6 +7,11 @@ import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
+import {
+  getSiteTemplate,
+  mergeThemeWithSiteTemplate,
+  resolveSiteTemplateId,
+} from '@/apps/user-page/site-templates/registry'
 import { resolvePageThemeIsDark, resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
@@ -21,15 +26,19 @@ export interface UsePreviewThemeContextOptions {
 }
 
 export function usePreviewThemeContext(options: UsePreviewThemeContextOptions) {
+  const siteTemplateId = computed(() => resolveSiteTemplateId(options.settings()?.siteTemplate))
+  const siteTemplate = computed(() => getSiteTemplate(siteTemplateId.value))
+
   const mergedTheme = computed<Record<string, any>>(() => {
     const settings = options.settings()
     const page = options.currentPage()
     const project = options.currentProject()
-    return {
-      ...settings?.theme,
-      ...page?.theme,
-      ...project?.theme,
-    }
+    return mergeThemeWithSiteTemplate(
+      siteTemplateId.value,
+      settings?.theme as Record<string, unknown> | undefined,
+      page?.theme as Record<string, unknown> | undefined,
+      project?.theme as Record<string, unknown> | undefined,
+    )
   })
 
   useGoogleFont(
@@ -84,6 +93,8 @@ export function usePreviewThemeContext(options: UsePreviewThemeContextOptions) {
   })
 
   return {
+    siteTemplateId,
+    siteTemplate,
     mergedTheme,
     effectiveIsDark,
     resolvedBackground,

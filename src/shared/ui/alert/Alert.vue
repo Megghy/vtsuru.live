@@ -21,6 +21,7 @@ const props = withDefaults(
 
 <template>
   <div
+    data-slot="alert"
     :class="cn(alertVariants({ variant: props.variant, size: props.size }), props.class)"
     role="alert"
   >

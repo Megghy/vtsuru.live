@@ -20,7 +20,11 @@ const props = withDefaults(
 </script>
 
 <template>
-  <div :class="cn(badgeVariants({ variant, size }), props.class)">
+  <div
+    data-slot="badge"
+    :data-variant="variant || 'default'"
+    :class="cn(badgeVariants({ variant, size }), props.class)"
+  >
     <slot />
   </div>
 </template>

@@ -88,6 +88,11 @@ export interface UserPageBackgroundConfigV1 {
 
 export interface UserPagesSettings {
   version: 2
+  /**
+   * 整站展示模板 ID（控制全站外壳导航、表面设计语言与经典主页舞台）。
+   * 缺省时回退到旧账号设置 userInfo.extra.templateTypes.index 或 'default'。
+   */
+  siteTemplate?: string
   customCss?: string
   /**
    * 全局主题（对所有页面生效，包括内置页面）。

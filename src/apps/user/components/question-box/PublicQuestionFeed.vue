@@ -93,6 +93,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
     <div
       class="mb-3 p-4 bg-card border border-border rounded-lg shadow-sm backdrop-blur-sm transition-all"
       :class="{ '!p-0 !bg-transparent !border-0 !shadow-none !backdrop-blur-none': embedded }"
+      :data-site-surface="embedded ? undefined : 'card'"
     >
       <header class="flex items-end justify-between gap-5 m-0">
         <div>
@@ -170,6 +171,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
               :class="{
                 '!p-4 !px-0 !bg-transparent !border-0 !border-t !border-border !rounded-none !shadow-none': embedded,
               }"
+              :data-site-surface="embedded ? undefined : 'card'"
               :style="{ '--thread-index': index }"
             >
               <div

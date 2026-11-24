@@ -222,7 +222,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--border-style': appearance.borderStyle,
     '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
     '--vtsuru-page-spacing': `${appearance.spacing}px`,
-    '--vtsuru-page-max-width': appearance.pageMaxWidth,
+    ...(appearance.hasExplicitPageMaxWidth ? { '--vtsuru-page-max-width': appearance.pageMaxWidth } : {}),
     '--vtsuru-page-text': canvasPalette.color,
     '--vtsuru-page-text-muted': canvasPalette.muted,
     '--vtsuru-page-text-subtle': canvasPalette.subtle,

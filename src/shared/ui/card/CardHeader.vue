@@ -10,6 +10,7 @@ const props = defineProps<{
 
 <template>
   <div
+    data-slot="card-header"
     data-card-header
     :class="cn('flex flex-col gap-y-1 p-3 pb-1.5', props.class)"
   >

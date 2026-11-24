@@ -4,6 +4,7 @@ import { validateCustomHtmlConfig } from '@/apps/user-page/block/customHtmlValid
 import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { isValidGoogleFontFamily } from '@/apps/user-page/googleFonts'
 import { isUserPageNavIcon } from '@/apps/user-page/pageIcons'
+import { isValidSiteTemplateId } from '@/apps/user-page/site-templates/registry'
 import { isNormalizedUserPageColor, USER_PAGE_THEME_COLOR_KEYS } from '@/apps/user-page/themeColor'
 import {
   isValidPageMaxWidth,
@@ -232,6 +233,14 @@ function validatePage(
 function validateSettings(settings: UserPagesSettings, validateBlockProject: BlockProjectValidator) {
   const issues: UserPageValidationIssue[] = []
   const settingsTarget: IssueTarget = { scope: 'settings', pageKey: null, blockId: null }
+  const siteTemplate = (settings as unknown as UnknownObject).siteTemplate
+  if (siteTemplate !== undefined && siteTemplate !== null) {
+    if (typeof siteTemplate !== 'string') {
+      report(issues, settingsTarget, 'siteTemplate', '整站模板标识必须是 string')
+    } else if (siteTemplate.trim() && !isValidSiteTemplateId(siteTemplate.trim())) {
+      report(issues, settingsTarget, 'siteTemplate', `不支持的整站模板：${siteTemplate}`)
+    }
+  }
   const customCss = (settings as unknown as UnknownObject).customCss
   if (customCss !== undefined) {
     if (typeof customCss !== 'string') report(issues, settingsTarget, 'customCss', '全局 CSS 必须是 string')

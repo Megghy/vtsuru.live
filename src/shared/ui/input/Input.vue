@@ -47,6 +47,7 @@ defineExpose({
   <input
     ref="inputRef"
     v-model="modelValue"
+    data-slot="input"
     :type="type"
     :placeholder="placeholder"
     :disabled="disabled"

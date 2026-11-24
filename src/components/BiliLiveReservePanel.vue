@@ -37,7 +37,10 @@ const fetchedLabel = computed(() => {
 </script>
 
 <template>
-  <section class="grid gap-2.5 min-w-0 py-3.5 px-4 border border-border rounded-[var(--radius,10px)] bg-popover">
+  <section
+    data-site-surface="card"
+    class="grid gap-2.5 min-w-0 py-3.5 px-4 border border-border rounded-[var(--radius,10px)] bg-popover"
+  >
     <header class="flex items-start justify-between gap-3">
       <div class="flex min-w-0 gap-2.5">
         <component
