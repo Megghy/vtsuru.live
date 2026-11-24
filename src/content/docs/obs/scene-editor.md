@@ -1,6 +1,6 @@
 ---
 title: OBS 场景编辑器指南
-description: 在网页画布里把多场景、全局常驻层、原生 OBS 本地源夹心顺序和 VTube Studio 机位联动一次配齐。
+description: 在网页画布里管理多场景、全局常驻层、原生 OBS 本地源分层顺序和 VTube Studio 机位联动。
 category: obs
 order: 1
 badge: 核心
@@ -63,7 +63,7 @@ manageLabel: 打开场景编辑器
 选中 `obs-source` 图层后，可以在右侧检查器挑一种控制方式：
 
 * **OBS Transform（默认）**：你在网页画布里把皮套框拖大、移到右下角、裁切掉多余边缘，OBS 里的对应来源就会以中心对齐 `1:1` 同步移动缩放。
-* **VTS Preset（机位联动）**：OBS 源本身全屏铺满不动，每次切换子场景（比如从「闲聊」切去「打游戏」），画面通过桌面客户端本地 RPC 自动让 VTube Studio 切换对应**机位预设、表情或热键/宏**，皮套自己丝滑缩到角落！
+* **VTS Preset（机位联动）**：OBS 源本身全屏铺满不动，每次切换子场景（比如从「闲聊」切去「打游戏」），画面通过桌面客户端本地 RPC 自动让 VTube Studio 切换对应**机位预设、表情或热键/宏**，皮套自己切到角落。
 
 <DocCallout type="warning" title="关于 obs-source 的放置规则">
   为了保证 Z 轴切片顺序清晰，<code>obs-source</code> 只能放在子场景顶层，不能塞进 Group 分组里，也不能放进全局层；另外，想要自动排序和 VTS 联动，需要保持桌面客户端在线。

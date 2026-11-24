@@ -1,6 +1,6 @@
 ---
 title: 直播中控台操作指南
-description: 四栏可拖拽专业播控台，集弹幕流、付费互动、投票与专注防剧透虚化于一体，支持 Alt+M 高光时刻打点。
+description: 四栏可拖拽播控台，集中查看弹幕流、礼物与 SC、投票监控和专注防剧透虚化，支持 Alt+M 高光时刻打点。
 category: live
 order: 1
 badge: 核心

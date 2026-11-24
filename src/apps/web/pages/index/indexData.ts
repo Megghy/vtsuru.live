@@ -125,20 +125,20 @@ export const FEATURE_GROUPS: readonly FeatureGroupMeta[] = [
   },
   {
     key: 'page',
-    title: '个人主页与粉丝社区',
-    subtitle: '44 种积木区块、日程歌单模板、棉花糖提问箱与粉丝交流角',
+    title: '个人主页与社区',
+    subtitle: '44 种积木区块、日程歌单模板、棉花糖提问箱与粉丝讨论区',
     accent: 'sakura',
   },
   {
     key: 'data',
-    title: '数据洞察与商业运营',
-    subtitle: '积分兑换商城、多维收益看板、场次语音复盘与公会协作',
+    title: '数据统计与积分运营',
+    subtitle: '积分兑换商城、直播收益统计、场次语音复盘与组织协作',
     accent: 'amber',
   },
   {
     key: 'efficiency',
-    title: 'AI 与效率工具',
-    subtitle: '上下文感知 AI 助手、11 合一直播工具箱与动态抽奖',
+    title: 'AI 助手与效率工具',
+    subtitle: '页面上下文 AI 助手、11 合一直播工具箱与动态抽奖',
     accent: 'emerald',
   },
 ]
@@ -149,7 +149,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'obs-scene-editor',
     name: 'OBS 场景编辑器',
-    desc: '浏览器内多场景画布编排与全局常驻层，支持图层嵌套分组、异形遮罩，单浏览器源联动 OBS 切换全直播画面。',
+    desc: '浏览器内编排多场景画布与全局常驻层，支持图层嵌套与异形遮罩，单浏览器源联动 OBS 切换画面。',
     category: 'live',
     route: 'manage-obsSceneEditor',
     icon: Clapperboard,
@@ -159,7 +159,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'live-dashboard',
     name: '直播中控台',
-    desc: '四栏可拖拽专业播控台，集中查看弹幕、醒目留言、礼物与投票，支持专注虚化与 Alt+M 高光时刻打点。',
+    desc: '四栏可拖拽播控台，集中查看弹幕、醒目留言、礼物与投票，支持专注虚化与 Alt+M 高光时刻打点。',
     category: 'live',
     route: 'live-dashboard',
     icon: LayoutDashboard,
@@ -196,7 +196,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'music-request',
     name: '弹幕点歌（歌势）',
-    desc: '联动个人曲库与牌子门槛，观众发送弹幕即可自动点歌排队，歌回直播播控井井有条。',
+    desc: '联动个人曲库与牌子门槛，观众发送弹幕即可自动点歌排队，方便歌回直播管理。',
     category: 'live',
     route: 'manage-musicRequest',
     icon: Music2,
@@ -253,7 +253,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'song-list',
     name: '公开歌单',
-    desc: '6 套歌单展示模板与沉浸播放器，观众随时搜索曲目并一键复制点歌口令。',
+    desc: '6 套歌单展示模板与在线试听播放，观众可随时检索曲目并一键复制点歌口令。',
     category: 'page',
     route: 'manage-songList',
     icon: ListMusic,
@@ -280,14 +280,14 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'forum',
     name: '粉丝讨论区',
-    desc: '主播专属公开交流角，支持观众发帖、评论回复与后台内容管理，沉淀社区互动。',
+    desc: '主播专属公开交流区，支持观众发帖、评论回复与后台内容管理。',
     category: 'page',
     route: 'manage-forum',
     icon: HeartHandshake,
     accent: 'emerald',
   },
 
-  // ---- 数据洞察与商业运营（6 项） ----
+  // ---- 数据统计与积分运营（6 项） ----
   {
     id: 'point-mall',
     name: '积分兑换商城',
@@ -300,7 +300,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'analyze',
     name: '直播数据分析看板',
-    desc: '按 7/30/60 天或自定义区间透视礼物、SC、大航海、下播收益、开播时段与分区表现。',
+    desc: '按 7/30/60 天或自定义区间统计礼物、SC、大航海、下播收益、开播时段与分区表现。',
     category: 'data',
     route: 'manage-analyze',
     icon: BarChart3,
@@ -310,7 +310,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'live-records',
     name: '场次记录与语音复盘',
-    desc: '完整沉淀每场直播的弹幕、礼物营收曲线以及实时语音转写文稿，支持检索与导出。',
+    desc: '记录每场直播的弹幕、礼物营收曲线以及实时语音转写文稿，支持检索与导出。',
     category: 'data',
     route: 'manage-live',
     icon: Radio,
@@ -358,7 +358,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'tools-dashboard',
     name: '直播实用工具箱（11 合一）',
-    desc: '开箱即用的创作者效率集：AI 去背景、封面生成、动态九图、图片拼接压缩、OCR、音视频转换与翻译。',
+    desc: '常用创作者工具集合：AI 去背景、封面生成、动态九图、图片拼接压缩、OCR、音视频转换与翻译。',
     category: 'efficiency',
     route: 'manage-tools-dashboard',
     icon: Wrench,
@@ -367,7 +367,7 @@ export const INDEX_FEATURES: readonly IndexFeatureItem[] = [
   {
     id: 'dynamic-lottery',
     name: '动态评论转发抽奖',
-    desc: '粘贴 B 站动态即可拉取评论与转发名单，支持条件过滤、去重与透明化开奖记录。',
+    desc: '粘贴 B 站动态即可拉取评论与转发名单，支持条件过滤、去重与开奖记录留存。',
     category: 'efficiency',
     route: 'manage-lottery',
     icon: Gift,
@@ -406,8 +406,8 @@ export const OBS_WIDGETS: readonly ObsWidgetItem[] = [
   {
     id: 'subtitle',
     name: '实时语音字幕条',
-    subtitle: '低延迟同传上屏',
-    desc: '直连桌面客户端语音转写引擎，在直播画面底部平滑滚动实时字幕。',
+    subtitle: '桌面端实时推送',
+    desc: '直连桌面客户端本地语音转写，在直播画面底部实时滚动显示字幕。',
     icon: Subtitles,
     accent: 'emerald',
     previewKind: 'subtitle',
@@ -425,7 +425,7 @@ export const OBS_WIDGETS: readonly ObsWidgetItem[] = [
     id: 'counter',
     name: '受苦挑战计数器',
     subtitle: '死亡 / 重试 / 目标',
-    desc: '受苦游戏与连胜挑战必备，支持快捷键与网页实时增减进度。',
+    desc: '适合高难挑战与连胜计数，支持快捷键与网页端实时增减进度。',
     icon: Flame,
     accent: 'amber',
     previewKind: 'counter',
@@ -434,7 +434,7 @@ export const OBS_WIDGETS: readonly ObsWidgetItem[] = [
     id: 'gamepad',
     name: '游戏手柄投屏',
     subtitle: 'Xbox / PS / Switch',
-    desc: '矢量级低延迟还原按键、双摇杆偏移与线性扳机行程。',
+    desc: '低延迟还原手柄按键、双摇杆偏移与线性扳机行程。',
     icon: Gamepad2,
     accent: 'brand',
     previewKind: 'gamepad',
@@ -442,8 +442,8 @@ export const OBS_WIDGETS: readonly ObsWidgetItem[] = [
   {
     id: 'keycast',
     name: '键鼠按键投屏',
-    subtitle: '操作实时可视化',
-    desc: '精准捕获键盘组合键与鼠标点击，教学、音游与硬核操作一目了然。',
+    subtitle: '键盘与鼠标操作',
+    desc: '实时显示键盘组合键与鼠标点击状态，适合教程、音游或动作游戏直播。',
     icon: Keyboard,
     accent: 'emerald',
     previewKind: 'keycast',
@@ -454,7 +454,7 @@ export const CLIENT_CAPABILITIES: readonly ClientCapabilityItem[] = [
   {
     id: 'live-manage',
     title: '一键开播与 OBS 推流',
-    desc: '直接修改标题、分区、封面并获取推流码用 OBS 推流，告别臃肿官方直播姬。',
+    desc: '直接修改标题、分区、封面并获取推流码用 OBS 推流，无需开启官方直播姬。',
     icon: Radio,
   },
   {

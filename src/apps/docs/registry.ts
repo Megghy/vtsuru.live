@@ -43,7 +43,7 @@ export const DOC_CATEGORIES: readonly DocCategoryMeta[] = [
   {
     id: 'ops',
     title: '运营与数据分析',
-    description: '积分兑换商城、直播收益洞察、场次语音复盘与创作者工具箱',
+    description: '积分兑换商城、直播收益统计、场次语音复盘与实用工具箱',
     order: 50,
   },
 ]

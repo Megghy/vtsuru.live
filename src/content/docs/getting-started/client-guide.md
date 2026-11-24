@@ -1,6 +1,6 @@
 ---
 title: 桌面客户端与 EventFetcher 指南
-description: 告别臃肿直播姬：用桌面端实现一键开播推流、EventFetcher 本地事件采集、透明弹幕浮窗与粉丝大 V 排查。
+description: 使用桌面客户端获取推流码开播，并运行 EventFetcher 本地采集、透明弹幕浮窗与粉丝查看。
 category: getting-started
 order: 2
 badge: 推荐

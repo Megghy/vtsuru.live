@@ -122,10 +122,10 @@ function getCardStyle(index: number) {
       >
         <div class="max-w-2xl">
           <h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            OBS 组件库：8 大直播挂件即配即用
+            OBS 组件库：8 类直播挂件即配即用
           </h2>
           <p class="mt-2 text-sm text-muted-foreground sm:text-base">
-            免折腾 HTML/CSS，网页端所见即所得配好风格，一键复制链接贴入 OBS 或直接拖进场景编辑器。
+            无需编写 HTML/CSS，在网页端调好样式后复制链接贴入 OBS 浏览器源，或直接拖入场景编辑器。
           </p>
         </div>
 

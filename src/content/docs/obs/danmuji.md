@@ -1,6 +1,6 @@
 ---
 title: OBS 弹幕机与样式配置
-description: 实时呈现弹幕、礼物、醒目留言与大航海，支持可视化调参、blivechat CSS 兼容以及云端同步过滤规则。
+description: 在 OBS 中显示弹幕、礼物、醒目留言与大航海，支持可视化调参、blivechat CSS 兼容以及云端同步过滤规则。
 category: obs
 order: 2
 badge: 常用

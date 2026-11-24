@@ -147,10 +147,10 @@ const accentTagMap: Record<IndexFeatureItem['accent'], string> = {
       >
         <div class="max-w-2xl min-w-0">
           <h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            全站功能矩阵
+            全站功能一览
           </h2>
           <p class="mt-2 text-sm text-muted-foreground sm:text-base">
-            按直播全流程清晰归类，覆盖开播前筹备、直播中控场与下播后数据复盘，点击卡片直达对应工作台。
+            按实际使用场景分类整理，点击卡片即可直达对应配置页面。
           </p>
         </div>
 

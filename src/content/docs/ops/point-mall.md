@@ -1,6 +1,6 @@
 ---
 title: 积分系统与兑换商城
-description: 打通弹幕签到、礼物、SC 与上舰积分累计，支持实体周边物流、服务类与随机 Key 兑换码商品。
+description: 统计弹幕签到、礼物、SC 与上舰的积分累计，支持实体周边物流、服务类与随机 Key 兑换码商品。
 category: ops
 order: 1
 tags:
@@ -18,7 +18,7 @@ manageLabel: 打开积分管理
   src="/docs-images/point-manage.png"
   title="积分管理与兑换商城（/manage/point）"
   badge="实机界面"
-  caption="清晰区分「虚拟 / 服务 / 实物」三类商品，顶部直接展示订单履约数、用户积分管理、规则配置与模拟测试标签页"
+  caption="清晰区分「虚拟 / 服务 / 实物」三类商品，顶部直接展示订单数、用户积分管理、规则配置与模拟测试标签页"
 />
 
 ## 观众怎么攒积分

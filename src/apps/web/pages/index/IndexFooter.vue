@@ -66,10 +66,10 @@ const sheenStyle = computed(() => {
         <div class="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div class="max-w-xl">
             <h2 class="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-              准备好搭建你的下一场直播与主页了吗？
+              开始配置你的直播间与个人主页
             </h2>
             <p class="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-              无论是快速接通一个 OBS 倒计时挂件，还是从零拼装一整套含 OC 设定集、约稿价目与歌单的个人门户，随时都可以开始。
+              可以只接入单个 OBS 挂件与直播日程，也可以完整搭建包含 OC 设定、约稿价目与歌单的个人主页。
             </p>
           </div>
 

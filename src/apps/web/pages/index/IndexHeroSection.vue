@@ -219,11 +219,11 @@ const formattedElapsed = computed(() => {
         </div>
 
         <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-[48px] xl:text-[52px] lg:leading-[1.15]">
-          把直播互动、<span class="inline-block">OBS 编排</span>与主页装修，收进同一套工作台
+          B 站直播互动、<span class="inline-block">OBS 编排</span>与个人主页工作台
         </h1>
 
         <p class="mt-5 max-w-[54ch] text-sm leading-relaxed text-muted-foreground sm:text-base">
-          面向 B 站虚拟主播与创作者的轻盈一站式工具箱：从弹幕投票、多引擎读弹幕、单源 OBS 场景编排，到 44 种积木区块的个人主页与免直播姬桌面客户端，开箱即用。
+          面向 B 站主播与虚拟主播的直播辅助平台：整合弹幕互动、单源 OBS 场景编排、积木式个人主页与桌面客户端，打开浏览器即可配置使用。
         </p>
 
         <!-- 双角色分流入口（原生语义按钮，图标比例完全自由不被 Button 基座压缩） -->

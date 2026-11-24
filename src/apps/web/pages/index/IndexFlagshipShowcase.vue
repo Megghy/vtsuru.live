@@ -168,10 +168,10 @@ onBeforeUnmount(() => {
         :style="headingStyle()"
       >
         <h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          从直播间画面到粉丝公开页，完整闭环
+          三大核心模块，覆盖直播内外
         </h2>
         <p class="mt-2.5 text-sm leading-relaxed text-muted-foreground sm:text-base">
-          三大核心能力彼此联通，无需来回切换零散插件。每个展区的演示面板都支持直接点击试玩。
+          涵盖直播画面编排、个人主页搭建与本地桌面端支持，可在下方交互面板中直接体验效果。
         </p>
       </div>
 
@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
               浏览器里编排多场景，OBS 只贴一个源
             </h3>
             <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
-              像设计工具一样自由拖拽、分组嵌套、设置圆角与异形遮罩。把弹幕机、歌单、点播、投票与 8 大挂件直接嵌入画布，配合客户端或 OBS WebSocket 随场景自动丝滑转场。
+              在浏览器中自由拖拽图层、分组嵌套并设置圆角与异形遮罩。可将弹幕机、歌单、点播、投票与 8 类挂件直接嵌入画布，配合客户端或 OBS WebSocket 随场景自动切换。
             </p>
 
             <ul class="mt-5 space-y-2 text-xs sm:text-sm text-muted-foreground">
@@ -551,16 +551,16 @@ onBeforeUnmount(() => {
             </div>
 
             <h3 class="mt-3 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-              专为 VTB 与创作者打造的 Bento 个人门户
+              高自由度的 Bento 风格个人主页
             </h3>
             <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
-              支持多子页面、Bento 跨列网格、开播/定时自动显隐与完整字体库。除常规链接与相册外，内置 OC 设定集、约稿价目表、声按钮语音板，甚至支持自定义 Vue 代码区块。
+              支持多子页面、Bento 跨列网格、开播/定时自动显隐与完整字体库。除常规链接与相册外，内置 OC 设定集、约稿价目表、声按钮语音板，并支持自定义 Vue 代码区块。
             </p>
 
             <ul class="mt-5 space-y-2 text-xs sm:text-sm text-muted-foreground">
               <li class="flex items-center gap-2">
                 <CheckCircle2 class="size-4 text-pink-500 shrink-0" />
-                <span>OC 三视图色卡、约稿排单价目、可试听语音板开箱即用</span>
+                <span>内置 OC 三视图色卡、约稿排单价目与可试听语音板</span>
               </li>
               <li class="flex items-center gap-2">
                 <CheckCircle2 class="size-4 text-pink-500 shrink-0" />
@@ -610,10 +610,10 @@ onBeforeUnmount(() => {
             </div>
 
             <h3 class="mt-3 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-              接管开播推流、自动感谢、VTS 联动与语音同传
+              开播推流、自动回复、VTS 联动与本地字幕
             </h3>
             <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
-              不再只是本地弹幕机。一站覆盖开关播 OBS 推流、模板与 JS 脚本自动化、弹幕签到、透明桌面浮窗、VTube Studio 模型热键触发以及本地实时语音转写字幕。
+              补齐浏览器端无法直接执行的本地能力：开关播 OBS 推流、模板与 JS 脚本自动化、弹幕签到、透明桌面浮窗、VTube Studio 热键触发以及本地实时语音转写字幕。
             </p>
 
             <div class="mt-5 grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
