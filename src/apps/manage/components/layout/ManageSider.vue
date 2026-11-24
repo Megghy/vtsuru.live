@@ -7,6 +7,7 @@ import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
 import GridOutline from '@vicons/ionicons5/es/GridOutline'
 import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
 import { createReusableTemplate } from '@vueuse/core'
+import { Download, Monitor } from 'lucide-vue-next'
 import { computed, toRef, watch, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
@@ -521,35 +522,63 @@ async function go(name: string, query?: Record<string, string>) {
     </div>
 
     <div
-      v-if="!collapsed"
-      class="border-t border-border py-2.5 px-3 flex flex-col gap-1.5 items-center"
+      class="border-t border-border py-2 flex flex-col gap-2"
+      :class="collapsed ? 'items-center px-1.5' : 'px-2.5'"
     >
-      <div class="text-xs text-muted-foreground text-center inline-flex items-center gap-1">
-        有更多功能建议请
-        <Button
-          variant="link"
-          class="h-auto p-0 text-brand"
-          @click="go('manage-feedback')"
-        >
-          反馈
-        </Button>
-      </div>
-      <div class="text-xs text-muted-foreground text-center inline-flex items-center gap-2">
-        <Button
-          variant="link"
-          class="h-auto p-0 text-brand"
+      <Tooltip :disabled="!collapsed">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            :size="collapsed ? 'icon-sm' : 'sm'"
+            :class="collapsed ? 'justify-center' : 'w-full justify-between px-2.5'"
+            :aria-label="collapsed ? '桌面客户端' : undefined"
+            @click="go('client-download')"
+          >
+            <span class="flex items-center gap-2 min-w-0">
+              <Monitor class="size-3.5 shrink-0 text-brand" />
+              <span
+                v-if="!collapsed"
+                class="truncate"
+              >
+                桌面客户端
+              </span>
+            </span>
+            <Download
+              v-if="!collapsed"
+              class="size-3.5 shrink-0 text-muted-foreground"
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          下载桌面客户端
+        </TooltipContent>
+      </Tooltip>
+
+      <div
+        v-if="!collapsed"
+        class="flex items-center justify-around px-1 text-[11px] text-muted-foreground"
+      >
+        <button
+          type="button"
+          class="transition-colors hover:text-foreground cursor-pointer"
           @click="go('docs-index')"
         >
           使用文档
-        </Button>
-        <span class="text-border">·</span>
-        <Button
-          variant="link"
-          class="h-auto p-0 text-brand"
+        </button>
+        <button
+          type="button"
+          class="transition-colors hover:text-foreground cursor-pointer"
+          @click="go('manage-feedback')"
+        >
+          反馈
+        </button>
+        <button
+          type="button"
+          class="transition-colors hover:text-foreground cursor-pointer"
           @click="go('about')"
         >
-          关于本站
-        </Button>
+          关于
+        </button>
       </div>
     </div>
   </DefineSiderBody>

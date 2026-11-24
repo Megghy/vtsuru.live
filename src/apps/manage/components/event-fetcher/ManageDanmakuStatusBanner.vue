@@ -101,7 +101,12 @@ function goPanel() {
         重连 {{ client.reconnectCount }} 次
       </span>
       <span class="text-[11px] text-muted-foreground/80">
-        后台标签页会限制定时器与 WebSocket，建议保持页面前台或使用 EventFetcher。
+        后台标签页会限制定时器与 WebSocket，建议保持页面前台或使用桌面客户端 EventFetcher（<Button
+          variant="link"
+          size="xs"
+          class="h-auto p-0 text-[11px] text-brand align-baseline"
+          @click="router.push({ name: 'client-download' })"
+        >下载客户端</Button>）。
       </span>
     </div>
   </div>

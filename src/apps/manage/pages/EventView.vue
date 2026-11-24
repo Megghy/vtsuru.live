@@ -493,14 +493,15 @@ function onTabChange(value: string | number) {
         </p>
       </div>
 
-      <div class="pt-4 border-t border-border flex justify-center">
+      <div class="pt-4 border-t border-border flex flex-wrap justify-center gap-2">
+        <Button @click="$router.push({ name: 'client-download' })">
+          下载桌面客户端 →
+        </Button>
         <Button
-          as="a"
-          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-          target="_blank"
-          rel="noopener noreferrer"
+          variant="outline"
+          @click="$router.push({ name: 'docs-article', params: { slug: ['getting-started', 'client-guide'] } })"
         >
-          查看部署指南 →
+          查看使用指南
         </Button>
       </div>
     </Card>

@@ -16,6 +16,13 @@ manageLabel: 预览客户端界面
 
 网页端已经能覆盖大部分挂件和主页能力，但像**获取推流码开播、单屏游戏看透明弹幕浮窗、本地语音转写、连 VTube Studio / OBS 本机进程**这些事，浏览器权限确实够不着，所以就有了基于 Tauri 的 VTsuru 桌面客户端。
 
+<DocActionBar
+  title="下载 VTsuru 桌面客户端"
+  description="支持 Windows / macOS / Linux，提供国内加速节点直连与 SHA-256 校验。"
+  route-name="client-download"
+  button-text="前往下载页面"
+/>
+
 ## 客户端能帮你省掉哪些麻烦
 
 1. **直接拿推流码开播（不用开官方直播姬）**：在客户端里就能改直播标题、选分区、换封面，点一下开播拿到推流地址和推流码，直接用干净的 OBS 推流。

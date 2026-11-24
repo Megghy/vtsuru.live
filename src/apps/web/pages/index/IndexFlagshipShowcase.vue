@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clapperboard,
   Code2,
+  Download,
   ExternalLink,
   Eye,
   EyeOff,
@@ -635,17 +636,18 @@ onBeforeUnmount(() => {
             <div class="mt-6 flex flex-wrap items-center gap-2.5">
               <Button
                 class="gap-1.5"
-                as-child
+                @click="router.push({ name: 'client-download' })"
               >
-                <a
-                  :href="EXTERNAL_LINKS.clientDocs"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <FileText class="size-3.5" />
-                  安装与使用说明
-                  <ExternalLink class="size-3 opacity-70" />
-                </a>
+                <Download class="size-3.5" />
+                下载桌面客户端
+              </Button>
+              <Button
+                variant="outline"
+                class="gap-1.5"
+                @click="router.push({ name: 'docs-article', params: { slug: ['getting-started', 'client-guide'] } })"
+              >
+                <FileText class="size-3.5" />
+                使用说明
               </Button>
               <Button
                 variant="outline"

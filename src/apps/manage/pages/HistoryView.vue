@@ -480,13 +480,12 @@ watch([() => dateRange.value, isDarkMode], () => {
             由于 B 站收紧风控策略，平台已无法直接抓取公开数据。请主播安装 1.0.6.4 及以上版本的 EventFetcher
             本地采集端同步。
           </span>
-          <a
-            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-            target="_blank"
+          <RouterLink
+            :to="{ name: 'client-download' }"
             class="text-brand hover:underline font-semibold shrink-0"
           >
-            下载采集端教程 →
-          </a>
+            下载桌面客户端 / EventFetcher →
+          </RouterLink>
         </AlertDescription>
       </Alert>
 

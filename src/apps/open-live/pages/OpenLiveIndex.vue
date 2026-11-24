@@ -150,12 +150,11 @@ const accountInfo = useAccount()
         >
           此文章 </a
         >）。建议注册并部署
-        <a
-          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-          target="_blank"
+        <RouterLink
+          :to="{ name: 'client-download' }"
           class="text-primary font-medium hover:underline underline-offset-2"
         >
-          VtsuruEventFetcher </a
+          VTsuru 桌面客户端 / EventFetcher </RouterLink
         >。
       </AlertDescription>
     </Alert>

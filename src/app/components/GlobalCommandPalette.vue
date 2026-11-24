@@ -6,6 +6,7 @@ import {
   CloudUpload,
   Compass,
   CornerDownLeft,
+  Download,
   Gift,
   History,
   MessageSquare,
@@ -88,6 +89,17 @@ const staticItems = computed<CommandItem[]>(() => {
   const nextTheme = cycleThemeType(themeType.value)
 
   // 1. 客户端一级工作台（覆盖全部 15 个侧边栏页面）
+  items.push({
+    id: 'client-download',
+    group: isInClient.value ? '快捷操作' : '桌面客户端',
+    scope: 'manage',
+    label: '下载桌面客户端',
+    description: '获取 Windows / macOS / Linux 安装包与国内高速直连下载',
+    keywords: ['download', 'client', 'installer', '下载', '客户端', '安装包', 'eventfetcher'],
+    icon: Download,
+    run: () => goRoute('client-download'),
+  })
+
   const clientGroupName = isInClient.value ? '客户端功能' : '桌面客户端'
   const clientEntries: { name: string; label: string; desc?: string; icon: any; kw: string[] }[] = [
     {

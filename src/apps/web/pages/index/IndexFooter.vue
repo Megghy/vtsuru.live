@@ -152,15 +152,13 @@ const sheenStyle = computed(() => {
             幻星平台
             <ExternalLink class="size-3 opacity-60" />
           </a>
-          <a
-            :href="EXTERNAL_LINKS.clientDocs"
-            target="_blank"
-            rel="noreferrer"
-            class="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+          <button
+            type="button"
+            class="transition-colors hover:text-foreground"
+            @click="router.push({ name: 'client-download' })"
           >
-            客户端文档
-            <ExternalLink class="size-3 opacity-60" />
-          </a>
+            下载客户端
+          </button>
           <a
             :href="EXTERNAL_LINKS.clientRepo"
             target="_blank"

@@ -6,7 +6,7 @@ import PlugDisconnected24Regular from '@vicons/fluent/es/PlugDisconnected24Regul
 import Warning24Filled from '@vicons/fluent/es/Warning24Filled'
 import { AlertCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { EventFetcherType } from '@/api/generated/model'
@@ -116,15 +116,22 @@ function goBindBili() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent class="max-w-xs leading-relaxed space-y-1.5 p-3">
-                <p>持续监听直播间内的 Superchat 和上舰事件并上传到本站记录。</p>
-                <p>支持按自定义范围查询并导出表格。</p>
-                <a
-                  href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-                  target="_blank"
-                  class="text-primary underline font-medium inline-block mt-1"
-                >
-                  关于 Event Fetcher &rarr;
-                </a>
+                <p>持续监听直播间内的 Superchat、上舰与弹幕事件并同步到本站。</p>
+                <p>推荐安装 VTsuru 桌面客户端，内置 EventFetcher 并提供推流码开播与透明浮窗。</p>
+                <div class="flex items-center gap-3 pt-1">
+                  <RouterLink
+                    :to="{ name: 'client-download' }"
+                    class="text-primary underline font-medium"
+                  >
+                    下载桌面客户端 &rarr;
+                  </RouterLink>
+                  <RouterLink
+                    :to="{ name: 'docs-article', params: { slug: ['getting-started', 'client-guide'] } }"
+                    class="text-muted-foreground hover:text-foreground underline"
+                  >
+                    使用指南
+                  </RouterLink>
+                </div>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -170,16 +177,21 @@ function goBindBili() {
       >
         前往绑定
       </Button>
-      <Button
-        v-else-if="status === 'offline'"
-        as="a"
-        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-        target="_blank"
-        variant="outline"
-        size="xs"
-      >
-        查看文档
-      </Button>
+      <template v-else-if="status === 'offline'">
+        <Button
+          variant="outline"
+          size="xs"
+          @click="router.push({ name: 'docs-article', params: { slug: ['getting-started', 'client-guide'] } })"
+        >
+          使用指南
+        </Button>
+        <Button
+          size="xs"
+          @click="router.push({ name: 'client-download' })"
+        >
+          下载客户端
+        </Button>
+      </template>
     </div>
   </div>
 </template>

@@ -45,6 +45,15 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: '/download',
+    name: 'client-download',
+    alias: ['/client-download'],
+    component: async () => import('@/apps/web/pages/ClientDownloadView.vue'),
+    meta: {
+      title: '桌面客户端下载',
+    },
+  },
+  {
     path: '/docs',
     name: 'docs-index',
     component: async () => import('@/apps/docs/components/DocsIndexView.vue'),
