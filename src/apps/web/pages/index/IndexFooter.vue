@@ -49,12 +49,12 @@ const sheenStyle = computed(() => {
 </script>
 
 <template>
-  <footer class="border-t border-border/70 bg-background/72 backdrop-blur-md">
+  <footer class="border-t border-border/75 bg-background/85 backdrop-blur-md">
     <!-- 轻量收尾行动带（随滚动 3D 撑正 + 光带横扫） -->
     <div class="mx-auto w-full max-w-[1320px] px-4 pt-14 pb-10 sm:px-6 lg:px-8">
       <div
         ref="ctaCardEl"
-        class="relative overflow-hidden rounded-2xl border border-border/85 bg-gradient-to-r from-brand/10 via-card/90 to-pink-500/8 p-6 sm:p-8 will-change-transform"
+        class="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-r from-brand/14 via-card/95 to-pink-500/12 p-6 sm:p-8 will-change-transform"
         :style="ctaCardStyle"
       >
         <div

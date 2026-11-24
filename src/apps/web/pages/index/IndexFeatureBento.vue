@@ -215,7 +215,7 @@ const accentTagMap: Record<IndexFeatureItem['accent'], string> = {
             >
               <button
                 type="button"
-                class="bento-card group relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card/80 p-4 sm:p-5 text-left backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/50 hover:bg-card/95 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                class="bento-card group relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-border/90 bg-card/92 p-4 sm:p-5 text-left backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/50 hover:bg-card hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 :class="{ 'bento-card--static': isReduced }"
                 @pointermove="handleCardPointerMove"
                 @click="openFeature(item)"
@@ -274,10 +274,10 @@ const accentTagMap: Record<IndexFeatureItem['accent'], string> = {
   );
 }
 
-:global(.dark) .bento-spotlight {
+html.dark .bento-spotlight {
   background: radial-gradient(
     260px circle at var(--mx, 50%) var(--my, 50%),
-    rgba(95, 195, 227, 0.16),
+    rgba(95, 195, 227, 0.2),
     transparent 65%
   );
 }

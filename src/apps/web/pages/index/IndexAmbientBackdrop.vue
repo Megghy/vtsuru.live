@@ -247,9 +247,9 @@ function getGlyphTransform(item: FloatingGlyph) {
 }
 
 const toneClasses: Record<FloatingGlyph['tone'], string> = {
-  brand: 'text-sky-500/24 dark:text-sky-300/20',
-  sakura: 'text-pink-500/22 dark:text-pink-300/18',
-  amber: 'text-amber-500/22 dark:text-amber-300/17',
+  brand: 'text-sky-500/24 dark:text-sky-300/28',
+  sakura: 'text-pink-500/22 dark:text-pink-300/25',
+  amber: 'text-amber-500/22 dark:text-amber-300/24',
 }
 </script>
 
@@ -294,7 +294,7 @@ const toneClasses: Record<FloatingGlyph['tone'], string> = {
       }"
     >
       <div
-        class="glyph-bob flex items-center justify-center rounded-2xl border border-current/15 bg-current/[0.03] p-2.5 backdrop-blur-[1px]"
+        class="glyph-bob flex items-center justify-center rounded-2xl border border-current/15 dark:border-current/22 bg-current/[0.03] dark:bg-current/[0.05] p-2.5 backdrop-blur-[1px]"
         :class="[
           toneClasses[item.tone],
           item.far ? 'blur-[0.6px] opacity-75' : 'opacity-100',
@@ -323,14 +323,18 @@ const toneClasses: Record<FloatingGlyph['tone'], string> = {
   opacity: 0.72;
 }
 
-:global(.dark) .ambient-dot-grid {
-  background-image: radial-gradient(color-mix(in srgb, var(--foreground) 16%, transparent) 1px, transparent 1px);
-  opacity: 0.55;
+html.dark .ambient-dot-grid {
+  background-image: radial-gradient(color-mix(in srgb, var(--foreground) 18%, transparent) 1px, transparent 1px);
+  opacity: 0.68;
 }
 
 .ambient-orb {
   filter: blur(110px);
   will-change: transform;
+}
+
+html.dark .ambient-orb {
+  filter: blur(100px);
 }
 
 .ambient-orb--cyan {
@@ -349,20 +353,20 @@ const toneClasses: Record<FloatingGlyph['tone'], string> = {
   background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, rgba(56, 189, 248, 0) 70%);
 }
 
-:global(.dark) .ambient-orb--cyan {
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0) 70%);
+html.dark .ambient-orb--cyan {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(56, 189, 248, 0) 70%);
 }
 
-:global(.dark) .ambient-orb--sakura {
-  background: radial-gradient(circle, rgba(244, 114, 182, 0.19) 0%, rgba(244, 114, 182, 0) 70%);
+html.dark .ambient-orb--sakura {
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.25) 0%, rgba(244, 114, 182, 0) 70%);
 }
 
-:global(.dark) .ambient-orb--amber {
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.13) 0%, rgba(251, 191, 36, 0) 70%);
+html.dark .ambient-orb--amber {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.19) 0%, rgba(251, 191, 36, 0) 70%);
 }
 
-:global(.dark) .ambient-orb--cyan-low {
-  background: radial-gradient(circle, rgba(35, 173, 229, 0.18) 0%, rgba(35, 173, 229, 0) 70%);
+html.dark .ambient-orb--cyan-low {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, rgba(56, 189, 248, 0) 70%);
 }
 
 @keyframes glyph-float {

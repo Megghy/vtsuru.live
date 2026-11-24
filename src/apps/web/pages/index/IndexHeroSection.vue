@@ -202,7 +202,7 @@ const formattedElapsed = computed(() => {
         class="lg:col-span-6 flex flex-col items-start will-change-transform"
         :style="heroCopyStyle"
       >
-        <div class="inline-flex flex-wrap items-center gap-2 rounded-full border border-border/80 bg-card/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm">
+        <div class="inline-flex flex-wrap items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm">
           <span class="relative flex size-2">
             <span
               class="absolute inline-flex size-full rounded-full bg-emerald-400 opacity-75"
@@ -235,7 +235,7 @@ const formattedElapsed = computed(() => {
                 class="group relative flex items-center gap-3.5 rounded-xl border border-brand/45 bg-gradient-to-br from-brand/14 via-card to-card p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 @click="router.push({ name: 'manage-index' })"
               >
-                <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-brand text-white shadow-sm">
+                <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-foreground shadow-sm">
                   <Sparkles class="size-5" />
                 </span>
                 <span class="min-w-0 flex-1">
@@ -256,7 +256,7 @@ const formattedElapsed = computed(() => {
             <TooltipTrigger as-child>
               <button
                 type="button"
-                class="group relative flex items-center gap-3.5 rounded-xl border border-border bg-card/90 p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400/70 hover:bg-card hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                class="group relative flex items-center gap-3.5 rounded-xl border border-border bg-card/95 p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400/70 hover:bg-card hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 @click="emit('openAudience')"
               >
                 <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/14 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/25">
@@ -344,11 +344,11 @@ const formattedElapsed = computed(() => {
 
         <!-- 主舞台卡（融合鼠标 3D 倾角与滚动后仰景深） -->
         <div
-          class="relative z-10 overflow-hidden rounded-2xl border border-border/90 bg-card/92 shadow-xl backdrop-blur-md transition-transform duration-150 ease-out will-change-transform"
+          class="relative z-10 overflow-hidden rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur-md transition-transform duration-150 ease-out will-change-transform"
           :style="heroStageStyle"
         >
           <!-- 窗口顶栏：场景切换器 -->
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/45 px-4 py-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/55 px-4 py-2.5">
             <div class="flex items-center gap-2">
               <span class="size-2.5 rounded-full bg-rose-400/80" />
               <span class="size-2.5 rounded-full bg-amber-400/80" />
@@ -370,7 +370,7 @@ const formattedElapsed = computed(() => {
                 class="rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors duration-150"
                 :class="
                   activeSceneId === scene.id
-                    ? 'bg-brand text-white shadow-xs'
+                    ? 'bg-brand text-brand-foreground shadow-xs font-semibold'
                     : 'text-muted-foreground hover:text-foreground'
                 "
                 @click="activeSceneId = scene.id"
@@ -390,7 +390,7 @@ const formattedElapsed = computed(() => {
 
             <div class="relative grid grid-cols-1 gap-4 sm:grid-cols-12">
               <!-- 吉祥物形象卡 + 实时状态 -->
-              <div class="sm:col-span-5 flex flex-col justify-between rounded-xl border border-border/70 bg-gradient-to-b from-brand/10 via-pink-400/6 to-inset/80 p-3.5">
+              <div class="sm:col-span-5 flex flex-col justify-between rounded-xl border border-border/75 bg-gradient-to-b from-brand/12 via-pink-400/8 to-inset/75 p-3.5">
                 <div class="flex items-center justify-between">
                   <span class="inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-medium text-brand ring-1 ring-brand/25">
                     <Clapperboard class="size-3" />
@@ -447,7 +447,7 @@ const formattedElapsed = computed(() => {
                           ? 'border-amber-400/40 bg-amber-500/10'
                           : item.role === 'guard'
                             ? 'border-brand/30 bg-brand/8'
-                            : 'border-border/60 bg-card/80'
+                            : 'border-border/75 bg-card/90'
                       "
                     >
                       <div class="flex items-center gap-1.5">

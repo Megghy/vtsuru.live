@@ -77,8 +77,7 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
 
   const foreground = isDark ? neutral[50] : neutral[950]
 
-  // 暗色边框用 700：site surface=900 / manage surface=800 都能看见描边
-  // （旧值 800 在 manage 的 surface/control 上会与底色同色，边框“消失”）
+  // 暗色边框用 700：site 与 manage surface=800 都能清晰看见描边
   const borderColor = isDark ? neutral[700] : neutral[300]
   const inputBorderColor = borderColor
   const inputBorderHover = isDark ? neutral[500] : neutral[400]
@@ -99,12 +98,12 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const primaryForeground = isDark ? neutral[950] : neutral[50]
 
   // brand：暗色用 brand[300] 提亮，亮色用 brand[400]
-  const brandColor = pickByMode(isDark, brand[300], brand[400])
-  const brandHover = pickByMode(isDark, brand[200], brand[300])
-  const brandPressed = pickByMode(isDark, brand[400], brand[500])
-  const brandRail = pickByMode(isDark, rgba(brand[400], 0.22), rgba(brand[400], 0.18))
-  const brandSoft = pickByMode(isDark, rgba(brand[400], 0.14), rgba(brand[400], 0.1))
-  const brandTint = pickByMode(isDark, rgba(brand[400], 0.18), rgba(brand[400], 0.14))
+  const brandColor = pickByMode(isDark, brand[400], brand[300])
+  const brandHover = pickByMode(isDark, brand[300], brand[200])
+  const brandPressed = pickByMode(isDark, brand[500], brand[400])
+  const brandRail = pickByMode(isDark, rgba(brand[400], 0.18), rgba(brand[400], 0.22))
+  const brandSoft = pickByMode(isDark, rgba(brand[400], 0.1), rgba(brand[400], 0.14))
+  const brandTint = pickByMode(isDark, rgba(brand[400], 0.14), rgba(brand[400], 0.18))
 
   // 浮层阴影：暗色统一加 1px 极弱描边，与页面背景剥离
   const shadowGlow = isDark ? `0 0 0 1px ${rgba(neutral[50], 0.06)}` : ''
@@ -157,13 +156,13 @@ export function buildSiteTokens(isDark: boolean): ThemeTokens {
     isDark,
     isDark
       ? {
-          canvas: neutral[950],
-          surface: neutral[900],
-          surfaceHover: neutral[750],
-          muted: neutral[800],
-          inset: neutral[950],
+          canvas: neutral[900],
+          surface: neutral[800],
+          surfaceHover: neutral[725],
+          muted: neutral[750],
+          inset: neutral[925],
           elevated: neutral[850],
-          cardBorderColor: neutral[800],
+          cardBorderColor: neutral[700],
         }
       : {
           canvas: neutral[50],

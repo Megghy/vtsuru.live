@@ -235,10 +235,10 @@ onBeforeUnmount(() => {
 
           <div class="lg:col-span-7 relative">
             <div
-              class="will-change-transform overflow-hidden rounded-2xl border border-border/85 bg-card/85 shadow-xl backdrop-blur-md"
+              class="will-change-transform overflow-hidden rounded-2xl border border-border bg-card/94 shadow-xl backdrop-blur-md"
               :style="stageStyle(0, 'right')"
             >
-              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/40 px-4 py-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/55 px-4 py-2.5">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs font-semibold text-foreground">切换场景转场：</span>
                   <button
@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
               </div>
 
               <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-12 sm:p-5">
-                <div class="sm:col-span-8 relative aspect-video overflow-hidden rounded-xl border border-border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3.5 text-white">
+                <div class="sm:col-span-8 relative aspect-video overflow-hidden rounded-xl border border-border dark:border-white/15 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3.5 text-white">
                   <div class="obs-grid-bg pointer-events-none absolute inset-0 opacity-30" />
 
                   <div
@@ -388,10 +388,10 @@ onBeforeUnmount(() => {
         >
           <div class="lg:col-span-7 lg:order-1 order-2 relative">
             <div
-              class="will-change-transform overflow-hidden rounded-2xl border border-border/85 bg-card/85 shadow-xl backdrop-blur-md"
+              class="will-change-transform overflow-hidden rounded-2xl border border-border bg-card/94 shadow-xl backdrop-blur-md"
               :style="stageStyle(1, 'left')"
             >
-              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/40 px-4 py-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/55 px-4 py-2.5">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-semibold text-foreground">模拟开播显隐：</span>
                   <button
@@ -619,7 +619,7 @@ onBeforeUnmount(() => {
               <div
                 v-for="cap in CLIENT_CAPABILITIES"
                 :key="cap.id"
-                class="flex items-start gap-2 rounded-lg border border-border/70 bg-card/75 p-2.5 backdrop-blur-sm"
+                class="flex items-start gap-2 rounded-lg border border-border/80 bg-card/90 p-2.5 backdrop-blur-sm"
               >
                 <component
                   :is="cap.icon"
@@ -679,10 +679,10 @@ onBeforeUnmount(() => {
 
           <div class="lg:col-span-7 relative">
             <div
-              class="will-change-transform overflow-hidden rounded-2xl border border-border/85 bg-card/85 shadow-xl backdrop-blur-md"
+              class="will-change-transform overflow-hidden rounded-2xl border border-border bg-card/94 shadow-xl backdrop-blur-md"
               :style="stageStyle(2, 'right')"
             >
-              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/40 px-4 py-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/55 px-4 py-2.5">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <button
                     v-for="tab in [
@@ -778,7 +778,7 @@ onBeforeUnmount(() => {
                     </span>
                   </div>
                   <div class="mt-4 space-y-3">
-                    <div class="rounded-xl bg-slate-900 px-4 py-4 text-center text-sm font-medium text-white shadow-inner">
+                    <div class="rounded-xl border border-transparent dark:border-white/15 bg-slate-900 px-4 py-4 text-center text-sm font-medium text-white shadow-inner">
                       “欢迎大家来到今晚的直播间，等会儿我们先把弹幕投票开起来！”
                     </div>
                     <div class="flex items-center justify-between text-[11px] text-muted-foreground">

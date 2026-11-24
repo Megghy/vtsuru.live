@@ -14,7 +14,10 @@ describe('getThemeCssVars', () => {
     expect(light['--primary']).toBe('#18181b')
     expect(light['--foreground']).toBe('#09090b')
     expect(light['--brand-foreground']).toBe('#03202d')
-    expect(dark['--background']).toBe('#09090b')
+    expect(light['--brand']).toBe('#23ade5')
+    expect(dark['--brand']).toBe('#5fc3e3')
+    expect(dark['--background']).toBe('#18181b')
+    expect(dark['--card']).toBe('#27272a')
     expect(dark['--foreground']).toBe('#fafafa')
     expect(
       new Set([

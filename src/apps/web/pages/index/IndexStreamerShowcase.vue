@@ -130,7 +130,7 @@ watch(
   <section
     id="streamers"
     ref="sectionEl"
-    class="overflow-x-clip border-t border-border/60 bg-inset/25 backdrop-blur-[2px] py-16 sm:py-22"
+    class="overflow-x-clip border-t border-border/70 bg-inset/25 dark:bg-muted/15 backdrop-blur-[2px] py-16 sm:py-22"
   >
     <div
       class="mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8 will-change-transform"
@@ -315,13 +315,13 @@ watch(
           >
             <img
               v-if="getRoomCoverSrc(room)"
-              class="absolute inset-0 size-full scale-105 object-cover blur-[5px] brightness-[0.68] transition-transform duration-300 group-hover:scale-110"
+              class="absolute inset-0 size-full scale-105 object-cover blur-[5px] brightness-[0.74] dark:brightness-[0.82] transition-transform duration-300 group-hover:scale-110"
               :src="getRoomCoverSrc(room)"
               referrerpolicy="no-referrer"
               loading="lazy"
               alt=""
             />
-            <div class="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-950/35 to-slate-950/82" />
+            <div class="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/28 to-slate-950/76" />
 
             <div class="relative z-10 flex h-full flex-col justify-between p-3.5 text-white">
               <div class="flex items-start justify-between gap-2">

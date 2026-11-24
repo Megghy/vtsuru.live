@@ -113,7 +113,7 @@ function getCardStyle(index: number) {
   <section
     id="obs-widgets"
     ref="sectionEl"
-    class="relative overflow-x-clip border-y border-border/60 bg-inset/30 backdrop-blur-[2px] py-16 sm:py-22"
+    class="relative overflow-x-clip border-y border-border/70 bg-inset/30 dark:bg-muted/20 backdrop-blur-[2px] py-16 sm:py-22"
   >
     <div class="mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
       <div
@@ -148,12 +148,12 @@ function getCardStyle(index: number) {
         >
           <button
             type="button"
-            class="group flex h-full w-full flex-col justify-between rounded-xl border border-border/80 bg-card/82 backdrop-blur-md p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/50 hover:bg-card/95 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            class="group flex h-full w-full flex-col justify-between rounded-xl border border-border/90 bg-card/92 backdrop-blur-md p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/50 hover:bg-card hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             @click="router.push({ name: 'manage-obsStore' })"
           >
             <div>
               <!-- 迷你动态预览槽（滚动实时驱动变换） -->
-              <div class="mb-3.5 flex h-16 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-inset/75 px-3">
+              <div class="mb-3.5 flex h-16 items-center justify-center overflow-hidden rounded-lg border border-border/75 bg-inset/85 px-3">
                 <!-- 时钟 -->
                 <div
                   v-if="widget.previewKind === 'clock'"
@@ -204,7 +204,7 @@ function getCardStyle(index: number) {
                 <!-- 同传字幕 -->
                 <div
                   v-else-if="widget.previewKind === 'subtitle'"
-                  class="w-full rounded-md bg-slate-900/90 px-2.5 py-1.5 text-center text-[11px] text-white/95 truncate"
+                  class="w-full rounded-md bg-slate-900/90 dark:ring-1 dark:ring-white/12 px-2.5 py-1.5 text-center text-[11px] text-white/95 truncate"
                 >
                   “今晚我们挑战无伤通关！”
                 </div>
