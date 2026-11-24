@@ -19,6 +19,14 @@ const templateTitle = computed(() => {
       return '弹幕模板'
     case ActionType.SEND_PRIVATE_MSG:
       return '私信模板'
+    case ActionType.SEND_NOTIFICATION:
+      return '通知正文模板'
+    case ActionType.OBS_NOTIFY:
+      return 'OBS 浮窗消息模板'
+    case ActionType.SPEAK_TTS:
+      return 'TTS 语音播报模板'
+    case ActionType.SEND_WEBHOOK:
+      return '附带消息模板（用于默认 JSON 的 message 字段）'
     default:
       return '消息模板'
   }
@@ -30,6 +38,14 @@ const templateDescription = computed(() => {
       return '发送到直播间的弹幕内容（每行一条候选文案，支持变量与 JS 表达式）'
     case ActionType.SEND_PRIVATE_MSG:
       return '发送给用户的私信内容（支持变量与 JS 表达式）'
+    case ActionType.SEND_NOTIFICATION:
+      return '桌面与应用内通知的正文内容（多行时随机/顺序抽取一行，支持变量插值）'
+    case ActionType.OBS_NOTIFY:
+      return '推送到 OBS 悬浮通知组件显示的消息文本（支持变量插值）'
+    case ActionType.SPEAK_TTS:
+      return '通过客户端语音引擎直接朗读的文本内容（支持变量插值）'
+    case ActionType.SEND_WEBHOOK:
+      return '未自定义请求体模板时，将作为默认 JSON 请求载荷中的 message 字段发送'
     default:
       return '消息内容模板'
   }

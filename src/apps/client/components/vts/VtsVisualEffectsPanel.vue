@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Palette, Plus, RefreshCw, RotateCcw, Sparkles } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { Check, Crosshair, Palette, Plus, RefreshCw, RotateCcw, Search, Sparkles, X } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { newDeckTile } from '@/apps/client/store/vts/deck'
@@ -10,8 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Empty } from '@/shared/ui/empty'
 import { FormField } from '@/shared/ui/form-field'
+import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -21,6 +25,37 @@ const { run } = useVtsAction()
 const customColor = ref('#ff6b9d')
 const fadeTime = ref(0.3)
 const refreshing = ref(false)
+const tintScope = ref<'all' | 'part'>('all')
+const partKeyword = ref('')
+const selectedArtMeshes = ref<string[]>([])
+const selectedArtMeshTag = ref('__none__')
+const artMeshSearch = ref('')
+const pickingArtMesh = ref(false)
+
+const filteredArtMeshNames = computed(() => {
+  const all = vts.artMeshInfo?.artMeshNames ?? []
+  const q = artMeshSearch.value.trim().toLowerCase()
+  const matched = q ? all.filter((name) => name.toLowerCase().includes(q)) : all
+  return matched.slice(0, 60)
+})
+
+function toggleArtMeshName(name: string) {
+  if (selectedArtMeshes.value.includes(name)) {
+    selectedArtMeshes.value = selectedArtMeshes.value.filter((n) => n !== name)
+  } else {
+    selectedArtMeshes.value = [...selectedArtMeshes.value, name]
+  }
+}
+
+const currentMatcher = computed(() => {
+  if (tintScope.value === 'all') return undefined
+  const nameExact = selectedArtMeshes.value.length > 0 ? selectedArtMeshes.value : undefined
+  const nameContains = partKeyword.value.trim() ? [partKeyword.value.trim()] : undefined
+  const tagExact =
+    selectedArtMeshTag.value && selectedArtMeshTag.value !== '__none__' ? [selectedArtMeshTag.value] : undefined
+  if (!nameExact && !nameContains && !tagExact) return undefined
+  return { tintAll: false, nameExact, nameContains, tagExact }
+})
 
 const TINT_PRESETS = [
   { name: '恢复原色', targetId: 'reset', color: '#ffffff', reset: true },
@@ -40,13 +75,35 @@ function applyPresetTint(preset: (typeof TINT_PRESETS)[number]) {
         colorHex: preset.color || undefined,
         rainbow: 'rainbow' in preset ? preset.rainbow : false,
         reset: 'reset' in preset ? preset.reset : false,
+        artMeshMatcher: 'reset' in preset && preset.reset ? undefined : currentMatcher.value,
       }),
     `已应用：${preset.name}`,
   )
 }
 
 function applyCustomTint() {
-  run(() => vts.tintModel({ colorHex: customColor.value }), '已应用染色')
+  run(
+    () => vts.tintModel({ colorHex: customColor.value, artMeshMatcher: currentMatcher.value }),
+    currentMatcher.value ? '已应用分部位染色' : '已应用染色',
+  )
+}
+
+async function pickArtMeshesFromVts() {
+  if (pickingArtMesh.value || !vts.connected) return
+  pickingArtMesh.value = true
+  try {
+    toast.info('请在 VTube Studio 窗口中点选目标部位并确认')
+    const res = await vts.selectArtMeshesInVts({ activeArtMeshes: selectedArtMeshes.value })
+    if (res.success) {
+      selectedArtMeshes.value = res.activeArtMeshes
+      tintScope.value = 'part'
+      toast.success(`已选中 ${res.activeArtMeshes.length} 个部位`)
+    }
+  } catch (err) {
+    toast.error(`部位点选失败: ${err instanceof Error ? err.message : String(err)}`)
+  } finally {
+    pickingArtMesh.value = false
+  }
 }
 
 function addTintToDeck(targetId: string, label: string, color?: string) {
@@ -138,8 +195,150 @@ function refreshPostProcessing() {
         </div>
 
         <FormField
-          label="自定义全模型染色"
-          description="对模型全部 ArtMesh 应用叠加色，适合礼物/弹幕整活"
+          label="染色范围（全模型 / 分部位 ArtMesh）"
+          description="可单独染头发、眼睛、衣服等局部 ArtMesh，支持直接在 VTS 中点选部位"
+        >
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <ToggleGroup
+                v-model="tintScope"
+                type="single"
+                class="w-44 grid grid-cols-2"
+              >
+                <ToggleGroupItem value="all">全模型</ToggleGroupItem>
+                <ToggleGroupItem value="part">分部位</ToggleGroupItem>
+              </ToggleGroup>
+              <Button
+                v-if="tintScope === 'part'"
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                :disabled="!vts.connected || pickingArtMesh"
+                @click="pickArtMeshesFromVts"
+              >
+                <Crosshair class="size-3" />
+                {{ pickingArtMesh ? '等待 VTS 点选...' : '在 VTS 中点选部位' }}
+              </Button>
+              <Button
+                v-if="tintScope === 'part' && selectedArtMeshes.length > 0"
+                size="xs"
+                variant="ghost"
+                @click="selectedArtMeshes = []"
+              >
+                清空已选 ({{ selectedArtMeshes.length }})
+              </Button>
+            </div>
+
+            <div
+              v-if="tintScope === 'part'"
+              class="space-y-2 rounded-md border border-border bg-muted/20 p-2.5"
+            >
+              <!-- 模型 ArtMesh 标签快捷分组芯片 -->
+              <div
+                v-if="(vts.artMeshInfo?.artMeshTags.length ?? 0) > 0"
+                class="flex items-center gap-1 flex-wrap"
+              >
+                <span class="text-[11px] text-muted-foreground shrink-0">分组标签:</span>
+                <Button
+                  type="button"
+                  size="xs"
+                  :variant="selectedArtMeshTag === '__none__' ? 'default' : 'outline'"
+                  @click="selectedArtMeshTag = '__none__'"
+                >
+                  全部
+                </Button>
+                <Button
+                  v-for="tag in vts.artMeshInfo?.artMeshTags ?? []"
+                  :key="tag"
+                  type="button"
+                  size="xs"
+                  :variant="selectedArtMeshTag === tag ? 'default' : 'outline'"
+                  @click="selectedArtMeshTag = selectedArtMeshTag === tag ? '__none__' : tag"
+                >
+                  {{ tag }}
+                </Button>
+              </div>
+
+              <!-- 关键词 + 可搜索 ArtMesh 多选 -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Input
+                  v-model="partKeyword"
+                  placeholder="模糊关键词匹配（如 Hair / Eye）"
+                />
+                <div class="relative">
+                  <Search class="size-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Input
+                    v-model="artMeshSearch"
+                    class="pl-8"
+                    placeholder="搜索精确 ArtMesh 勾选..."
+                  />
+                </div>
+              </div>
+
+              <div
+                v-if="filteredArtMeshNames.length > 0"
+                class="max-h-28 overflow-y-auto scrollbar-thin flex flex-wrap gap-1 pt-1"
+              >
+                <button
+                  v-for="mesh in filteredArtMeshNames"
+                  :key="mesh"
+                  type="button"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] transition-colors"
+                  :class="
+                    selectedArtMeshes.includes(mesh)
+                      ? 'border-primary bg-primary/15 text-primary font-medium'
+                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40'
+                  "
+                  @click="toggleArtMeshName(mesh)"
+                >
+                  <Check
+                    v-if="selectedArtMeshes.includes(mesh)"
+                    class="size-2.5 shrink-0"
+                  />
+                  <span class="truncate max-w-[140px]">{{ mesh }}</span>
+                </button>
+              </div>
+              <div
+                v-else-if="vts.connected"
+                class="text-[11px] text-muted-foreground"
+              >
+                {{ (vts.artMeshInfo?.artMeshNames.length ?? 0) === 0 ? '当前模型暂未读取到 ArtMesh 列表' : '无匹配的 ArtMesh 部位' }}
+              </div>
+            </div>
+
+            <div
+              v-if="tintScope === 'part' && selectedArtMeshes.length > 0"
+              class="flex items-center gap-1 flex-wrap"
+            >
+              <Badge
+                v-for="mesh in selectedArtMeshes.slice(0, 10)"
+                :key="mesh"
+                variant="secondary"
+                size="xs"
+                class="gap-1"
+              >
+                <span>{{ mesh }}</span>
+                <button
+                  type="button"
+                  class="hover:text-destructive"
+                  @click="toggleArtMeshName(mesh)"
+                >
+                  <X class="size-2.5" />
+                </button>
+              </Badge>
+              <span
+                v-if="selectedArtMeshes.length > 10"
+                class="text-[11px] text-muted-foreground"
+              >
+                +{{ selectedArtMeshes.length - 10 }}
+              </span>
+            </div>
+          </div>
+        </FormField>
+
+        <FormField
+          label="自定义颜色"
+          description="按上方选定范围应用叠加色，适合礼物/弹幕整活"
         >
           <div class="flex items-center gap-2 flex-wrap">
             <ColorPicker

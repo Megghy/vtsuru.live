@@ -1,9 +1,24 @@
 import { persistedSetJson, usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 
-export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy' | 'message-failed' | 'live-danmaku-failed'
+export type NotificationType =
+  | 'question-box'
+  | 'danmaku'
+  | 'goods-buy'
+  | 'message-failed'
+  | 'live-danmaku-failed'
+  | 'cookie-invalid'
+  | 'live-status'
+  | 'update'
+
+export type CloseWindowAction = 'minimize-to-tray' | 'exit'
+
 export interface NotificationSettings {
   enableTypes: NotificationType[]
+  onlyWhenHidden: boolean
+  enableSound: boolean
+  soundVolume: number
 }
+
 export interface ClientBackupSettings {
   directory: string
   scheduleEnabled: boolean
@@ -14,12 +29,13 @@ export interface ClientBackupSettings {
   lastBackupAt: number | null
   lastBackupFile: string | null
 }
+
 export interface VTsuruClientSettings {
   useDanmakuClientType: 'openlive' | 'direct'
   fallbackToOpenLive: boolean
   bootAsMinimized: boolean
+  closeWindowAction: CloseWindowAction
 
-  danmakuHistorySize: number
   loginType: 'qrcode' | 'cookiecloud'
 
   enableNotification: boolean
@@ -34,10 +50,6 @@ export interface VTsuruClientSettings {
   // 看门狗心跳超时自动重载主界面
   watchdogAutoReload?: boolean
 
-  // 机器人小号独立自动操作
-  enableBotAccount: boolean
-  botAccountFallbackToMain: boolean
-
   dev_disableDanmakuClient: boolean
   backup: ClientBackupSettings
 }
@@ -47,12 +59,23 @@ export const useSettings = defineStore('settings', () => {
     useDanmakuClientType: 'openlive',
     fallbackToOpenLive: true,
     bootAsMinimized: false,
+    closeWindowAction: 'minimize-to-tray',
 
-    danmakuHistorySize: 100,
     loginType: 'qrcode',
     enableNotification: true,
     notificationSettings: {
-      enableTypes: ['question-box', 'danmaku', 'message-failed'],
+      enableTypes: [
+        'question-box',
+        'goods-buy',
+        'danmaku',
+        'message-failed',
+        'live-danmaku-failed',
+        'cookie-invalid',
+        'update',
+      ],
+      onlyWhenHidden: false,
+      enableSound: true,
+      soundVolume: 0.5,
     },
 
     // 默认间隔为2秒
@@ -62,10 +85,6 @@ export const useSettings = defineStore('settings', () => {
     // 默认启用 EventFetcher
     enableEventFetcher: true,
     watchdogAutoReload: false,
-
-    // 机器人小号设置
-    enableBotAccount: false,
-    botAccountFallbackToMain: true,
 
     dev_disableDanmakuClient: false,
 

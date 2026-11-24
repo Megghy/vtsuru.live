@@ -5,6 +5,8 @@ import { buildPreflightChecks } from '@/apps/client/components/live-manage/prefl
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useSettings } from '@/apps/client/store/useSettings'
+import { useTranscription } from '@/apps/client/store/useTranscription'
+import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -17,6 +19,8 @@ export function useLivePreflight(control: LiveControl) {
   const fetcher = useWebFetcher()
   const danmaku = useDanmakuClient()
   const obs = useOBSStore()
+  const vts = useVtsStore()
+  const transcription = useTranscription()
   const refreshing = ref(false)
   const error = ref('')
   const checkedAt = ref<number>()
@@ -43,6 +47,12 @@ export function useLivePreflight(control: LiveControl) {
       autoSwitch: obs.obsSceneConfig.autoSwitchEnabled,
       startScene: obs.obsSceneConfig.startScene,
       scenes: inspection.value?.scenes,
+      vtsConfigured: Boolean(vts.authToken) || vts.connecting,
+      vtsConnected: vts.connected,
+      vtsFaceFound: vts.faceFound,
+      vtsModelName: vts.currentModelName,
+      transcriptionRunning: transcription.status.running,
+      ffmpegAvailable: transcription.runtimeError ? false : undefined,
     }),
   )
 

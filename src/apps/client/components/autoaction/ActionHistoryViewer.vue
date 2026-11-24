@@ -3,7 +3,7 @@ import { CheckCircle2, Copy, Eye, History, RotateCw, Search, Trash2, XCircle } f
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
-import { ActionType, VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
+import { ActionType, OBS_ACTION_TYPES, VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -89,12 +89,21 @@ function getActionTypeLabel(actionType: ActionType): string {
       return '弹幕'
     case ActionType.SEND_PRIVATE_MSG:
       return '私信'
+    case ActionType.SEND_NOTIFICATION:
+      return '桌面通知'
+    case ActionType.OBS_NOTIFY:
+      return 'OBS通知'
+    case ActionType.SPEAK_TTS:
+      return 'TTS播报'
+    case ActionType.SEND_WEBHOOK:
+      return 'Webhook'
     case ActionType.PLAY_AUDIO:
       return '音效'
     case ActionType.PNGTUBER_EXPRESSION:
       return 'PNGtuber'
     default:
       if (VTS_ACTION_TYPES.has(actionType)) return 'VTS'
+      if (OBS_ACTION_TYPES.has(actionType)) return 'OBS'
       return '命令'
   }
 }

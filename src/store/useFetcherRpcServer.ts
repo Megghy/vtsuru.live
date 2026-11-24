@@ -283,6 +283,11 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
         return stageObsFilterAssetLocally(params)
       },
 
+      obsSaveReplayBuffer: async () => {
+        requireWrite()
+        return obsStore.saveReplayBuffer()
+      },
+
       obsSubscribeEvents: async () => {
         obsSubscribers.add(conn.connId)
         setSubscribed(conn.connId, true)
@@ -302,6 +307,55 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
         return runVtsSceneAction(params)
       },
 
+      vtsLoadModel: async (modelId) => {
+        requireWrite()
+        if (!vtsStore.connected) return { ok: false, message: 'VTS 未连接' }
+        try {
+          await vtsStore.loadModel(modelId)
+          return { ok: true }
+        } catch (err) {
+          return { ok: false, message: err instanceof Error ? err.message : String(err) }
+        }
+      },
+
+      vtsTintModel: async (params) => {
+        requireWrite()
+        if (!vtsStore.connected) return { ok: false, message: 'VTS 未连接' }
+        try {
+          await vtsStore.tintModel({
+            colorHex: params.colorHex,
+            rainbow: params.rainbow,
+            reset: params.reset,
+            artMeshMatcher: params.nameContains?.length ? { tintAll: false, nameContains: params.nameContains } : undefined,
+          })
+          return { ok: true }
+        } catch (err) {
+          return { ok: false, message: err instanceof Error ? err.message : String(err) }
+        }
+      },
+
+      vtsDropItem: async (params) => {
+        requireWrite()
+        if (!vtsStore.connected) return { ok: false, message: 'VTS 未连接' }
+        try {
+          await vtsStore.dropItem(params.fileName, { x: params.x, size: params.size, randomX: params.randomX })
+          return { ok: true }
+        } catch (err) {
+          return { ok: false, message: err instanceof Error ? err.message : String(err) }
+        }
+      },
+
+      vtsInjectParameters: async (params) => {
+        requireWrite()
+        if (!vtsStore.connected) return { ok: false, message: 'VTS 未连接' }
+        try {
+          await vtsStore.injectParameters(params.values, { mode: params.mode ?? 'add' })
+          return { ok: true }
+        } catch (err) {
+          return { ok: false, message: err instanceof Error ? err.message : String(err) }
+        }
+      },
+
       vtsSubscribeEvents: async () => {
         vtsSubscribers.add(conn.connId)
         setSubscribed(conn.connId, true)
@@ -311,6 +365,15 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
       vtsUnsubscribeEvents: async () => {
         vtsSubscribers.delete(conn.connId)
         if (!subscriptions.has(conn.connId) && !obsSubscribers.has(conn.connId)) setSubscribed(conn.connId, false)
+        return { ok: true }
+      },
+
+      ttsSpeak: async (text) => {
+        requireWrite()
+        const trimmed = text.trim()
+        if (!trimmed) return { ok: false, message: '播报文本为空' }
+        const { useSpeechService } = await import('@/store/useSpeechService')
+        await useSpeechService().previewVoice(trimmed)
         return { ok: true }
       },
     }

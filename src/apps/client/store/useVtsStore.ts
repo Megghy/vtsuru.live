@@ -8,7 +8,18 @@ import { createVtsHistory } from './vts/history'
 import { startVtsObsLink } from './vts/obsLink'
 import { createVtsOperations } from './vts/operations'
 
-export type { VtsAvailableModel, VtsExpression, VtsInputParameter, VtsPostProcessingState } from './vts/connection'
+export type {
+  VtsArtMeshInfo,
+  VtsAvailableModel,
+  VtsExpression,
+  VtsFolderInfo,
+  VtsInputParameter,
+  VtsModelClickEvent,
+  VtsNdiState,
+  VtsPhysicsGroup,
+  VtsPhysicsState,
+  VtsPostProcessingState,
+} from './vts/connection'
 export { VTS_OP_KIND_LABELS, type VtsOpKind, type VtsOpRecord } from './vts/history'
 export type * from './vts/schemas'
 

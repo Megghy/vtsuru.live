@@ -6,7 +6,7 @@ import { DownloadConfig, isLoggedIn, UploadConfig, useAccount } from '@/api/acco
 import type { EventModel } from '@/api/client-types'
 import { EventDataTypes } from '@/api/generated/model'
 import { createVoiceProvider, hasVoiceProvider } from '@/apps/open-live/voice-providers'
-import { usePersistedStorage } from '@/shared/storage/persist'
+import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 import { useMessage } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -707,6 +707,29 @@ function createSpeechService() {
     })
   }
 
+  /**
+   * 直接朗读一段自定义文本（供 AutoAction SPEAK_TTS 等独立调用）
+   */
+  async function speakText(rawText: string): Promise<void> {
+    const text = rawText.trim()
+    if (!text) return
+    await whenPersistedReady(settings)
+    if (!speechState.isInitialized) {
+      try {
+        await EasySpeech.init({ maxTimeout: 3000, interval: 200 })
+      } catch {
+        // 非浏览器原生 provider 时可忽略
+      }
+      ensureAudioElement()
+      const provider = getCurrentProvider()
+      await provider?.initialize?.()
+    }
+    const finalText =
+      settings.value.provider === 'api' && settings.value.providers.api?.splitText ? insertSpaces(text) : text
+    cancelSpeech()
+    doSpeak(finalText)
+  }
+
   function removeFromQueue(item: QueueItem) {
     const index = speakQueue.value.indexOf(item)
     if (index !== -1) {
@@ -857,6 +880,7 @@ function createSpeechService() {
     addToQueue,
     testEvent,
     forceSpeak,
+    speakText,
     removeFromQueue,
     moveQueueItem,
     pinToTop,

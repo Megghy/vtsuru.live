@@ -416,6 +416,61 @@ async function executeVtsAction(action: AutoActionItem): Promise<string> {
   }
 }
 
+async function executeObsAction(action: AutoActionItem): Promise<string> {
+  const cfg = action.actionConfig
+
+  // VTsuru 云端 obs-scene 子场景切换走 HTTP API，不强依赖本地 OBS 已连接
+  if (action.actionType === ActionType.OBS_SCENE_SWITCH) {
+    const projectId = cfg.obsSceneProjectId
+    const sceneId = cfg.obsSubSceneId?.trim()
+    if (!projectId || !sceneId) {
+      throw new Error(`OBS_SCENE_SWITCH 缺少场景项目或子场景: ${action.name || action.id}`)
+    }
+    const { useObsSceneControl } = await import('@/apps/client/store/useObsSceneControl')
+    await useObsSceneControl().switchSubScene(projectId, sceneId, { silent: true })
+    return `OBS_SCENE_SWITCH ${projectId}:${sceneId}`
+  }
+
+  const { useOBSStore } = await import('@/apps/client/store/useOBSStore')
+  const obs = useOBSStore()
+  if (!obs.obsConnected) {
+    throw new Error(`OBS 未连接，无法执行: ${action.name || action.actionType}`)
+  }
+
+  switch (action.actionType) {
+    case ActionType.OBS_SWITCH_SCENE: {
+      const sceneName = cfg.obsSceneName?.trim()
+      if (!sceneName) throw new Error(`OBS_SWITCH_SCENE 缺少场景名: ${action.name || action.id}`)
+      await obs.switchToScene(sceneName)
+      return `OBS_SWITCH_SCENE ${sceneName}`
+    }
+    case ActionType.OBS_SOURCE_VISIBLE: {
+      const sourceName = cfg.obsSourceName?.trim()
+      if (!sourceName) throw new Error(`OBS_SOURCE_VISIBLE 缺少源名称: ${action.name || action.id}`)
+      const visible = cfg.obsSourceVisible ?? true
+      await obs.setSceneItemEnabledByName(sourceName, visible, cfg.obsSceneName?.trim() || undefined)
+      return `OBS_SOURCE_VISIBLE ${sourceName} (${visible ? 'show' : 'hide'})`
+    }
+    case ActionType.OBS_FILTER_ENABLED: {
+      const sourceName = cfg.obsSourceName?.trim()
+      const filterName = cfg.obsFilterName?.trim()
+      if (!sourceName || !filterName) {
+        throw new Error(`OBS_FILTER_ENABLED 缺少源名称或滤镜名称: ${action.name || action.id}`)
+      }
+      const enabled = cfg.obsFilterEnabled ?? true
+      await obs.setSourceFilterEnabled(sourceName, filterName, enabled)
+      return `OBS_FILTER_ENABLED ${sourceName}/${filterName} (${enabled ? 'on' : 'off'})`
+    }
+    case ActionType.OBS_SAVE_REPLAY: {
+      const res = await obs.saveReplayBuffer()
+      if (!res.ok) throw new Error(res.message)
+      return `OBS_SAVE_REPLAY ${res.savedPath || 'ok'}`
+    }
+    default:
+      throw new Error(`未知 OBS 动作类型: ${action.actionType}`)
+  }
+}
+
 export function executeActions(
   actions: AutoActionItem[],
   event: EventModel | null,
@@ -523,6 +578,77 @@ export function executeActions(
           options,
           () => executeVtsAction(action),
           action.actionType,
+        )
+        break
+
+      case ActionType.OBS_SWITCH_SCENE:
+      case ActionType.OBS_SCENE_SWITCH:
+      case ActionType.OBS_SOURCE_VISIBLE:
+      case ActionType.OBS_FILTER_ENABLED:
+      case ActionType.OBS_SAVE_REPLAY:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          () => executeObsAction(action),
+          action.actionType,
+        )
+        break
+
+      case ActionType.SEND_NOTIFICATION:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            const { executeSendNotificationAction } = await import('./modules/notificationActions')
+            return executeSendNotificationAction(action, context, runtimeState, options?.useSequentialTemplate)
+          },
+          '发送通知',
+        )
+        break
+
+      case ActionType.OBS_NOTIFY:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            const { executeObsNotifyAction } = await import('./modules/notificationActions')
+            return executeObsNotifyAction(action, context, runtimeState, options?.useSequentialTemplate)
+          },
+          'OBS 浮窗通知',
+        )
+        break
+
+      case ActionType.SPEAK_TTS:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            const { executeSpeakTtsAction } = await import('./modules/notificationActions')
+            return executeSpeakTtsAction(action, context, runtimeState, options?.useSequentialTemplate)
+          },
+          'TTS 语音播报',
+        )
+        break
+
+      case ActionType.SEND_WEBHOOK:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            const { executeSendWebhookAction } = await import('./modules/notificationActions')
+            return executeSendWebhookAction(action, context, runtimeState, options?.useSequentialTemplate)
+          },
+          'Webhook 请求',
         )
         break
 

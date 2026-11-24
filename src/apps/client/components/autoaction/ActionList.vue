@@ -16,7 +16,7 @@ import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
-import { VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
+import { OBS_ACTION_TYPES, VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
 import { ActionType, KeywordMatchType, Priority, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useFilePicker } from '@/composables/useFilePicker'
@@ -64,6 +64,7 @@ const isFiltered = computed(() => Boolean(searchText.value.trim()) || actionType
 function matchesActionTypeCategory(actionType: ActionType, filter: string): boolean {
   if (filter === 'all') return true
   if (filter === 'vts') return VTS_ACTION_TYPES.has(actionType)
+  if (filter === 'obs') return OBS_ACTION_TYPES.has(actionType)
   return actionType === filter
 }
 
@@ -114,6 +115,14 @@ function getActionTypeMeta(actionType: ActionType): { label: string; class: stri
       return { label: '发弹幕', class: 'border-sky-500/40 text-sky-600 dark:text-sky-400 bg-sky-500/10' }
     case ActionType.SEND_PRIVATE_MSG:
       return { label: '发私信', class: 'border-violet-500/40 text-violet-600 dark:text-violet-400 bg-violet-500/10' }
+    case ActionType.SEND_NOTIFICATION:
+      return { label: '通知', class: 'border-cyan-500/40 text-cyan-600 dark:text-cyan-400 bg-cyan-500/10' }
+    case ActionType.OBS_NOTIFY:
+      return { label: 'OBS通知', class: 'border-indigo-500/40 text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' }
+    case ActionType.SPEAK_TTS:
+      return { label: 'TTS播报', class: 'border-teal-500/40 text-teal-600 dark:text-teal-400 bg-teal-500/10' }
+    case ActionType.SEND_WEBHOOK:
+      return { label: 'Webhook', class: 'border-orange-500/40 text-orange-600 dark:text-orange-400 bg-orange-500/10' }
     case ActionType.PLAY_AUDIO:
       return { label: '音效', class: 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10' }
     case ActionType.PNGTUBER_EXPRESSION:
@@ -121,6 +130,9 @@ function getActionTypeMeta(actionType: ActionType): { label: string; class: stri
     default:
       if (VTS_ACTION_TYPES.has(actionType)) {
         return { label: 'VTS', class: 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' }
+      }
+      if (OBS_ACTION_TYPES.has(actionType)) {
+        return { label: 'OBS', class: 'border-indigo-500/40 text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' }
       }
       return { label: '其他', class: '' }
   }
@@ -207,6 +219,18 @@ function getTriggerSummary(action: AutoActionItem): string {
       if (parts.length === 0) parts.push('全部积分商品')
       break
     }
+    case TriggerType.LIVE_START:
+      parts.push('直播间开播瞬间')
+      break
+    case TriggerType.LIVE_END:
+      parts.push('直播间下播瞬间')
+      break
+    case TriggerType.DANMAKU_DISCONNECTED:
+      parts.push('弹幕连接中断或异常')
+      break
+    case TriggerType.COOKIE_INVALID:
+      parts.push('主账号 B 站 Cookie 失效')
+      break
   }
 
   if (cfg.onlyDuringLive) parts.push('仅开播')
@@ -239,13 +263,21 @@ function getStatusBadge(action: AutoActionItem) {
     return { class: 'border-border text-muted-foreground bg-muted/40', text: '已禁用', tooltip: '此规则已被手动禁用' }
   }
 
-  if ([ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG].includes(action.actionType)) {
+  if ([ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG, ActionType.OBS_NOTIFY, ActionType.SPEAK_TTS].includes(action.actionType)) {
     if (!action.template || (typeof action.template === 'string' && action.template.trim() === '')) {
       return {
         class: 'border-amber-500/40 text-amber-600 bg-amber-500/10',
         text: '空模板',
         tooltip: '请设置有效的消息模板内容',
       }
+    }
+  }
+
+  if (action.actionType === ActionType.SEND_WEBHOOK && !action.actionConfig.webhookUrl?.trim()) {
+    return {
+      class: 'border-amber-500/40 text-amber-600 bg-amber-500/10',
+      text: '未配置URL',
+      tooltip: '请填写有效的 Webhook 请求地址',
     }
   }
 
@@ -395,9 +427,14 @@ function toggleActionOnlyLive(row: AutoActionItem) {
               <SelectItem value="all">全部动作</SelectItem>
               <SelectItem :value="ActionType.SEND_DANMAKU">发送弹幕</SelectItem>
               <SelectItem :value="ActionType.SEND_PRIVATE_MSG">发送私信</SelectItem>
+              <SelectItem :value="ActionType.SEND_NOTIFICATION">客户端通知</SelectItem>
+              <SelectItem :value="ActionType.OBS_NOTIFY">OBS 浮窗通知</SelectItem>
+              <SelectItem :value="ActionType.SPEAK_TTS">TTS 播报</SelectItem>
+              <SelectItem :value="ActionType.SEND_WEBHOOK">Webhook</SelectItem>
               <SelectItem :value="ActionType.PLAY_AUDIO">播放音效</SelectItem>
               <SelectItem :value="ActionType.PNGTUBER_EXPRESSION">PNGtuber</SelectItem>
               <SelectItem value="vts">VTS 联动</SelectItem>
+              <SelectItem value="obs">OBS 联动</SelectItem>
             </SelectContent>
           </Select>
         </div>

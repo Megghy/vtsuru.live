@@ -95,6 +95,12 @@ export const useOBSStore = defineStore('obs', () => {
   // 场景控制
   const obsScenes = ref<string[]>([])
   const currentObsScene = ref('')
+  const obsProfiles = ref<string[]>([])
+  const currentObsProfile = ref('')
+  const obsSceneCollections = ref<string[]>([])
+  const currentObsSceneCollection = ref('')
+  const obsReplayBufferActive = ref(false)
+  const obsAudioStates = ref<Record<string, { muted: boolean; volumeMul: number }>>({})
   const isSwitchingScene = ref(false)
   const obsSceneError = ref('')
   const obsSceneConfig = ref<ObsSceneConfig>({
@@ -126,11 +132,21 @@ export const useOBSStore = defineStore('obs', () => {
     await Promise.all(
       names.map(async (inputName) => {
         // Unknown/non-audio inputs remain muted until OBS confirms their state.
-        if (inputMuted.has(inputName)) return
         try {
-          const muteResult = await client.call('GetInputMute', { inputName })
-          if (generation === inputGeneration && !inputMuted.has(inputName))
+          const [muteResult, volResult] = await Promise.all([
+            client.call('GetInputMute', { inputName }),
+            client.call('GetInputVolume', { inputName }).catch(() => ({ inputVolumeMul: 1 })),
+          ])
+          if (generation === inputGeneration) {
             inputMuted.set(inputName, muteResult.inputMuted)
+            obsAudioStates.value = {
+              ...obsAudioStates.value,
+              [inputName]: {
+                muted: muteResult.inputMuted,
+                volumeMul: Number.isFinite(volResult.inputVolumeMul) ? volResult.inputVolumeMul : 1,
+              },
+            }
+          }
         } catch (cause) {
           // OBS 604 (InputHasNoAudio) is expected for image/browser-only inputs.
           if (!(cause && typeof cause === 'object' && 'code' in cause && cause.code === 604)) throw cause
@@ -174,7 +190,33 @@ export const useOBSStore = defineStore('obs', () => {
       })
       obs.on('InputMuteStateChanged', (event) => {
         inputMuted.set(event.inputName, event.inputMuted)
+        obsAudioStates.value = {
+          ...obsAudioStates.value,
+          [event.inputName]: {
+            muted: event.inputMuted,
+            volumeMul: obsAudioStates.value[event.inputName]?.volumeMul ?? 1,
+          },
+        }
         if (event.inputMuted) emitVolume({ inputName: event.inputName, volume: 0, muted: true })
+      })
+      obs.on('InputVolumeChanged', (event) => {
+        obsAudioStates.value = {
+          ...obsAudioStates.value,
+          [event.inputName]: {
+            muted: obsAudioStates.value[event.inputName]?.muted ?? inputMuted.get(event.inputName) ?? false,
+            volumeMul: event.inputVolumeMul,
+          },
+        }
+      })
+      obs.on('CurrentProfileChanged', (event) => {
+        if (event?.profileName) currentObsProfile.value = event.profileName
+      })
+      obs.on('CurrentSceneCollectionChanged', (event) => {
+        if (event?.sceneCollectionName) currentObsSceneCollection.value = event.sceneCollectionName
+        void fetchObsScenes().catch(() => {})
+      })
+      obs.on('ReplayBufferStateChanged', (event) => {
+        obsReplayBufferActive.value = Boolean(event?.outputActive)
       })
       const refreshInputs = () => {
         void fetchObsInputs().catch((err) => {
@@ -196,6 +238,12 @@ export const useOBSStore = defineStore('obs', () => {
         inputGeneration++
         inputMuted.clear()
         obsInputs.value = []
+        obsAudioStates.value = {}
+        obsProfiles.value = []
+        currentObsProfile.value = ''
+        obsSceneCollections.value = []
+        currentObsSceneCollection.value = ''
+        obsReplayBufferActive.value = false
         emitVolume({ inputName: '', volume: 0, muted: true })
         obsConnected.value = false
         obsStreamActive.value = false
@@ -335,8 +383,11 @@ export const useOBSStore = defineStore('obs', () => {
       startObsStatsLoop()
       void updateObsStats()
 
-      // 连接成功后获取场景列表
+      // 连接成功后获取场景、配置集、音频与回放缓存状态
       void fetchObsScenes()
+      void fetchObsProfiles().catch(() => {})
+      void fetchObsSceneCollections().catch(() => {})
+      void fetchReplayBufferStatus().catch(() => {})
       void fetchObsInputs().catch((err) => {
         obsError.value = String(err)
       })
@@ -634,6 +685,201 @@ export const useOBSStore = defineStore('obs', () => {
     return syncObsSourceFilters(obs, params)
   }
 
+  async function fetchObsProfiles() {
+    if (!obs || !obsConnected.value) return
+    const res = await obs.call('GetProfileList')
+    obsProfiles.value = res.profiles ?? []
+    currentObsProfile.value = res.currentProfileName ?? ''
+  }
+
+  async function switchObsProfile(profileName: string) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    await obs.call('SetCurrentProfile', { profileName })
+    currentObsProfile.value = profileName
+    toast.success(`已切换 OBS 配置文件: ${profileName}`)
+  }
+
+  async function fetchObsSceneCollections() {
+    if (!obs || !obsConnected.value) return
+    const res = await obs.call('GetSceneCollectionList')
+    obsSceneCollections.value = res.sceneCollections ?? []
+    currentObsSceneCollection.value = res.currentSceneCollectionName ?? ''
+  }
+
+  async function switchObsSceneCollection(sceneCollectionName: string) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    await obs.call('SetCurrentSceneCollection', { sceneCollectionName })
+    currentObsSceneCollection.value = sceneCollectionName
+    await fetchObsScenes().catch(() => {})
+    toast.success(`已切换 OBS 场景集合: ${sceneCollectionName}`)
+  }
+
+  async function fetchReplayBufferStatus() {
+    if (!obs || !obsConnected.value) return
+    const status = await obs.call('GetReplayBufferStatus')
+    obsReplayBufferActive.value = Boolean(status.outputActive)
+  }
+
+  async function toggleReplayBuffer() {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    const res = await obs.call('ToggleReplayBuffer')
+    obsReplayBufferActive.value = Boolean(res.outputActive)
+    toast.success(obsReplayBufferActive.value ? '已开启 OBS 回放缓存' : '已关闭 OBS 回放缓存')
+    return obsReplayBufferActive.value
+  }
+
+  async function setInputMute(inputName: string, inputMutedState: boolean) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    await obs.call('SetInputMute', { inputName, inputMuted: inputMutedState })
+  }
+
+  async function toggleInputMute(inputName: string) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    const res = await obs.call('ToggleInputMute', { inputName })
+    return res.inputMuted
+  }
+
+  async function setInputVolume(inputName: string, inputVolumeMul: number) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    const clamped = Math.max(0, Math.min(2, inputVolumeMul))
+    await obs.call('SetInputVolume', { inputName, inputVolumeMul: clamped })
+  }
+
+  async function setSceneItemEnabled(sceneName: string, sceneItemId: number, enabled: boolean) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    await obs.call('SetSceneItemEnabled', {
+      sceneName,
+      sceneItemId,
+      sceneItemEnabled: enabled,
+    })
+  }
+
+  async function setSceneItemEnabledByName(sourceName: string, enabled: boolean, sceneName?: string) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    const targetScene = (sceneName || currentObsScene.value || obsScenes.value[0] || '').trim()
+    if (!targetScene) throw new Error('未找到可用的 OBS 场景')
+    const list = await obs.call('GetSceneItemList', { sceneName: targetScene })
+    const matched = list.sceneItems.filter((item) => String(item.sourceName) === sourceName)
+    if (matched.length === 0) throw new Error(`场景「${targetScene}」中未找到源「${sourceName}」`)
+    for (const item of matched) {
+      await obs.call('SetSceneItemEnabled', {
+        sceneName: targetScene,
+        sceneItemId: Number(item.sceneItemId),
+        sceneItemEnabled: enabled,
+      })
+    }
+  }
+
+  async function getSourceFilters(sourceName: string): Promise<Array<{
+    filterName: string
+    filterKind: string
+    filterEnabled: boolean
+    filterIndex: number
+  }>> {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    const res = await obs.call('GetSourceFilterList', { sourceName })
+    return (res.filters ?? []).map((f: any) => ({
+      filterName: String(f.filterName ?? ''),
+      filterKind: String(f.filterKind ?? ''),
+      filterEnabled: Boolean(f.filterEnabled),
+      filterIndex: Number(f.filterIndex ?? 0),
+    }))
+  }
+
+  async function setSourceFilterEnabled(sourceName: string, filterName: string, enabled: boolean) {
+    if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
+    await obs.call('SetSourceFilterEnabled', {
+      sourceName,
+      filterName,
+      filterEnabled: enabled,
+    })
+  }
+
+  /** 一键向 OBS 目标场景插入 VTube Studio 采集源 (Spout2 / NDI / 透明游戏采集) */
+  async function insertVtsCaptureSource(options: {
+    mode: 'spout2' | 'ndi' | 'game_capture'
+    sceneName?: string
+    sourceName?: string
+  }): Promise<{ ok: boolean; message: string; sourceName?: string }> {
+    if (!obs || !obsConnected.value) {
+      return { ok: false, message: 'OBS 未连接，请先连接 OBS WebSocket' }
+    }
+    const targetScene = (options.sceneName || currentObsScene.value || obsScenes.value[0] || '').trim()
+    if (!targetScene) {
+      return { ok: false, message: '当前没有可用的 OBS 场景' }
+    }
+
+    const { inputKinds } = await obs.call('GetInputKindList', { unversioned: false })
+    const findKind = (candidates: string[]) => candidates.find((k) => inputKinds.includes(k))
+
+    let inputKind: string | undefined
+    let inputSettings: Record<string, any> = {}
+    let defaultName = 'VTube Studio'
+
+    if (options.mode === 'spout2') {
+      inputKind = findKind(['spout_capture'])
+      if (!inputKind) {
+        return { ok: false, message: 'OBS 未检测到 Spout2 插件 (win-spout)，请先安装 obs-spout2-plugin 后重启 OBS' }
+      }
+      defaultName = 'VTube Studio (Spout2)'
+      inputSettings = {
+        spout_sender_name: 'VTubeStudioSpout',
+        composite_mode: 1,
+      }
+    } else if (options.mode === 'ndi') {
+      inputKind = findKind(['ndi_source'])
+      if (!inputKind) {
+        return { ok: false, message: 'OBS 未检测到 NDI 插件 (DistroAV / obs-ndi)，请先安装后重启 OBS' }
+      }
+      defaultName = 'VTube Studio (NDI)'
+      inputSettings = {
+        ndi_source_name: 'VTube Studio',
+      }
+    } else {
+      inputKind = findKind(['game_capture'])
+      if (!inputKind) {
+        return { ok: false, message: '当前平台 OBS 不支持游戏采集源，建议改用 Spout2 或 NDI' }
+      }
+      defaultName = 'VTube Studio (透明采集)'
+      inputSettings = {
+        capture_mode: 'window',
+        window: 'VTube Studio:UnityWndClass:VTube Studio.exe',
+        allow_transparency: true,
+        capture_cursor: false,
+      }
+    }
+
+    const inputName = options.sourceName?.trim() || defaultName
+    const existingInputs = await obs.call('GetInputList')
+    const alreadyExists = existingInputs.inputs.some((i) => String(i.inputName) === inputName)
+
+    if (alreadyExists) {
+      const items = await obs.call('GetSceneItemList', { sceneName: targetScene })
+      const inScene = items.sceneItems.some((item) => String(item.sourceName) === inputName)
+      if (!inScene) {
+        await obs.call('CreateSceneItem', { sceneName: targetScene, sourceName: inputName, sceneItemEnabled: true })
+      }
+      await obs.call('SetInputSettings', { inputName, inputSettings, overlay: true })
+      return { ok: true, sourceName: inputName, message: `已更新并关联「${inputName}」到场景「${targetScene}」` }
+    }
+
+    await obs.call('CreateInput', {
+      sceneName: targetScene,
+      inputName,
+      inputKind,
+      inputSettings,
+      sceneItemEnabled: true,
+    })
+    return { ok: true, sourceName: inputName, message: `已在场景「${targetScene}」中创建「${inputName}」` }
+  }
+
+  async function saveObsConfig() {
+    await tauriStore.set(OBS_CONFIG_KEY, {
+      address: obsAddress.value || 'ws://127.0.0.1:4455',
+      password: obsPassword.value || undefined,
+    })
+  }
+
   // 保存场景配置
   async function saveSceneConfig() {
     try {
@@ -714,18 +960,40 @@ export const useOBSStore = defineStore('obs', () => {
     obsStats,
     obsScenes,
     currentObsScene,
+    obsProfiles,
+    currentObsProfile,
+    obsSceneCollections,
+    currentObsSceneCollection,
+    obsReplayBufferActive,
+    obsAudioStates,
     isSwitchingScene,
     obsSceneError,
     obsSceneConfig,
 
     // 方法
     handleObsConnect,
+    connectObs: handleObsConnect,
     handleObsDisconnect,
+    saveObsConfig,
     handleObsToggleStream,
     startObsStream,
     stopObsStream,
     syncStreamKeyToObs,
     fetchObsScenes,
+    fetchObsProfiles,
+    switchObsProfile,
+    fetchObsSceneCollections,
+    switchObsSceneCollection,
+    fetchReplayBufferStatus,
+    toggleReplayBuffer,
+    setInputMute,
+    toggleInputMute,
+    setInputVolume,
+    setSceneItemEnabled,
+    setSceneItemEnabledByName,
+    getSourceFilters,
+    setSourceFilterEnabled,
+    insertVtsCaptureSource,
     updateCurrentScene,
     switchToScene,
     getVideoCanvasSize,

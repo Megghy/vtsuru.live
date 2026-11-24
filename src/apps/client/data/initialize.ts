@@ -7,18 +7,21 @@ import { TrayIcon } from '@tauri-apps/api/tray'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 import { getCurrentWindow, PhysicalSize } from '@tauri-apps/api/window'
 import { attachConsole, info, warn } from '@tauri-apps/plugin-log'
-import { isPermissionGranted, onAction, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
+import { isPermissionGranted, onAction, requestPermission } from '@tauri-apps/plugin-notification'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
+
+import router from '@/app/router'
 
 import { isLoggedIn, useAccount } from '@/api/account'
 import {
   clientSupportsRpc,
   clientVersion,
   CN_HOST,
+  compareVersion,
   initClientVersion,
   isDev,
   isTauri,
@@ -33,12 +36,21 @@ import { useBiliAccountManager } from '../store/useBiliAccountManager'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
 import { useClientBackup } from '../store/useClientBackup'
+import { useClientShortcuts } from '../store/useClientShortcuts'
 import { useDanmakuWindow } from '../store/useDanmakuWindow'
+import { useLiveRoutine } from '../store/useLiveRoutine'
+import { useManagedTools } from '../store/useManagedTools'
 import { usePngtuberDriver } from '../store/usePngtuberDriver'
 import { useSettings } from '../store/useSettings'
 import { useTranscription } from '../store/useTranscription'
 import { useVtsStore } from '../store/useVtsStore'
-import { initInfo } from './info'
+import { initInfo, isLiveStreaming, roomInfo } from './info'
+import {
+  notifyBootMinimized,
+  notifyClientUpdate,
+  onBiliCookieInvalid,
+  onLiveStatusChanged,
+} from './notification'
 import { getBuvid, getRoomKey } from './utils'
 
 const accountInfo = useAccount()
@@ -48,7 +60,7 @@ export const clientInitStage = ref('')
 export const isCheckingUpdate = ref(false)
 export const isClientVersionOutdated = computed(() => {
   if (!isTauri() || !clientVersion.value) return false
-  return compareSemver(clientVersion.value, REQUIRED_CLIENT_VERSION) < 0
+  return compareVersion(clientVersion.value, REQUIRED_CLIENT_VERSION) < 0
 })
 
 let tray: TrayIcon | undefined
@@ -57,16 +69,6 @@ let trayEventUnlisten: (() => void) | null = null
 const UPDATE_TOAST_ID = 'client-update-available'
 const UPDATE_PROGRESS_ID = 'client-update-progress'
 const NATIVE_TRAY_ID = 'main-tray'
-
-function compareSemver(a: string, b: string): number {
-  const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0)
-  const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0)
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const diff = (pa[i] || 0) - (pb[i] || 0)
-    if (diff !== 0) return diff
-  }
-  return 0
-}
 
 function setInitStageSafely(stage: string) {
   if (clientInitStage.value !== '启动完成') {
@@ -257,13 +259,7 @@ export async function checkUpdate(manual = false): Promise<boolean> {
 
     if (update) {
       info(`[更新检查] 发现新版本: ${update.version}`)
-      const permissionGranted = await isPermissionGranted()
-      if (permissionGranted) {
-        sendNotification({
-          title: 'VTsuru.Client 更新可用',
-          body: `发现新版本 ${update.version}，点击应用内通知可立即更新`,
-        })
-      }
+      notifyClientUpdate(update.version)
 
       const summary = update.body?.trim() ? `\n${update.body.trim().slice(0, 120)}` : ''
       toast.warning(`发现新版本 ${update.version}`, {
@@ -408,12 +404,7 @@ export async function initAll(_isOnBoot?: boolean) {
   const launchedByAutostart = await invoke<boolean>('is_autostart_launch').catch(() => false)
   if (launchedByAutostart && settings.settings.bootAsMinimized && !isDev && (await appWindow.isVisible())) {
     void appWindow.hide()
-    if (permissionGranted) {
-      sendNotification({
-        title: 'VTsuru.Client',
-        body: '已随系统启动并最小化到托盘',
-      })
-    }
+    notifyBootMinimized()
   }
 
   // 同步看门狗自动重载开关到 Rust 宿主（兼容老壳忽略异常）
@@ -475,6 +466,15 @@ export async function initAll(_isOnBoot?: boolean) {
   usePngtuberDriver()
   useAutoAction().init()
   useBiliFunction().init()
+  void useManagedTools()
+    .init()
+    .catch(async (err) => warn(`[Tools] 初始化失败: ${err}`))
+  void useLiveRoutine()
+    .init()
+    .catch(async (err) => warn(`[Routine] 初始化失败: ${err}`))
+  void useClientShortcuts()
+    .init()
+    .catch(async (err) => warn(`[Shortcuts] 初始化失败: ${err}`))
   void useVtsStore()
     .init()
     .catch(async (err) => warn(`[VTS] 初始化失败: ${err}`))
@@ -495,8 +495,58 @@ export async function initAll(_isOnBoot?: boolean) {
     startUpdateCheck()
   }
 
+  initClientLifecycleMonitors()
+
   clientInited.value = true
   clientInitStage.value = '启动完成'
+}
+
+let lifecycleMonitorsStop: (() => void) | null = null
+
+function initClientLifecycleMonitors() {
+  lifecycleMonitorsStop?.()
+
+  const accountManager = useBiliAccountManager()
+  let hasHydratedRoomState = false
+  let prevLiveState = false
+
+  const stopLiveWatch = watch(
+    () => [Boolean(roomInfo.value), isLiveStreaming.value] as const,
+    ([hasRoom, live]) => {
+      if (!hasRoom) return
+      if (!hasHydratedRoomState) {
+        hasHydratedRoomState = true
+        prevLiveState = live
+        return
+      }
+      if (live !== prevLiveState) {
+        prevLiveState = live
+        onLiveStatusChanged(live, roomInfo.value?.title)
+      }
+    },
+    { immediate: true },
+  )
+
+  let prevMainValid: boolean | null = null
+  const stopAccountWatch = watch(
+    () => accountManager.mainAccount,
+    (acc) => {
+      if (!acc) {
+        prevMainValid = null
+        return
+      }
+      if (prevMainValid === true && !acc.isValid) {
+        onBiliCookieInvalid(acc.alias ? `${acc.name} (${acc.alias})` : acc.name || acc.id)
+      }
+      prevMainValid = acc.isValid
+    },
+    { deep: true, immediate: true },
+  )
+
+  lifecycleMonitorsStop = () => {
+    stopLiveWatch()
+    stopAccountWatch()
+  }
 }
 
 export function OnClientUnmounted() {
@@ -504,7 +554,11 @@ export function OnClientUnmounted() {
     clientInited.value = false
   }
 
+  lifecycleMonitorsStop?.()
+  lifecycleMonitorsStop = null
+
   void useVtsStore().dispose()
+  void useClientShortcuts().dispose()
   if (!isTauri()) return
 
   stopUpdateCheck()
@@ -628,6 +682,17 @@ export async function callStartDanmakuClient() {
   }
 }
 
+async function revealMainWindow() {
+  try {
+    const win = getCurrentWindow()
+    await win.show()
+    await win.unminimize()
+    await win.setFocus()
+  } catch (err) {
+    warn(`[notification] 唤醒主窗口失败: ${err}`)
+  }
+}
+
 function initNotificationHandler() {
   void onAction((event) => {
     const extra = (event as { notification?: { extra?: Record<string, unknown> } }).notification?.extra
@@ -635,6 +700,18 @@ function initNotificationHandler() {
       void openUrl(`${CN_HOST}manage/question-box`)
     } else if (extra?.type === 'goods-buy') {
       void openUrl(`${CN_HOST}manage/goods-buy`)
+    } else if (extra?.type === 'cookie-invalid') {
+      void revealMainWindow()
+      void router.push({ name: 'client-account-manage' })
+    } else if (
+      extra?.type === 'update' ||
+      extra?.type === 'danmaku' ||
+      extra?.type === 'live-status' ||
+      extra?.type === 'auto-action' ||
+      extra?.type === 'message-failed' ||
+      extra?.type === 'live-danmaku-failed'
+    ) {
+      void revealMainWindow()
     }
   }).catch((err) => {
     warn(`[notification] 注册通知点击回调失败: ${err}`)

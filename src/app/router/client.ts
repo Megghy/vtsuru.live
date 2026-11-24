@@ -96,6 +96,16 @@ export default {
       },
     },
     {
+      path: 'tools',
+      name: 'client-tools',
+      component: async () => import('@/apps/client/pages/ClientToolsHub.vue'),
+      meta: {
+        title: '工具中心',
+        forceReload: true,
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'transcription',
       name: 'client-transcription',
       component: async () => import('@/apps/client/pages/ClientTranscription.vue'),

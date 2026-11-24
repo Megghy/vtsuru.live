@@ -1,143 +1,84 @@
 <script setup lang="ts">
-import { toast } from 'vue-sonner'
+import { UserCog } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-// Fix vue-tsc type inference issue in template inline functions
-const showToast = toast
-
-import { callStartDanmakuClient, resetDanmakuClientInitState } from '@/apps/client/data/initialize'
+import { useFetcherControl } from '@/apps/client/composables/useFetcherControl'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useSettings } from '@/apps/client/store/useSettings'
-import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Popconfirm } from '@/shared/ui/popconfirm'
-import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { useWebFetcher } from '@/store/useWebFetcher'
 
-const webfetcher = useWebFetcher()
+const router = useRouter()
 const biliCookie = useBiliCookie()
 const settings = useSettings()
+const { isBusy, switchMode } = useFetcherControl()
 
-async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boolean = false) {
-  if (webfetcher.webfetcherType === type && !force) {
-    showToast.info('当前已是该模式')
-    return
+const credentialBadge = computed(() => {
+  if (biliCookie.isCookieValid) {
+    return {
+      variant: 'success' as const,
+      text: biliCookie.userInfo?.name || '主凭据有效',
+    }
   }
-  const noticeId = 'webfetcher-switch'
-  showToast.loading('WebEventFetcher', {
-    id: noticeId,
-    description: '正在关闭弹幕服务器...',
-    duration: Infinity,
-  })
-  settings.settings.useDanmakuClientType = type
-  settings.save()
-  await webfetcher.Stop()
-  showToast.loading('WebEventFetcher', {
-    id: noticeId,
-    description: '正在连接弹幕服务器...',
-    duration: Infinity,
-  })
-  const result = await callStartDanmakuClient()
-  showToast.dismiss(noticeId)
-  if (result.success) {
-    showToast.success('WebEventFetcher', {
-      description: `${webfetcher.webfetcherType} 弹幕客户端连接成功`,
-      duration: 3000,
-    })
-  } else {
-    showToast.error('WebEventFetcher', {
-      description: `弹幕服务器连接失败: ${result.message}`,
-    })
+  return {
+    variant: 'warning' as const,
+    text: '未登录 / 需验证',
   }
-}
+})
 
-async function handleToggleEventFetcher(enabled: boolean) {
+async function handleFallbackToggle(val: boolean) {
+  settings.settings.fallbackToOpenLive = val
   await settings.save()
-  if (enabled) {
-    showToast.info('正在启动 EventFetcher...')
-    const result = await callStartDanmakuClient()
-    if (result.success) {
-      showToast.success('EventFetcher 已启动')
-    } else {
-      showToast.error(`EventFetcher 启动失败: ${result.message}`)
-    }
-  } else {
-    if (webfetcher.state !== 'disconnected') {
-      await webfetcher.Stop()
-      showToast.info('EventFetcher 已停止')
-    }
-    resetDanmakuClientInitState()
-  }
-}
-
-async function handleForceRestartDanmaku() {
-  await onSwitchDanmakuClientMode(settings.settings.useDanmakuClientType, true)
-  showToast.success('已重启弹幕服务器')
 }
 </script>
 
 <template>
   <Card class="w-full">
-    <CardHeader class="p-3 border-b">
-      <CardTitle>设置</CardTitle>
-    </CardHeader>
-    <CardContent class="p-3 space-y-4">
-      <!-- EventFetcher 功能开关 -->
-      <div class="space-y-2">
-        <SettingRow
-          variant="none"
-          title="EventFetcher 功能"
-        >
-          <template #hint>
-            <p class="mb-1">启用后，系统将会：</p>
-            <ul class="pl-4 list-disc space-y-0.5">
-              <li>连接到 SignalR 服务器</li>
-              <li>启动弹幕客户端接收直播间消息</li>
-              <li>收集并上传直播间事件数据</li>
-              <li>显示实时统计信息</li>
-            </ul>
-            <p class="mt-1">关闭后，所有 EventFetcher 相关功能将停止工作。</p>
-          </template>
-          <span class="text-xs text-muted-foreground">
-            {{ settings.settings.enableEventFetcher ? '已启用' : '已禁用' }}
-          </span>
-          <Switch
-            :checked="settings.settings.enableEventFetcher"
-            :disabled="webfetcher.state === 'connecting'"
-            @update:checked="((settings.settings.enableEventFetcher = $event), handleToggleEventFetcher($event))"
-          />
-        </SettingRow>
-
-        <Alert
+    <CardHeader class="p-3 border-b flex-row items-center justify-between space-y-0">
+      <CardTitle>采集模式与凭据</CardTitle>
+      <div class="flex items-center gap-2">
+        <Badge
+          :variant="credentialBadge.variant"
           size="sm"
-          variant="warning"
-          v-if="!settings.settings.enableEventFetcher"
         >
-          <AlertDescription class="m-0"> EventFetcher 功能已禁用，直播间事件数据将不会被收集和上传 </AlertDescription>
-        </Alert>
+          {{ credentialBadge.text }}
+        </Badge>
+        <Button
+          variant="outline"
+          size="xs"
+          class="gap-1"
+          @click="router.push({ name: 'client-account-manage' })"
+        >
+          <UserCog class="size-3.5" />
+          <span>账号与凭据</span>
+        </Button>
       </div>
+    </CardHeader>
 
-      <Separator />
-
-      <!-- 弹幕客户端模式选择 -->
-      <div class="space-y-2">
-        <span class="text-xs font-semibold text-foreground block">弹幕客户端模式</span>
+    <CardContent class="p-3 space-y-2.5">
+      <SettingRow
+        variant="compact"
+        title="弹幕客户端模式"
+        description="开放平台无需 B 站 Cookie 即可使用；直接连接依赖主账号凭据，可采集更完整的互动事件"
+      >
         <ToggleGroup
           type="single"
           :model-value="settings.settings.useDanmakuClientType"
           @update:model-value="
             (val) => {
-              if (val) onSwitchDanmakuClientMode(val as any)
+              if (val === 'openlive' || val === 'direct') switchMode(val)
             }
           "
         >
           <ToggleGroupItem
             value="openlive"
-            :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
+            :disabled="isBusy"
           >
             开放平台
           </ToggleGroupItem>
@@ -154,37 +95,29 @@ async function handleForceRestartDanmaku() {
                   </ToggleGroupItem>
                 </span>
               </TooltipTrigger>
-              <TooltipContent> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
+              <TooltipContent>请先在「账号与凭据」登录有效 B 站主凭据</TooltipContent>
             </Tooltip>
             <ToggleGroupItem
               v-else
               value="direct"
-              :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
+              :disabled="isBusy"
             >
               直接连接
             </ToggleGroupItem>
           </TooltipProvider>
         </ToggleGroup>
-      </div>
+      </SettingRow>
 
-      <div>
-        <Popconfirm
-          title="强制重启"
-          :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
-          @positive-click="handleForceRestartDanmaku"
-        >
-          <template #trigger>
-            <Button
-              variant="outline"
-              class="border-destructive/40 text-destructive hover:bg-destructive/10"
-              :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
-            >
-              强制重启弹幕客户端
-            </Button>
-          </template>
-          确定要强制重启弹幕服务器吗？
-        </Popconfirm>
-      </div>
+      <SettingRow
+        variant="compact"
+        title="无凭据时自动回退开放平台"
+        description="启动初始化检测到未配置有效 B 站 Cookie 时，自动切换为开放平台模式避免采集失败"
+      >
+        <Switch
+          :checked="settings.settings.fallbackToOpenLive"
+          @update:checked="handleFallbackToggle($event)"
+        />
+      </SettingRow>
     </CardContent>
   </Card>
 </template>

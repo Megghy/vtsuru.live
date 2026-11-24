@@ -13,6 +13,7 @@ import {
   AUTO_ACTION_USER_DATA_PREFIX,
   persistedEntries,
   persistedFlush,
+  persistedGetJson,
   persistedRemoveKeys,
   persistedSetMany,
 } from '@/shared/storage/persist'
@@ -110,7 +111,6 @@ const EXPLICIT_SENSITIVE_KEYS = new Set([
   'user.bilibili.accounts_pool',
   'user.bilibili.multi_cookie_cloud',
   'webfetcher.rtmpInfo',
-  'obs.password',
 ])
 
 const SENSITIVE_KEY_PATTERN = /(cookie|token|password|secret|credential)/i
@@ -134,6 +134,83 @@ function sanitizeTranscriptionSettings(value: unknown): unknown {
     }
   }
   return cloned
+}
+
+function sanitizeObsConfig(value: unknown): unknown {
+  if (!value || typeof value !== 'object') return value
+  const cloned = structuredClone(value) as Record<string, unknown>
+  if ('password' in cloned) cloned.password = ''
+  return cloned
+}
+
+function sanitizeVtsInstances(value: unknown): unknown {
+  if (!Array.isArray(value)) return value
+  return value.map((item) => {
+    if (!item || typeof item !== 'object') return item
+    const cloned = structuredClone(item) as Record<string, unknown>
+    if ('authToken' in cloned) cloned.authToken = ''
+    return cloned
+  })
+}
+
+function sanitizeEntryValueForExport(key: string, value: unknown): unknown {
+  if (key === 'transcription.settings') return sanitizeTranscriptionSettings(value)
+  if (key === 'webfetcher.obsConfig') return sanitizeObsConfig(value)
+  if (key === 'vts.instances') return sanitizeVtsInstances(value)
+  return value
+}
+
+function mergeLocalSensitiveFieldsOnRestore(key: string, incoming: unknown, existing: unknown): unknown {
+  if (key === 'webfetcher.obsConfig' && incoming && typeof incoming === 'object' && existing && typeof existing === 'object') {
+    const next = structuredClone(incoming) as Record<string, unknown>
+    const prev = existing as Record<string, unknown>
+    if (!next.password && typeof prev.password === 'string' && prev.password) {
+      next.password = prev.password
+    }
+    return next
+  }
+
+  if (key === 'vts.instances' && Array.isArray(incoming) && Array.isArray(existing)) {
+    const tokenById = new Map<string, string>()
+    for (const item of existing) {
+      if (item && typeof item === 'object' && typeof (item as Record<string, unknown>).id === 'string') {
+        const token = (item as Record<string, unknown>).authToken
+        if (typeof token === 'string' && token) {
+          tokenById.set((item as Record<string, unknown>).id as string, token)
+        }
+      }
+    }
+    return incoming.map((item) => {
+      if (!item || typeof item !== 'object') return item
+      const cloned = structuredClone(item) as Record<string, unknown>
+      if (!cloned.authToken && typeof cloned.id === 'string' && tokenById.has(cloned.id)) {
+        cloned.authToken = tokenById.get(cloned.id)
+      }
+      return cloned
+    })
+  }
+
+  if (key === 'transcription.settings' && incoming && typeof incoming === 'object' && existing && typeof existing === 'object') {
+    const next = structuredClone(incoming) as { profiles?: Array<Record<string, unknown>> }
+    const prev = existing as { profiles?: Array<Record<string, unknown>> }
+    if (Array.isArray(next.profiles) && Array.isArray(prev.profiles)) {
+      const prevById = new Map<string, Record<string, unknown>>()
+      for (const p of prev.profiles) {
+        if (p && typeof p === 'object' && typeof p.id === 'string') prevById.set(p.id, p)
+      }
+      for (const profile of next.profiles) {
+        if (!profile || typeof profile !== 'object' || typeof profile.id !== 'string') continue
+        const old = prevById.get(profile.id)
+        if (!old) continue
+        if (!profile.secretId && typeof old.secretId === 'string') profile.secretId = old.secretId
+        if (!profile.secretKey && typeof old.secretKey === 'string') profile.secretKey = old.secretKey
+        if (!profile.apiKey && typeof old.apiKey === 'string') profile.apiKey = old.apiKey
+      }
+    }
+    return next
+  }
+
+  return incoming
 }
 
 function partitionKey(key: string): ClientBackupModule {
@@ -332,9 +409,7 @@ export const useClientBackup = defineStore('clientBackup', () => {
       if (!includeSensitive && isSensitiveStorageKey(key)) {
         continue
       }
-      const finalValue = !includeSensitive && key === 'transcription.settings'
-        ? sanitizeTranscriptionSettings(value)
-        : value
+      const finalValue = !includeSensitive ? sanitizeEntryValueForExport(key, value) : value
       grouped[module].push([key, finalValue])
     }
     const tauriStoreEntries = grouped.tauriStore
@@ -429,11 +504,27 @@ export const useClientBackup = defineStore('clientBackup', () => {
     }
   }
 
+  const PARTIALLY_SANITIZED_KEYS = new Set([
+    'transcription.settings',
+    'webfetcher.obsConfig',
+    'vts.instances',
+  ])
+
   async function restoreModule(
     module: ClientBackupModule,
     moduleEntries: Array<[string, unknown]>,
     preserveSensitiveKeys = false,
   ) {
+    const existingSanitizedValues = new Map<string, unknown>()
+    if (preserveSensitiveKeys) {
+      for (const [key] of moduleEntries) {
+        const keyStr = String(key)
+        if (PARTIALLY_SANITIZED_KEYS.has(keyStr)) {
+          existingSanitizedValues.set(keyStr, await persistedGetJson(keyStr))
+        }
+      }
+    }
+
     const currentKeys = (await persistedEntries())
       .map(([key]) => String(key))
       .filter((key) => partitionKey(key) === module && (!preserveSensitiveKeys || !isSensitiveStorageKey(key)))
@@ -442,6 +533,12 @@ export const useClientBackup = defineStore('clientBackup', () => {
       const nextKey = String(key)
       if (module === 'autoActionUserData' && !nextKey.startsWith(AUTO_ACTION_USER_DATA_PREFIX)) {
         return [`${AUTO_ACTION_USER_DATA_PREFIX}${nextKey}`, value] as [string, unknown]
+      }
+      if (preserveSensitiveKeys && PARTIALLY_SANITIZED_KEYS.has(nextKey)) {
+        return [
+          nextKey,
+          mergeLocalSensitiveFieldsOnRestore(nextKey, value, existingSanitizedValues.get(nextKey)),
+        ] as [string, unknown]
       }
       return [nextKey, value] as [string, unknown]
     })

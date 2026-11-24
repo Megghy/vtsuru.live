@@ -4,6 +4,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import type { AutoActionItem, SingleActionTestResult } from '@/apps/client/store/autoAction/types'
+import { LIFECYCLE_TRIGGER_TYPES, OBS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
 import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
@@ -55,11 +56,20 @@ const actionTypeLabel = computed(() => {
       return '发送弹幕'
     case ActionType.SEND_PRIVATE_MSG:
       return '发送私信'
+    case ActionType.SEND_NOTIFICATION:
+      return '客户端通知'
+    case ActionType.OBS_NOTIFY:
+      return 'OBS 浮窗通知'
+    case ActionType.SPEAK_TTS:
+      return 'TTS 语音播报'
+    case ActionType.SEND_WEBHOOK:
+      return 'Webhook 请求'
     case ActionType.PLAY_AUDIO:
       return '播放音效'
     case ActionType.PNGTUBER_EXPRESSION:
       return 'PNGtuber 表情'
     default:
+      if (OBS_ACTION_TYPES.has(props.action.actionType)) return 'OBS 联动'
       return 'VTS 联动'
   }
 })
@@ -174,12 +184,18 @@ function runTest(dryRun: boolean) {
         v-if="action"
         class="space-y-3 py-1 max-h-[65vh] overflow-y-auto scrollbar-thin pr-1"
       >
-        <!-- 定时任务无事件字段 -->
+        <!-- 定时任务 / 状态触发器无事件字段 -->
         <Alert
-          v-if="action.triggerType === TriggerType.SCHEDULED"
+          v-if="action.triggerType === TriggerType.SCHEDULED || LIFECYCLE_TRIGGER_TYPES.has(action.triggerType)"
           size="sm"
         >
-          <AlertDescription>定时发送规则不依赖观众事件，可直接预览当前模板渲染结果或真实触发一次。</AlertDescription>
+          <AlertDescription>
+            {{
+              action.triggerType === TriggerType.SCHEDULED
+                ? '定时发送规则不依赖观众事件，可直接预览当前模板渲染结果或真实触发一次。'
+                : '状态与告警规则由客户端运行状态变化触发，可直接预览模板渲染结果或真实模拟触发一次。'
+            }}
+          </AlertDescription>
         </Alert>
 
         <!-- 事件模拟输入 -->

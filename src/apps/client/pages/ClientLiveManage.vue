@@ -35,6 +35,18 @@ async function navigateCheck(target: CheckTarget) {
     await router.push({ name: 'client-fetcher' })
     return
   }
+  if (target === 'vts') {
+    await router.push({ name: 'client-vts' })
+    return
+  }
+  if (target === 'transcription') {
+    await router.push({ name: 'client-transcription' })
+    return
+  }
+  if (target === 'tools') {
+    await router.push({ name: 'client-tools' })
+    return
+  }
   activeTab.value = target
   await nextTick()
   settingsPanel.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })

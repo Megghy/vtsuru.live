@@ -1,5 +1,27 @@
 <script setup lang="ts">
-import { AppWindow, BookOpen, Compass, CornerDownLeft, Monitor, Palette, Search, Sparkles, Wrench } from 'lucide-vue-next'
+import {
+  AppWindow,
+  AudioWaveform,
+  BookOpen,
+  CloudUpload,
+  Compass,
+  CornerDownLeft,
+  Gift,
+  History,
+  MessageSquare,
+  Mic,
+  Monitor,
+  Palette,
+  Radio,
+  Search,
+  Settings,
+  Smile,
+  Sparkles,
+  UserCog,
+  Users,
+  Wrench,
+  Zap,
+} from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -7,7 +29,8 @@ import { useAccount } from '@/api/account'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import { ALL_DOCS, getDocCategory } from '@/apps/docs/registry'
 import { obsComponentList } from '@/apps/obs-store/registry'
-import { useCommandPalette } from '@/shared/composables/useCommandPalette'
+import { type CommandItem, useCommandPalette } from '@/shared/composables/useCommandPalette'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
@@ -22,25 +45,17 @@ const props = withDefaults(
   },
 )
 
-type CommandItem = {
-  id: string
-  group: string
-  label: string
-  description?: string
-  keywords: string[]
-  icon: any
-  shortcut?: string
-  run: () => void | Promise<void>
-}
+type FilterTab = 'all' | 'client' | 'dynamic' | 'site'
 
 const router = useRouter()
 const route = useRoute()
 const accountInfo = useAccount()
 const assistant = useAssistantStore()
-const { open, togglePalette, closePalette } = useCommandPalette()
+const { open, dynamicItems, recentIds, togglePalette, closePalette, recordRecent } = useCommandPalette()
 
 const query = ref('')
 const activeIndex = ref(0)
+const activeFilter = ref<FilterTab>('all')
 const inputWrapperRef = ref<HTMLElement | null>(null)
 const listRef = ref<HTMLElement | null>(null)
 
@@ -48,18 +63,370 @@ const isInClient = computed(() => route.path.startsWith('/client'))
 const isInOpenLive = computed(() => route.path.startsWith('/open-live'))
 const isInManage = computed(() => route.path.startsWith('/manage'))
 
+const filterTabs = computed<{ key: FilterTab; label: string }[]>(() => {
+  if (isInClient.value || dynamicItems.value.length > 0) {
+    return [
+      { key: 'all', label: '全部' },
+      { key: 'client', label: '客户端' },
+      { key: 'dynamic', label: '动态控制' },
+      { key: 'site', label: '后台与文档' },
+    ]
+  }
+  return [
+    { key: 'all', label: '全部' },
+    { key: 'site', label: '页面与工具' },
+    { key: 'client', label: '桌面客户端' },
+  ]
+})
+
 function goRoute(name: string, params?: Record<string, string | string[]>, queryParams?: Record<string, string>) {
   void router.push({ name, params, query: queryParams })
 }
 
-const allItems = computed<CommandItem[]>(() => {
+const staticItems = computed<CommandItem[]>(() => {
   const items: CommandItem[] = []
   const nextTheme = cycleThemeType(themeType.value)
 
-  // 1. 快捷操作
+  // 1. 客户端一级工作台（覆盖全部 15 个侧边栏页面）
+  const clientGroupName = isInClient.value ? '客户端功能' : '桌面客户端'
+  const clientEntries: { name: string; label: string; desc?: string; icon: any; kw: string[] }[] = [
+    {
+      name: 'client-index',
+      label: '客户端首页',
+      desc: '系统状态总览与浮窗快捷控台',
+      icon: AppWindow,
+      kw: ['home', 'index', '首页'],
+    },
+    {
+      name: 'client-live-dashboard',
+      label: '客户端中控台',
+      desc: '实时弹幕、礼物与互动中控面板',
+      icon: Monitor,
+      kw: ['dashboard', '中控台'],
+    },
+    {
+      name: 'client-live-manage',
+      label: '客户端直播管理',
+      desc: '开关播、封面标题与 OBS 推流控制',
+      icon: Radio,
+      kw: ['live', 'obs', '开播', '直播管理'],
+    },
+    {
+      name: 'client-danmaku-window-manage',
+      label: '弹幕机浮窗管理',
+      desc: '桌面弹幕机样式、交互与置顶设置',
+      icon: MessageSquare,
+      kw: ['danmaku', 'window', '弹幕机', '浮窗'],
+    },
+    {
+      name: 'client-gift-window-manage',
+      label: '礼物与排行浮窗管理',
+      desc: '礼物、舰队排行与答谢列表窗口',
+      icon: Gift,
+      kw: ['gift', 'window', '礼物', '排行', '浮窗'],
+    },
+    {
+      name: 'client-auto-action-manage',
+      label: '自动操作与答谢',
+      desc: '自动回复、礼物/上舰答谢与定时发送',
+      icon: Zap,
+      kw: ['auto', 'action', '自动操作', '答谢'],
+    },
+    {
+      name: 'client-fans-viewer',
+      label: '粉丝查看',
+      desc: '观众牌子、消费与互动记录查询',
+      icon: Users,
+      kw: ['fans', '观众', '粉丝'],
+    },
+    {
+      name: 'client-vts',
+      label: 'VTubeStudio 控制',
+      desc: 'VTS 热键、表情、机位预设与动作宏',
+      icon: Smile,
+      kw: ['vts', 'vtubestudio', '模型'],
+    },
+    {
+      name: 'client-pngtuber',
+      label: 'PNGtuber',
+      desc: '轻量立绘驱动与音频口型联动',
+      icon: Sparkles,
+      kw: ['pngtuber', '立绘'],
+    },
+    {
+      name: 'client-read-danmaku',
+      label: '客户端读弹幕',
+      desc: 'TTS 语音播报弹幕与礼物',
+      icon: Mic,
+      kw: ['tts', 'speech', '读弹幕'],
+    },
+    {
+      name: 'client-transcription',
+      label: '实时语音转写',
+      desc: '本地 ASR 实时字幕识别与输出',
+      icon: AudioWaveform,
+      kw: ['asr', 'transcription', '字幕', '转写'],
+    },
+    {
+      name: 'client-fetcher',
+      label: 'EventFetcher 采集端',
+      desc: '弹幕连接模式、上报统计与心跳状态',
+      icon: CloudUpload,
+      kw: ['fetcher', '采集', '弹幕'],
+    },
+    {
+      name: 'client-account-manage',
+      label: '账号与凭据',
+      desc: 'B站主账号 Cookie 扫码与多账号池',
+      icon: UserCog,
+      kw: ['cookie', 'account', '凭据', '账号'],
+    },
+    {
+      name: 'client-tools',
+      label: '工具中心',
+      desc: '托管外部工具、开播编排与全局热键',
+      icon: Wrench,
+      kw: ['tools', '工具中心', '托管'],
+    },
+    {
+      name: 'client-settings',
+      label: '客户端设置',
+      desc: '常规、通知、备份、诊断与版本更新',
+      icon: Settings,
+      kw: ['settings', '设置'],
+    },
+  ]
+  for (const c of clientEntries) {
+    items.push({
+      id: `client-${c.name}`,
+      group: clientGroupName,
+      scope: 'client',
+      label: c.label,
+      description: c.desc,
+      keywords: ['client', '客户端', c.label, ...c.kw],
+      icon: c.icon,
+      run: () => goRoute(c.name),
+    })
+  }
+
+  // 2. 客户端深层子页面 / Tab 直达
+  const clientSubEntries: {
+    id: string
+    name: string
+    tab: string
+    label: string
+    desc: string
+    icon: any
+    kw: string[]
+  }[] = [
+    {
+      id: 'client-sub-settings-general',
+      name: 'client-settings',
+      tab: 'general',
+      label: '常规与启动设置',
+      desc: '客户端设置 · 主题、开机自启与托盘行为',
+      icon: Settings,
+      kw: ['autostart', 'theme', '开机自启', '托盘'],
+    },
+    {
+      id: 'client-sub-settings-notification',
+      name: 'client-settings',
+      tab: 'notification',
+      label: '系统通知设置',
+      desc: '客户端设置 · 开播/礼物/舰长桌面通知',
+      icon: Settings,
+      kw: ['notification', '通知', '提醒'],
+    },
+    {
+      id: 'client-sub-settings-backup',
+      name: 'client-settings',
+      tab: 'backup',
+      label: '客户端数据备份与恢复',
+      desc: '客户端设置 · 导出/导入本地配置备份',
+      icon: Settings,
+      kw: ['backup', 'restore', '备份', '导出', '导入'],
+    },
+    {
+      id: 'client-sub-settings-diagnostics',
+      name: 'client-settings',
+      tab: 'diagnostics',
+      label: '诊断与日志',
+      desc: '客户端设置 · 本地 RPC 状态与运行日志',
+      icon: Settings,
+      kw: ['diagnostics', 'log', 'rpc', '诊断', '日志'],
+    },
+    {
+      id: 'client-sub-settings-about',
+      name: 'client-settings',
+      tab: 'about',
+      label: '关于客户端与更新',
+      desc: '客户端设置 · 版本信息与更新检查',
+      icon: Settings,
+      kw: ['about', 'version', 'update', '关于', '版本'],
+    },
+    {
+      id: 'client-sub-account-main',
+      name: 'client-account-manage',
+      tab: 'main',
+      label: 'B站主账号扫码与 Cookie',
+      desc: '账号与凭据 · 主账号登录与 CookieCloud 同步',
+      icon: UserCog,
+      kw: ['cookie', 'qrcode', '扫码', '主账号'],
+    },
+    {
+      id: 'client-sub-account-pool',
+      name: 'client-account-manage',
+      tab: 'pool',
+      label: '自动化多账号池',
+      desc: '账号与凭据 · 管理发弹幕/私信小号池',
+      icon: UserCog,
+      kw: ['pool', 'account', '多账号', '账号池', '小号'],
+    },
+    {
+      id: 'client-sub-tools-overview',
+      name: 'client-tools',
+      tab: 'overview',
+      label: '托管工具总览',
+      desc: '工具中心 · 统一管理 VTS / OBS / FFmpeg / 转写',
+      icon: Wrench,
+      kw: ['ffmpeg', 'obs', 'vts', '托管'],
+    },
+    {
+      id: 'client-sub-tools-routine',
+      name: 'client-tools',
+      tab: 'routine',
+      label: '一键开播编排配置',
+      desc: '工具中心 · 自定义开播与下播自动化流程',
+      icon: Wrench,
+      kw: ['routine', '编排', '一键开播', '下播'],
+    },
+    {
+      id: 'client-sub-tools-shortcuts',
+      name: 'client-tools',
+      tab: 'shortcuts',
+      label: '全局热键中心',
+      desc: '工具中心 · 配置系统级快捷键',
+      icon: Wrench,
+      kw: ['shortcut', 'hotkey', '全局热键', '快捷键'],
+    },
+    {
+      id: 'client-sub-tools-capabilities',
+      name: 'client-tools',
+      tab: 'capabilities',
+      label: '版本能力与本地 RPC',
+      desc: '工具中心 · 查看宿主能力矩阵与 RPC 接口',
+      icon: Wrench,
+      kw: ['rpc', 'capabilities', '能力矩阵', '端口'],
+    },
+    {
+      id: 'client-sub-auto-danmaku',
+      name: 'client-auto-action-manage',
+      tab: 'danmaku',
+      label: '自动操作：自动回复',
+      desc: '按弹幕关键词触发回复或执行动作',
+      icon: Zap,
+      kw: ['auto', 'reply', '自动回复', '关键词'],
+    },
+    {
+      id: 'client-sub-auto-gift',
+      name: 'client-auto-action-manage',
+      tab: 'gift',
+      label: '自动操作：礼物感谢',
+      desc: '配置礼物答谢模板与价值过滤',
+      icon: Zap,
+      kw: ['auto', 'gift', '礼物感谢', '答谢'],
+    },
+    {
+      id: 'client-sub-auto-guard',
+      name: 'client-auto-action-manage',
+      tab: 'guard',
+      label: '自动操作：上舰感谢',
+      desc: '配置大航海开通欢迎与自动私信',
+      icon: Zap,
+      kw: ['auto', 'guard', '上舰', '舰长', '私信'],
+    },
+    {
+      id: 'client-sub-auto-follow',
+      name: 'client-auto-action-manage',
+      tab: 'follow',
+      label: '自动操作：关注感谢',
+      desc: '新关注直播间时自动感谢',
+      icon: Zap,
+      kw: ['auto', 'follow', '关注感谢'],
+    },
+    {
+      id: 'client-sub-auto-enter',
+      name: 'client-auto-action-manage',
+      tab: 'enter',
+      label: '自动操作：入场欢迎',
+      desc: '观众进入直播间欢迎规则',
+      icon: Zap,
+      kw: ['auto', 'enter', '入场欢迎', '进房'],
+    },
+    {
+      id: 'client-sub-auto-scheduled',
+      name: 'client-auto-action-manage',
+      tab: 'scheduled',
+      label: '自动操作：定时发送',
+      desc: '定时发送弹幕或触发定时动作',
+      icon: Zap,
+      kw: ['auto', 'scheduled', '定时', '轮播'],
+    },
+    {
+      id: 'client-sub-auto-sc',
+      name: 'client-auto-action-manage',
+      tab: 'super_chat',
+      label: '自动操作：SC 感谢',
+      desc: '醒目留言感谢与联动动作',
+      icon: Zap,
+      kw: ['auto', 'sc', 'superchat', '醒目留言'],
+    },
+    {
+      id: 'client-sub-auto-point',
+      name: 'client-auto-action-manage',
+      tab: 'point_redeem',
+      label: '自动操作：积分兑换联动',
+      desc: '观众兑换积分商品后自动执行动作',
+      icon: Zap,
+      kw: ['auto', 'point', '积分兑换', '商城'],
+    },
+    {
+      id: 'client-sub-auto-checkin',
+      name: 'client-auto-action-manage',
+      tab: 'check-in-settings',
+      label: '自动操作：签到设置',
+      desc: '直播间弹幕签到规则与提示词',
+      icon: Zap,
+      kw: ['checkin', '签到'],
+    },
+    {
+      id: 'client-sub-auto-history',
+      name: 'client-auto-action-manage',
+      tab: 'action-history',
+      label: '自动操作：执行历史',
+      desc: '查看已触发规则的执行日志与结果',
+      icon: Zap,
+      kw: ['history', '执行历史', '记录'],
+    },
+  ]
+  for (const sub of clientSubEntries) {
+    items.push({
+      id: sub.id,
+      group: '客户端配置与子页面',
+      scope: 'client',
+      label: sub.label,
+      description: sub.desc,
+      keywords: ['client', '客户端', sub.label, ...sub.kw],
+      icon: sub.icon,
+      run: () => goRoute(sub.name, undefined, { tab: sub.tab }),
+    })
+  }
+
+  // 3. 通用快捷操作
   items.push({
     id: 'action-theme',
     group: '快捷操作',
+    scope: isInClient.value ? 'client' : 'manage',
     label: `切换主题（当前：${getThemeTypeLabel(themeType.value)}）`,
     description: `切换为${getThemeTypeLabel(nextTheme)}`,
     keywords: ['theme', 'dark', 'light', 'auto', '主题', '暗色', '浅色', '深色'],
@@ -73,6 +440,7 @@ const allItems = computed<CommandItem[]>(() => {
     items.push({
       id: 'action-assistant',
       group: '快捷操作',
+      scope: 'manage',
       label: '打开 VTsuru 助手',
       description: '针对当前页面提问或执行辅助操作',
       keywords: ['assistant', 'ai', 'bot', '助手'],
@@ -91,6 +459,7 @@ const allItems = computed<CommandItem[]>(() => {
     items.push({
       id: 'action-public-page',
       group: '快捷操作',
+      scope: 'manage',
       label: `打开我的公开展示页 (@${accountInfo.value.name})`,
       description: '预览观众看到的主播主页与各模块',
       keywords: ['home', 'public', 'user', '展示页', '主页', accountInfo.value.name],
@@ -99,7 +468,7 @@ const allItems = computed<CommandItem[]>(() => {
     })
   }
 
-  // 2. 管理后台与直播互动
+  // 4. 管理后台与直播互动
   const manageEntries: { name: string; label: string; desc?: string; kw: string[] }[] = [
     { name: 'manage-index', label: '管理面板', desc: '账号状态、Token 与功能开关', kw: ['dashboard', 'panel', '面板'] },
     {
@@ -161,11 +530,11 @@ const allItems = computed<CommandItem[]>(() => {
       kw: ['live-dashboard', '中控台'],
     },
   ]
-
   for (const entry of manageEntries) {
     items.push({
       id: `manage-${entry.name}`,
       group: '管理后台',
+      scope: 'manage',
       label: entry.label,
       description: entry.desc,
       keywords: [entry.label, ...entry.kw],
@@ -174,12 +543,13 @@ const allItems = computed<CommandItem[]>(() => {
     })
   }
 
-  // 3. OBS 组件库直达
+  // 5. OBS 组件库直达
   for (const comp of obsComponentList) {
     if (comp.status === 'planned') continue
     items.push({
       id: `obs-${comp.id}`,
       group: 'OBS 组件库',
+      scope: 'manage',
       label: comp.name,
       description: comp.shortDescription,
       keywords: [comp.id, comp.name, ...comp.tags],
@@ -188,7 +558,7 @@ const allItems = computed<CommandItem[]>(() => {
     })
   }
 
-  // 4. 直播工具箱 (11 个本地/浏览器工具)
+  // 6. 直播工具箱 (11 个本地/浏览器工具)
   const toolScopePrefix = isInOpenLive.value ? 'open-live-tool-' : null
   const toolEntries: { path: string; manageName: string; label: string; kw: string[] }[] = [
     {
@@ -217,6 +587,7 @@ const allItems = computed<CommandItem[]>(() => {
     items.push({
       id: `tool-${tool.path}`,
       group: '直播工具箱',
+      scope: 'manage',
       label: tool.label,
       description: '纯浏览器本地处理',
       keywords: ['tool', '工具', tool.label, ...tool.kw],
@@ -225,35 +596,11 @@ const allItems = computed<CommandItem[]>(() => {
     })
   }
 
-  // 5. 客户端工作台
-  const clientEntries: { name: string; label: string; kw: string[] }[] = [
-    { name: 'client-index', label: '客户端首页', kw: ['client', '客户端'] },
-    { name: 'client-fetcher', label: 'EventFetcher 采集端', kw: ['fetcher', '采集'] },
-    { name: 'client-account-manage', label: '客户端账号与凭据', kw: ['cookie', 'account', '凭据'] },
-    { name: 'client-live-manage', label: '客户端直播管理', kw: ['live', '开播'] },
-    { name: 'client-live-dashboard', label: '客户端中控台', kw: ['dashboard', '中控台'] },
-    { name: 'client-auto-action-manage', label: '自动操作与签到', kw: ['auto', '签到', '自动'] },
-    { name: 'client-vts', label: 'VTubeStudio 控制', kw: ['vts', 'vtubestudio'] },
-    { name: 'client-read-danmaku', label: '客户端读弹幕', kw: ['tts', '读弹幕'] },
-    { name: 'client-transcription', label: '实时语音转写', kw: ['asr', 'transcription', '字幕', '转写'] },
-    { name: 'client-fans-viewer', label: '粉丝查看', kw: ['fans', '粉丝'] },
-    { name: 'client-settings', label: '客户端设置', kw: ['settings', '设置'] },
-  ]
-  for (const c of clientEntries) {
-    items.push({
-      id: `client-${c.name}`,
-      group: isInClient.value ? '客户端功能' : '桌面客户端',
-      label: c.label,
-      keywords: ['client', '客户端', c.label, ...c.kw],
-      icon: AppWindow,
-      run: () => goRoute(c.name),
-    })
-  }
-
-  // 6. 使用文档
+  // 7. 使用文档
   items.push({
     id: 'docs-index',
     group: '使用文档',
+    scope: 'docs',
     label: '使用文档中心',
     description: '浏览全站功能图文说明与交互示例',
     keywords: ['doc', 'docs', 'help', 'guide', '文档', '说明', '帮助', '教程'],
@@ -264,6 +611,7 @@ const allItems = computed<CommandItem[]>(() => {
     items.push({
       id: `doc-${doc.slug}`,
       group: '使用文档',
+      scope: 'docs',
       label: doc.title,
       description: `${getDocCategory(doc.category).title}${doc.description ? ` · ${doc.description}` : ''}`,
       keywords: ['doc', '文档', '教程', doc.title, ...doc.tags],
@@ -275,32 +623,122 @@ const allItems = computed<CommandItem[]>(() => {
   return items
 })
 
-const filteredItems = computed(() => {
-  const raw = query.value.trim().toLowerCase()
-  if (!raw) return allItems.value
-  const tokens = raw.split(/\s+/).filter(Boolean)
-  return allItems.value.filter((item) => {
-    const haystack = `${item.group} ${item.label} ${item.description ?? ''} ${item.keywords.join(' ')}`.toLowerCase()
-    return tokens.every((t) => haystack.includes(t))
+const CLIENT_GROUP_ORDER = [
+  '客户端快捷操作',
+  'OBS 场景与控制',
+  'VTS 动态控制',
+  '自动操作规则',
+  '客户端功能',
+  '客户端配置与子页面',
+  '快捷操作',
+  '管理后台',
+  'OBS 组件库',
+  '直播工具箱',
+  '使用文档',
+]
+
+const WEB_GROUP_ORDER = ['快捷操作', '管理后台', 'OBS 组件库', '直播工具箱', '桌面客户端', '使用文档']
+
+const allItems = computed<CommandItem[]>(() => {
+  const merged = [...dynamicItems.value, ...staticItems.value]
+  const orderList = isInClient.value ? CLIENT_GROUP_ORDER : WEB_GROUP_ORDER
+  const rankMap = new Map(orderList.map((name, idx) => [name, idx]))
+  return merged.toSorted((a, b) => {
+    const rankA = rankMap.get(a.group) ?? orderList.length
+    const rankB = rankMap.get(b.group) ?? orderList.length
+    return rankA - rankB
   })
+})
+
+function matchesFilter(item: CommandItem, tab: FilterTab): boolean {
+  if (tab === 'all') return true
+  if (tab === 'client') return item.scope === 'client' || item.scope === 'dynamic'
+  if (tab === 'dynamic') return item.scope === 'dynamic'
+  return item.scope === 'manage' || item.scope === 'docs'
+}
+
+function scoreItem(item: CommandItem, tokens: string[]): number {
+  const labelLower = item.label.toLowerCase()
+  const descLower = (item.description ?? '').toLowerCase()
+  const groupLower = item.group.toLowerCase()
+  const badgeLower = (item.badge ?? '').toLowerCase()
+  const kwLower = item.keywords.map((k) => k.toLowerCase())
+
+  let score = 0
+  for (const token of tokens) {
+    let tokenScore = 0
+    if (labelLower === token) tokenScore = 120
+    else if (labelLower.startsWith(token)) tokenScore = 70
+    else if (labelLower.includes(token)) tokenScore = 45
+    else if (kwLower.some((k) => k === token)) tokenScore = 35
+    else if (kwLower.some((k) => k.includes(token))) tokenScore = 20
+    else if (badgeLower.includes(token) || groupLower.includes(token)) tokenScore = 15
+    else if (descLower.includes(token)) tokenScore = 8
+    else return -1
+    score += tokenScore
+  }
+
+  if (isInClient.value && (item.scope === 'client' || item.scope === 'dynamic')) {
+    score += 15
+  }
+  return score
+}
+
+const recentItems = computed<CommandItem[]>(() => {
+  const ids = Array.isArray(recentIds.value) ? recentIds.value : []
+  if (ids.length === 0) return []
+  const byId = new Map(allItems.value.map((item) => [item.id, item]))
+  return ids
+    .map((id) => byId.get(id))
+    .filter((item): item is CommandItem => Boolean(item) && matchesFilter(item, activeFilter.value))
+    .slice(0, 5)
+})
+
+const filteredItems = computed<CommandItem[]>(() => {
+  const scoped = allItems.value.filter((item) => matchesFilter(item, activeFilter.value))
+  const raw = query.value.trim().toLowerCase()
+  if (!raw) return scoped
+
+  const tokens = raw.split(/\s+/).filter(Boolean)
+  const scored: { item: CommandItem; score: number }[] = []
+  for (const item of scoped) {
+    const score = scoreItem(item, tokens)
+    if (score >= 0) {
+      scored.push({ item, score })
+    }
+  }
+  scored.sort((a, b) => b.score - a.score)
+  return scored.map((entry) => entry.item)
 })
 
 const groupedItems = computed(() => {
   const groups: { name: string; items: { item: CommandItem; flatIndex: number }[] }[] = []
+  let flatIndex = 0
+
+  // 无搜索词时置顶显示最近使用
+  if (!query.value.trim() && recentItems.value.length > 0) {
+    groups.push({
+      name: '最近使用',
+      items: recentItems.value.map((item) => ({ item, flatIndex: flatIndex++ })),
+    })
+  }
+
   const map = new Map<string, { item: CommandItem; flatIndex: number }[]>()
-  filteredItems.value.forEach((item, flatIndex) => {
+  for (const item of filteredItems.value) {
     let list = map.get(item.group)
     if (!list) {
       list = []
       map.set(item.group, list)
       groups.push({ name: item.group, items: list })
     }
-    list.push({ item, flatIndex })
-  })
+    list.push({ item, flatIndex: flatIndex++ })
+  }
   return groups
 })
 
-watch(filteredItems, () => {
+const flatDisplayItems = computed(() => groupedItems.value.flatMap((g) => g.items.map((x) => x.item)))
+
+watch([filteredItems, activeFilter], () => {
   activeIndex.value = 0
 })
 
@@ -308,6 +746,7 @@ watch(open, async (val) => {
   if (!val) {
     query.value = ''
     activeIndex.value = 0
+    activeFilter.value = 'all'
     return
   }
   await nextTick()
@@ -315,8 +754,23 @@ watch(open, async (val) => {
   el?.focus()
 })
 
+function setFilter(tab: FilterTab) {
+  activeFilter.value = tab
+  void nextTick(() => {
+    inputWrapperRef.value?.querySelector('input')?.focus()
+  })
+}
+
+function cycleFilter() {
+  const tabs = filterTabs.value
+  const idx = tabs.findIndex((t) => t.key === activeFilter.value)
+  const next = tabs[(idx + 1) % tabs.length]
+  if (next) setFilter(next.key)
+}
+
 function executeItem(item: CommandItem | undefined) {
   if (!item) return
+  recordRecent(item.id)
   closePalette()
   void item.run()
 }
@@ -331,7 +785,13 @@ function scrollActiveIntoView() {
 }
 
 function handlePaletteKeydown(event: KeyboardEvent) {
-  const total = filteredItems.value.length
+  if (event.key === 'Tab') {
+    event.preventDefault()
+    cycleFilter()
+    return
+  }
+
+  const total = flatDisplayItems.value.length
   if (total === 0) return
   if (event.key === 'ArrowDown') {
     event.preventDefault()
@@ -343,7 +803,7 @@ function handlePaletteKeydown(event: KeyboardEvent) {
     scrollActiveIntoView()
   } else if (event.key === 'Enter') {
     event.preventDefault()
-    executeItem(filteredItems.value[activeIndex.value])
+    executeItem(flatDisplayItems.value[activeIndex.value])
   }
 }
 
@@ -381,7 +841,9 @@ onBeforeUnmount(() => {
         <Input
           v-model="query"
           size="default"
-          placeholder="搜索页面、OBS 组件、工具箱或操作..."
+          :placeholder="
+            isInClient ? '搜索页面、设置 Tab、VTS/OBS 控制或自动操作规则...' : '搜索页面、OBS 组件、工具箱或操作...'
+          "
           class="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
         <kbd
@@ -389,6 +851,24 @@ onBeforeUnmount(() => {
         >
           Esc
         </kbd>
+      </div>
+
+      <!-- 范围筛选栏 -->
+      <div
+        class="flex items-center gap-1 border-b border-border/70 bg-muted/20 px-3 py-1.5 overflow-x-auto no-scrollbar"
+      >
+        <Button
+          v-for="tab in filterTabs"
+          :key="tab.key"
+          size="xs"
+          :variant="activeFilter === tab.key ? 'secondary' : 'ghost'"
+          class="shrink-0"
+          :class="activeFilter === tab.key ? 'font-semibold text-foreground' : 'text-muted-foreground'"
+          @mousedown.prevent
+          @click="setFilter(tab.key)"
+        >
+          {{ tab.label }}
+        </Button>
       </div>
 
       <div
@@ -399,19 +879,23 @@ onBeforeUnmount(() => {
           v-if="groupedItems.length === 0"
           class="py-10 text-center text-xs text-muted-foreground"
         >
-          未找到匹配的命令或页面
+          未找到匹配的命令、页面或规则
         </div>
 
         <template
           v-for="group in groupedItems"
           :key="group.name"
         >
-          <div class="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
-            {{ group.name }}
+          <div class="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
+            <History
+              v-if="group.name === '最近使用'"
+              class="size-3 shrink-0"
+            />
+            <span>{{ group.name }}</span>
           </div>
           <Button
             v-for="{ item, flatIndex } in group.items"
-            :key="item.id"
+            :key="`${group.name}-${item.id}`"
             :data-cmd-index="flatIndex"
             variant="ghost"
             class="flex w-full h-auto justify-start items-center gap-2.5 rounded-md px-2.5 py-2 text-left font-normal"
@@ -424,7 +908,17 @@ onBeforeUnmount(() => {
               class="size-4 shrink-0 text-muted-foreground"
             />
             <div class="min-w-0 flex-1">
-              <div class="font-medium truncate">{{ item.label }}</div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-medium truncate">{{ item.label }}</span>
+                <Badge
+                  v-if="item.badge"
+                  variant="secondary"
+                  size="xs"
+                  class="shrink-0"
+                >
+                  {{ item.badge }}
+                </Badge>
+              </div>
               <div
                 v-if="item.description"
                 class="text-[11px] text-muted-foreground truncate"
@@ -441,7 +935,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="flex-between border-t border-border bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground">
-        <span>↑↓ 选择 · Enter 确认</span>
+        <span>↑↓ 选择 · Enter 确认 · Tab 切换范围</span>
         <span>Ctrl+K 呼出</span>
       </div>
     </DialogContent>

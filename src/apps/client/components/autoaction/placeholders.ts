@@ -21,6 +21,9 @@ export const BASE_PLACEHOLDERS: Placeholder[] = [
   { name: '{{date.minute}}', description: '当前分钟' },
   { name: '{{date.second}}', description: '当前秒数' },
   { name: '{{timeOfDay}}', description: '当前时段 (凌晨/早上/上午/中午/下午/晚上/深夜)' },
+  { name: '{{live.title}}', description: '当前直播间标题' },
+  { name: '{{live.areaName}}', description: '当前直播分区名称' },
+  { name: '{{live.roomId}}', description: '直播间房间号' },
   { name: '{{event}}', description: '原始事件对象 (高级用法)' },
 ]
 
@@ -54,6 +57,22 @@ export const TRIGGER_PLACEHOLDERS: Partial<Record<TriggerType, Placeholder[]>> =
     { name: '{{pointOrder.subItems}}', description: '选择的规格款式' },
     { name: '{{pointOrder.remark}}', description: '下单备注' },
     { name: '{{pointOrder.orderId}}', description: '订单ID' },
+  ],
+  [TriggerType.LIVE_START]: [
+    { name: '{{live.title}}', description: '直播间标题' },
+    { name: '{{live.areaName}}', description: '直播分区名称' },
+    { name: '{{system.reason}}', description: '状态变更说明' },
+  ],
+  [TriggerType.LIVE_END]: [
+    { name: '{{live.title}}', description: '直播间标题' },
+    { name: '{{system.reason}}', description: '状态变更说明' },
+  ],
+  [TriggerType.DANMAKU_DISCONNECTED]: [
+    { name: '{{system.reason}}', description: '断开或异常原因' },
+  ],
+  [TriggerType.COOKIE_INVALID]: [
+    { name: '{{system.accountName}}', description: '失效的 B 站账号名' },
+    { name: '{{system.reason}}', description: '失效原因说明' },
   ],
 }
 

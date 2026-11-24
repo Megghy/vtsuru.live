@@ -10,7 +10,7 @@ import {
 } from '@/shared/storage/persist'
 
 import type { AutoActionItem, ExecutionContext, RuntimeState } from './types'
-import { ActionType, Priority, TriggerType } from './types'
+import { ActionType, LIFECYCLE_TRIGGER_TYPES, Priority, TriggerType } from './types'
 
 function userDataKey(key: string): string {
   return key.startsWith(AUTO_ACTION_USER_DATA_PREFIX) ? key : `${AUTO_ACTION_USER_DATA_PREFIX}${key}`
@@ -52,6 +52,10 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
     [TriggerType.SCHEDULED]: '这是一条定时消息，当前时间: {{date.formatted}}',
     [TriggerType.SUPER_CHAT]: '感谢 {{user.name}} 的SC!',
     [TriggerType.POINT_REDEEM]: '感谢 {{user.name}} 兑换了 {{pointOrder.goodsName}} x{{pointOrder.count}}！',
+    [TriggerType.LIVE_START]: '直播已开始：{{live.title}}（{{date.formatted}}）',
+    [TriggerType.LIVE_END]: '直播已结束（{{date.formatted}}）',
+    [TriggerType.DANMAKU_DISCONNECTED]: '弹幕连接异常：{{system.reason}}',
+    [TriggerType.COOKIE_INVALID]: '账号 {{system.accountName}} 的 B 站 Cookie 已失效，请及时重新登录',
   }
 
   // 根据不同触发类型设置默认名称
@@ -64,22 +68,34 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
     [TriggerType.SCHEDULED]: '定时消息',
     [TriggerType.SUPER_CHAT]: 'SC感谢',
     [TriggerType.POINT_REDEEM]: '积分兑换互动',
+    [TriggerType.LIVE_START]: '开播自动提醒',
+    [TriggerType.LIVE_END]: '下播自动提醒',
+    [TriggerType.DANMAKU_DISCONNECTED]: '弹幕断连告警',
+    [TriggerType.COOKIE_INVALID]: 'Cookie 失效告警',
   }
+
+  const isLifecycle = LIFECYCLE_TRIGGER_TYPES.has(triggerType)
+  const defaultActionType =
+    triggerType === TriggerType.GUARD
+      ? ActionType.SEND_PRIVATE_MSG
+      : isLifecycle
+        ? ActionType.SEND_NOTIFICATION
+        : ActionType.SEND_DANMAKU
 
   return {
     id,
     name: defaultNames[triggerType] || '新建自动操作',
     enabled: true,
     triggerType,
-    actionType: triggerType === TriggerType.GUARD ? ActionType.SEND_PRIVATE_MSG : ActionType.SEND_DANMAKU,
+    actionType: defaultActionType,
     priority: Priority.NORMAL,
     template: defaultTemplates[triggerType] || '默认模板',
     logicalExpression: '',
     executeCommand: '',
     ignoreCooldown: false,
     triggerConfig: {
-      onlyDuringLive: true,
-      ignoreTianXuan: true,
+      onlyDuringLive: !isLifecycle,
+      ignoreTianXuan: !isLifecycle,
       userFilterEnabled: false,
       requireMedal: false,
       requireCaptain: false,
@@ -93,11 +109,17 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
     },
     actionConfig: {
       delaySeconds: 0,
-      cooldownSeconds: 5,
+      cooldownSeconds: isLifecycle ? 15 : 5,
       maxUsersPerMsg: 5,
       maxItemsPerUser: 3,
       audioVolume: 0.8,
       audioWaitForEnd: false,
+      notificationShowDesktop: true,
+      notificationShowToast: true,
+      notificationPlaySound: true,
+      notificationToastLevel: isLifecycle && triggerType !== TriggerType.LIVE_START && triggerType !== TriggerType.LIVE_END ? 'warning' : 'info',
+      notificationSoundPreset:
+        triggerType === TriggerType.DANMAKU_DISCONNECTED || triggerType === TriggerType.COOKIE_INVALID ? 'alert' : 'chime',
     },
   }
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 
 import { isLiveStreaming, roomInfo } from '@/apps/client/data/info'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { useSettings } from '@/apps/client/store/useSettings'
 import { isTauri } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -13,6 +14,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 const router = useRouter()
 const isMaximized = ref(false)
 const giftWindow = useGiftWindow()
+const settingsStore = useSettings()
+
+const closeTooltipText = computed(() =>
+  settingsStore.settings.closeWindowAction === 'exit' ? '退出客户端' : '关闭到后台',
+)
 
 const liveTitle = computed(() => roomInfo.value?.title || giftWindow.currentLive?.title || '直播中')
 
@@ -49,6 +55,20 @@ async function toggleMaximizeWindow() {
 }
 
 async function closeWindow() {
+  if (settingsStore.settings.closeWindowAction === 'exit' && isTauri()) {
+    try {
+      const { useWebFetcher } = await import('@/store/useWebFetcher')
+      await Promise.race([
+        useWebFetcher().Stop(),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ])
+    } catch {
+      // 忽略清理异常，确保正常退出
+    }
+    const { exit } = await import('@tauri-apps/plugin-process')
+    await exit(0)
+    return
+  }
   const appWindow = await getTauriWindow()
   if (appWindow) await appWindow.hide()
 }
@@ -160,13 +180,13 @@ function goToLiveManage() {
               variant="ghost"
               size="icon-xs"
               class="hover:bg-destructive hover:text-white"
-              aria-label="关闭到后台"
+              :aria-label="closeTooltipText"
               @click="closeWindow"
             >
               <X class="size-3.5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>关闭到后台</TooltipContent>
+          <TooltipContent>{{ closeTooltipText }}</TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>

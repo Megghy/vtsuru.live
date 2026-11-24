@@ -11,8 +11,9 @@ import { useRealtimeTopic } from '@/shared/realtime'
 import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { useDanmakuClient } from '@/store/useDanmakuClient.js'
 
-import { isLiveStreaming, liveStartTimeMs } from '../data/info'
-import { checkUserFilters, executeActions, processTemplate } from './autoAction/actionUtils'
+import { isLiveStreaming, liveStartTimeMs, roomInfo } from '../data/info'
+import { checkUserFilters, executeActions, filterValidActions, processTemplate } from './autoAction/actionUtils'
+import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator'
 import { matchesDanmakuTrigger, useAutoReply } from './autoAction/modules/autoReply'
 import type { CheckInHubEvent } from './autoAction/modules/checkin'
 import { useCheckIn } from './autoAction/modules/checkin'
@@ -24,7 +25,15 @@ import type { PointOrderRedeemedHubEvent } from './autoAction/modules/pointRedee
 import { matchesPointRedeemTrigger, normalizePointRedeemEvent, usePointRedeem } from './autoAction/modules/pointRedeem'
 import { matchesSuperChatTrigger, useSuperChatThank } from './autoAction/modules/superChatThank'
 import type { AutoActionItem, RuntimeState, SingleActionTestResult } from './autoAction/types.js'
-import { ActionType, KeywordMatchType, Priority, TriggerType, VTS_ACTION_TYPES } from './autoAction/types.js'
+import {
+  ActionType,
+  KeywordMatchType,
+  LIFECYCLE_TRIGGER_TYPES,
+  OBS_ACTION_TYPES,
+  Priority,
+  TriggerType,
+  VTS_ACTION_TYPES,
+} from './autoAction/types.js'
 import {
   buildExecutionContext,
   createDefaultAutoAction,
@@ -32,6 +41,7 @@ import {
   evaluateExpression,
   validateLogicalExpression,
 } from './autoAction/utils'
+import { useBiliAccountManager } from './useBiliAccountManager'
 import { useBiliCookie } from './useBiliCookie'
 import { useBiliFunction } from './useBiliFunction.js'
 import { useVtsStore } from './useVtsStore'
@@ -40,6 +50,7 @@ export const useAutoAction = defineStore('autoAction', () => {
   const danmakuClient = useDanmakuClient()
   const biliFunc = useBiliFunction()
   const account = useAccount()
+  const accountManager = useBiliAccountManager()
   const userEventsTopic = computed(() => (account.value.id > 0 ? `user:events:${account.value.id}` : ''))
   const { on: onUserEvent } = useRealtimeTopic(userEventsTopic)
   let userEventsRegistered = false
@@ -75,6 +86,10 @@ export const useAutoAction = defineStore('autoAction', () => {
     [TriggerType.SCHEDULED]: true,
     [TriggerType.SUPER_CHAT]: true,
     [TriggerType.POINT_REDEEM]: true,
+    [TriggerType.LIVE_START]: true,
+    [TriggerType.LIVE_END]: true,
+    [TriggerType.DANMAKU_DISCONNECTED]: true,
+    [TriggerType.COOKIE_INVALID]: true,
   })
   const isTriggersLoaded = persistLoaded(enabledTriggerTypes)
 
@@ -406,7 +421,7 @@ export const useAutoAction = defineStore('autoAction', () => {
             }
           })
 
-          // 兼容旧版本：触发类型启用状态可能缺少新字段（例如 gift / super_chat）
+          // 兼容旧版本：触发类型启用状态可能缺少新字段（例如 gift / super_chat / 生命周期触发器）
           const defaultEnabled: Record<TriggerType, boolean> = {
             [TriggerType.DANMAKU]: true,
             [TriggerType.GIFT]: true,
@@ -416,6 +431,10 @@ export const useAutoAction = defineStore('autoAction', () => {
             [TriggerType.SCHEDULED]: true,
             [TriggerType.SUPER_CHAT]: true,
             [TriggerType.POINT_REDEEM]: true,
+            [TriggerType.LIVE_START]: true,
+            [TriggerType.LIVE_END]: true,
+            [TriggerType.DANMAKU_DISCONNECTED]: true,
+            [TriggerType.COOKIE_INVALID]: true,
           }
           let patched = false
           for (const triggerType of Object.values(TriggerType)) {
@@ -437,23 +456,146 @@ export const useAutoAction = defineStore('autoAction', () => {
       { immediate: true },
     )
 
-    // 监听直播状态变化，维护开播时间以驱动早鸟签到
-    watch(
-      isLive,
-      (currentState, prevState) => {
-        if (currentState && !prevState) {
-          fallbackLiveStartTime.value = liveStartTimeMs.value ?? Date.now()
-          console.log('[AutoAction] 检测到直播开始，已同步开播时间')
-        } else if (!currentState && prevState) {
-          fallbackLiveStartTime.value = null
-          console.log('[AutoAction] 检测到直播结束，已重置开播时间')
-        }
-      },
-      { immediate: true },
+    // 监听直播状态变化，维护开播时间并触发开播/下播生命周期规则
+    let hasHydratedLive = false
+    let prevHydratedLive = false
+    eventUnlistens.push(
+      watch(
+        () => [Boolean(roomInfo.value), isLive.value] as const,
+        ([hasRoom, currentState]) => {
+          if (currentState) {
+            fallbackLiveStartTime.value ??= liveStartTimeMs.value ?? Date.now()
+          } else {
+            fallbackLiveStartTime.value = null
+          }
+
+          if (!hasRoom) return
+          if (!hasHydratedLive) {
+            hasHydratedLive = true
+            prevHydratedLive = currentState
+            return
+          }
+          if (currentState !== prevHydratedLive) {
+            prevHydratedLive = currentState
+            if (currentState) {
+              console.log('[AutoAction] 检测到直播开始，已同步开播时间')
+              dispatchLifecycleTrigger(TriggerType.LIVE_START, {
+                event: 'live_start',
+                reason: '直播间已开播',
+              })
+            } else {
+              console.log('[AutoAction] 检测到直播结束，已重置开播时间')
+              dispatchLifecycleTrigger(TriggerType.LIVE_END, {
+                event: 'live_end',
+                reason: '直播间已下播',
+              })
+            }
+          }
+        },
+        { immediate: true },
+      ),
+    )
+
+    // 监听弹幕客户端连接异常断开
+    let lastDanmakuDisconnectAlertAt = 0
+    eventUnlistens.push(
+      watch(
+        () => danmakuClient.phase,
+        (nextPhase, prevPhase) => {
+          if (prevPhase === 'connected' && (nextPhase === 'reconnecting' || nextPhase === 'error')) {
+            const now = Date.now()
+            if (now - lastDanmakuDisconnectAlertAt < 15_000) return
+            lastDanmakuDisconnectAlertAt = now
+            dispatchLifecycleTrigger(TriggerType.DANMAKU_DISCONNECTED, {
+              event: 'danmaku_disconnected',
+              reason: danmakuClient.lastError || (nextPhase === 'reconnecting' ? '弹幕连接已断开，正在重连' : '弹幕连接出错'),
+            })
+          }
+        },
+      ),
+    )
+
+    // 监听 B 站主账号 Cookie 失效
+    let prevMainCookieValid: boolean | null = null
+    eventUnlistens.push(
+      watch(
+        () => accountManager.mainAccount,
+        (acc) => {
+          if (!acc) {
+            prevMainCookieValid = null
+            return
+          }
+          if (prevMainCookieValid === true && !acc.isValid) {
+            dispatchLifecycleTrigger(TriggerType.COOKIE_INVALID, {
+              event: 'cookie_invalid',
+              accountName: acc.alias ? `${acc.name} (${acc.alias})` : acc.name || acc.id,
+              reason: '主账号 Cookie 验证失败',
+            })
+          }
+          prevMainCookieValid = acc.isValid
+        },
+        { deep: true, immediate: true },
+      ),
     )
 
     registerEventListeners()
     void registerCheckInResultListener()
+  }
+
+  function buildLiveVariables() {
+    return {
+      isLive: isLive.value,
+      roomId: roomId.value ?? 0,
+      title: roomInfo.value?.title || '',
+      areaName: roomInfo.value?.area_name || '',
+      startTime: liveStartTime.value ?? null,
+    }
+  }
+
+  function buildSystemMockVariables(triggerType: TriggerType): Record<string, unknown> {
+    switch (triggerType) {
+      case TriggerType.LIVE_START:
+        return { event: 'live_start', reason: '直播间已开播（测试）' }
+      case TriggerType.LIVE_END:
+        return { event: 'live_end', reason: '直播间已下播（测试）' }
+      case TriggerType.DANMAKU_DISCONNECTED:
+        return { event: 'danmaku_disconnected', reason: '模拟弹幕连接中断（测试）' }
+      case TriggerType.COOKIE_INVALID:
+        return {
+          event: 'cookie_invalid',
+          accountName: accountManager.mainAccount?.name || '测试主账号',
+          reason: '模拟 Cookie 验证失效（测试）',
+        }
+      default:
+        return { event: triggerType, reason: '状态事件（测试）' }
+    }
+  }
+
+  function dispatchLifecycleTrigger(
+    triggerType: TriggerType,
+    systemVars?: Record<string, unknown>,
+    isTest = false,
+  ) {
+    if (!isActionsLoaded.value || !isTriggersLoaded.value) return
+    if (!isTest && !enabledTriggerTypes.value?.[triggerType]) return
+
+    const validActions = filterValidActions(autoActions.value, triggerType, isLive, isTianXuanActive, {
+      enabledTriggerTypes: isTest ? undefined : enabledTriggerTypes,
+      isTest,
+    })
+    if (validActions.length === 0) return
+
+    const effectiveRoomId = roomId.value || 10000
+    const liveVars = buildLiveVariables()
+    executeActions(validActions, null, triggerType, effectiveRoomId, runtimeState.value, scheduledHandlers, {
+      isTest,
+      skipUserFilters: true,
+      customContextBuilder: (ev, rid, tt) =>
+        buildExecutionContext(ev, rid, tt, {
+          live: liveVars,
+          system: systemVars ?? buildSystemMockVariables(triggerType),
+        }),
+    })
   }
 
   // 初始化模块
@@ -871,9 +1013,17 @@ export const useAutoAction = defineStore('autoAction', () => {
         num: order.count,
         price: order.point,
       }
-      extraVars = { pointOrder: order }
+      extraVars = { pointOrder: order, live: buildLiveVariables() }
+    } else if (LIFECYCLE_TRIGGER_TYPES.has(triggerType)) {
+      extraVars = {
+        live: buildLiveVariables(),
+        system: buildSystemMockVariables(triggerType),
+      }
     } else if (triggerType !== TriggerType.SCHEDULED) {
       event = buildDefaultMockEvent(triggerType, options?.mockEvent)
+      extraVars = { live: buildLiveVariables() }
+    } else {
+      extraVars = { live: buildLiveVariables() }
     }
 
     // 1. 触发条件校验
@@ -934,6 +1084,35 @@ export const useAutoAction = defineStore('autoAction', () => {
         return { matched: false, reason: '模板内容为空，无法生成消息', executed: false }
       }
       renderedText = rendered
+    } else if (action.actionType === ActionType.SEND_NOTIFICATION) {
+      const rawTitle = action.actionConfig.notificationTitle?.trim()
+      const title = rawTitle ? evaluateTemplateExpressions(rawTitle, context).trim() : action.name || '自动提醒'
+      const body = processTemplate(action, context, { useRandomTemplate: true, defaultValue: '' })?.trim() ?? ''
+      if (!title && !body) {
+        return { matched: false, reason: '通知标题与正文不能同时为空', executed: false }
+      }
+      renderedText = `[${title}] ${body}`.trim()
+    } else if (action.actionType === ActionType.OBS_NOTIFY) {
+      const body = processTemplate(action, context, { useRandomTemplate: true })?.trim()
+      if (!body) {
+        return { matched: false, reason: 'OBS 浮窗通知内容不能为空', executed: false }
+      }
+      const rawTitle = action.actionConfig.obsNotifyTitle?.trim()
+      const title = rawTitle ? evaluateTemplateExpressions(rawTitle, context).trim() : action.name || '直播提醒'
+      renderedText = `[OBS 通知] ${title}: ${body}`
+    } else if (action.actionType === ActionType.SPEAK_TTS) {
+      const text = processTemplate(action, context, { useRandomTemplate: true })?.trim()
+      if (!text) {
+        return { matched: false, reason: 'TTS 语音播报内容不能为空', executed: false }
+      }
+      renderedText = `朗读：${text}`
+    } else if (action.actionType === ActionType.SEND_WEBHOOK) {
+      const rawUrl = action.actionConfig.webhookUrl?.trim()
+      if (!rawUrl) {
+        return { matched: false, reason: '尚未配置 Webhook URL', executed: false }
+      }
+      const renderedUrl = evaluateTemplateExpressions(rawUrl, context).trim()
+      renderedText = `${action.actionConfig.webhookMethod ?? 'POST'} ${renderedUrl}`
     } else if (action.actionType === ActionType.PLAY_AUDIO) {
       renderedText = action.actionConfig.audioSource ? `播放音效：${action.actionConfig.audioSource}` : '未配置音效来源'
       if (!action.actionConfig.audioSource) {
@@ -941,6 +1120,8 @@ export const useAutoAction = defineStore('autoAction', () => {
       }
     } else if (action.actionType === ActionType.PNGTUBER_EXPRESSION) {
       renderedText = `切换 PNGtuber 表情：${action.actionConfig.pngtuberExpressionId || '未选择'} (${action.actionConfig.pngtuberDurationMs ?? 5000}ms)`
+    } else if (OBS_ACTION_TYPES.has(action.actionType)) {
+      renderedText = `触发 OBS 动作：${action.actionType}`
     } else if (VTS_ACTION_TYPES.has(action.actionType)) {
       renderedText = `触发 VTS 动作：${action.actionType}`
     }
@@ -1029,6 +1210,12 @@ export const useAutoAction = defineStore('autoAction', () => {
       }
       pointRedeemModule.processPointRedeem(testPayload, autoActions.value, runtimeState.value, true)
       toast.success('已发送积分兑换测试事件')
+      return
+    }
+
+    if (LIFECYCLE_TRIGGER_TYPES.has(triggerType)) {
+      dispatchLifecycleTrigger(triggerType, buildSystemMockVariables(triggerType), true)
+      toast.success(`已触发 ${actionsToTest.length} 条状态规则的测试执行`)
       return
     }
 

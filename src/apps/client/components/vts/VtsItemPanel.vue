@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ArrowDownToLine, Pin, PinOff, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
+import { ArrowDownToLine, Crosshair, Layers, Pause, Pin, PinOff, Play, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import type { VtsAccessoryBinding, VtsPrankBinding } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -16,6 +17,7 @@ import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { useVtsAction } from './useVtsAction'
+import VtsItemDropTrack from './VtsItemDropTrack.vue'
 
 const vts = useVtsStore()
 const { run } = useVtsAction()
@@ -142,6 +144,19 @@ function unloadSingleInstance(instanceID: string) {
     await vts.unloadItems({ instanceIDs: [instanceID] })
     await vts.refreshItems({ includeFiles: true })
   }, '已卸载道具')
+}
+
+function pinToPickedArtMesh(instanceID: string) {
+  run(async () => {
+    toast.info('请在 VTS 中点选 1 个目标部位作为钉选点')
+    const picked = await vts.selectArtMeshesInVts({
+      requestedCount: 1,
+      text: '选择道具要钉选的部位',
+    })
+    const artMeshID = picked.activeArtMeshes[0]
+    if (!picked.success || !artMeshID) throw new Error('未选择部位')
+    await vts.pinItem(instanceID, true, { artMeshID })
+  }, '已钉选到指定部位')
 }
 </script>
 
@@ -413,44 +428,18 @@ function unloadSingleInstance(instanceID: string) {
                 </div>
               </div>
 
-              <!-- 掉落坐标与大小配置 -->
-              <div
+              <!-- 可视化掉落坐标与大小轨道 -->
+              <VtsItemDropTrack
                 v-if="!p.hotkeyID"
-                class="flex items-center gap-3 flex-wrap pt-2 border-t border-border/60 text-xs"
-              >
-                <label class="flex items-center gap-1.5 cursor-pointer select-none">
-                  <Switch
-                    :checked="Boolean(p.randomX)"
-                    @update:checked="(val) => savePrank({ ...p, randomX: val })"
-                  />
-                  <span class="text-muted-foreground">随机 X 落点</span>
-                </label>
-                <div
-                  v-if="!p.randomX"
-                  class="flex items-center gap-1.5"
-                >
-                  <span class="text-muted-foreground">水平 X</span>
-                  <NumberField
-                    :model-value="p.dropX ?? 0"
-                    :min="-1"
-                    :max="1"
-                    :step="0.05"
-                    class="w-24"
-                    @update:model-value="(val) => savePrank({ ...p, dropX: Number(val ?? 0) })"
-                  />
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-muted-foreground">缩放大小</span>
-                  <NumberField
-                    :model-value="p.dropSize ?? 0.32"
-                    :min="0.05"
-                    :max="1"
-                    :step="0.02"
-                    class="w-24"
-                    @update:model-value="(val) => savePrank({ ...p, dropSize: Number(val ?? 0.32) })"
-                  />
-                </div>
-              </div>
+                :drop-x="p.dropX ?? 0"
+                :drop-size="p.dropSize ?? 0.32"
+                :random-x="Boolean(p.randomX)"
+                :disabled-test="!vts.connected || !p.fileName"
+                @update:drop-x="(val) => savePrank({ ...p, dropX: val })"
+                @update:drop-size="(val) => savePrank({ ...p, dropSize: val })"
+                @update:random-x="(val) => savePrank({ ...p, randomX: val })"
+                @test-drop="dropPrank(p)"
+              />
             </div>
           </div>
         </TabsContent>
@@ -501,7 +490,7 @@ function unloadSingleInstance(instanceID: string) {
                 </span>
               </div>
 
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <Button
                   size="xs"
                   variant="outline"
@@ -521,7 +510,74 @@ function unloadSingleInstance(instanceID: string) {
                     v-else
                     class="size-3"
                   />
-                  {{ item.pinnedToModel ? '取消固定' : '固定到模型' }}
+                  {{ item.pinnedToModel ? '取消固定' : '固定' }}
+                </Button>
+                <Button
+                  v-if="!item.pinnedToModel"
+                  size="xs"
+                  variant="outline"
+                  class="gap-1"
+                  title="在 VTS 中点选具体 ArtMesh 部位精确钉选"
+                  @click="pinToPickedArtMesh(item.instanceID)"
+                >
+                  <Crosshair class="size-3" />
+                  选部位钉选
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="gap-1"
+                  title="将道具置顶到模型前层"
+                  @click="run(() => vts.sortItem(item.instanceID, { frontOn: true, backOn: false }), '已置前')"
+                >
+                  <Layers class="size-3" />
+                  置前
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="gap-1"
+                  title="将道具移到模型后层"
+                  @click="run(() => vts.sortItem(item.instanceID, { frontOn: false, backOn: true }), '已置后')"
+                >
+                  <Layers class="size-3" />
+                  置后
+                </Button>
+                <Button
+                  v-if="item.frameCount > 1"
+                  size="icon-xs"
+                  variant="outline"
+                  title="播放动画"
+                  @click="
+                    run(
+                      () =>
+                        vts.controlItemAnimation(item.instanceID, {
+                          setAnimationPlayState: true,
+                          animationPlayState: true,
+                        }),
+                      '已播放动画',
+                    )
+                  "
+                >
+                  <Play class="size-3" />
+                </Button>
+                <Button
+                  v-if="item.frameCount > 1"
+                  size="icon-xs"
+                  variant="outline"
+                  title="暂停动画"
+                  @click="
+                    run(
+                      () =>
+                        vts.controlItemAnimation(item.instanceID, {
+                          setAnimationPlayState: true,
+                          animationPlayState: false,
+                        }),
+                      '已暂停动画',
+                    )
+                  "
+                >
+                  <Pause class="size-3" />
                 </Button>
                 <Popconfirm
                   title="确认从场景中卸载此道具？"

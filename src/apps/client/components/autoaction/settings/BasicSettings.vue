@@ -54,11 +54,19 @@ const triggerTypeOptions = [
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
   { label: '积分商品兑换', value: TriggerType.POINT_REDEEM },
+  { label: '开播时触发', value: TriggerType.LIVE_START },
+  { label: '下播时触发', value: TriggerType.LIVE_END },
+  { label: '弹幕连接异常', value: TriggerType.DANMAKU_DISCONNECTED },
+  { label: 'Cookie 失效', value: TriggerType.COOKIE_INVALID },
 ]
 
 const actionTypeOptions = [
   { label: '发送弹幕', value: ActionType.SEND_DANMAKU },
   { label: '发送私信', value: ActionType.SEND_PRIVATE_MSG },
+  { label: '发送客户端通知', value: ActionType.SEND_NOTIFICATION },
+  { label: '发送 OBS 浮窗通知', value: ActionType.OBS_NOTIFY },
+  { label: 'TTS 语音播报', value: ActionType.SPEAK_TTS },
+  { label: '发送 Webhook 请求', value: ActionType.SEND_WEBHOOK },
   { label: '播放音效（无需 VTS）', value: ActionType.PLAY_AUDIO },
   { label: 'PNGtuber：切换表情', value: ActionType.PNGTUBER_EXPRESSION },
   { label: 'VTS：触发热键', value: ActionType.VTS_HOTKEY },
@@ -70,6 +78,11 @@ const actionTypeOptions = [
   { label: 'VTS：配饰显隐', value: ActionType.VTS_ACCESSORY },
   { label: 'VTS：模型染色', value: ActionType.VTS_COLOR_TINT },
   { label: 'VTS：后处理滤镜', value: ActionType.VTS_POST_PROCESSING },
+  { label: 'OBS：切换本地场景', value: ActionType.OBS_SWITCH_SCENE },
+  { label: 'VTsuru 场景：切换子场景', value: ActionType.OBS_SCENE_SWITCH },
+  { label: 'OBS：控制源显隐', value: ActionType.OBS_SOURCE_VISIBLE },
+  { label: 'OBS：控制滤镜开关', value: ActionType.OBS_FILTER_ENABLED },
+  { label: 'OBS：保存高光回放', value: ActionType.OBS_SAVE_REPLAY },
 ]
 
 const priorityOptions = [

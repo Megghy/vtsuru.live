@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
-import { Activity, Bell, HardDrive, Info, RefreshCw, Settings } from 'lucide-vue-next'
-import { onMounted, ref, watch } from 'vue'
+import { Activity, Bell, HardDrive, Info, RefreshCw, Settings, Volume2 } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -10,7 +10,9 @@ import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
 import ClientDiagnosticsPanel from '@/apps/client/components/settings/ClientDiagnosticsPanel.vue'
 import { checkUpdate, isCheckingUpdate } from '@/apps/client/data/initialize'
-import type { NotificationType } from '@/apps/client/store/useSettings'
+import { sendCustomClientNotification } from '@/apps/client/data/notification'
+import { playNotificationTone } from '@/apps/client/data/notificationSound'
+import type { CloseWindowAction, NotificationType } from '@/apps/client/store/useSettings'
 import { useSettings } from '@/apps/client/store/useSettings'
 import { isTauri } from '@/shared/config/api'
 import { clientVersion } from '@/shared/config/clientVersion'
@@ -18,6 +20,7 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
@@ -139,6 +142,34 @@ async function handleWatchdogAutoReloadChange(val: boolean) {
   }
 }
 
+const closeWindowOptions: Array<{ label: string; value: CloseWindowAction }> = [
+  { label: '最小化到系统托盘', value: 'minimize-to-tray' },
+  { label: '直接退出客户端', value: 'exit' },
+]
+
+const soundVolumePercent = computed({
+  get: () => Math.round((setting.settings.notificationSettings?.soundVolume ?? 0.5) * 100),
+  set: (val: number) => {
+    setting.settings.notificationSettings.soundVolume = Math.min(1, Math.max(0.05, (val || 50) / 100))
+    void setting.save()
+  },
+})
+
+function previewNotificationSound() {
+  void playNotificationTone('chime', setting.settings.notificationSettings?.soundVolume ?? 0.5)
+}
+
+function sendTestNotification() {
+  void sendCustomClientNotification({
+    title: 'VTsuru.Client 测试通知',
+    body: '如果你看到了这条弹窗，说明系统桌面通知与提示音工作正常。',
+    showDesktop: true,
+    showToast: true,
+    playSound: setting.settings.notificationSettings?.enableSound ?? true,
+    bypassGlobalSwitch: false,
+  })
+}
+
 const notificationItems: Array<{ type: NotificationType; title: string; desc: string }> = [
   {
     type: 'question-box',
@@ -153,7 +184,7 @@ const notificationItems: Array<{ type: NotificationType; title: string; desc: st
   {
     type: 'danmaku',
     title: '弹幕连接异常通知',
-    desc: '当弹幕流中断或异常重连时在桌面提醒',
+    desc: '当弹幕流启动失败、被踢下线或连接中断时在桌面提醒',
   },
   {
     type: 'message-failed',
@@ -163,7 +194,22 @@ const notificationItems: Array<{ type: NotificationType; title: string; desc: st
   {
     type: 'live-danmaku-failed',
     title: '直播弹幕发送失败通知',
-    desc: '自动操作发送直播间弹幕失败时在桌面提醒',
+    desc: '自动操作或客户端发送直播间弹幕失败时在桌面提醒',
+  },
+  {
+    type: 'cookie-invalid',
+    title: 'B 站 Cookie 失效通知',
+    desc: '检测到主账号 B 站凭据过期或验证失败时立即提醒',
+  },
+  {
+    type: 'live-status',
+    title: '直播开播 / 下播状态通知',
+    desc: '检测到绑定直播间开播或下播时发送桌面状态提醒',
+  },
+  {
+    type: 'update',
+    title: '客户端版本更新通知',
+    desc: '后台检查到 VTsuru.Client 新版本可用时在桌面提醒',
   },
 ]
 
@@ -172,7 +218,12 @@ function isNotificationTypeEnabled(type: NotificationType): boolean {
 }
 
 function toggleNotificationType(type: NotificationType, value: boolean) {
-  setting.settings.notificationSettings ??= { enableTypes: [] }
+  setting.settings.notificationSettings ??= {
+    enableTypes: [],
+    onlyWhenHidden: false,
+    enableSound: true,
+    soundVolume: 0.5,
+  }
   setting.settings.notificationSettings.enableTypes ??= []
   if (value) {
     if (!setting.settings.notificationSettings.enableTypes.includes(type)) {
@@ -328,8 +379,41 @@ function handleTitleClick() {
 
                       <SettingRow
                         variant="none"
+                        title="点击窗口关闭按钮时"
+                        description="选择点击右上角关闭按钮后隐藏到托盘后台运行，或直接退出程序"
+                      >
+                        <div class="w-[180px]">
+                          <Select
+                            :model-value="setting.settings.closeWindowAction || 'minimize-to-tray'"
+                            @update:model-value="
+                              (val) => {
+                                setting.settings.closeWindowAction = val as CloseWindowAction
+                                setting.save()
+                              }
+                            "
+                          >
+                            <SelectTrigger class="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem
+                                v-for="opt in closeWindowOptions"
+                                :key="opt.value"
+                                :value="opt.value"
+                              >
+                                {{ opt.label }}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </SettingRow>
+
+                      <Separator />
+
+                      <SettingRow
+                        variant="none"
                         title="界面卡死时自动重载（看门狗自愈）"
-                        description="当主界面连续 60 秒未响应心跳时，由原生壳自动重载页面以恢复采集与服务"
+                        description="当主界面连续 30 秒未响应心跳时，由原生壳自动重载页面以恢复采集与服务"
                       >
                         <Switch
                           :checked="Boolean(setting.settings.watchdogAutoReload)"
@@ -376,8 +460,17 @@ function handleTitleClick() {
               <!-- 系统通知 -->
               <template v-else-if="currentTab === 'notification'">
                 <Card>
-                  <CardHeader class="py-3 px-4">
+                  <CardHeader class="py-3 px-4 flex-row items-center justify-between space-y-0">
                     <CardTitle>系统通知</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      class="gap-1.5"
+                      @click="sendTestNotification"
+                    >
+                      <Bell class="size-3.5" />
+                      发送测试通知
+                    </Button>
                   </CardHeader>
                   <CardContent class="px-4 pb-4 flex flex-col gap-3.5">
                     <SettingRow
@@ -395,6 +488,60 @@ function handleTitleClick() {
                         "
                       />
                     </SettingRow>
+
+                    <template v-if="setting.settings.enableNotification">
+                      <SettingRow
+                        variant="none"
+                        title="仅在后台或最小化时推送桌面通知"
+                        description="当客户端主窗口处于前台聚焦状态时跳过系统桌面弹窗，减少打扰"
+                      >
+                        <Switch
+                          :checked="Boolean(setting.settings.notificationSettings?.onlyWhenHidden)"
+                          @update:checked="
+                            (val) => {
+                              setting.settings.notificationSettings.onlyWhenHidden = Boolean(val)
+                              setting.save()
+                            }
+                          "
+                        />
+                      </SettingRow>
+
+                      <SettingRow
+                        variant="none"
+                        title="通知提示音"
+                        description="桌面通知弹出时播放轻量系统提示音"
+                      >
+                        <div class="flex items-center gap-2">
+                          <template v-if="setting.settings.notificationSettings?.enableSound">
+                            <NumberField
+                              v-model="soundVolumePercent"
+                              :min="10"
+                              :max="100"
+                              :step="10"
+                              class="w-24"
+                            />
+                            <span class="text-xs text-muted-foreground">%</span>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              title="试听提示音"
+                              @click="previewNotificationSound"
+                            >
+                              <Volume2 class="size-3.5" />
+                            </Button>
+                          </template>
+                          <Switch
+                            :checked="setting.settings.notificationSettings?.enableSound ?? true"
+                            @update:checked="
+                              (val) => {
+                                setting.settings.notificationSettings.enableSound = Boolean(val)
+                                setting.save()
+                              }
+                            "
+                          />
+                        </div>
+                      </SettingRow>
+                    </template>
 
                     <Separator />
 

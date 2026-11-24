@@ -16,6 +16,7 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 
 import { useVtsAction } from './useVtsAction'
+import VtsPresetStageCanvas from './VtsPresetStageCanvas.vue'
 
 const vts = useVtsStore()
 const { run } = useVtsAction()
@@ -78,6 +79,17 @@ function addFromCurrent() {
 function addToDeck(p: VtsPreset) {
   run(() => vts.upsertDeckTile(newDeckTile('preset', p.id, p.name, '机位')), '已加入操作台')
 }
+
+function miniThumbStyle(p: VtsPreset) {
+  const left = Math.max(0, Math.min(100, ((p.positionX + 1) / 2) * 100))
+  const top = Math.max(0, Math.min(100, ((1 - p.positionY) / 2) * 100))
+  const scale = Math.max(0.35, Math.min(1.5, 0.7 + p.size / 180))
+  return {
+    left: `${left}%`,
+    top: `${top}%`,
+    transform: `translate(-50%, -50%) rotate(${(-p.rotation).toFixed(1)}deg) scale(${scale.toFixed(2)})`,
+  }
+}
 </script>
 
 <template>
@@ -119,7 +131,7 @@ function addToDeck(p: VtsPreset) {
         v-if="vts.presets.length === 0"
         class="py-6"
       >
-        <Empty description="保存常用机位坐标（杂谈、游戏、特写等），支持一键切换或 OBS 联动" />
+        <Empty description="保存常用机位坐标（杂谈、游戏、特写等），支持可视化拖拽构图、一键切换或 OBS 联动" />
       </div>
 
       <div
@@ -127,14 +139,32 @@ function addToDeck(p: VtsPreset) {
         :key="p.id"
         class="flex-between gap-3 flex-wrap p-2.5 rounded-md border border-border bg-muted/20"
       >
-        <div class="flex items-center gap-2.5 flex-wrap text-xs">
-          <span class="font-semibold text-foreground">{{ p.name }}</span>
-          <span class="text-[11px] text-muted-foreground tabular-nums font-mono">
-            x={{ p.positionX.toFixed(2) }} · y={{ p.positionY.toFixed(2) }} · rot={{ p.rotation.toFixed(1) }}° · size={{
-              p.size.toFixed(1)
-            }}
-            · {{ p.timeInSeconds }}s
-          </span>
+        <div class="flex items-center gap-3 min-w-0">
+          <!-- 迷你 16:9 构图缩略图 -->
+          <div
+            class="relative w-16 h-9 rounded border border-border bg-neutral-950/90 overflow-hidden shrink-0"
+            title="机位构图示意图"
+          >
+            <div class="absolute inset-x-0 top-1/2 h-px bg-white/15" />
+            <div class="absolute inset-y-0 left-1/2 w-px bg-white/15" />
+            <div
+              class="absolute flex flex-col items-center justify-center"
+              :style="miniThumbStyle(p)"
+            >
+              <div class="size-2 rounded-full bg-primary" />
+              <div class="w-3.5 h-2.5 rounded-t bg-primary/80 mt-px" />
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-0.5">
+            <div class="text-xs font-semibold text-foreground truncate">{{ p.name }}</div>
+            <div class="text-[11px] text-muted-foreground tabular-nums font-mono">
+              x={{ p.positionX.toFixed(2) }} · y={{ p.positionY.toFixed(2) }} · rot={{ p.rotation.toFixed(1) }}° · size={{
+                p.size.toFixed(1)
+              }}
+              · {{ p.timeInSeconds }}s
+            </div>
+          </div>
         </div>
 
         <div class="flex items-center gap-1.5 flex-wrap">
@@ -182,22 +212,24 @@ function addToDeck(p: VtsPreset) {
     :open="showEdit"
     @update:open="(val) => (showEdit = val)"
   >
-    <DialogContent class="max-w-lg">
+    <DialogContent class="max-w-2xl">
       <DialogHeader>
         <DialogTitle class="text-base">{{ isNewDraft ? '新建机位预设' : '编辑机位预设' }}</DialogTitle>
       </DialogHeader>
-      <div class="flex flex-col gap-3 py-2">
-        <FormField label="预设名称">
-          <Input
-            v-model="form.name"
-            placeholder="例如：杂谈居中 / 游戏右下角"
-          />
-        </FormField>
-
-        <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex flex-col gap-3 py-1">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
+          <FormField
+            label="预设名称"
+            class="sm:col-span-2 min-w-0"
+          >
+            <Input
+              v-model="form.name"
+              placeholder="例如：杂谈居中 / 游戏右下角"
+            />
+          </FormField>
           <Button
             variant="outline"
-            class="gap-1.5"
+            class="gap-1.5 w-full"
             :disabled="!canReadCurrent && !vts.connected"
             @click="
               run(async () => {
@@ -209,12 +241,21 @@ function addToDeck(p: VtsPreset) {
             <Crosshair class="size-3.5" />
             读取当前模型位置
           </Button>
-          <span class="text-[11px] text-muted-foreground">连接 VTS 后可直接采集模型当前坐标与缩放</span>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+        <!-- 16:9 交互拖拽舞台 -->
+        <VtsPresetStageCanvas
+          v-if="showEdit"
+          v-model:position-x="form.positionX"
+          v-model:position-y="form.positionY"
+          v-model:rotation="form.rotation"
+          v-model:size="form.size"
+        />
+
+        <!-- 精确微调数值 -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
           <FormField
-            label="过渡时间 (s)"
+            label="过渡 (s)"
             class="min-w-0"
           >
             <NumberField
@@ -251,7 +292,7 @@ function addToDeck(p: VtsPreset) {
             />
           </FormField>
           <FormField
-            label="缩放大小"
+            label="缩放"
             class="min-w-0"
           >
             <NumberField

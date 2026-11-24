@@ -5,11 +5,11 @@ import {
   ArrowUpRight,
   AudioWaveform,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CloudUpload,
   Cookie,
+  Gift,
   Home,
   LayoutDashboard,
   MessageSquare,
@@ -23,14 +23,16 @@ import {
   Sparkles,
   UserCog,
   Users,
+  Wrench,
   XCircle,
   Zap,
 } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { type Component, computed, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
+import ClientCommandSource from '@/apps/client/components/ClientCommandSource.vue'
 import ClientStatusBar from '@/apps/client/components/ClientStatusBar.vue'
 import SpeechMiniController from '@/apps/client/components/SpeechMiniController.vue'
 import WindowBar from '@/apps/client/components/WindowBar.vue'
@@ -58,6 +60,7 @@ import { Empty } from '@/shared/ui/empty'
 import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
@@ -82,7 +85,6 @@ const biliCookie = useBiliCookie()
 
 const token = ref('')
 const siderCollapsed = ref(false)
-const liveWindowsOpen = ref(true)
 
 const cookieStatusType = computed(() => {
   if (!biliCookie.hasBiliCookie) return 'warning'
@@ -129,6 +131,7 @@ const routeNameToMenuKey: Record<string, string> = {
   'client-danmaku-window-manage': 'danmaku-window-manage',
   'client-gift-window-manage': 'gift-window-manage',
   'client-auto-action-manage': 'danmaku-auto-action-manage',
+  'client-tools': 'tools',
   'client-vts': 'vts',
   'client-pngtuber': 'pngtuber',
   'client-pngtuber-model': 'pngtuber',
@@ -173,39 +176,71 @@ async function login() {
   }
 }
 
-const menuItems = [
-  { key: 'go-back-home', name: 'client-index', label: '主页', icon: Home },
-  { key: 'account-manage', name: 'client-account-manage', label: '账号与凭据', icon: UserCog },
-  { key: 'fetcher', name: 'client-fetcher', label: 'EventFetcher', icon: CloudUpload },
-  { key: 'live-manage', name: 'client-live-manage', label: '直播管理', icon: Radio },
-  { key: 'live-dashboard', name: 'client-live-dashboard', label: '中控台', icon: LayoutDashboard },
+interface ClientMenuItem {
+  key: string
+  name: string
+  label: string
+  icon: Component
+  hasIndicator?: () => boolean
+}
+
+interface ClientMenuGroup {
+  key: string
+  label?: string
+  items: ClientMenuItem[]
+}
+
+const menuGroups: ClientMenuGroup[] = [
   {
-    key: 'live-windows',
-    label: '直播浮窗',
-    icon: MessageSquare,
-    isGroup: true,
-    children: [
+    key: 'overview',
+    items: [
+      { key: 'go-back-home', name: 'client-index', label: '主页', icon: Home },
+      { key: 'tools', name: 'client-tools', label: '工具中心', icon: Wrench },
+    ],
+  },
+  {
+    key: 'live',
+    label: '直播与互动',
+    items: [
+      { key: 'live-dashboard', name: 'client-live-dashboard', label: '中控台', icon: LayoutDashboard },
+      { key: 'live-manage', name: 'client-live-manage', label: '直播管理', icon: Radio },
       {
         key: 'danmaku-window-manage',
         name: 'client-danmaku-window-manage',
         label: '弹幕机',
+        icon: MessageSquare,
         hasIndicator: () => danmakuWindow.isDanmakuWindowOpen,
       },
       {
         key: 'gift-window-manage',
         name: 'client-gift-window-manage',
         label: '礼物与排行',
+        icon: Gift,
         hasIndicator: () => giftWindow.isGiftWindowOpen,
       },
+      { key: 'danmaku-auto-action-manage', name: 'client-auto-action-manage', label: '自动操作', icon: Zap },
+      { key: 'fans-viewer', name: 'client-fans-viewer', label: '粉丝查看', icon: Users },
     ],
   },
-  { key: 'danmaku-auto-action-manage', name: 'client-auto-action-manage', label: '自动操作', icon: Zap },
-  { key: 'vts', name: 'client-vts', label: 'VTS 控制', icon: Smile },
-  { key: 'pngtuber', name: 'client-pngtuber', label: 'PNGtuber', icon: Sparkles },
-  { key: 'read-danmaku', name: 'client-read-danmaku', label: '读弹幕', icon: Mic },
-  { key: 'transcription', name: 'client-transcription', label: '语音转写', icon: AudioWaveform },
-  { key: 'fans-viewer', name: 'client-fans-viewer', label: '粉丝查看', icon: Users },
-  { key: 'settings', name: 'client-settings', label: '设置', icon: Settings },
+  {
+    key: 'avatar-audio',
+    label: '形象与语音',
+    items: [
+      { key: 'vts', name: 'client-vts', label: 'VTS 控制', icon: Smile },
+      { key: 'pngtuber', name: 'client-pngtuber', label: 'PNGtuber', icon: Sparkles },
+      { key: 'read-danmaku', name: 'client-read-danmaku', label: '读弹幕', icon: Mic },
+      { key: 'transcription', name: 'client-transcription', label: '语音转写', icon: AudioWaveform },
+    ],
+  },
+  {
+    key: 'system',
+    label: '连接与系统',
+    items: [
+      { key: 'fetcher', name: 'client-fetcher', label: 'EventFetcher', icon: CloudUpload },
+      { key: 'account-manage', name: 'client-account-manage', label: '账号与凭据', icon: UserCog },
+      { key: 'settings', name: 'client-settings', label: '设置', icon: Settings },
+    ],
+  },
 ]
 
 onMounted(() => {
@@ -305,43 +340,43 @@ onMounted(() => {
         <div class="sider-content flex flex-col h-full">
           <!-- 侧边栏头部 -->
           <div
-            class="sider-header flex items-center h-[54px] px-3.5 border-b border-border shrink-0"
-            :class="siderCollapsed ? 'justify-center !px-0' : 'justify-between'"
+            class="sider-header flex items-center h-11 px-2.5 border-b border-border shrink-0"
+            :class="siderCollapsed ? 'justify-center !px-0' : 'justify-between gap-1'"
           >
-            <div
-              v-if="!siderCollapsed"
-              class="app-title flex items-center gap-2 font-semibold text-sm text-foreground tracking-tight"
-            >
-              <span>VTsuru.Client</span>
-            </div>
-
-            <div class="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    class="rounded-full"
-                    aria-label="EventFetcher 状态"
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  :size="siderCollapsed ? 'icon-xs' : 'xs'"
+                  :class="siderCollapsed ? 'rounded-full' : 'px-1.5 gap-1.5 min-w-0'"
+                  aria-label="EventFetcher 状态"
+                  @click="router.push({ name: 'client-fetcher' })"
+                >
+                  <CheckCircle2
+                    v-if="webfetcher.state === 'connected'"
+                    class="size-3.5 text-emerald-500 shrink-0"
+                  />
+                  <XCircle
+                    v-else
+                    class="size-3.5 text-destructive shrink-0"
+                  />
+                  <span
+                    v-if="!siderCollapsed"
+                    class="text-xs font-medium truncate"
                   >
-                    <CheckCircle2
-                      v-if="webfetcher.state === 'connected'"
-                      class="size-4 text-emerald-500"
-                    />
-                    <XCircle
-                      v-else
-                      class="size-4 text-destructive"
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div>EventFetcher 状态</div>
-                  <div class="text-[11px] text-muted-foreground">
-                    {{ webfetcher.state === 'connected' ? '运行中' : '未运行 / 连接断开' }}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
+                    {{ webfetcher.state === 'connected' ? '采集正常' : '采集断开' }}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <div>EventFetcher 状态</div>
+                <div class="text-[11px] text-muted-foreground">
+                  {{ webfetcher.state === 'connected' ? '运行中 · 点击查看' : '未运行 / 连接断开 · 点击查看' }}
+                </div>
+              </TooltipContent>
+            </Tooltip>
 
+            <div class="flex items-center gap-0.5 shrink-0">
               <template v-if="!siderCollapsed">
                 <Tooltip>
                   <TooltipTrigger as-child>
@@ -373,210 +408,208 @@ onMounted(() => {
                   <TooltipContent>折叠边栏</TooltipContent>
                 </Tooltip>
               </template>
-            </div>
 
-            <Tooltip v-if="siderCollapsed">
-              <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label="展开边栏"
-                  @click="siderCollapsed = false"
-                >
-                  <ChevronRight class="size-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>展开边栏</TooltipContent>
-            </Tooltip>
+              <Tooltip v-else>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="展开边栏"
+                    @click="siderCollapsed = false"
+                  >
+                    <ChevronRight class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">展开边栏</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
 
           <!-- 导航菜单 -->
-          <div class="sider-menu flex-1 overflow-y-auto scrollbar-thin px-2 py-3 space-y-1">
-            <template
-              v-for="item in menuItems"
-              :key="item.key"
+          <div
+            class="sider-menu flex-1 overflow-y-auto scrollbar-thin px-2 py-2.5"
+            :class="siderCollapsed ? 'space-y-2' : 'space-y-2.5'"
+          >
+            <div
+              v-for="(group, groupIdx) in menuGroups"
+              :key="group.key"
+              class="space-y-0.5"
             >
-              <!-- 分组项 (直播浮窗) -->
               <div
-                v-if="item.isGroup"
-                class="space-y-1"
+                v-if="group.label && !siderCollapsed"
+                class="px-2.5 pb-1 text-[11px] font-medium text-muted-foreground/70 select-none"
               >
-                <Button
-                  variant="ghost"
-                  class="w-full justify-start gap-2.5 text-muted-foreground"
-                  :class="{ 'justify-center !px-0': siderCollapsed }"
-                  @click="liveWindowsOpen = !liveWindowsOpen"
-                >
-                  <component
-                    :is="item.icon"
-                    class="size-4 shrink-0"
-                  />
-                  <span
-                    v-if="!siderCollapsed"
-                    class="flex-1 text-left"
-                    >{{ item.label }}</span
-                  >
-                  <ChevronDown
-                    v-if="!siderCollapsed"
-                    class="size-3 transition-transform duration-150"
-                    :class="{ '-rotate-90': !liveWindowsOpen }"
-                  />
-                </Button>
+                {{ group.label }}
+              </div>
+              <Separator
+                v-else-if="groupIdx > 0 && siderCollapsed"
+                class="my-1.5 mx-auto w-7"
+              />
 
-                <div
-                  v-if="liveWindowsOpen && !siderCollapsed"
-                  class="pl-4 space-y-1 border-l ml-3.5 border-border/60"
-                >
+              <Tooltip
+                v-for="item in group.items"
+                :key="item.key"
+                :disabled="!siderCollapsed"
+              >
+                <TooltipTrigger as-child>
                   <RouterLink
-                    v-for="sub in item.children"
-                    :key="sub.key"
-                    :to="{ name: sub.name }"
-                    class="flex-between px-2.5 py-1.5 rounded-md text-xs transition-colors"
-                    :class="
-                      activeMenuKey === sub.key
+                    :to="{ name: item.name }"
+                    class="relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors"
+                    :class="[
+                      activeMenuKey === item.key
                         ? 'bg-primary/10 text-primary font-semibold'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                    "
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+                      siderCollapsed && 'justify-center !px-0',
+                    ]"
+                    :aria-label="siderCollapsed ? item.label : undefined"
                   >
-                    <span>{{ sub.label }}</span>
+                    <component
+                      :is="item.icon"
+                      class="size-4 shrink-0"
+                    />
                     <span
-                      v-if="sub.hasIndicator?.()"
-                      class="size-1.5 rounded-full bg-emerald-500"
+                      v-if="!siderCollapsed"
+                      class="flex-1 truncate"
+                    >
+                      {{ item.label }}
+                    </span>
+                    <span
+                      v-if="item.hasIndicator?.()"
+                      class="size-1.5 rounded-full bg-emerald-500 shrink-0"
+                      :class="siderCollapsed && 'absolute top-1.5 right-3'"
+                      aria-label="运行中"
                     />
                   </RouterLink>
-                </div>
-              </div>
-
-              <!-- 普通路由项 -->
-              <RouterLink
-                v-else
-                :to="{ name: item.name }"
-                class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors"
-                :class="[
-                  activeMenuKey === item.key
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-                  siderCollapsed && 'justify-center !px-0',
-                ]"
-                :title="siderCollapsed ? item.label : undefined"
-              >
-                <component
-                  :is="item.icon"
-                  class="size-4 shrink-0"
-                />
-                <span v-if="!siderCollapsed">{{ item.label }}</span>
-              </RouterLink>
-            </template>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <span>{{ item.label }}</span>
+                  <span
+                    v-if="item.hasIndicator?.()"
+                    class="ml-1.5 text-[11px] text-emerald-500"
+                  >
+                    · 运行中
+                  </span>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
 
           <!-- 底部状态区 (仅展开时显示) -->
           <div
-            v-if="!siderCollapsed && (rpcServer.running || rpcServer.lastError)"
-            class="sider-status-list p-2 mx-2 mb-2 rounded border bg-muted/20"
+            v-if="!siderCollapsed"
+            class="sider-footer shrink-0 border-t border-border/60 p-2 flex flex-col gap-1.5"
           >
             <div
-              v-if="rpcServer.lastError"
-              class="flex-between gap-1.5 text-xs text-destructive cursor-pointer"
-              @click="goDiagnostics"
+              v-if="rpcServer.running || rpcServer.lastError"
+              class="sider-status-list px-2.5 py-2 rounded-md border border-border/80 bg-muted/20"
             >
-              <div class="flex items-center gap-1.5 min-w-0">
-                <AlertTriangle class="size-3.5 shrink-0" />
-                <span class="truncate text-[11px]">本地接口异常</span>
-              </div>
-              <Badge
-                variant="destructive"
-                size="xs"
+              <div
+                v-if="rpcServer.lastError"
+                class="flex-between gap-1.5 text-xs text-destructive cursor-pointer"
+                @click="goDiagnostics"
               >
-                查看
-              </Badge>
-            </div>
-            <Popover v-else>
-              <PopoverTrigger as-child>
-                <div class="status-row status-row--hoverable flex-between text-xs cursor-pointer select-none">
-                  <div class="status-row-label flex items-center gap-1.5 min-w-0">
-                    <Plug
-                      class="size-3.5 shrink-0"
-                      :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
-                    />
-                    <span class="text-muted-foreground text-[11px]">本地接口</span>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    size="xs"
-                    :class="
-                      rpcServer.connectionCount > 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''
-                    "
-                  >
-                    {{ rpcServer.connectionCount }} 连接
-                  </Badge>
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <AlertTriangle class="size-3.5 shrink-0" />
+                  <span class="truncate text-[11px]">本地接口异常</span>
                 </div>
-              </PopoverTrigger>
-              <PopoverContent
-                side="right"
-                class="w-64 space-y-2"
-              >
-                <div class="font-semibold text-foreground text-xs">外部接入连接</div>
-                <Empty
-                  v-if="rpcServer.connectionCount === 0"
-                  description="暂无外部连接"
-                  class="py-3"
-                />
-                <div
-                  v-for="conn in rpcServer.connections"
-                  v-else
-                  :key="conn.connId"
-                  class="p-2 rounded bg-muted/40 space-y-1"
+                <Badge
+                  variant="destructive"
+                  size="xs"
                 >
-                  <div class="flex-between gap-2">
-                    <span class="font-medium text-foreground truncate">{{ formatOrigin(conn.origin) }}</span>
+                  查看
+                </Badge>
+              </div>
+              <Popover v-else>
+                <PopoverTrigger as-child>
+                  <div class="status-row status-row--hoverable flex-between text-xs cursor-pointer select-none">
+                    <div class="status-row-label flex items-center gap-1.5 min-w-0">
+                      <Plug
+                        class="size-3.5 shrink-0"
+                        :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
+                      />
+                      <span class="text-muted-foreground text-[11px]">本地接口</span>
+                    </div>
                     <Badge
-                      :variant="conn.subscribed ? 'success' : 'secondary'"
+                      variant="outline"
                       size="xs"
+                      :class="
+                        rpcServer.connectionCount > 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''
+                      "
                     >
-                      {{ conn.subscribed ? '已订阅' : '未订阅' }}
+                      {{ rpcServer.connectionCount }} 连接
                     </Badge>
                   </div>
-                  <div class="text-[10px] text-muted-foreground">接入于 {{ formatSince(conn.connectedAt) }}</div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <!-- Cookie 状态卡片 -->
-          <div
-            v-if="!siderCollapsed"
-            class="cookie-status-card m-2 p-2.5 rounded border bg-muted/20 space-y-2"
-          >
-            <div class="cookie-status-header flex-between text-xs">
-              <div class="status-row-label flex items-center gap-1.5 min-w-0">
-                <Cookie
-                  class="size-3.5 shrink-0"
-                  :class="
-                    cookieStatusType === 'success'
-                      ? 'text-emerald-500'
-                      : cookieStatusType === 'error'
-                        ? 'text-destructive'
-                        : 'text-amber-500'
-                  "
-                />
-                <span class="font-medium text-foreground text-[11px]">B站 Cookie</span>
-              </div>
-              <Badge
-                :variant="cookieStatusType === 'success' ? 'success' : cookieStatusType === 'error' ? 'destructive' : 'warning'"
-                size="xs"
-              >
-                {{ cookieStatusText }}
-              </Badge>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="right"
+                  class="w-64 space-y-2"
+                >
+                  <div class="font-semibold text-foreground text-xs">外部接入连接</div>
+                  <Empty
+                    v-if="rpcServer.connectionCount === 0"
+                    description="暂无外部连接"
+                    class="py-3"
+                  />
+                  <div
+                    v-for="conn in rpcServer.connections"
+                    v-else
+                    :key="conn.connId"
+                    class="p-2 rounded bg-muted/40 space-y-1"
+                  >
+                    <div class="flex-between gap-2">
+                      <span class="font-medium text-foreground truncate">{{ formatOrigin(conn.origin) }}</span>
+                      <Badge
+                        :variant="conn.subscribed ? 'success' : 'secondary'"
+                        size="xs"
+                      >
+                        {{ conn.subscribed ? '已订阅' : '未订阅' }}
+                      </Badge>
+                    </div>
+                    <div class="text-[10px] text-muted-foreground">接入于 {{ formatSince(conn.connectedAt) }}</div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
-            <Button
-              v-if="cookieStatusType !== 'success'"
-              size="xs"
-              variant="outline"
-              class="w-full"
-              @click="goCookieManagement"
-            >
-              前往处理
-            </Button>
+
+            <!-- Cookie 状态卡片 -->
+            <div class="cookie-status-card px-2.5 py-2 rounded-md border border-border/80 bg-muted/20 space-y-2">
+              <div class="cookie-status-header flex-between text-xs">
+                <div class="status-row-label flex items-center gap-1.5 min-w-0">
+                  <Cookie
+                    class="size-3.5 shrink-0"
+                    :class="
+                      cookieStatusType === 'success'
+                        ? 'text-emerald-500'
+                        : cookieStatusType === 'error'
+                          ? 'text-destructive'
+                          : 'text-amber-500'
+                    "
+                  />
+                  <span class="font-medium text-foreground text-[11px]">B站 Cookie</span>
+                </div>
+                <Badge
+                  :variant="
+                    cookieStatusType === 'success'
+                      ? 'success'
+                      : cookieStatusType === 'error'
+                        ? 'destructive'
+                        : 'warning'
+                  "
+                  size="xs"
+                >
+                  {{ cookieStatusText }}
+                </Badge>
+              </div>
+              <Button
+                v-if="cookieStatusType !== 'success'"
+                size="xs"
+                variant="outline"
+                class="w-full"
+                @click="goCookieManagement"
+              >
+                前往处理
+              </Button>
+            </div>
           </div>
         </div>
       </aside>
@@ -591,7 +624,9 @@ onMounted(() => {
           <div class="flex items-center gap-2 min-w-0">
             <AlertTriangle class="size-3.5 shrink-0" />
             <span class="truncate">
-              当前桌面客户端版本 (v{{ clientVersion }}) 低于推荐版本 (v{{ REQUIRED_CLIENT_VERSION }})，部分新功能（如诊断/语音转写/本地 RPC）可能受限。
+              当前桌面客户端版本 (v{{ clientVersion }}) 低于推荐版本 (v{{
+                REQUIRED_CLIENT_VERSION
+              }})，部分新功能（如诊断/语音转写/本地 RPC）可能受限。
             </span>
           </div>
           <Button
@@ -637,6 +672,7 @@ onMounted(() => {
       </main>
 
       <SpeechMiniController />
+      <ClientCommandSource v-if="clientInited" />
     </div>
 
     <!-- 底部全局状态栏 -->

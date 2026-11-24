@@ -9,7 +9,7 @@ import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { getEventType, recordEvent, streamingInfo } from '@/apps/client/data/info'
-import { onReceivedNotification } from '@/apps/client/data/notification'
+import { onDanmakuConnectionAlert, onReceivedNotification } from '@/apps/client/data/notification'
 import { getHubBaseUrl, isDev, isTauri } from '@/shared/config'
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 import { message as uiMessage } from '@/shared/utils'
@@ -42,6 +42,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
   // --- 事件处理 ---
   const events: string[] = [] // 待发送事件队列
+  const queueSize = ref(0)
 
   // --- 新增: 会话统计 (在 Start 时重置) ---
   /** 本次会话处理的总事件数 */
@@ -54,6 +55,10 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
   const failedUploads = ref(0)
   /** 本次会话发送的总字节数 (压缩后) */
   const bytesSentSession = ref(0)
+  /** 最近一次成功上传时间戳 */
+  const lastUploadAt = ref<number>()
+  /** 最近一次上传错误信息 */
+  const lastUploadError = ref<string>()
   let zstd: ZstdCodec | undefined // Zstd 编码器实例 (如果需要压缩)
 
   const prefix = computed(() => (isFromClient ? '[web-fetcher-iframe] ' : '[web-fetcher] '))
@@ -101,12 +106,16 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
       let danmakuResult = await connectDanmakuClient(type, directAuthInfo)
       if (!danmakuResult?.success) {
+        const reason = danmakuResult?.message || '无法连接到弹幕服务器'
         window.$notification?.create({
           title: '弹幕客户端启动失败',
-          content: danmakuResult?.message || '无法连接到弹幕服务器',
+          content: reason,
           type: 'error',
           duration: 5000,
         })
+        if (isFromClient) {
+          onDanmakuConnectionAlert('弹幕客户端启动失败', reason)
+        }
       }
       while (!danmakuResult?.success) {
         console.log(`${prefix.value}弹幕客户端启动失败, 5秒后重试`)
@@ -170,6 +179,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     // 清理状态
     startedAt.value = undefined
     events.length = 0 // 清空事件队列
+    queueSize.value = 0
     // resetSessionStats(); // 会话统计在下次 Start 时重置
 
     console.log(`${prefix.value}已停止`)
@@ -182,6 +192,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     successfulUploads.value = 0
     failedUploads.value = 0
     bytesSentSession.value = 0
+    lastUploadAt.value = undefined
+    lastUploadError.value = undefined
   }
 
   /**
@@ -233,6 +245,9 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     disconnectedByServer = true
     serverDisconnectReason.value = message
     uiMessage.error(`被服务器要求断开连接: ${message}`)
+    if (isFromClient) {
+      onDanmakuConnectionAlert('弹幕连接被服务器断开', message)
+    }
     state.value = 'disconnected'
     signalRClient.value = undefined
     signalRConnectionId.value = undefined
@@ -310,7 +325,11 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
       connection.onclose(async (error) => {
         if (state.value !== 'disconnected' && !disconnectedByServer) {
-          console.error(`${prefix.value}与服务器连接关闭: ${error?.message || '未知原因'}. 30秒后将自动重启`)
+          const reason = error?.message || '未知原因'
+          console.error(`${prefix.value}与服务器连接关闭: ${reason}. 30秒后将自动重启`)
+          if (isFromClient) {
+            onDanmakuConnectionAlert('与服务端弹幕枢纽断开连接', `${reason}，将在 30 秒后自动重连`)
+          }
           state.value = 'connecting'
           signalRClient.value?.stop()
           signalRClient.value = undefined
@@ -443,6 +462,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       events.shift() // 如果队列过长，移除最旧的事件
     }
     events.push(eventString)
+    queueSize.value = events.length
   }
   let updateCount = 0
   let isSending = false
@@ -497,8 +517,11 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
       if (result?.Success) {
         events.splice(0, batch.length) // 从队列中移除已成功发送的事件
+        queueSize.value = events.length
         successfulUploads.value++
         bytesSentSession.value += length
+        lastUploadAt.value = Date.now()
+        lastUploadError.value = undefined
 
         // 若队列仍有积压事件，在 550ms（满足后端冷却）后立即继续派发下一批，避免积压排队
         if (events.length > 0 && !drainTimer) {
@@ -509,10 +532,12 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         }
       } else {
         failedUploads.value++
+        lastUploadError.value = result?.Message || '上传返回失败'
         console.error(`${prefix.value}上传弹幕失败: ${result?.Message}`)
       }
     } catch (err) {
       failedUploads.value++
+      lastUploadError.value = err instanceof Error ? err.message : String(err)
       console.error(`${prefix.value}发送事件时出错: ${err}`)
     } finally {
       isSending = false
@@ -535,10 +560,14 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     // 连接详情
     danmakuClientState,
     danmakuServerUrl,
+    serverDisconnectReason,
     // signalRConnectionId,
     // heartbeatLatency, // 暂不暴露
 
-    // 会话统计
+    // 会话统计与上传诊断
+    queueSize,
+    lastUploadAt,
+    lastUploadError,
     sessionEventCount,
     sessionEventTypeCounts,
     successfulUploads,

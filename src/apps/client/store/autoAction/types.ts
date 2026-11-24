@@ -13,6 +13,10 @@ export enum TriggerType {
   SCHEDULED = 'scheduled', // 定时触发
   SUPER_CHAT = 'super_chat', // SC
   POINT_REDEEM = 'point_redeem', // 积分商品兑换
+  LIVE_START = 'live_start', // 开播时
+  LIVE_END = 'live_end', // 下播时
+  DANMAKU_DISCONNECTED = 'danmaku_disconnected', // 弹幕服务断开/异常
+  COOKIE_INVALID = 'cookie_invalid', // B站 Cookie 失效
 }
 
 // 操作类型
@@ -21,6 +25,10 @@ export enum ActionType {
   SEND_PRIVATE_MSG = 'send_private_msg', // 发送私信
   EXECUTE_COMMAND = 'execute_command', // 执行命令
   PLAY_AUDIO = 'play_audio', // 播放本地/URL 音效（不依赖 VTS）
+  SEND_NOTIFICATION = 'send_notification', // 发送客户端桌面/应用内通知
+  OBS_NOTIFY = 'obs_notify', // 发送 OBS 浮窗通知
+  SPEAK_TTS = 'speak_tts', // TTS 语音播报
+  SEND_WEBHOOK = 'send_webhook', // 发送 HTTP Webhook 请求
   PNGTUBER_EXPRESSION = 'pngtuber_expression', // 切换 PNGtuber 表情
   VTS_HOTKEY = 'vts_hotkey', // 触发 VTS hotkey
   VTS_EXPRESSION = 'vts_expression', // 切换 VTS 表情
@@ -31,7 +39,26 @@ export enum ActionType {
   VTS_ACCESSORY = 'vts_accessory', // 配饰显隐
   VTS_COLOR_TINT = 'vts_color_tint', // 模型染色
   VTS_POST_PROCESSING = 'vts_post_processing', // 后处理滤镜
+  OBS_SWITCH_SCENE = 'obs_switch_scene', // OBS 切换场景
+  OBS_SCENE_SWITCH = 'obs_scene_switch', // VTsuru 云端场景切换子场景 (obs-scene)
+  OBS_SOURCE_VISIBLE = 'obs_source_visible', // OBS 源显隐
+  OBS_FILTER_ENABLED = 'obs_filter_enabled', // OBS 源滤镜开关
+  OBS_SAVE_REPLAY = 'obs_save_replay', // OBS 保存回放缓存
 }
+
+export const LIFECYCLE_TRIGGER_TYPES = new Set<TriggerType>([
+  TriggerType.LIVE_START,
+  TriggerType.LIVE_END,
+  TriggerType.DANMAKU_DISCONNECTED,
+  TriggerType.COOKIE_INVALID,
+])
+
+export const NOTIFICATION_ACTION_TYPES = new Set<ActionType>([
+  ActionType.SEND_NOTIFICATION,
+  ActionType.OBS_NOTIFY,
+  ActionType.SPEAK_TTS,
+  ActionType.SEND_WEBHOOK,
+])
 
 export const VTS_ACTION_TYPES = new Set<ActionType>([
   ActionType.VTS_HOTKEY,
@@ -43,6 +70,14 @@ export const VTS_ACTION_TYPES = new Set<ActionType>([
   ActionType.VTS_ACCESSORY,
   ActionType.VTS_COLOR_TINT,
   ActionType.VTS_POST_PROCESSING,
+])
+
+export const OBS_ACTION_TYPES = new Set<ActionType>([
+  ActionType.OBS_SWITCH_SCENE,
+  ActionType.OBS_SCENE_SWITCH,
+  ActionType.OBS_SOURCE_VISIBLE,
+  ActionType.OBS_FILTER_ENABLED,
+  ActionType.OBS_SAVE_REPLAY,
 ])
 
 // 关键词匹配类型
@@ -118,6 +153,33 @@ export interface AutoActionItem {
     vtsPostProcessingEnabled?: boolean
     vtsPostProcessingPreset?: string
     vtsPostProcessingFadeTime?: number
+
+    // --- OBS / obs-scene 动作配置（按 actionType 使用） ---
+    obsSceneName?: string
+    obsSourceName?: string
+    obsSourceVisible?: boolean
+    obsFilterName?: string
+    obsFilterEnabled?: boolean
+    obsSceneProjectId?: number
+    obsSubSceneId?: string
+
+    // --- 通知 / TTS / Webhook 动作配置 ---
+    notificationTitle?: string
+    notificationShowDesktop?: boolean
+    notificationShowToast?: boolean
+    notificationToastLevel?: 'info' | 'success' | 'warning' | 'error'
+    notificationPlaySound?: boolean
+    notificationSoundPreset?: 'chime' | 'alert' | 'soft'
+    notificationBypassGlobalSwitch?: boolean
+
+    obsNotifyType?: 'success' | 'failed'
+    obsNotifyTitle?: string
+    obsNotifySource?: string
+
+    webhookUrl?: string
+    webhookMethod?: 'POST' | 'PUT'
+    webhookHeadersJson?: string
+    webhookBodyTemplate?: string
   }
 }
 

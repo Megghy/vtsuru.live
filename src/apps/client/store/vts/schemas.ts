@@ -175,6 +175,16 @@ export type VtsProfileExportV1 = z.infer<typeof profileExportSchema>
 export type VtsMinimalExportV1 = z.infer<typeof minimalExportSchema>
 export type VtsExportV2 = z.infer<typeof fullExportSchema>
 
+export const vtsInstanceSchema = z.object({
+  id,
+  name: z.string(),
+  wsUrl: id,
+  authToken: z.string().optional(),
+  note: z.string().optional(),
+})
+
+export type VtsInstance = z.infer<typeof vtsInstanceSchema>
+
 export interface VtsProfile {
   id: string
   name: string

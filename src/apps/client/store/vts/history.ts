@@ -16,9 +16,15 @@ export type VtsOpKind =
   | 'itemUnload'
   | 'itemOpacity'
   | 'itemPin'
+  | 'itemSort'
+  | 'itemAnimation'
   | 'dropItem'
   | 'colorTint'
   | 'postProcessing'
+  | 'physicsOverride'
+  | 'ndiConfig'
+  | 'customParam'
+  | 'artMeshSelection'
   | 'macroRun'
 
 export const VTS_OP_KIND_LABELS: Record<VtsOpKind, string> = {
@@ -33,9 +39,15 @@ export const VTS_OP_KIND_LABELS: Record<VtsOpKind, string> = {
   itemUnload: '卸载道具',
   itemOpacity: '道具显隐',
   itemPin: '道具钉选',
+  itemSort: '道具图层',
+  itemAnimation: '道具动画',
   dropItem: '掉落道具',
   colorTint: '模型染色',
   postProcessing: '后处理滤镜',
+  physicsOverride: '物理控制',
+  ndiConfig: 'NDI 输出',
+  customParam: '自定义参数',
+  artMeshSelection: '部位点选',
   macroRun: '运行宏',
 }
 

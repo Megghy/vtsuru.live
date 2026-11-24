@@ -217,14 +217,35 @@ export interface ServerFunctions {
   obsGetFilterCapabilities: () => Promise<RpcObsFilterCapabilities>
   obsSyncSourceFilters: (params: RpcObsSyncFiltersParams) => Promise<RpcObsSyncFiltersResult>
   obsStageFilterAsset: (params: RpcObsStageFilterAssetParams) => Promise<RpcObsStageFilterAssetResult>
+  obsSaveReplayBuffer: () => Promise<{ ok: boolean; savedPath?: string; message: string }>
   obsSubscribeEvents: () => Promise<{ ok: true }>
   obsUnsubscribeEvents: () => Promise<{ ok: true }>
 
-  /** VTube Studio 状态与切场动作代理接口 */
+  /** VTube Studio 状态与动作代理接口 */
   vtsGetStatus: () => Promise<RpcVtsStatus>
   vtsRunSceneAction: (params: RpcVtsSceneActionParams) => Promise<{ ok: boolean; message?: string }>
+  vtsLoadModel: (modelId: string) => Promise<{ ok: boolean; message?: string }>
+  vtsTintModel: (params: {
+    colorHex?: string
+    rainbow?: boolean
+    reset?: boolean
+    nameContains?: string[]
+  }) => Promise<{ ok: boolean; message?: string }>
+  vtsDropItem: (params: {
+    fileName: string
+    x?: number
+    size?: number
+    randomX?: boolean
+  }) => Promise<{ ok: boolean; message?: string }>
+  vtsInjectParameters: (params: {
+    values: Array<{ id: string; value: number; weight?: number }>
+    mode?: 'add' | 'set'
+  }) => Promise<{ ok: boolean; message?: string }>
   vtsSubscribeEvents: () => Promise<{ ok: true }>
   vtsUnsubscribeEvents: () => Promise<{ ok: true }>
+
+  /** TTS 播报代理接口 */
+  ttsSpeak: (text: string) => Promise<{ ok: boolean; message?: string }>
 }
 
 /**

@@ -1,5 +1,13 @@
 export type CheckStatus = 'success' | 'error' | 'warning' | 'info'
-export type CheckTarget = 'fetcher' | 'control' | 'obs' | 'account' | 'account-manage'
+export type CheckTarget =
+  | 'fetcher'
+  | 'control'
+  | 'obs'
+  | 'account'
+  | 'account-manage'
+  | 'vts'
+  | 'transcription'
+  | 'tools'
 export interface PreflightCheck {
   id: string
   title: string
@@ -22,6 +30,12 @@ export interface PreflightState {
   autoSwitch: boolean
   startScene: string | undefined
   scenes: string[] | undefined
+  vtsConfigured?: boolean
+  vtsConnected?: boolean
+  vtsFaceFound?: boolean | null
+  vtsModelName?: string | null
+  transcriptionRunning?: boolean
+  ffmpegAvailable?: boolean
 }
 
 function basicChecks(s: PreflightState): PreflightCheck[] {
@@ -140,6 +154,37 @@ function obsChecks(s: PreflightState): PreflightCheck[] {
   return checks
 }
 
+function toolsChecks(s: PreflightState): PreflightCheck[] {
+  const checks: PreflightCheck[] = []
+  if (s.vtsConfigured || s.vtsConnected) {
+    checks.push({
+      id: 'vts',
+      title: 'VTube Studio',
+      status: !s.vtsConnected ? 'warning' : s.vtsFaceFound === false ? 'warning' : 'success',
+      detail: !s.vtsConnected
+        ? 'VTS 未连接，表情/机位/自动操作联动暂不可用'
+        : s.vtsFaceFound === false
+          ? `已连接 (${s.vtsModelName || '模型已加载'})，但当前未识别到面部`
+          : `已连接 · ${s.vtsModelName || '模型就绪'}`,
+      target: 'vts',
+    })
+  }
+  if (s.transcriptionRunning || s.ffmpegAvailable === false) {
+    checks.push({
+      id: 'transcription',
+      title: '语音转写 / FFmpeg',
+      status: s.transcriptionRunning ? 'success' : s.ffmpegAvailable ? 'info' : 'warning',
+      detail: s.transcriptionRunning
+        ? '语音转写正在运行'
+        : s.ffmpegAvailable
+          ? 'FFmpeg 已就绪，可按需开启语音转写'
+          : '未检测到 FFmpeg，如需语音转写请前往下载',
+      target: 'transcription',
+    })
+  }
+  return checks
+}
+
 export function buildPreflightChecks(s: PreflightState): PreflightCheck[] {
-  return [...basicChecks(s), ...fetcherChecks(s), ...obsChecks(s)]
+  return [...basicChecks(s), ...fetcherChecks(s), ...obsChecks(s), ...toolsChecks(s)]
 }

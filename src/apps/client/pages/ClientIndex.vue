@@ -1,31 +1,38 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
 import {
+  CheckCircle2,
+  CircleSlash,
   CloudUpload,
   Cookie,
   ExternalLink,
   Gift,
+  Keyboard,
+  Loader2,
   MessageSquare,
-  Mic,
+  Monitor,
+  Play,
   Plug,
+  PowerOff,
   Radio,
   RotateCcw,
-  Settings,
+  SlidersHorizontal,
   Smile,
-  Sparkles,
-  Users,
-  Zap,
+  XCircle,
 } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { logoutAccount, useAccount } from '@/api/account'
 import CookieInvalidAlert from '@/apps/client/components/CookieInvalidAlert.vue'
+import ObsSceneQuickPanel from '@/apps/client/components/live-manage/ObsSceneQuickPanel.vue'
+import StartLiveConfirmDialog from '@/apps/client/components/tools/StartLiveConfirmDialog.vue'
 import { isLiveStreaming, roomInfo } from '@/apps/client/data/info'
-import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { useLiveRoutine } from '@/apps/client/store/useLiveRoutine'
+import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { DEFAULT_OVERLAY_POSITION } from '@/apps/client/utils/overlayWindow'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
@@ -44,19 +51,20 @@ const webfetcher = useWebFetcher()
 const biliCookie = useBiliCookie()
 const danmakuWindow = useDanmakuWindow()
 const giftWindow = useGiftWindow()
+const obsStore = useOBSStore()
 const vtsStore = useVtsStore()
-const autoActionStore = useAutoAction()
+const liveRoutine = useLiveRoutine()
 const rpcServer = useFetcherRpcServer()
+const showStartConfirm = ref(false)
+
+onMounted(() => {
+  void liveRoutine.init()
+})
 
 const roomCover = computed(() => {
   return roomInfo.value?.user_cover || roomInfo.value?.keyframe || ''
 })
 const liveRoomUrl = computed(() => `https://live.bilibili.com/${accountInfo.value.biliRoomId}`)
-
-const activeAutoActionCount = computed(() => {
-  if (!autoActionStore.autoActions) return 0
-  return autoActionStore.autoActions.filter((a) => a.enabled).length
-})
 
 const cookieBadgeMeta = computed(() => {
   if (!biliCookie.hasBiliCookie) {
@@ -86,7 +94,7 @@ function toggleGiftWindow() {
 
 <template>
   <div class="flex flex-col gap-3.5 pb-6">
-    <!-- 头部主播状态横幅 -->
+    <!-- 头部主播驾驶舱横幅（含一键开播/下播编排） -->
     <Card>
       <CardContent class="p-4">
         <div class="flex-between gap-4 flex-wrap">
@@ -128,7 +136,7 @@ function toggleGiftWindow() {
                 </Badge>
               </div>
 
-              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
                 <span>房间: {{ accountInfo.biliRoomId || '未绑定' }}</span>
                 <span class="opacity-50">·</span>
                 <span>
@@ -142,22 +150,51 @@ function toggleGiftWindow() {
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <Button
-              variant="secondary"
               class="gap-1.5"
-              @click="router.push({ name: 'client-pngtuber' })"
+              :disabled="Boolean(liveRoutine.runningMode)"
+              @click="showStartConfirm = true"
             >
-              <Sparkles class="size-3.5" />
-              PNGtuber
+              <Loader2
+                v-if="liveRoutine.runningMode === 'start'"
+                class="size-3.5 animate-spin"
+              />
+              <Play
+                v-else
+                class="size-3.5"
+              />
+              一键开播准备
             </Button>
+
+            <Popconfirm
+              title="确认执行下播收尾流程？"
+              @confirm="liveRoutine.executeStopRoutine()"
+            >
+              <Button
+                variant="outline"
+                class="gap-1.5"
+                :disabled="Boolean(liveRoutine.runningMode)"
+              >
+                <Loader2
+                  v-if="liveRoutine.runningMode === 'stop'"
+                  class="size-3.5 animate-spin"
+                />
+                <PowerOff
+                  v-else
+                  class="size-3.5"
+                />
+                下播收尾
+              </Button>
+            </Popconfirm>
+
             <Button
               variant="secondary"
               class="gap-1.5 text-primary hover:text-primary"
               @click="openUrl(liveRoomUrl)"
             >
               <ExternalLink class="size-3.5" />
-              前往直播间
+              直播间
             </Button>
 
             <Popconfirm
@@ -179,10 +216,64 @@ function toggleGiftWindow() {
       </CardContent>
     </Card>
 
+    <!-- 一键开播/下播执行进度（仅执行后出现） -->
+    <Card v-if="liveRoutine.stepLogs.length > 0">
+      <CardHeader class="p-3 border-b flex flex-row items-center justify-between gap-2">
+        <CardTitle>开播编排执行记录</CardTitle>
+        <div class="flex items-center gap-1.5">
+          <Button
+            size="xs"
+            variant="outline"
+            class="gap-1"
+            @click="router.push({ name: 'client-tools', query: { tab: 'routine' } })"
+          >
+            <SlidersHorizontal class="size-3" />
+            配置步骤
+          </Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            :disabled="Boolean(liveRoutine.runningMode)"
+            @click="liveRoutine.stepLogs = []"
+          >
+            收起
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+        <div
+          v-for="log in liveRoutine.stepLogs"
+          :key="log.id"
+          class="flex-between gap-2 text-xs px-2.5 py-1.5 rounded-md border border-border bg-muted/20"
+        >
+          <div class="flex items-center gap-1.5 min-w-0">
+            <Loader2
+              v-if="log.status === 'running'"
+              class="size-3.5 animate-spin text-primary shrink-0"
+            />
+            <CheckCircle2
+              v-else-if="log.status === 'ok'"
+              class="size-3.5 text-emerald-500 shrink-0"
+            />
+            <CircleSlash
+              v-else-if="log.status === 'skipped'"
+              class="size-3.5 text-muted-foreground shrink-0"
+            />
+            <XCircle
+              v-else
+              class="size-3.5 text-destructive shrink-0"
+            />
+            <span class="font-medium truncate">{{ log.title }}</span>
+          </div>
+          <span class="text-[11px] text-muted-foreground truncate max-w-[45%]">{{ log.detail }}</span>
+        </div>
+      </CardContent>
+    </Card>
+
     <CookieInvalidAlert variant="home" />
 
-    <!-- 核心系统健康矩阵 (4 Bento Grid Cards) -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <!-- 核心链路状态（精简 4 格，不与工具中心重复） -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <Card
         class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-fetcher' })"
@@ -231,6 +322,29 @@ function toggleGiftWindow() {
 
       <Card
         class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
+        @click="router.push({ name: 'client-live-manage' })"
+      >
+        <CardContent class="p-3">
+          <div class="flex-between mb-2">
+            <div class="size-7 rounded-md flex-center bg-sky-500/12 text-sky-500">
+              <Monitor class="size-4" />
+            </div>
+            <Badge
+              :variant="obsStore.obsConnected ? 'success' : 'secondary'"
+              size="xs"
+            >
+              {{ obsStore.obsConnected ? (obsStore.obsStreamActive ? '推流中' : '已连接') : '未连接' }}
+            </Badge>
+          </div>
+          <div class="text-xs font-semibold text-foreground">OBS Studio</div>
+          <div class="text-xs text-muted-foreground truncate mt-0.5">
+            {{ obsStore.obsConnected ? `场景: ${obsStore.currentObsScene || '已就绪'}` : '点击连接与配置' }}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card
+        class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-vts' })"
       >
         <CardContent class="p-3">
@@ -251,33 +365,135 @@ function toggleGiftWindow() {
           </div>
         </CardContent>
       </Card>
+    </div>
 
-      <Card
-        class="cursor-pointer transition-transform duration-150 h-full hover:-translate-y-0.5"
-        @click="router.push({ name: 'client-auto-action-manage' })"
-      >
-        <CardContent class="p-3">
-          <div class="flex-between mb-2">
-            <div class="size-7 rounded-md flex-center bg-emerald-500/12 text-emerald-500">
-              <Zap class="size-4" />
-            </div>
-            <Badge
-              :variant="activeAutoActionCount > 0 ? 'success' : 'secondary'"
+    <!-- 直播间封面 & VTsuru 场景快捷切场 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
+      <!-- 直播间状态与封面 -->
+      <Card class="flex flex-col justify-between overflow-hidden">
+        <div>
+          <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+            <CardTitle>当前直播间</CardTitle>
+            <Button
               size="xs"
+              variant="outline"
+              @click="router.push({ name: 'client-live-manage' })"
             >
-              {{ activeAutoActionCount > 0 ? `${activeAutoActionCount} 条规则` : '未启用' }}
-            </Badge>
-          </div>
-          <div class="text-xs font-semibold text-foreground">自动操作</div>
-          <div class="text-xs text-muted-foreground mt-0.5">自动回复 / 答谢</div>
-        </CardContent>
+              直播管理
+            </Button>
+          </CardHeader>
+          <CardContent class="p-3">
+            <div
+              v-if="roomCover"
+              class="group relative w-full aspect-video rounded-md overflow-hidden cursor-pointer bg-muted"
+              @click="openUrl(liveRoomUrl)"
+            >
+              <div class="w-full h-full overflow-hidden">
+                <img
+                  :src="roomCover"
+                  alt="直播间封面"
+                  referrerpolicy="no-referrer"
+                  class="w-full h-full object-cover block transition-transform duration-200 ease-out group-hover:scale-105"
+                />
+              </div>
+              <div
+                class="absolute inset-0 z-1 bg-gradient-to-t from-black/90 via-black/25 to-black/5 pointer-events-none"
+              />
+              <div class="absolute left-3 right-3 bottom-2.5 z-2 text-white pointer-events-none">
+                <div class="text-xs font-semibold text-shadow-md overflow-hidden whitespace-nowrap text-ellipsis">
+                  {{ roomInfo?.title || '暂无标题' }}
+                </div>
+                <div class="text-[11px] text-white/80 mt-0.5">
+                  <span v-if="roomInfo?.parent_area_name"
+                    >{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span
+                  >
+                  <span v-if="roomInfo?.online"> · 人气: {{ roomInfo.online }}</span>
+                </div>
+              </div>
+              <div
+                class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-[opacity,transform] duration-200 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0"
+              >
+                <Badge
+                  variant="default"
+                  size="sm"
+                  class="gap-1"
+                >
+                  <span>点击前往直播间</span>
+                  <ExternalLink class="size-3" />
+                </Badge>
+              </div>
+            </div>
+
+            <div
+              v-else
+              class="flex justify-center p-8"
+            >
+              <span class="text-xs text-muted-foreground">暂无直播间封面信息</span>
+            </div>
+          </CardContent>
+        </div>
+
+        <div class="p-2.5 px-3 pb-3 flex justify-end">
+          <Button
+            class="gap-1.5"
+            @click="router.push({ name: 'client-live-manage' })"
+          >
+            <Radio class="size-3.5" />
+            修改直播标题与分区
+          </Button>
+        </div>
       </Card>
+
+      <!-- VTsuru 场景快捷切换 + RPC 状态 -->
+      <div class="space-y-3">
+        <ObsSceneQuickPanel compact />
+
+        <Card v-if="rpcServer.running">
+          <CardContent class="p-3 flex-between gap-2 text-xs text-muted-foreground">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <Plug
+                class="size-3.5 shrink-0"
+                :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
+              />
+              <span class="truncate">本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接</span>
+            </div>
+            <Button
+              size="xs"
+              variant="ghost"
+              class="shrink-0"
+              @click="router.push({ name: 'client-tools', query: { tab: 'capabilities' } })"
+            >
+              查看 RPC
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
 
     <!-- 直播浮窗控制中心 -->
     <Card>
-      <CardHeader class="p-3 border-b">
+      <CardHeader class="p-3 border-b flex flex-row items-center justify-between gap-2">
         <CardTitle>直播浮窗控制中心</CardTitle>
+        <div class="flex items-center gap-1.5">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="gap-1 text-muted-foreground"
+            @click="router.push({ name: 'client-tools', query: { tab: 'shortcuts' } })"
+          >
+            <Keyboard class="size-3" />
+            全局热键
+          </Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            class="gap-1 text-muted-foreground"
+            @click="router.push({ name: 'client-tools', query: { tab: 'routine' } })"
+          >
+            <SlidersHorizontal class="size-3" />
+            编排开播流程
+          </Button>
+        </div>
       </CardHeader>
       <CardContent class="p-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -399,176 +615,8 @@ function toggleGiftWindow() {
         </div>
       </CardContent>
     </Card>
-
-    <!-- 直播间快捷概览与常用功能 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
-      <!-- 直播间状态与封面 -->
-      <Card class="flex flex-col justify-between overflow-hidden h-full">
-        <div>
-          <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
-            <CardTitle>当前直播间</CardTitle>
-            <div class="flex items-center gap-2">
-              <Button
-                size="xs"
-                variant="outline"
-                @click="router.push({ name: 'client-live-manage' })"
-              >
-                直播管理
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent class="p-3">
-            <div
-              v-if="roomCover"
-              class="group relative w-full aspect-video rounded-md overflow-hidden cursor-pointer bg-muted"
-              @click="openUrl(liveRoomUrl)"
-            >
-              <div class="w-full h-full overflow-hidden">
-                <img
-                  :src="roomCover"
-                  alt="直播间封面"
-                  referrerpolicy="no-referrer"
-                  class="w-full h-full object-cover block transition-transform duration-200 ease-out group-hover:scale-105"
-                />
-              </div>
-              <div
-                class="absolute inset-0 z-1 bg-gradient-to-t from-black/90 via-black/25 to-black/5 pointer-events-none"
-              />
-              <div class="absolute left-3 right-3 bottom-2.5 z-2 text-white pointer-events-none">
-                <div class="text-xs font-semibold text-shadow-md overflow-hidden whitespace-nowrap text-ellipsis">
-                  {{ roomInfo?.title || '暂无标题' }}
-                </div>
-                <div class="text-[11px] text-white/80 mt-0.5">
-                  <span v-if="roomInfo?.parent_area_name"
-                    >{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span
-                  >
-                  <span v-if="roomInfo?.online"> · 人气: {{ roomInfo.online }}</span>
-                </div>
-              </div>
-              <div
-                class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-[opacity,transform] duration-200 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0"
-              >
-                <Badge
-                  variant="default"
-                  size="sm"
-                  class="gap-1"
-                >
-                  <span>点击前往直播间</span>
-                  <ExternalLink class="size-3" />
-                </Badge>
-              </div>
-            </div>
-
-            <div
-              v-else
-              class="flex justify-center p-8"
-            >
-              <span class="text-xs text-muted-foreground">暂无直播间封面信息</span>
-            </div>
-          </CardContent>
-        </div>
-
-        <div class="p-2.5 px-3 pb-3 flex justify-end">
-          <Button
-            class="gap-1.5"
-            @click="router.push({ name: 'client-live-manage' })"
-          >
-            <Radio class="size-3.5" />
-            修改直播标题与分区
-          </Button>
-        </div>
-      </Card>
-
-      <!-- 常用功能快速入口 -->
-      <Card class="flex flex-col justify-between">
-        <div>
-          <CardHeader class="p-3 border-b">
-            <CardTitle>常用工作台</CardTitle>
-          </CardHeader>
-          <CardContent class="p-3">
-            <div class="grid grid-cols-2 gap-2.5">
-              <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
-                @click="router.push({ name: 'client-live-manage' })"
-              >
-                <div class="size-8 rounded-md flex-center shrink-0 bg-blue-500/10 text-blue-500">
-                  <Radio class="size-4" />
-                </div>
-                <div class="min-w-0">
-                  <div class="text-xs font-medium leading-tight">直播控制</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">OBS 推流与场次信息</div>
-                </div>
-              </div>
-
-              <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
-                @click="router.push({ name: 'client-read-danmaku' })"
-              >
-                <div class="size-8 rounded-md flex-center shrink-0 bg-emerald-500/10 text-emerald-500">
-                  <Mic class="size-4" />
-                </div>
-                <div class="min-w-0">
-                  <div class="text-xs font-medium leading-tight">读弹幕 (TTS)</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">语音朗读与音色设置</div>
-                </div>
-              </div>
-
-              <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
-                @click="router.push({ name: 'client-auto-action-manage' })"
-              >
-                <div class="size-8 rounded-md flex-center shrink-0 bg-amber-500/10 text-amber-500">
-                  <Zap class="size-4" />
-                </div>
-                <div class="min-w-0">
-                  <div class="text-xs font-medium leading-tight">自动操作</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">入场欢迎与进房致谢</div>
-                </div>
-              </div>
-
-              <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
-                @click="router.push({ name: 'client-fans-viewer' })"
-              >
-                <div class="size-8 rounded-md flex-center shrink-0 bg-purple-500/10 text-purple-500">
-                  <Users class="size-4" />
-                </div>
-                <div class="min-w-0">
-                  <div class="text-xs font-medium leading-tight">粉丝查看</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">粉丝量降序与回关</div>
-                </div>
-              </div>
-
-              <div
-                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-[transform,colors] duration-150 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
-                @click="router.push({ name: 'client-settings' })"
-              >
-                <div class="size-8 rounded-md flex-center shrink-0 bg-muted text-muted-foreground">
-                  <Settings class="size-4" />
-                </div>
-                <div class="min-w-0">
-                  <div class="text-xs font-medium leading-tight">客户端设置</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 truncate">通知 / 偏好 / 诊断</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </div>
-
-        <div
-          v-if="rpcServer.running"
-          class="p-3 border-t bg-muted/10 text-xs text-muted-foreground flex-between"
-        >
-          <div class="flex items-center gap-1.5">
-            <Plug
-              class="size-3.5"
-              :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
-            />
-            <span>本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接</span>
-          </div>
-        </div>
-      </Card>
-    </div>
+    <!-- 开播准备确认弹窗 -->
+    <StartLiveConfirmDialog v-model:open="showStartConfirm" />
   </div>
 </template>
 

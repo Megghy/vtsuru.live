@@ -15,6 +15,8 @@ import { useRouter } from 'vue-router'
 
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { useOBSStore } from '@/apps/client/store/useOBSStore'
+import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
@@ -28,6 +30,8 @@ const router = useRouter()
 const danmakuClient = useDanmakuClient()
 const danmakuWindow = useDanmakuWindow()
 const giftWindow = useGiftWindow()
+const obsStore = useOBSStore()
+const vtsStore = useVtsStore()
 const webfetcher = useWebFetcher()
 const rpcServer = useFetcherRpcServer()
 
@@ -161,6 +165,72 @@ function toggleGiftWindow() {
           </TooltipTrigger>
           <TooltipContent side="top">
             <div>EventFetcher 服务：{{ webfetcher.state === 'connected' ? '运行中' : '未连接' }}</div>
+          </TooltipContent>
+        </Tooltip>
+
+        <!-- OBS 状态 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div
+              class="inline-flex items-center gap-1 cursor-pointer px-1 py-0.5 rounded transition-opacity hover:opacity-85"
+              @click="router.push({ name: 'client-tools' })"
+            >
+              <span
+                class="size-1.25 rounded-full"
+                :class="
+                  obsStore.obsConnected
+                    ? obsStore.obsStreamActive
+                      ? 'bg-emerald-500 animate-pulse'
+                      : 'bg-sky-500'
+                    : 'bg-muted-foreground/60'
+                "
+              />
+              <span>OBS</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <div>
+              OBS：{{
+                obsStore.obsConnected
+                  ? `${obsStore.obsStreamActive ? '推流中' : '已连接'} (${obsStore.currentObsScene || '无场景'})`
+                  : '未连接（点击前往工具中心）'
+              }}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+
+        <!-- VTS 状态 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div
+              class="inline-flex items-center gap-1 cursor-pointer px-1 py-0.5 rounded transition-opacity hover:opacity-85"
+              @click="router.push({ name: 'client-vts' })"
+            >
+              <span
+                class="size-1.25 rounded-full"
+                :class="
+                  vtsStore.connected
+                    ? vtsStore.faceFound === false
+                      ? 'bg-amber-500'
+                      : 'bg-emerald-500'
+                    : vtsStore.connecting
+                      ? 'bg-sky-500 animate-pulse'
+                      : 'bg-muted-foreground/60'
+                "
+              />
+              <span>VTS</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <div>
+              VTube Studio：{{
+                vtsStore.connected
+                  ? `${vtsStore.currentModelName || '已连接'}${vtsStore.faceFound === false ? ' · 面部丢失' : ''}`
+                  : vtsStore.connecting
+                    ? '等待连接/授权中'
+                    : '未连接（点击前往 VTS 控制）'
+              }}
+            </div>
           </TooltipContent>
         </Tooltip>
 

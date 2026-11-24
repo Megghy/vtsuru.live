@@ -105,8 +105,12 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     for (const e of conn.expressions.value.filter((x) => x.active)) await setExpression(e.file, false)
   }
 
-  async function moveModel(t: ModelTransform) {
+  async function moveModel(t: ModelTransform, options?: { silent?: boolean }) {
     const payload = { ...t }
+    if (options?.silent) {
+      await request(async (c) => c.moveModel({ ...payload, valuesAreRelativeToModel: false }))
+      return
+    }
     await call(
       'moveModel',
       `x=${t.positionX.toFixed(2)}, y=${t.positionY.toFixed(2)}, size=${t.size.toFixed(0)}`,
@@ -272,10 +276,15 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     await refreshItems({ includeFiles: true })
   }
 
-  async function pinItem(itemInstanceID: string, pin: boolean) {
+  async function pinItem(
+    itemInstanceID: string,
+    pin: boolean,
+    options?: { artMeshID?: string; modelID?: string },
+  ) {
+    const useArtMesh = Boolean(pin && options?.artMeshID)
     await call(
       'itemPin',
-      `${itemInstanceID.slice(0, 8)}:${pin ? '固定' : '取消固定'}`,
+      `${itemInstanceID.slice(0, 8)}:${pin ? (options?.artMeshID ? `钉选(${options.artMeshID})` : '固定') : '取消固定'}`,
       async (c) =>
         c.itemPin({
           itemInstanceID,
@@ -283,10 +292,77 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
           angleRelativeTo: 'RelativeToCurrentItemRotation',
           sizeRelativeTo: 'RelativeToCurrentItemSize',
           vertexPinType: 'Center',
+          ...(useArtMesh
+            ? {
+                pinInfo: {
+                  modelID: options?.modelID ?? conn.currentModelId.value ?? undefined,
+                  artMeshID: options?.artMeshID,
+                  angle: 0,
+                  size: 0.3,
+                },
+              }
+            : {}),
         }),
-      { itemInstanceID, pin },
+      { itemInstanceID, pin, ...options },
     )
     await refreshItems({ includeFiles: false })
+  }
+
+  async function sortItem(
+    itemInstanceID: string,
+    options: {
+      frontOn?: boolean
+      backOn?: boolean
+      withinModelOrderFront?: string
+      withinModelOrderBack?: string
+    },
+  ) {
+    await call(
+      'itemSort',
+      `${itemInstanceID.slice(0, 8)}:${options.frontOn ? '前层' : ''}${options.backOn ? '后层' : ''}`,
+      async (c) =>
+        c.itemSort({
+          itemInstanceID,
+          frontOn: options.frontOn,
+          backOn: options.backOn,
+          setFrontOrder: options.withinModelOrderFront ? 'UseArtMeshID' : 'Unchanged',
+          setBackOrder: options.withinModelOrderBack ? 'UseArtMeshID' : 'Unchanged',
+          withinModelOrderFront: options.withinModelOrderFront,
+          withinModelOrderBack: options.withinModelOrderBack,
+        }),
+      { itemInstanceID, ...options },
+    )
+    await refreshItems({ includeFiles: false })
+  }
+
+  async function controlItemAnimation(
+    itemInstanceID: string,
+    options: {
+      framerate?: number
+      frame?: number
+      brightness?: number
+      opacity?: number
+      setAnimationPlayState?: boolean
+      animationPlayState?: boolean
+    },
+  ) {
+    return call(
+      'itemAnimation',
+      itemInstanceID.slice(0, 8),
+      async (c) =>
+        c.itemAnimationControl({
+          itemInstanceID,
+          framerate: options.framerate ?? -1,
+          frame: options.frame ?? -1,
+          brightness: options.brightness ?? -1,
+          opacity: options.opacity ?? -1,
+          setAutoStopFrames: false,
+          autoStopFrames: [],
+          setAnimationPlayState: options.setAnimationPlayState ?? false,
+          animationPlayState: options.animationPlayState ?? true,
+        }),
+      { itemInstanceID, ...options },
+    )
   }
 
   async function setItemOpacity(itemInstanceID: string, opacity: number) {
@@ -331,12 +407,38 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     rainbow?: boolean
     reset?: boolean
     mixWithSceneLighting?: number
+    artMeshMatcher?: {
+      tintAll?: boolean
+      nameExact?: string[]
+      nameContains?: string[]
+      tagExact?: string[]
+      tagContains?: string[]
+      artMeshGroupIDExact?: string[]
+    }
   }) {
-    const payload = { colorHex: options.colorHex, rainbow: options.rainbow, reset: options.reset }
+    const payload = {
+      colorHex: options.colorHex,
+      rainbow: options.rainbow,
+      reset: options.reset,
+      artMeshMatcher: options.artMeshMatcher,
+    }
     const rgb =
       options.reset || options.rainbow ? { r: 255, g: 255, b: 255 } : parseHexToRgb(options.colorHex || '#ffffff')
-    const detail = options.reset ? '重置颜色' : options.rainbow ? '彩虹染色' : options.colorHex || '#ffffff'
-    await call(
+    const hasScopedMatcher = Boolean(
+      options.artMeshMatcher &&
+        ((options.artMeshMatcher.nameExact?.length ?? 0) > 0 ||
+          (options.artMeshMatcher.nameContains?.length ?? 0) > 0 ||
+          (options.artMeshMatcher.tagExact?.length ?? 0) > 0 ||
+          (options.artMeshMatcher.tagContains?.length ?? 0) > 0 ||
+          (options.artMeshMatcher.artMeshGroupIDExact?.length ?? 0) > 0),
+    )
+    const matcher =
+      hasScopedMatcher && !options.artMeshMatcher?.tintAll
+        ? { tintAll: false, ...options.artMeshMatcher }
+        : { tintAll: true }
+    const scopeLabel = hasScopedMatcher && !matcher.tintAll ? ' (分部位)' : ''
+    const detail = `${options.reset ? '重置颜色' : options.rainbow ? '彩虹染色' : options.colorHex || '#ffffff'}${scopeLabel}`
+    return call(
       'colorTint',
       detail,
       async (c) =>
@@ -349,10 +451,127 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
             mixWithSceneLightingColor: options.mixWithSceneLighting ?? 0,
             ...(options.rainbow ? { jeb_: true as const } : {}),
           },
-          artMeshMatcher: { tintAll: true },
+          artMeshMatcher: matcher,
         }),
       payload,
     )
+  }
+
+  async function selectArtMeshesInVts(options?: {
+    requestedCount?: number
+    activeArtMeshes?: string[]
+    text?: string
+    help?: string
+  }) {
+    return call(
+      'artMeshSelection',
+      'VTS 内可视点选部位',
+      async (c) =>
+        c.artMeshSelection({
+          textOverride: options?.text ?? '请选择要染色或绑定的模型部位 (ArtMesh)',
+          helpOverride: options?.help ?? '点选完成后点击确定，客户端将自动接收所选部位列表',
+          requestedArtMeshCount: options?.requestedCount ?? 0,
+          activeArtMeshes: options?.activeArtMeshes,
+        }),
+      options,
+    )
+  }
+
+  async function setModelPhysics(options: {
+    strength?: number
+    wind?: number
+    overrideSeconds?: number
+    setBaseValue?: boolean
+    groupId?: string
+  }) {
+    const id = options.groupId ?? ''
+    const overrideSeconds = options.overrideSeconds ?? 5
+    const setBaseValue = options.setBaseValue ?? false
+    const strengthOverrides =
+      options.strength !== undefined
+        ? [{ id, value: options.strength, setBaseValue, overrideSeconds }]
+        : []
+    const windOverrides =
+      options.wind !== undefined
+        ? [{ id, value: options.wind, setBaseValue, overrideSeconds }]
+        : []
+    if (strengthOverrides.length === 0 && windOverrides.length === 0) return
+
+    await call(
+      'physicsOverride',
+      `强度=${options.strength ?? '-'} 风力=${options.wind ?? '-'} (${overrideSeconds}s)`,
+      async (c) => c.setCurrentModelPhysics({ strengthOverrides, windOverrides }),
+      options,
+    )
+    await conn.refreshPhysics().catch(() => {})
+  }
+
+  async function resetPhysicsDirect() {
+    await setModelPhysics({ strength: 0, wind: 0, overrideSeconds: 0.5, setBaseValue: false })
+  }
+
+  async function updateNdiConfig(options: {
+    ndiActive: boolean
+    useNDI5?: boolean
+    useCustomResolution?: boolean
+    customWidthNDI?: number
+    customHeightNDI?: number
+  }) {
+    const current = conn.ndiState.value
+    const payload = {
+      setNewConfig: true,
+      ndiActive: options.ndiActive,
+      useNDI5: options.useNDI5 ?? current?.useNDI5 ?? true,
+      useCustomResolution: options.useCustomResolution ?? current?.useCustomResolution ?? false,
+      customWidthNDI: options.customWidthNDI ?? current?.customWidthNDI ?? -1,
+      customHeightNDI: options.customHeightNDI ?? current?.customHeightNDI ?? -1,
+    }
+    const res = await call(
+      'ndiConfig',
+      options.ndiActive ? '开启 NDI 输出' : '关闭 NDI 输出',
+      async (c) => c.ndiConfig(payload),
+      payload,
+    )
+    conn.ndiState.value = {
+      ndiActive: res.ndiActive,
+      useNDI5: res.useNDI5,
+      useCustomResolution: res.useCustomResolution,
+      customWidthNDI: res.customWidthNDI,
+      customHeightNDI: res.customHeightNDI,
+    }
+    return res
+  }
+
+  async function createCustomParameter(input: {
+    parameterName: string
+    explanation: string
+    min: number
+    max: number
+    defaultValue: number
+  }) {
+    const res = await call(
+      'customParam',
+      `创建 ${input.parameterName}`,
+      async (c) => c.parameterCreation(input),
+      input,
+    )
+    await conn.refreshInputParameters().catch(() => {})
+    return res
+  }
+
+  async function deleteCustomParameter(parameterName: string) {
+    const res = await call(
+      'customParam',
+      `删除 ${parameterName}`,
+      async (c) => c.parameterDeletion({ parameterName }),
+      { parameterName },
+    )
+    await conn.refreshInputParameters().catch(() => {})
+    return res
+  }
+
+  async function getParameterValue(name: string) {
+    return request(async (c) => c.parameterValue({ name }))
   }
 
   async function updatePostProcessing(options: { enabled: boolean; preset?: string; fadeTime?: number }) {
@@ -579,13 +798,28 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
     unloadItems,
     unloadAllPluginItems,
     pinItem,
+    sortItem,
+    controlItemAnimation,
     setItemOpacity,
     dropItem,
     tintModel,
+    selectArtMeshesInVts,
+    setModelPhysics,
+    resetPhysicsDirect,
+    updateNdiConfig,
+    createCustomParameter,
+    deleteCustomParameter,
+    getParameterValue,
     updatePostProcessing,
     toggleAccessory,
     panicCalibrate: async () => triggerPanicHotkey(config.panicConfig.value.calibrateHotkeyId, '校准'),
-    panicResetPhysics: async () => triggerPanicHotkey(config.panicConfig.value.resetPhysicsHotkeyId, '重置物理'),
+    panicResetPhysics: async () => {
+      if (config.panicConfig.value.resetPhysicsHotkeyId) {
+        await triggerHotkey(config.panicConfig.value.resetPhysicsHotkeyId)
+      } else {
+        await resetPhysicsDirect()
+      }
+    },
     runMacro,
     stopMacro,
     replayHistoryRecord,

@@ -8,20 +8,24 @@ import {
   FlaskConical,
   Gift,
   History,
+  KeyRound,
   LayoutGrid,
   LogIn,
   MessageSquare,
   Pencil,
   PieChart,
   Plus,
+  Radio,
   Receipt,
   RotateCcw,
   Settings,
   Shield,
+  SquarePower,
   Star,
   Target,
   Timer,
   Trash2,
+  Unplug,
   UserPlus,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
@@ -95,6 +99,16 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
+    label: '状态与告警',
+    key: 'group-lifecycle',
+    children: [
+      { label: '开播触发', key: TriggerType.LIVE_START, icon: Radio },
+      { label: '下播触发', key: TriggerType.LIVE_END, icon: SquarePower },
+      { label: '弹幕断连', key: TriggerType.DANMAKU_DISCONNECTED, icon: Unplug },
+      { label: 'Cookie 失效', key: TriggerType.COOKIE_INVALID, icon: KeyRound },
+    ],
+  },
+  {
     label: '功能设置',
     key: 'group-settings',
     children: [
@@ -116,15 +130,29 @@ const menuGroups: MenuGroup[] = [
 const validMenuKeys = new Set(menuGroups.flatMap((g) => g.children.map((c) => c.key)))
 
 // 状态管理（与 URL query 双向同步）
-const initialTab = typeof route.query.tab === 'string' && validMenuKeys.has(route.query.tab)
-  ? route.query.tab
-  : TriggerType.GIFT
+const initialTab =
+  typeof route.query.tab === 'string' && validMenuKeys.has(route.query.tab) ? route.query.tab : TriggerType.GIFT
 const currentMenuKey = ref<string>(initialTab)
 const editingActionId = ref<string | null>(typeof route.query.edit === 'string' ? route.query.edit : null)
 
 watch(
+  () => [route.query.tab, route.query.edit],
+  ([tab, edit]) => {
+    if (route.name !== 'client-auto-action-manage') return
+    if (typeof tab === 'string' && validMenuKeys.has(tab) && currentMenuKey.value !== tab) {
+      currentMenuKey.value = tab
+    }
+    const nextEdit = typeof edit === 'string' ? edit : null
+    if (editingActionId.value !== nextEdit) {
+      editingActionId.value = nextEdit
+    }
+  },
+)
+
+watch(
   [currentMenuKey, editingActionId],
   ([tab, edit]) => {
+    if (route.name !== 'client-auto-action-manage') return
     const nextQuery: Record<string, string> = { tab }
     if (edit) nextQuery.edit = edit
     if (route.query.tab !== nextQuery.tab || (route.query.edit ?? undefined) !== nextQuery.edit) {
@@ -229,6 +257,10 @@ const typeMap: Record<string, string> = {
   [TriggerType.SCHEDULED]: '定时发送',
   [TriggerType.SUPER_CHAT]: 'SC感谢',
   [TriggerType.POINT_REDEEM]: '积分兑换',
+  [TriggerType.LIVE_START]: '开播触发',
+  [TriggerType.LIVE_END]: '下播触发',
+  [TriggerType.DANMAKU_DISCONNECTED]: '弹幕断连',
+  [TriggerType.COOKIE_INVALID]: 'Cookie 失效',
 }
 
 const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes)
@@ -339,6 +371,10 @@ const triggerTypeOptions = [
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
   { label: '积分兑换', value: TriggerType.POINT_REDEEM },
+  { label: '开播触发', value: TriggerType.LIVE_START },
+  { label: '下播触发', value: TriggerType.LIVE_END },
+  { label: '弹幕断连', value: TriggerType.DANMAKU_DISCONNECTED },
+  { label: 'Cookie 失效', value: TriggerType.COOKIE_INVALID },
 ]
 
 async function handleDanmakuAccountChange(value: string) {
@@ -404,7 +440,8 @@ async function handleFallbackChange(value: boolean) {
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
-                当前共有 {{ effectiveActiveRulesCount }} 条规则处于生效状态（共 {{ totalEnabledRulesCount }} 条规则开启，部分可能受分类总开关关闭影响）
+                当前共有 {{ effectiveActiveRulesCount }} 条规则处于生效状态（共
+                {{ totalEnabledRulesCount }} 条规则开启，部分可能受分类总开关关闭影响）
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -520,7 +557,9 @@ async function handleFallbackChange(value: boolean) {
             v-if="editingActionId && currentEditingAction"
             class="space-y-3.5 max-w-4xl mx-auto pb-4"
           >
-            <div class="flex-between gap-3 flex-wrap pb-2.5 border-b sticky top-0 bg-card/95 backdrop-blur z-10 -mx-1 px-1 pt-0.5">
+            <div
+              class="flex-between gap-3 flex-wrap pb-2.5 border-b sticky top-0 bg-card/95 backdrop-blur z-10 -mx-1 px-1 pt-0.5"
+            >
               <div class="flex items-center gap-2.5 min-w-0">
                 <Button
                   variant="secondary"
@@ -658,7 +697,8 @@ async function handleFallbackChange(value: boolean) {
                 >
                   <AlertTitle>功能限制提醒</AlertTitle>
                   <AlertDescription class="mt-0.5">
-                    当前连接模式 (OpenLive) 无法获取用户 UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
+                    当前连接模式 (OpenLive) 无法获取用户
+                    UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
                   </AlertDescription>
                 </Alert>
               </template>

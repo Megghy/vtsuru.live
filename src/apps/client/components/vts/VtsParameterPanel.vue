@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Plus, RotateCcw, Square } from 'lucide-vue-next'
-import { computed, onUnmounted } from 'vue'
+import { Activity, Plus, RotateCcw, Sparkles, Square, Trash2 } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { VtsParamSlot } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -41,10 +41,83 @@ function schedulePersist(slot: VtsParamSlot) {
   persistTimers.set(slot.id, timer)
 }
 
-onUnmounted(() => {
+const liveMonitorEnabled = ref(true)
+const liveValues = ref<Record<string, { value: number; min: number; max: number }>>({})
+let livePollTimer: ReturnType<typeof setInterval> | null = null
+let pollingInFlight = false
+
+async function pollLiveValues() {
+  if (pollingInFlight || !vts.connected || !liveMonitorEnabled.value) return
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+  const paramIds = Array.from(new Set(vts.paramSlots.map((s) => s.parameterId).filter(Boolean))).slice(0, 12)
+  if (paramIds.length === 0) return
+  pollingInFlight = true
+  try {
+    const next: Record<string, { value: number; min: number; max: number }> = { ...liveValues.value }
+    for (const id of paramIds) {
+      try {
+        const res = await vts.getParameterValue(id)
+        next[id] = { value: res.value, min: res.min, max: res.max }
+      } catch {
+        // 未在当前模型中找到的参数忽略
+      }
+    }
+    liveValues.value = next
+  } finally {
+    pollingInFlight = false
+  }
+}
+
+function stopLivePoll() {
+  if (livePollTimer) {
+    clearInterval(livePollTimer)
+    livePollTimer = null
+  }
+}
+
+function liveCursorPct(slot: VtsParamSlot): number | null {
+  const sample = liveValues.value[slot.parameterId]
+  if (!sample) return null
+  const { min, max } = safeBounds(slot)
+  const pct = ((sample.value - min) / (max - min)) * 100
+  return Math.max(0, Math.min(100, pct))
+}
+
+watch(
+  [() => vts.connected, liveMonitorEnabled, () => vts.paramSlots.length],
+  ([connected, enabled, count]) => {
+    stopLivePoll()
+    if (connected && enabled && count > 0) {
+      void pollLiveValues()
+      livePollTimer = setInterval(() => {
+        void pollLiveValues()
+      }, 450)
+    }
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  stopLivePoll()
   for (const timer of persistTimers.values()) window.clearTimeout(timer)
   persistTimers.clear()
 })
+
+const CUSTOM_PARAM_TEMPLATES = [
+  { label: '弹幕热度', name: 'VTsuru_Hype', desc: '直播间弹幕热度 (0~1)', min: 0, max: 1, def: 0 },
+  { label: '脸红强度', name: 'VTsuru_Blush', desc: '触发害羞/脸红特效 (0~1)', min: 0, max: 1, def: 0 },
+  { label: '麦克风响度', name: 'VTsuru_MicLevel', desc: '实时语音音量映射 (0~1)', min: 0, max: 1, def: 0 },
+  { label: '礼物暴击', name: 'VTsuru_GiftBoost', desc: '礼物连击加成 (0~10)', min: 0, max: 10, def: 0 },
+  { label: '情绪波动', name: 'VTsuru_Mood', desc: '双向情绪偏移 (-1~1)', min: -1, max: 1, def: 0 },
+] as const
+
+function applyCustomTemplate(tpl: (typeof CUSTOM_PARAM_TEMPLATES)[number]) {
+  customParamName.value = tpl.name
+  customParamDesc.value = tpl.desc
+  customParamMin.value = tpl.min
+  customParamMax.value = tpl.max
+  customParamDefault.value = tpl.def
+}
 
 function safeBounds(slot: VtsParamSlot) {
   const min = Number.isFinite(slot.min) ? slot.min : 0
@@ -112,6 +185,37 @@ function addSlot() {
 }
 
 const hasAnyHold = computed(() => vts.paramSlots.some((s) => s.hold))
+
+const showCreateCustom = ref(false)
+const customParamName = ref('VTsuru_Hype')
+const customParamDesc = ref('由 VTsuru 客户端注入的自定义参数')
+const customParamMin = ref(0)
+const customParamMax = ref(1)
+const customParamDefault = ref(0)
+
+const customParams = computed(() => vts.inputParameters.filter((p) => p.isCustom))
+
+function handleCreateCustomParam() {
+  const name = customParamName.value.trim()
+  if (!name) return
+  run(async () => {
+    await vts.createCustomParameter({
+      parameterName: name,
+      explanation: customParamDesc.value.trim() || 'VTsuru 自定义参数',
+      min: customParamMin.value,
+      max: customParamMax.value,
+      defaultValue: customParamDefault.value,
+    })
+    await vts.createParamSlot(name, {
+      parameterId: name,
+      min: customParamMin.value,
+      max: customParamMax.value,
+      defaultValue: customParamDefault.value,
+      mode: 'set',
+    })
+    showCreateCustom.value = false
+  }, `已注册自定义参数 ${name} 并创建参数槽`)
+}
 </script>
 
 <template>
@@ -129,7 +233,17 @@ const hasAnyHold = computed(() => vts.paramSlots.some((s) => s.hold))
         </Badge>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-[11px] text-muted-foreground">Hold 模式持续注入且不刷屏操作记录</span>
+        <label
+          v-if="vts.connected"
+          class="flex items-center gap-1.5 cursor-pointer select-none text-xs"
+        >
+          <Switch
+            :checked="liveMonitorEnabled"
+            @update:checked="(v) => (liveMonitorEnabled = v)"
+          />
+          <Activity class="size-3 text-emerald-500" />
+          <span class="text-muted-foreground">实时游标</span>
+        </label>
         <Button
           size="xs"
           variant="outline"
@@ -139,6 +253,16 @@ const hasAnyHold = computed(() => vts.paramSlots.some((s) => s.hold))
         >
           <Square class="size-3" />
           全部停止持有
+        </Button>
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          :disabled="!vts.connected"
+          @click="showCreateCustom = !showCreateCustom"
+        >
+          <Sparkles class="size-3" />
+          注册自定义参数
         </Button>
         <Button
           class="gap-1.5"
@@ -151,6 +275,114 @@ const hasAnyHold = computed(() => vts.paramSlots.some((s) => s.hold))
     </CardHeader>
 
     <CardContent class="p-3 space-y-3">
+      <div
+        v-if="showCreateCustom"
+        class="p-3 rounded-md border border-border bg-muted/20 space-y-3"
+      >
+        <div class="flex-between gap-2 flex-wrap">
+          <div class="text-xs font-semibold text-foreground">向 VTS 注册自定义追踪参数</div>
+          <div class="flex items-center gap-1 flex-wrap">
+            <span class="text-[11px] text-muted-foreground">一键模板:</span>
+            <Button
+              v-for="tpl in CUSTOM_PARAM_TEMPLATES"
+              :key="tpl.name"
+              type="button"
+              size="xs"
+              variant="outline"
+              @click="applyCustomTemplate(tpl)"
+            >
+              {{ tpl.label }}
+            </Button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <FormField
+            label="参数名（英文/数字/下划线）"
+            class="min-w-0"
+          >
+            <Input
+              v-model="customParamName"
+              placeholder="VTsuru_Hype"
+            />
+          </FormField>
+          <FormField
+            label="说明"
+            class="min-w-0"
+          >
+            <Input
+              v-model="customParamDesc"
+              placeholder="弹幕热度/礼物进度"
+            />
+          </FormField>
+          <FormField
+            label="范围 (最小 ~ 最大)"
+            class="min-w-0"
+          >
+            <div class="flex items-center gap-1.5">
+              <NumberField
+                v-model="customParamMin"
+                :step="0.5"
+                :show-buttons="false"
+              />
+              <span class="text-xs text-muted-foreground">~</span>
+              <NumberField
+                v-model="customParamMax"
+                :step="0.5"
+                :show-buttons="false"
+              />
+            </div>
+          </FormField>
+          <FormField
+            label="默认值"
+            class="min-w-0"
+          >
+            <NumberField
+              v-model="customParamDefault"
+              :step="0.1"
+            />
+          </FormField>
+        </div>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div
+            v-if="customParams.length > 0"
+            class="flex items-center gap-1.5 flex-wrap"
+          >
+            <span class="text-[11px] text-muted-foreground">已注册:</span>
+            <Badge
+              v-for="cp in customParams"
+              :key="cp.name"
+              variant="secondary"
+              size="xs"
+              class="gap-1"
+            >
+              <span>{{ cp.name }}</span>
+              <button
+                type="button"
+                class="hover:text-destructive"
+                title="从 VTS 删除此自定义参数"
+                @click="run(() => vts.deleteCustomParameter(cp.name), `已删除 ${cp.name}`)"
+              >
+                <Trash2 class="size-2.5" />
+              </button>
+            </Badge>
+          </div>
+          <div class="flex items-center gap-2 ml-auto">
+            <Button
+              size="xs"
+              variant="ghost"
+              @click="showCreateCustom = false"
+            >
+              取消
+            </Button>
+            <Button
+              size="xs"
+              @click="handleCreateCustomParam"
+            >
+              注册并建槽
+            </Button>
+          </div>
+        </div>
+      </div>
       <div
         v-if="vts.paramSlots.length === 0"
         class="py-6"
@@ -225,7 +457,7 @@ const hasAnyHold = computed(() => vts.paramSlots.some((s) => s.hold))
         </div>
 
         <div class="flex items-center gap-3">
-          <div class="flex-1 min-w-[200px]">
+          <div class="flex-1 min-w-[200px] space-y-1">
             <Slider
               :model-value="[slot.value]"
               :min="safeBounds(slot).min"
@@ -234,6 +466,25 @@ const hasAnyHold = computed(() => vts.paramSlots.some((s) => s.hold))
               :disabled="!vts.connected"
               @update:model-value="(val) => onSliderInput(slot, val)"
             />
+            <!-- VTS 实际参数值实时指示游标 -->
+            <div
+              v-if="vts.connected && liveMonitorEnabled && liveCursorPct(slot) !== null"
+              class="flex items-center gap-2"
+            >
+              <div class="relative flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  class="absolute inset-y-0 left-0 bg-emerald-500/35 origin-left transition-transform duration-150 w-full"
+                  :style="{ transform: `scaleX(${((liveCursorPct(slot) ?? 0) / 100).toFixed(3)})` }"
+                />
+                <div
+                  class="absolute top-0 bottom-0 w-1 rounded-full bg-emerald-500 -translate-x-1/2"
+                  :style="{ left: `${liveCursorPct(slot)}%` }"
+                />
+              </div>
+              <span class="text-[10px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0">
+                实时 {{ liveValues[slot.parameterId]?.value.toFixed(2) }}
+              </span>
+            </div>
           </div>
           <NumberField
             :model-value="slot.value"

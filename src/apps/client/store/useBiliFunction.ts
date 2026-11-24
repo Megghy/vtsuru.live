@@ -7,7 +7,7 @@ import { toast } from 'vue-sonner'
 import { useAccount } from '@/api/account'
 import { isDev } from '@/shared/config'
 
-import { onSendPrivateMessageFailed } from '../data/notification'
+import { onSendLiveDanmakuFailed, onSendPrivateMessageFailed } from '../data/notification'
 import { QueryBiliAPI } from '../data/utils'
 import { useBiliAccountManager } from './useBiliAccountManager'
 import { useBiliCookie } from './useBiliCookie'
@@ -262,15 +262,19 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       })
 
       if (!response.ok) {
-        console.error('发送弹幕网络失败:', response.status, await response.text())
+        const errText = await response.text()
+        console.error('发送弹幕网络失败:', response.status, errText)
+        onSendLiveDanmakuFailed(roomId, message, `HTTP ${response.status}`)
         return false
       }
       const json = await response.json()
       if (json.code !== 0) {
+        const reason = `${json.code} - ${json.message || json.msg}`
         toast.error('发送弹幕失败', {
-          description: `内容: ${message} (${json.code} - ${json.message || json.msg})`,
+          description: `内容: ${message} (${reason})`,
         })
-        console.error(`发送弹幕API失败 to: ${roomId} [${message}] - ${json.code} - ${json.message || json.msg}`)
+        console.error(`发送弹幕API失败 to: ${roomId} [${message}] - ${reason}`)
+        onSendLiveDanmakuFailed(roomId, message, reason)
         return false
       }
 
@@ -278,6 +282,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       return true
     } catch (error) {
       console.error('发送弹幕时发生错误:', error)
+      onSendLiveDanmakuFailed(roomId, message, error)
       return false
     }
   }

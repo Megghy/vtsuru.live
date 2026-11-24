@@ -8,6 +8,7 @@ import type {
   VtsDeckTile,
   VtsExportV2,
   VtsHotkeyCustomization,
+  VtsInstance,
   VtsMacro,
   VtsMinimalExportV1,
   VtsObsLinkConfig,
@@ -72,6 +73,13 @@ export function createVtsConfig() {
   const deck = persistedList<VtsDeckTile>(target('deck', []), byId)
   const profiles = persistedList<VtsProfile>(target('profiles', []), byId)
   const currentProfileId = persistedValue(target('currentProfileId', ''), '')
+  const instances = persistedList<VtsInstance>(
+    target('instances', [
+      { id: 'vts-default', name: '默认 VTS (8001)', wsUrl: DEFAULT_WS_URL, authToken: '' },
+    ]),
+    byId,
+  )
+  const activeInstanceId = persistedValue(target('activeInstanceId', 'vts-default'), 'vts-default')
 
   const all = [
     wsUrl,
@@ -87,6 +95,8 @@ export function createVtsConfig() {
     deck,
     profiles,
     currentProfileId,
+    instances,
+    activeInstanceId,
   ]
 
   async function loadConfig() {
@@ -172,14 +182,58 @@ export function createVtsConfig() {
     deckTiles: deck.value,
     profiles: profiles.value,
     currentProfileId: currentProfileId.value,
+    instances: instances.value,
+    activeInstanceId: activeInstanceId.value,
 
     loadConfig,
-    saveAuthToken: authToken.save,
+    saveAuthToken: async (nextToken: string) => {
+      await authToken.save(nextToken)
+      const active = instances.value.value.find((i) => i.id === activeInstanceId.value.value)
+      if (active) {
+        await instances.upsert({ ...active, authToken: nextToken, wsUrl: wsUrl.value.value })
+      }
+    },
     saveDeck: deck.save,
     upsertDeckTile: deck.upsert,
     removeDeckTile: deck.remove,
 
-    setWsUrl: async (next: string) => wsUrl.save(next.trim()),
+    setWsUrl: async (next: string) => {
+      const normalized = next.trim()
+      await wsUrl.save(normalized)
+      const active = instances.value.value.find((i) => i.id === activeInstanceId.value.value)
+      if (active) {
+        await instances.upsert({ ...active, wsUrl: normalized })
+      }
+    },
+    createInstance: async (name = 'VTS 实例 2', url = 'ws://127.0.0.1:8002', note = '') =>
+      create(instances, {
+        id: `vts-${nanoid(8)}`,
+        name: name.trim() || '新实例',
+        wsUrl: url.trim() || DEFAULT_WS_URL,
+        authToken: '',
+        note: note.trim() || undefined,
+      }),
+    upsertInstance: instances.upsert,
+    removeInstance: async (id: string) => {
+      if (instances.value.value.length <= 1) throw new Error('至少保留一个 VTS 实例配置')
+      await instances.remove(id)
+      if (activeInstanceId.value.value === id) {
+        const fallback = instances.value.value[0]
+        if (fallback) {
+          await activeInstanceId.save(fallback.id)
+          await wsUrl.save(fallback.wsUrl)
+          await authToken.save(fallback.authToken ?? '')
+        }
+      }
+    },
+    selectInstanceConfig: async (id: string) => {
+      const targetInst = instances.value.value.find((i) => i.id === id)
+      if (!targetInst) throw new Error('VTS 实例不存在')
+      await activeInstanceId.save(targetInst.id)
+      await wsUrl.save(targetInst.wsUrl)
+      await authToken.save(targetInst.authToken ?? '')
+      return targetInst
+    },
     upsertPreset: presets.upsert,
     removePreset: presets.remove,
     createPreset: async (name = '新预设') =>

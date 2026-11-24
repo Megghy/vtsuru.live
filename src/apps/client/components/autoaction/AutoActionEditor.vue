@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
+import { NOTIFICATION_ACTION_TYPES, OBS_ACTION_TYPES, VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
@@ -16,6 +16,8 @@ import EnterSettings from './settings/EnterSettings.vue'
 import FollowSettings from './settings/FollowSettings.vue'
 import GiftSettings from './settings/GiftSettings.vue'
 import GuardSettings from './settings/GuardSettings.vue'
+import NotificationActionSettings from './settings/NotificationActionSettings.vue'
+import ObsSettings from './settings/ObsSettings.vue'
 import PngtuberSettings from './settings/PngtuberSettings.vue'
 import PointRedeemSettings from './settings/PointRedeemSettings.vue'
 import ScheduledSettings from './settings/ScheduledSettings.vue'
@@ -44,10 +46,19 @@ const props = withDefaults(
 )
 
 const showTemplate = computed(() =>
-  [ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG].includes(props.action.actionType),
+  [
+    ActionType.SEND_DANMAKU,
+    ActionType.SEND_PRIVATE_MSG,
+    ActionType.SEND_NOTIFICATION,
+    ActionType.OBS_NOTIFY,
+    ActionType.SPEAK_TTS,
+    ActionType.SEND_WEBHOOK,
+  ].includes(props.action.actionType),
 )
 
 const showVtsSettings = computed(() => VTS_ACTION_TYPES.has(props.action.actionType))
+const showObsSettings = computed(() => OBS_ACTION_TYPES.has(props.action.actionType))
+const showNotificationSettings = computed(() => NOTIFICATION_ACTION_TYPES.has(props.action.actionType))
 const showAudioSettings = computed(() => props.action.actionType === ActionType.PLAY_AUDIO)
 const showPngtuberSettings = computed(() => props.action.actionType === ActionType.PNGTUBER_EXPRESSION)
 
@@ -112,11 +123,15 @@ const advancedSummary = computed(() => {
       </CardContent>
     </Card>
 
-    <!-- 3. 执行内容 (模板 / 音效 / PNGtuber / VTS) -->
+    <!-- 3. 执行内容 (通知 / 模板 / 音效 / PNGtuber / VTS / OBS) -->
     <div
-      v-if="showTemplate || showVtsSettings || showPngtuberSettings || showAudioSettings"
-      class="content-settings-section"
+      v-if="showNotificationSettings || showTemplate || showVtsSettings || showObsSettings || showPngtuberSettings || showAudioSettings"
+      class="content-settings-section space-y-3.5"
     >
+      <NotificationActionSettings
+        v-if="showNotificationSettings"
+        :action="action"
+      />
       <TemplateSettings
         v-if="showTemplate"
         :action="action"
@@ -133,6 +148,10 @@ const advancedSummary = computed(() => {
       />
       <VtsSettings
         v-if="showVtsSettings"
+        :action="action"
+      />
+      <ObsSettings
+        v-if="showObsSettings"
         :action="action"
       />
     </div>

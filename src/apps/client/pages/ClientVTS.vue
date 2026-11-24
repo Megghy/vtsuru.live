@@ -14,6 +14,7 @@ import {
   Square,
   Unplug,
   Video,
+  Wind,
   Workflow,
   X,
 } from 'lucide-vue-next'
@@ -34,6 +35,7 @@ import VtsPanicPanel from '@/apps/client/components/vts/VtsPanicPanel.vue'
 import VtsParameterPanel from '@/apps/client/components/vts/VtsParameterPanel.vue'
 import VtsPresetPanel from '@/apps/client/components/vts/VtsPresetPanel.vue'
 import VtsProfilePanel from '@/apps/client/components/vts/VtsProfilePanel.vue'
+import VtsQuickToolsPanel from '@/apps/client/components/vts/VtsQuickToolsPanel.vue'
 import VtsVisualEffectsPanel from '@/apps/client/components/vts/VtsVisualEffectsPanel.vue'
 import { VTS_ACTION_TYPES } from '@/apps/client/store/autoAction/types'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
@@ -55,7 +57,7 @@ const { run } = useVtsAction()
 const router = useRouter()
 
 const tab = ref<'deck' | 'actions' | 'items' | 'settings'>('deck')
-const actionsSubTab = ref<'hotkeys' | 'macros' | 'presets' | 'effects'>('hotkeys')
+const actionsSubTab = ref<'hotkeys' | 'macros' | 'presets' | 'effects' | 'quick'>('hotkeys')
 const switchingModel = ref(false)
 const refreshingModels = ref(false)
 
@@ -407,7 +409,7 @@ function refreshModels() {
           class="pt-3 space-y-3"
         >
           <Tabs v-model="actionsSubTab">
-            <TabsList class="grid w-full max-w-lg grid-cols-4">
+            <TabsList class="grid w-full max-w-2xl grid-cols-5">
               <TabsTrigger
                 value="hotkeys"
                 class="gap-1.5"
@@ -435,6 +437,13 @@ function refreshModels() {
               >
                 <Palette class="size-3.5" />
                 染色与滤镜
+              </TabsTrigger>
+              <TabsTrigger
+                value="quick"
+                class="gap-1.5"
+              >
+                <Wind class="size-3.5" />
+                物理与输出
               </TabsTrigger>
             </TabsList>
 
@@ -470,6 +479,13 @@ function refreshModels() {
               class="pt-3"
             >
               <VtsVisualEffectsPanel />
+            </TabsContent>
+
+            <TabsContent
+              value="quick"
+              class="pt-3"
+            >
+              <VtsQuickToolsPanel />
             </TabsContent>
           </Tabs>
         </TabsContent>

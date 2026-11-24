@@ -47,6 +47,60 @@ export interface VtsPostProcessingState {
   canUpdate: boolean
 }
 
+export interface VtsPhysicsGroup {
+  groupID: string
+  groupName: string
+  strengthMultiplier: number
+  windMultiplier: number
+}
+
+export interface VtsPhysicsState {
+  modelHasPhysics: boolean
+  physicsSwitchedOn: boolean
+  usingLegacyPhysics: boolean
+  physicsFPSSetting: number
+  baseStrength: number
+  baseWind: number
+  apiPhysicsOverrideActive: boolean
+  apiPhysicsOverridePluginName: string
+  physicsGroups: VtsPhysicsGroup[]
+}
+
+export interface VtsNdiState {
+  ndiActive: boolean
+  useNDI5: boolean
+  useCustomResolution: boolean
+  customWidthNDI: number
+  customHeightNDI: number
+}
+
+export interface VtsFolderInfo {
+  models: string
+  backgrounds: string
+  items: string
+  config: string
+  logs: string
+  backup: string
+}
+
+export interface VtsArtMeshInfo {
+  artMeshNames: string[]
+  artMeshTags: string[]
+  artMeshGroups: Array<{
+    groupID: string
+    groupName: string
+    numberOfArtMeshesInGroup: number
+    artMeshNames: string[]
+  }>
+}
+
+export interface VtsModelClickEvent {
+  ts: number
+  modelName: string
+  mouseButtonID: number
+  artMeshIDs: string[]
+}
+
 function formatConnectionError(err: unknown): { message: string; fatal: boolean } {
   if (err instanceof VTubeStudioError) {
     const errorID = (err.data as { errorID?: number } | undefined)?.errorID
@@ -91,11 +145,17 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
   const expressions = ref<VtsExpression[]>([])
   const inputParameters = ref<VtsInputParameter[]>([])
   const postProcessing = ref<VtsPostProcessingState | null>(null)
+  const physicsState = ref<VtsPhysicsState | null>(null)
+  const ndiState = ref<VtsNdiState | null>(null)
+  const folderInfo = ref<VtsFolderInfo | null>(null)
+  const artMeshInfo = ref<VtsArtMeshInfo | null>(null)
+  const lastModelClick = ref<VtsModelClickEvent | null>(null)
   const lastError = ref<string | null>(null)
   const itemEventWaiters = new Map<string, { resolve: (data: VtsItemEventData) => void; acceptTypes: Set<string> }>()
   const sessionReadyHooks = new Set<() => Promise<void> | void>()
   const sessionResetHooks = new Set<() => void>()
   const modelLoadedHooks = new Set<(modelId: string, modelName: string) => Promise<void> | void>()
+  const modelClickedHooks = new Set<(event: VtsModelClickEvent) => Promise<void> | void>()
   let monitorTimer: number | undefined
 
   const setError = (err: unknown) => {
@@ -187,12 +247,71 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
     }
   }
 
+  async function refreshPhysics() {
+    const data = await request(async (c) => c.getCurrentModelPhysics())
+    physicsState.value = data.modelLoaded
+      ? {
+          modelHasPhysics: data.modelHasPhysics,
+          physicsSwitchedOn: data.physicsSwitchedOn,
+          usingLegacyPhysics: data.usingLegacyPhysics,
+          physicsFPSSetting: data.physicsFPSSetting,
+          baseStrength: data.baseStrength,
+          baseWind: data.baseWind,
+          apiPhysicsOverrideActive: data.apiPhysicsOverrideActive,
+          apiPhysicsOverridePluginName: data.apiPhysicsOverridePluginName,
+          physicsGroups: data.physicsGroups ?? [],
+        }
+      : null
+  }
+
+  async function refreshNdiConfig() {
+    const data = await request(async (c) =>
+      c.ndiConfig({
+        setNewConfig: false,
+        ndiActive: false,
+        useNDI5: true,
+        useCustomResolution: false,
+        customWidthNDI: -1,
+        customHeightNDI: -1,
+      }),
+    )
+    ndiState.value = {
+      ndiActive: data.ndiActive,
+      useNDI5: data.useNDI5,
+      useCustomResolution: data.useCustomResolution,
+      customWidthNDI: data.customWidthNDI,
+      customHeightNDI: data.customHeightNDI,
+    }
+  }
+
+  async function refreshFolderInfo() {
+    const data = await request(async (c) => c.vtsFolderInfo())
+    folderInfo.value = data
+  }
+
+  async function refreshArtMeshes() {
+    const data = await request(async (c) => c.artMeshList())
+    artMeshInfo.value = data.modelLoaded
+      ? {
+          artMeshNames: data.artMeshNames ?? [],
+          artMeshTags: data.artMeshTags ?? [],
+          artMeshGroups: data.artMeshGroups ?? [],
+        }
+      : null
+  }
+
   async function refreshModelState() {
     await Promise.all([
       refreshCurrentModel(),
       refreshHotkeys(),
       refreshExpressions(),
       refreshInputParameters().catch(() => {}),
+      refreshPhysics().catch(() => {
+        physicsState.value = null
+      }),
+      refreshArtMeshes().catch(() => {
+        artMeshInfo.value = null
+      }),
     ])
   }
 
@@ -247,6 +366,24 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
           }
         }
       })
+      .catch(() => {})
+    await c.events.modelClicked
+      .subscribe(
+        (data) => {
+          if (!data.modelWasClicked) return
+          const evt: VtsModelClickEvent = {
+            ts: Date.now(),
+            modelName: data.loadedModelName,
+            mouseButtonID: data.mouseButtonID,
+            artMeshIDs: data.artMeshHits.map((h) => h.hitInfo.artMeshID),
+          }
+          lastModelClick.value = evt
+          for (const hook of modelClickedHooks) {
+            void Promise.resolve(hook(evt)).catch(() => {})
+          }
+        },
+        { onlyClicksOnModel: true },
+      )
       .catch(() => {})
   }
 
@@ -304,6 +441,11 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
     expressions.value = []
     inputParameters.value = []
     postProcessing.value = null
+    physicsState.value = null
+    ndiState.value = null
+    folderInfo.value = null
+    artMeshInfo.value = null
+    lastModelClick.value = null
     itemEventWaiters.clear()
     for (const hook of sessionResetHooks) hook()
   }
@@ -325,6 +467,12 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
         refreshAvailableModels().catch(() => {}),
         refreshPostProcessing().catch(() => {
           postProcessing.value = null
+        }),
+        refreshNdiConfig().catch(() => {
+          ndiState.value = null
+        }),
+        refreshFolderInfo().catch(() => {
+          folderInfo.value = null
         }),
       ])
     })
@@ -417,6 +565,47 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
     await connect()
   }
 
+  /** 切换 VTS 多实例并自动重连 */
+  async function switchInstance(instanceId: string, autoConnect = true) {
+    const wasConnected = connected.value || connecting.value
+    await disconnect(false)
+    await config.selectInstanceConfig(instanceId)
+    if (autoConnect || wasConnected) {
+      await connect()
+    }
+  }
+
+  async function subscribeModelOutline(
+    onOutline: (data: {
+      convexHull: Array<{ x: number; y: number }>
+      convexHullCenter: { x: number; y: number }
+      windowSize: { x: number; y: number }
+    }) => void,
+  ): Promise<() => void> {
+    const c = client.value
+    if (!c || !connected.value) return () => {}
+    let active = true
+    try {
+      await c.events.modelOutline.subscribe(
+        (data) => {
+          if (!active) return
+          onOutline({
+            convexHull: data.convexHull,
+            convexHullCenter: data.convexHullCenter,
+            windowSize: data.windowSize,
+          })
+        },
+        { draw: false },
+      )
+    } catch {
+      return () => {}
+    }
+    return () => {
+      active = false
+      void c.events.modelOutline.unsubscribe().catch(() => {})
+    }
+  }
+
   return {
     connecting,
     connected,
@@ -436,6 +625,11 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
     expressions,
     inputParameters,
     postProcessing,
+    physicsState,
+    ndiState,
+    folderInfo,
+    artMeshInfo,
+    lastModelClick,
     lastError,
 
     request,
@@ -443,14 +637,20 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
     connect,
     disconnect,
     reauthorize,
+    switchInstance,
     refreshCurrentModel,
     refreshAvailableModels,
     refreshHotkeys,
     refreshExpressions,
     refreshInputParameters,
     refreshPostProcessing,
+    refreshPhysics,
+    refreshNdiConfig,
+    refreshFolderInfo,
+    refreshArtMeshes,
     refreshModelState,
     waitForItemEvent,
+    subscribeModelOutline,
     onSessionReady: (fn: () => Promise<void> | void) => {
       sessionReadyHooks.add(fn)
     },
@@ -459,6 +659,9 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
     },
     onModelLoaded: (fn: (modelId: string, modelName: string) => Promise<void> | void) => {
       modelLoadedHooks.add(fn)
+    },
+    onModelClicked: (fn: (event: VtsModelClickEvent) => Promise<void> | void) => {
+      modelClickedHooks.add(fn)
     },
   }
 }
