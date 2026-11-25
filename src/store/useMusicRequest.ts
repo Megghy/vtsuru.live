@@ -54,6 +54,8 @@ export interface MusicRequestSettings {
   platform: 'netease' | 'kugou'
   obsTitle: string
   deviceId?: string
+  maxWaitingSize: number
+  preventDuplicateInQueue: boolean
 
   blacklist: string[]
 }
@@ -70,6 +72,8 @@ export function createDefaultMusicRequestSettings(): MusicRequestSettings {
     orderMusicFirst: true,
     platform: 'netease',
     obsTitle: '点歌机',
+    maxWaitingSize: 0,
+    preventDuplicateInQueue: true,
     blacklist: [],
   }
 }
@@ -205,11 +209,14 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
         volume: merged.volume,
         blacklist: [...merged.blacklist],
         obsTitle: merged.obsTitle,
+        maxWaitingSize: merged.maxWaitingSize ?? 0,
+        preventDuplicateInQueue: merged.preventDuplicateInQueue ?? true,
       }
       await SaveSetting('MusicRequest', payload)
       if (accountInfo.value?.settings) {
         accountInfo.value.settings.musicRequest = payload
       }
+      scheduleSnapshotSync()
       message.success('点歌机设置已保存并同步到云端')
       return true
     } catch (err) {
@@ -239,6 +246,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
           music: w.music,
           isPinned: Boolean(w.isPinned),
         })),
+        obsTitle: settings.value.obsTitle || '点歌机',
       })
         .then((res) => {
           if (seq === snapshotSeq && res && res.code !== 200) {
@@ -557,12 +565,36 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
         }
       }
 
+      // 检查待播队列上限
+      const maxSize = settings.value.maxWaitingSize ?? 0
+      if (maxSize > 0 && waitingMusics.value.length >= maxSize) {
+        message.info(`[点歌机] 队列已满 (${waitingMusics.value.length}/${maxSize})，忽略 [${danmaku.uname}] 点歌`)
+        await publishResult(false, danmaku.uname, `当前待播队列已达上限 (${maxSize} 首)，请稍后再点`)
+        return
+      }
+
       // 优先命中本地闲置曲库，未命中时搜索在线音乐平台
       const matched = findSongInLibrary(songKeyword) ?? (await searchOnlineSong(songKeyword))
       if (!matched || (!matched.url && matched.from !== SongPlatform.Netease)) {
         message.warning(`[点歌机] 未找到可播放歌曲: ${songKeyword}`)
         await publishResult(false, danmaku.uname, `未找到可播放曲目「${songKeyword}」`)
         return
+      }
+
+      // 检查是否已在播放或待播队列中（防重）
+      if (settings.value.preventDuplicateInQueue !== false) {
+        const isSameSong = (song: ResponseSongModel | undefined) => {
+          if (!song) return false
+          if (song.id > 0 && matched.id > 0 && song.from === matched.from) {
+            return song.id === matched.id
+          }
+          return song.name.trim().toLowerCase() === matched.name.trim().toLowerCase()
+        }
+        if (isSameSong(currentOriginMusic.value?.music) || waitingMusics.value.some((w) => isSameSong(w.music))) {
+          message.info(`[点歌机] 《${matched.name}》已在队列中，跳过重复点播`)
+          await publishResult(false, danmaku.uname, `《${matched.name}》已在待播或播放中`)
+          return
+        }
       }
 
       // 二次复核解析后的真实歌名与歌手，避免别名搜索绕过黑名单

@@ -3,7 +3,9 @@ import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
 import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
 import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
 import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
 import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import Next24Filled from '@vicons/fluent/es/Next24Filled'
 import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
 import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import Search24Regular from '@vicons/fluent/es/Search24Regular'
@@ -13,7 +15,8 @@ import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
 import type { SongRequestInfo } from '@/api/client-types'
-import { QueueSortType, SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
+import { QueueSortType, type ResponseSongModel, SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
+import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import LiveActiveFocusCard from '@/apps/open-live/components/shared/LiveActiveFocusCard.vue'
 import UserBadges from '@/apps/open-live/components/UserBadges.vue'
 import { useLiveRequest } from '@/composables/useLiveRequest'
@@ -31,8 +34,11 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { copyToClipboard } from '@/shared/utils'
 import { formatListForCopy, normalizeTimestampMs } from '@/shared/utils/queue'
@@ -49,6 +55,69 @@ const showCancelAllDialog = ref(false)
 const showBatchCancelDialog = ref(false)
 const refundPointOnCancelAll = ref(false)
 const refundPointOnBatchCancel = ref(false)
+
+// 编辑点播歌名 / 绑定歌单曲目弹窗
+const editingItem = ref<SongRequestInfo | null>(null)
+const editSongName = ref('')
+const editSelectedSongKey = ref<string | null>(null)
+const editSongSearch = ref('')
+const mySongsCache = ref<ResponseSongModel[]>([])
+const isLoadingMySongs = ref(false)
+const isSavingEdit = ref(false)
+
+const filteredBindSongs = computed(() => {
+  const kw = editSongSearch.value.trim().toLowerCase()
+  const list = mySongsCache.value
+  if (!kw) return list.slice(0, 30)
+  return list
+    .filter(
+      (s) =>
+        s.name.toLowerCase().includes(kw) ||
+        s.translateName?.toLowerCase().includes(kw) ||
+        s.author?.some((a) => a.toLowerCase().includes(kw)),
+    )
+    .slice(0, 30)
+})
+
+async function openEditDialog(item: SongRequestInfo) {
+  editingItem.value = item
+  editSongName.value = item.songName || ''
+  editSelectedSongKey.value = item.song?.key ?? null
+  editSongSearch.value = ''
+  if (songRequest.configCanEdit && mySongsCache.value.length === 0) {
+    isLoadingMySongs.value = true
+    try {
+      const res = await getApiSongListGet()
+      if (res.code === 200 && res.data) {
+        mySongsCache.value = res.data
+      }
+    } finally {
+      isLoadingMySongs.value = false
+    }
+  }
+}
+
+function selectBindSong(song: ResponseSongModel) {
+  editSelectedSongKey.value = song.key
+  editSongName.value = song.name
+}
+
+async function saveEditItem() {
+  if (!editingItem.value || isSavingEdit.value) return
+  isSavingEdit.value = true
+  try {
+    const ok = await songRequest.updateRequestItem(editingItem.value, {
+      songName: editSongName.value,
+      songListKey: editSelectedSongKey.value,
+      clearSongListKey: !editSelectedSongKey.value,
+    })
+    if (ok) {
+      editingItem.value = null
+    }
+  } finally {
+    isSavingEdit.value = false
+  }
+}
 
 async function handleAddSongManual() {
   if (isAddingManual.value || !songRequest.newSongName.trim()) return
@@ -480,6 +549,15 @@ async function copyWaitingQueue() {
 
       <template #actions>
         <Button
+          size="xs"
+          variant="ghost"
+          :disabled="songRequest.isLoading || songRequest.isSongOperating(item.id)"
+          @click="openEditDialog(item)"
+        >
+          <Edit24Regular class="size-3.5 mr-1" />
+          编辑
+        </Button>
+        <Button
           v-if="item.song?.url"
           size="xs"
           variant="outline"
@@ -496,6 +574,15 @@ async function copyWaitingQueue() {
           @click="songRequest.updateSongStatus(item, SongRequestStatus.Waiting)"
         >
           暂停退回
+        </Button>
+        <Button
+          v-if="waitingSongs.length > 0"
+          size="xs"
+          :disabled="songRequest.isLoading || songRequest.isSongOperating(item.id)"
+          @click="songRequest.finishAndStartNext()"
+        >
+          <Next24Filled class="size-3.5 mr-1" />
+          完成并唱下一首
         </Button>
         <Button
           size="xs"
@@ -525,6 +612,7 @@ async function copyWaitingQueue() {
         :selection-mode="selectionMode"
         :selected="selectedIds.includes(item.id)"
         @toggle-select="(checked) => toggleSelect(item.id, checked)"
+        @edit="openEditDialog"
       />
     </div>
     <div
@@ -606,5 +694,103 @@ async function copyWaitingQueue() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <!-- 编辑点播歌名 / 绑定歌单弹窗 -->
+    <Dialog
+      :open="Boolean(editingItem)"
+      @update:open="(val) => { if (!val) editingItem = null }"
+    >
+      <DialogContent class="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>编辑点播曲目</DialogTitle>
+          <DialogDescription>修正观众打错的歌名，或关联到你的歌单曲目以支持试听与统计。</DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-3 py-1">
+          <FormField label="显示歌名">
+            <Input
+              v-model="editSongName"
+              placeholder="输入修正后的歌曲名称"
+              @keyup.enter="saveEditItem"
+            />
+          </FormField>
+
+          <FormField
+            v-if="songRequest.configCanEdit"
+            label="绑定我的歌单曲目（可选）"
+          >
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <Input
+                  v-model="editSongSearch"
+                  placeholder="搜索我的歌单曲目或原唱..."
+                  class="flex-1"
+                />
+                <Button
+                  v-if="editSelectedSongKey"
+                  variant="outline"
+                  size="xs"
+                  @click="editSelectedSongKey = null"
+                >
+                  取消绑定
+                </Button>
+              </div>
+              <ScrollArea class="h-44 rounded-md border border-border/70 p-1.5">
+                <div
+                  v-if="isLoadingMySongs"
+                  class="py-6 text-center text-xs text-muted-foreground"
+                >
+                  正在加载我的歌单...
+                </div>
+                <div
+                  v-else-if="filteredBindSongs.length === 0"
+                  class="py-6 text-center text-xs text-muted-foreground"
+                >
+                  没有匹配的歌单曲目
+                </div>
+                <div
+                  v-else
+                  class="space-y-1"
+                >
+                  <button
+                    v-for="song in filteredBindSongs"
+                    :key="song.key"
+                    type="button"
+                    class="w-full flex-between gap-2 px-2.5 py-1.5 rounded text-left text-xs transition-colors"
+                    :class="
+                      editSelectedSongKey === song.key
+                        ? 'bg-primary/15 text-primary font-medium'
+                        : 'hover:bg-muted/70 text-foreground'
+                    "
+                    @click="selectBindSong(song)"
+                  >
+                    <span class="truncate">{{ song.name }}</span>
+                    <span class="text-[11px] text-muted-foreground truncate max-w-[140px]">
+                      {{ song.author?.join(' / ') || '未知原唱' }}
+                    </span>
+                  </button>
+                </div>
+              </ScrollArea>
+            </div>
+          </FormField>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="editingItem = null"
+          >
+            取消
+          </Button>
+          <Button
+            :loading="isSavingEdit"
+            :disabled="!editSongName.trim()"
+            @click="saveEditItem"
+          >
+            保存修改
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

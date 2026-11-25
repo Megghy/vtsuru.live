@@ -6,8 +6,10 @@ import type { ResponseSongModel, SettingSongRequest } from '@/api/generated/mode
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { SmartImage } from '@/shared/ui/image'
 import { copyToClipboard } from '@/shared/utils'
 
+import { isNewSong } from '../utils/useSongListQueryState'
 import SongOptionBadges from './SongOptionBadges.vue'
 
 const props = defineProps<{
@@ -61,12 +63,11 @@ function handleRequest() {
         class="space-y-3 py-1"
       >
         <div class="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
-          <img
+          <SmartImage
             v-if="song.cover"
             :src="song.cover"
             :alt="song.name"
             class="size-14 rounded-md object-cover border border-border shrink-0"
-            referrerpolicy="no-referrer"
           />
           <div
             v-else
@@ -76,7 +77,16 @@ function handleRequest() {
           </div>
 
           <div class="min-w-0 flex-1 space-y-1">
-            <div class="font-semibold text-sm text-foreground break-words">{{ song.name }}</div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-semibold text-sm text-foreground break-words">{{ song.name }}</span>
+              <Badge
+                v-if="isNewSong(song)"
+                variant="brand"
+                size="xs"
+              >
+                NEW
+              </Badge>
+            </div>
             <div
               v-if="song.translateName"
               class="text-xs text-muted-foreground truncate"

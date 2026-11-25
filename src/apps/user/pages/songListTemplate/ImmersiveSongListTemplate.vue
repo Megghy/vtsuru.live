@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useVirtualList } from '@vueuse/core'
-import { ExternalLink, Music, Pin, Play } from 'lucide-vue-next'
+import { ExternalLink, Heart, Music, Pin, Play } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -9,6 +9,7 @@ import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
+import { SmartImage } from '@/shared/ui/image'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { toast } from '@/shared/utils'
 import { getPlayableAudioUrl, getSongExternalLink } from '@/shared/utils/songMedia'
@@ -18,9 +19,11 @@ import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRandomDialog from './components/SongRandomDialog.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
-import { getSongRequestTooltip } from './utils/songRequestUtils'
-import { useSongListQueryState } from './utils/useSongListQueryState'
+import SongTagChips from './components/SongTagChips.vue'
+import { canRequestSong, getSongRequestTooltip } from './utils/songRequestUtils'
+import { isNewSong, useSongListQueryState } from './utils/useSongListQueryState'
 import { useSongListTemplateCore } from './utils/useSongListTemplateCore'
+import { useSongPreviewPlayer } from './utils/useSongPreviewPlayer'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
@@ -46,29 +49,47 @@ const {
   sortKey,
   sortOrder,
   hideDisabled,
+  onlyRequestable,
+  onlyFavorites,
+  onlyPlayable,
   artistOptions,
   languageOptions,
   tagOptions,
+  topLanguageOptions,
+  topTagOptions,
   disabledCount,
+  playableCount,
+  favoriteCount,
+  isFavorite,
+  toggleFavorite,
   filteredSongs,
   hasFilters,
   clearFilters,
   pickRandomSong,
   copyShareLink,
-} = useSongListQueryState(() => props.data)
+} = useSongListQueryState(() => props.data, {
+  ownerId: () => props.userInfo?.id,
+  canRequestPredicate: (song) =>
+    canRequestSong(
+      song,
+      props.userInfo,
+      props.liveRequestSettings,
+      requestAuthState.value.isLoggedIn,
+      requestAuthState.value.isBiliAuthed,
+    ).canRequest,
+})
+
+const { previewSong, isLrcLoading, playSong, closePlayer, isShared: isSharedPlayer } = useSongPreviewPlayer()
 
 const selectedSong = ref<ResponseSongModel>()
-const isLrcLoading = ref<string>()
-const playerVisible = ref(true)
 const randomDialogOpen = ref(false)
 const randomSong = ref<ResponseSongModel | null>(null)
 
 const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
-  itemHeight: 54,
+  itemHeight: 58,
   overscan: 10,
 })
 
-// 筛选后如果当前选中歌曲不在列表内，自动更新选中第一首
 watch(
   filteredSongs,
   (songs) => {
@@ -78,7 +99,6 @@ watch(
     }
     if (!selectedSong.value || !songs.some((s) => s.key === selectedSong.value!.key)) {
       selectedSong.value = songs[0]
-      playerVisible.value = true
     }
   },
   { immediate: true },
@@ -86,7 +106,6 @@ watch(
 
 const stageEpoch = ref(0)
 function selectSong(song: ResponseSongModel) {
-  playerVisible.value = true
   if (selectedSong.value?.key === song.key) return
   selectedSong.value = song
   stageEpoch.value += 1
@@ -144,11 +163,10 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
                 :aria-label="`放大查看 ${selectedSong.name} 封面`"
                 @click="open()"
               >
-                <img
+                <SmartImage
                   :src="selectedSong.cover"
                   :alt="selectedSong.name"
                   class="size-full object-cover"
-                  referrerpolicy="no-referrer"
                 />
               </button>
             </template>
@@ -179,6 +197,13 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
                 {{ selectedSong.name }}
               </span>
               <Badge
+                v-if="isNewSong(selectedSong)"
+                variant="brand"
+                size="xs"
+              >
+                NEW
+              </Badge>
+              <Badge
                 v-if="selectedSong.isDisabled"
                 variant="secondary"
                 size="xs"
@@ -207,28 +232,17 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
             {{ selectedSong.description }}
           </p>
 
-          <div
+          <SongTagChips
             v-if="selectedSong.language?.length || selectedSong.tags?.length"
-            class="stage-tags flex flex-wrap gap-1"
-          >
-            <Badge
-              v-for="lang in selectedSong.language ?? []"
-              :key="`l-${lang}`"
-              variant="secondary"
-              size="sm"
-              class="bg-primary/10 text-primary"
-            >
-              {{ lang }}
-            </Badge>
-            <Badge
-              v-for="tag in (selectedSong.tags ?? []).slice(0, 6)"
-              :key="`t-${tag}`"
-              variant="secondary"
-              size="sm"
-            >
-              {{ tag }}
-            </Badge>
-          </div>
+            :tags="selectedSong.tags"
+            :languages="selectedSong.language"
+            :selected-tag="selectedTag"
+            :selected-language="selectedLanguage"
+            :max-tags="6"
+            :max-languages="4"
+            @toggle-tag="selectedTag = selectedTag === $event ? null : $event"
+            @toggle-language="selectedLanguage = selectedLanguage === $event ? null : $event"
+          />
 
           <SongOptionBadges
             v-if="selectedSong.options"
@@ -250,6 +264,29 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
               :label="stageRequestLabel"
               @request="requestSong"
             />
+            <Button
+              v-if="playableSelectedUrl"
+              variant="secondary"
+              size="sm"
+              class="gap-1.5"
+              :disabled="isLrcLoading === selectedSong.key"
+              @click="playSong(selectedSong)"
+            >
+              <Play class="size-3.5" />
+              试听
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              :class="isFavorite(selectedSong.key) ? 'text-rose-500 border-rose-500/30' : 'text-muted-foreground'"
+              :aria-label="isFavorite(selectedSong.key) ? '取消收藏' : '收藏'"
+              @click="toggleFavorite(selectedSong.key)"
+            >
+              <Heart
+                class="size-3.5"
+                :class="{ 'fill-current': isFavorite(selectedSong.key) }"
+              />
+            </Button>
             <a
               v-if="externalSelectedLink"
               :href="externalSelectedLink.url"
@@ -268,10 +305,10 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
           </div>
 
           <SongPlayer
-            v-if="playableSelectedUrl && playerVisible"
+            v-if="!isSharedPlayer && previewSong"
             v-model:is-lrc-loading="isLrcLoading"
-            :song="selectedSong"
-            @close="playerVisible = false"
+            :song="previewSong"
+            @close="closePlayer"
           />
         </div>
       </Transition>
@@ -296,13 +333,19 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
         v-model:sort-key="sortKey"
         v-model:sort-order="sortOrder"
         v-model:hide-disabled="hideDisabled"
-        density="compact"
+        v-model:only-requestable="onlyRequestable"
+        v-model:only-favorites="onlyFavorites"
+        v-model:only-playable="onlyPlayable"
         :artist-options="artistOptions"
         :language-options="languageOptions"
         :tag-options="tagOptions"
+        :top-language-options="topLanguageOptions"
+        :top-tag-options="topTagOptions"
         :total-count="data?.length ?? 0"
         :filtered-count="filteredSongs.length"
         :disabled-count="disabledCount"
+        :playable-count="playableCount"
+        :favorite-count="favoriteCount"
         :has-filters="hasFilters"
         @clear="clearFilters"
         @random="handleRandomPick"
@@ -324,7 +367,7 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
           <div
             v-for="{ data: song } in list"
             :key="song.key"
-            class="flex items-center gap-2 h-[54px] px-2 rounded-lg transition-colors hover:bg-muted/70 min-w-0"
+            class="flex items-center gap-2 h-[58px] px-2 rounded-lg transition-colors hover:bg-muted/70 min-w-0"
             :class="{
               'bg-muted': selectedSong?.key === song.key,
               'is-singing': singingSongKeySet.has(song.key),
@@ -342,13 +385,11 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
               <span
                 class="size-9 rounded-md overflow-hidden bg-muted flex-center text-xs font-semibold text-muted-foreground shrink-0"
               >
-                <img
+                <SmartImage
                   v-if="song.cover"
                   :src="song.cover"
                   :alt="song.name"
                   class="size-full object-cover"
-                  loading="lazy"
-                  referrerpolicy="no-referrer"
                 />
                 <span v-else>{{ song.name.charAt(0) }}</span>
               </span>
@@ -364,12 +405,28 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
                   >
                     {{ song.name }}
                   </span>
+                  <Badge
+                    v-if="isNewSong(song)"
+                    variant="brand"
+                    size="xs"
+                  >
+                    NEW
+                  </Badge>
                 </span>
-                <span
-                  v-if="song.author?.length"
-                  class="text-[11px] text-muted-foreground truncate"
-                >
-                  {{ song.author.join(' / ') }}
+                <span class="flex items-center gap-1.5 text-[11px] text-muted-foreground min-w-0">
+                  <span
+                    v-if="song.author?.length"
+                    class="truncate"
+                  >
+                    {{ song.author.join(' / ') }}
+                  </span>
+                  <SongOptionBadges
+                    v-if="song.options"
+                    :options="song.options"
+                    variant="semantic"
+                    size="tiny"
+                    class="shrink-0"
+                  />
                 </span>
               </span>
             </button>
@@ -387,6 +444,30 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
               :queued-keys="queuedSongKeySet"
               variant="text"
             />
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="rounded-full"
+              :class="isFavorite(song.key) ? 'text-rose-500' : 'text-muted-foreground'"
+              :aria-label="isFavorite(song.key) ? '取消收藏' : '收藏'"
+              @click="toggleFavorite(song.key)"
+            >
+              <Heart
+                class="size-3.5"
+                :class="{ 'fill-current': isFavorite(song.key) }"
+              />
+            </Button>
+            <Button
+              v-if="getPlayableAudioUrl(song)"
+              size="icon-xs"
+              variant="ghost"
+              class="rounded-full text-muted-foreground"
+              :disabled="isLrcLoading === song.key"
+              :aria-label="`试听《${song.name}》`"
+              @click="playSong(song)"
+            >
+              <Play class="size-3.5" />
+            </Button>
             <SongRequestButton
               :song="song"
               :live-request-settings="liveRequestSettings"
@@ -401,20 +482,19 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
       </div>
     </section>
 
-    <!-- 移动端吸底快捷栏，选中下方曲目时无需滚回页顶 -->
+    <!-- 移动端吸底快捷栏（点击试听直接唤起全局吸底播放器，不再跳回顶部） -->
     <div
-      v-if="selectedSong"
+      v-if="selectedSong && !previewSong"
       data-site-sticky="bottom"
       data-site-surface="bar"
       class="md:hidden sticky bottom-2 z-20 flex items-center justify-between gap-2 p-2.5 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-md"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1">
-        <img
+        <SmartImage
           v-if="selectedSong.cover"
           :src="selectedSong.cover"
           :alt="selectedSong.name"
           class="size-8 rounded object-cover shrink-0"
-          referrerpolicy="no-referrer"
         />
         <div class="min-w-0 flex-1">
           <div class="text-xs font-medium text-foreground truncate">{{ selectedSong.name }}</div>
@@ -425,11 +505,23 @@ const externalSelectedLink = computed(() => (selectedSong.value ? getSongExterna
       </div>
       <div class="flex items-center gap-1 shrink-0">
         <Button
+          size="icon-xs"
+          variant="ghost"
+          :class="isFavorite(selectedSong.key) ? 'text-rose-500' : 'text-muted-foreground'"
+          :aria-label="isFavorite(selectedSong.key) ? '取消收藏' : '收藏'"
+          @click="toggleFavorite(selectedSong.key)"
+        >
+          <Heart
+            class="size-3.5"
+            :class="{ 'fill-current': isFavorite(selectedSong.key) }"
+          />
+        </Button>
+        <Button
           v-if="playableSelectedUrl"
           size="icon-xs"
           variant="ghost"
           aria-label="播放试听"
-          @click="playerVisible = true"
+          @click="playSong(selectedSong)"
         >
           <Play class="size-3.5" />
         </Button>

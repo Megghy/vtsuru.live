@@ -19,6 +19,7 @@ import PaidPanel from '../components/PaidPanel.vue'
 import SaveImageModal from '../components/SaveImageModal.vue'
 import SettingsDrawer from '../components/SettingsDrawer.vue'
 import ShortcutsModal from '../components/ShortcutsModal.vue'
+import SongRequestPanel from '../components/SongRequestPanel.vue'
 import UserMenu from '../components/UserMenu.vue'
 import VotePanel from '../components/VotePanel.vue'
 import type { PanelId } from '../core/types'
@@ -160,6 +161,10 @@ onUnmounted(() => void dashboard.stop())
           />
           <VotePanel
             v-else-if="pane.id === 'vote'"
+            :blurred="pane.blurred"
+          />
+          <SongRequestPanel
+            v-else-if="pane.id === 'song_request'"
             :blurred="pane.blurred"
           />
           <PaidPanel

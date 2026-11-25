@@ -39,14 +39,20 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
       variant="none"
       class="py-1"
     >
-      <Switch v-model:checked="blockProps.showSearch" />
+      <Switch
+        :checked="blockProps.showSearch !== false"
+        @update:checked="blockProps.showSearch = $event"
+      />
     </SettingRow>
     <SettingRow
       title="显示点歌方式"
       variant="none"
       class="py-1"
     >
-      <Switch v-model:checked="blockProps.showRequestStatus" />
+      <Switch
+        :checked="blockProps.showRequestStatus !== false"
+        @update:checked="blockProps.showRequestStatus = $event"
+      />
     </SettingRow>
     <SettingRow
       title="允许块内快捷点歌"

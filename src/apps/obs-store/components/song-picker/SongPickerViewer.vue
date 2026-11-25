@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Dices, History, Music2, RefreshCw, RotateCcw, Trash2 } from 'lucide-vue-next'
+import { Dices, History, ListPlus, Music2, RefreshCw, RotateCcw, Trash2 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
+import { postApiLiveRequestAdd } from '@/api/generated/live-request/live-request'
 import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import { OBS_ACCENT_PRESETS, OBS_WIDGET_THEME_OPTIONS } from '@/apps/obs-store/components/shared/theme'
 import type { ObsWidgetTheme } from '@/apps/obs-store/components/shared/theme'
@@ -67,6 +68,25 @@ const { state, updateState, sendAction, currentHash, isSyncing, lastSyncError, h
 
 const remoteSongs = ref<PickerSongItem[]>([])
 const isLoadingSongs = ref(false)
+const queuingSongName = ref<string | null>(null)
+
+async function pushSongToLiveQueue(songName: string) {
+  const name = songName.trim()
+  if (!name || queuingSongName.value) return
+  queuingSongName.value = name
+  try {
+    const res = await postApiLiveRequestAdd({ name })
+    if (res.code === 200) {
+      toast.success(`已将「${name}」加入待唱队列`)
+    } else {
+      toast.error(`加入待唱队列失败：${res.message || '未知错误'}`)
+    }
+  } catch (err) {
+    toast.error(`加入待唱队列失败：${err instanceof Error ? err.message : String(err)}`)
+  } finally {
+    queuingSongName.value = null
+  }
+}
 
 async function fetchOwnSongs() {
   const uid = account.value.id
@@ -305,6 +325,17 @@ function handleClearHistory() {
           </Button>
 
           <Button
+            v-if="state.lastDraw"
+            variant="secondary"
+            :loading="queuingSongName === state.lastDraw.song.name"
+            class="gap-1 shrink-0"
+            @click="pushSongToLiveQueue(state.lastDraw.song.name)"
+          >
+            <ListPlus class="size-3.5" />
+            加入待唱
+          </Button>
+
+          <Button
             variant="outline"
             :disabled="!state.lastDraw"
             class="gap-1 shrink-0"
@@ -347,9 +378,21 @@ function handleClearHistory() {
                 <span class="text-muted-foreground tabular-nums mr-1">#{{ idx + 1 }}</span>
                 {{ item.name }}
               </span>
-              <span class="text-[11px] text-muted-foreground truncate shrink-0 max-w-[110px]">
-                {{ item.author || '未知歌手' }}
-              </span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span class="text-[11px] text-muted-foreground truncate max-w-[100px]">
+                  {{ item.author || '未知歌手' }}
+                </span>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-primary"
+                  :loading="queuingSongName === item.name"
+                  title="加入待唱队列"
+                  @click="pushSongToLiveQueue(item.name)"
+                >
+                  <ListPlus class="size-3" />
+                </Button>
+              </div>
             </div>
           </div>
 

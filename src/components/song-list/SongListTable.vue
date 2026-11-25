@@ -2,10 +2,13 @@
 import {
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
+  ArrowUpToLine,
   Ban,
   CheckCircle2,
   ExternalLink,
   GripVertical,
+  ListPlus,
+  Music2,
   Pencil,
   Pin,
   PinOff,
@@ -19,6 +22,7 @@ import { computed, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import type { SongRequestInfo } from '@/api/client-types'
+import { postApiLiveRequestAdd } from '@/api/generated/live-request/live-request'
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform, SongRequestStatus } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
@@ -92,10 +96,29 @@ const {
   selectAllFiltered,
   clearSelection,
   resetFilters,
+  moveSongToPosition,
   applyPageReorder,
   nextPage,
   prevPage,
 } = state
+
+const addingQueueKey = ref<string | null>(null)
+async function quickAddToLiveQueue(song: ResponseSongModel) {
+  if (addingQueueKey.value === song.key) return
+  addingQueueKey.value = song.key
+  try {
+    const res = await postApiLiveRequestAdd({ name: song.name })
+    if (res.code === 200) {
+      toast.success(`已将《${song.name}》加入今晚待唱队列`)
+    } else {
+      toast.error(res.message || '加入待唱队列失败')
+    }
+  } catch (err) {
+    toast.error(`加入待唱队列失败: ${err instanceof Error ? err.message : String(err)}`)
+  } finally {
+    addingQueueKey.value = null
+  }
+}
 
 const singingKeySet = computed(() => {
   const set = new Set<string>()
@@ -561,8 +584,160 @@ async function handleBatchDelete() {
         @close="playingSong = undefined"
       />
 
-      <!-- 歌曲表格 -->
-      <div class="border border-border/80 rounded-lg overflow-x-auto bg-card">
+      <!-- 移动端卡片视图（窄屏无横向滚动） -->
+      <div class="md:hidden space-y-2">
+        <div
+          v-if="!pagedSongs.length"
+          class="rounded-lg border border-border/80 bg-card py-10 text-center text-xs text-muted-foreground"
+        >
+          暂无符合条件的歌曲
+        </div>
+        <div
+          v-for="row in pagedSongs"
+          :key="`mobile-${row.key}`"
+          class="rounded-lg border border-border/80 bg-card p-3 space-y-2"
+          :class="{ 'opacity-65': row.isDisabled }"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <Checkbox
+                v-if="isSelf"
+                :checked="selectedKeys.includes(row.key)"
+                @update:checked="toggleSelectRow(row.key, $event)"
+              />
+              <img
+                v-if="row.cover"
+                :src="row.cover"
+                :alt="row.name"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                class="size-9 rounded object-cover border border-border/60 shrink-0"
+              />
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <Pin
+                    v-if="row.isPinned"
+                    class="size-3 text-primary shrink-0"
+                  />
+                  <span class="font-medium text-xs text-foreground truncate">{{ row.name }}</span>
+                  <Badge
+                    v-if="row.proficiency"
+                    variant="secondary"
+                    size="xs"
+                  >
+                    {{ row.proficiency }}
+                  </Badge>
+                  <Badge
+                    v-if="row.keyShift"
+                    variant="outline"
+                    size="xs"
+                  >
+                    {{ row.keyShift }}
+                  </Badge>
+                </div>
+                <div class="text-[11px] text-muted-foreground truncate">
+                  {{ row.author?.join(' / ') || '未知原唱' }}
+                  {{ row.language?.length ? ` · ${row.language.join('/')}` : '' }}
+                </div>
+              </div>
+            </div>
+            <span
+              v-if="(row.requestCount ?? 0) > 0"
+              class="text-[11px] text-muted-foreground tabular-nums shrink-0"
+            >
+              {{ row.requestCount }} 次
+            </span>
+          </div>
+
+          <div
+            v-if="row.tags?.length || row.isDisabled"
+            class="flex flex-wrap items-center gap-1"
+          >
+            <Badge
+              v-if="row.isDisabled"
+              variant="secondary"
+              size="xs"
+            >
+              暂不接歌
+            </Badge>
+            <Badge
+              v-for="t in row.tags"
+              :key="t"
+              variant="secondary"
+              size="xs"
+            >
+              {{ t }}
+            </Badge>
+          </div>
+
+          <div
+            v-if="isSelf"
+            class="flex items-center justify-end gap-1 pt-1 border-t border-border/50"
+          >
+            <Button
+              v-if="showListenButton && getPlayableAudioUrl(row)"
+              size="icon-xs"
+              variant="ghost"
+              class="text-primary"
+              aria-label="试听"
+              @click="playingSong = row"
+            >
+              <Play class="size-3.5" />
+            </Button>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :loading="addingQueueKey === row.key"
+              aria-label="加入今晚待唱队列"
+              @click="quickAddToLiveQueue(row)"
+            >
+              <ListPlus class="size-3.5" />
+            </Button>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :class="row.isPinned ? 'text-primary' : 'text-muted-foreground'"
+              aria-label="置顶"
+              @click="batchUpdatePin(!row.isPinned, [row.key])"
+            >
+              <component
+                :is="row.isPinned ? PinOff : Pin"
+                class="size-3.5"
+              />
+            </Button>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-muted-foreground"
+              aria-label="修改"
+              @click="editModalRef?.open(row)"
+            >
+              <Pencil class="size-3.5" />
+            </Button>
+            <Popconfirm
+              :title="`确认删除《${row.name}》？`"
+              positive-text="删除"
+              negative-text="取消"
+              @positive-click="handleDeleteSong(row)"
+            >
+              <template #trigger>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-destructive"
+                  aria-label="删除"
+                >
+                  <Trash2 class="size-3.5" />
+                </Button>
+              </template>
+              确认删除《{{ row.name }}》？
+            </Popconfirm>
+          </div>
+        </div>
+      </div>
+
+      <!-- 桌面歌曲表格 -->
+      <div class="hidden md:block border border-border/80 rounded-lg overflow-x-auto bg-card">
         <Table class="min-w-[820px]">
           <TableHeader>
             <TableRow class="hover:bg-transparent border-b border-border/80 bg-muted/40">
@@ -679,6 +854,20 @@ async function handleBatchDelete() {
                         size="xs"
                       >
                         {{ platformLabel(row.from) }}
+                      </Badge>
+                      <Badge
+                        v-if="row.proficiency"
+                        variant="secondary"
+                        size="xs"
+                      >
+                        {{ row.proficiency }}
+                      </Badge>
+                      <Badge
+                        v-if="row.keyShift"
+                        variant="outline"
+                        size="xs"
+                      >
+                        {{ row.keyShift }}
                       </Badge>
                     </div>
 
@@ -823,7 +1012,10 @@ async function handleBatchDelete() {
                   <TooltipTrigger as-child>
                     <span class="font-medium text-foreground cursor-default">{{ row.requestCount }} 次</span>
                   </TooltipTrigger>
-                  <TooltipContent>{{ formatLastRequested(row.lastRequestedAt) }}</TooltipContent>
+                  <TooltipContent>
+                    <div>累计被点 {{ row.requestCount }} 次{{ (row.finishCount ?? 0) > 0 ? ` · 唱完 ${row.finishCount} 次` : '' }}</div>
+                    <div>{{ formatLastRequested(row.lastRequestedAt) }}</div>
+                  </TooltipContent>
                 </Tooltip>
                 <span
                   v-else
@@ -872,7 +1064,58 @@ async function handleBatchDelete() {
                     <TooltipContent>{{ getSongExternalLink(row)!.label }}</TooltipContent>
                   </Tooltip>
 
+                  <Tooltip v-if="row.instrumentalUrl">
+                    <TooltipTrigger as-child>
+                      <a
+                        :href="row.instrumentalUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-muted-foreground"
+                          aria-label="打开伴奏或乐谱"
+                        >
+                          <Music2 class="size-3.5" />
+                        </Button>
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent>打开伴奏 / 乐谱</TooltipContent>
+                  </Tooltip>
+
                   <template v-if="isSelf">
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-muted-foreground hover:text-primary"
+                          :loading="addingQueueKey === row.key"
+                          aria-label="加入今晚待唱队列"
+                          @click="quickAddToLiveQueue(row)"
+                        >
+                          <ListPlus class="size-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>加入今晚待唱队列</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip v-if="canDragReorder">
+                      <TooltipTrigger as-child>
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-muted-foreground"
+                          aria-label="移至排序第 1 位"
+                          @click="moveSongToPosition(row.key, 0)"
+                        >
+                          <ArrowUpToLine class="size-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>移至歌单最前（支持跨页调序）</TooltipContent>
+                    </Tooltip>
+
                     <Tooltip>
                       <TooltipTrigger as-child>
                         <Button

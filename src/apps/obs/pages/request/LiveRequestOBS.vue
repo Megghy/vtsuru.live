@@ -63,7 +63,13 @@ const panelComponent = computed(() => {
   }
 })
 
-const { title, countText, current, items, footerTags, update } = useLiveRequestObsView(currentId)
+const { title, countText, current, items, footerTags, hideWhenEmpty, isEmpty, update } = useLiveRequestObsView(currentId)
+
+const shouldHide = computed(() => {
+  // 预览模式下（传入了 props.id）保持可见，仅在独立 OBS 浏览器源中生效
+  if (props.id !== undefined) return false
+  return hideWhenEmpty.value && isEmpty.value
+})
 
 const obsNotification = useOBSNotification()
 const { on } = useObsRealtimeSync({
@@ -86,6 +92,7 @@ onMounted(() => {
 <template>
   <component
     :is="panelComponent"
+    v-if="!shouldHide"
     :title="title"
     :count-text="countText"
     :current="current"

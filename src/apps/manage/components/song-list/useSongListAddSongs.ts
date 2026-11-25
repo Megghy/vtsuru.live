@@ -20,6 +20,10 @@ export async function addSongsToSongList(songsShouldAdd: ResponseSongModel[], fr
       sortOrder: s.sortOrder ?? undefined,
       isPinned: s.isPinned ?? undefined,
       isDisabled: s.isDisabled ?? undefined,
+      aliases: s.aliases ?? [],
+      proficiency: s.proficiency ?? undefined,
+      keyShift: s.keyShift ?? undefined,
+      instrumentalUrl: s.instrumentalUrl ?? undefined,
     })),
   )
 }

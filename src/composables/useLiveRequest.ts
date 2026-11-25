@@ -21,7 +21,9 @@ import {
   postApiLiveRequestTryAdd,
 } from '@/api/generated/live-request/live-request'
 import type { ResponseLiveRequestStatsModel, ResponseSongModel } from '@/api/generated/model'
-import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
+import { EventDataTypes, FunctionTypes, SongPlatform, SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
+import { postApiSongListAdd } from '@/api/generated/song-list/song-list'
+import { postApiLiveRequestFinishAndNext, postApiLiveRequestUpdateItem } from '@/api/songRequestExtras'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
 import { getGuardColor, getSCColor, normalizeTimestampMs, sortByQueueType } from '@/shared/utils/queue'
@@ -360,6 +362,149 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
   }
 
+  /** 一键完成当前正在演唱并自动开始下一首待唱 */
+  async function finishAndStartNext(): Promise<boolean> {
+    const currentSinging = unfilteredActiveSongs.value.find((s) => s.status === SongRequestStatus.Singing)
+    const nextWaiting = unfilteredActiveSongs.value.find((s) => s.status === SongRequestStatus.Waiting)
+    if (!currentSinging && !nextWaiting) {
+      window.$message.info('当前待唱队列为空')
+      return false
+    }
+
+    if (!isLoggedIn.value) {
+      const now = Date.now()
+      if (currentSinging) applySongStatusUpdate(currentSinging, SongRequestStatus.Finish, false, now)
+      if (nextWaiting) applySongStatusUpdate(nextWaiting, SongRequestStatus.Singing, false, now)
+      window.$message.success(nextWaiting ? `已切歌至《${nextWaiting.songName}》` : '已完成当前曲目')
+      return true
+    }
+
+    isBatchLoading.value = true
+    try {
+      const res = await postApiLiveRequestFinishAndNext()
+      if (res.code === 200) {
+        const now = Date.now()
+        if (res.data?.finishedId) {
+          const fin = originSongs.value.find((s) => s.id === res.data.finishedId)
+          if (fin) applySongStatusUpdate(fin, SongRequestStatus.Finish, false, now)
+        }
+        if (res.data?.next) {
+          const idx = originSongs.value.findIndex((s) => s.id === res.data.next!.id)
+          if (idx > -1) {
+            originSongs.value.splice(idx, 1, res.data.next)
+          } else {
+            originSongs.value.unshift(res.data.next)
+          }
+          window.$message.success(`已切至下一首：《${res.data.next.songName}》`)
+        } else {
+          window.$message.success('已完成当前曲目，暂无更多待唱')
+        }
+        return true
+      }
+      window.$message.error(`切歌失败: ${res.message}`)
+    } catch {
+      // 兼容尚未升级的线上后端：降级为串行调用 finish + singing
+      if (currentSinging) {
+        await updateSongStatus(currentSinging, SongRequestStatus.Finish)
+      }
+      if (nextWaiting) {
+        await updateSongStatus(nextWaiting, SongRequestStatus.Singing)
+      }
+      return true
+    } finally {
+      isBatchLoading.value = false
+    }
+    return false
+  }
+
+  /** 修改点播条目的歌名或绑定歌单曲目 */
+  async function updateRequestItem(
+    item: SongRequestInfo,
+    payload: { songName: string; songListKey?: string | null; clearSongListKey?: boolean },
+  ): Promise<boolean> {
+    const trimmed = payload.songName.trim()
+    if (!trimmed) {
+      window.$message.warning('歌名不能为空')
+      return false
+    }
+    if (!isLoggedIn.value) {
+      item.songName = trimmed
+      window.$message.success('已更新歌名')
+      return true
+    }
+    markOperating(item.id, true)
+    try {
+      const res = await postApiLiveRequestUpdateItem({
+        id: item.id,
+        songName: trimmed,
+        songListKey: payload.songListKey,
+        clearSongListKey: payload.clearSongListKey,
+      })
+      if (res.code === 200 && res.data) {
+        const idx = originSongs.value.findIndex((s) => s.id === item.id)
+        if (idx > -1) {
+          originSongs.value.splice(idx, 1, res.data)
+        }
+        window.$message.success(`已更新为《${res.data.songName}》`)
+        return true
+      }
+      window.$message.error(`更新失败: ${res.message}`)
+    } catch (err) {
+      console.error('[SONG-REQUEST] 更新条目失败', err)
+      window.$message.error('更新点播记录失败')
+    } finally {
+      markOperating(item.id, false)
+    }
+    return false
+  }
+
+  /** 将歌单外点播曲目一键收入我的歌单，并自动关联 */
+  async function addRequestToSongList(item: SongRequestInfo): Promise<boolean> {
+    if (!isLoggedIn.value) {
+      window.$message.warning('请先登录账号')
+      return false
+    }
+    const name = item.songName?.trim()
+    if (!name) return false
+    markOperating(item.id, true)
+    try {
+      const res = await postApiSongListAdd([
+        {
+          name,
+          id: 0,
+          from: SongPlatform.Custom,
+          author: [],
+        },
+      ])
+      if (res.code === 200) {
+        const created = res.data?.[0]
+        if (created?.key) {
+          await postApiLiveRequestUpdateItem({
+            id: item.id,
+            songName: created.name,
+            songListKey: created.key,
+          }).then((upd) => {
+            if (upd.code === 200 && upd.data) {
+              const idx = originSongs.value.findIndex((s) => s.id === item.id)
+              if (idx > -1) originSongs.value.splice(idx, 1, upd.data)
+            }
+          })
+          window.$message.success(`已将《${created.name}》收入歌单并关联`)
+        } else {
+          window.$message.info(`《${name}》已存在于你的歌单中`)
+        }
+        return true
+      }
+      window.$message.error(res.message || '收入歌单失败')
+    } catch (err) {
+      console.error('[SONG-REQUEST] 收入歌单失败', err)
+      window.$message.error('收入歌单失败')
+    } finally {
+      markOperating(item.id, false)
+    }
+    return false
+  }
+
   async function batchUpdateStatus(ids: number[], status: SongRequestStatus, refundPoint = false) {
     if (ids.length === 0) return false
     if (!isLoggedIn.value) {
@@ -608,6 +753,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       if (data.code === 200) {
         const activeList = data.data ?? []
         const activeIdSet = new Set(activeList.map((item) => item.id))
+        const hadExistingSongs = originSongs.value.length > 0
 
         needsFullRefresh = originSongs.value.some(
           (song) =>
@@ -630,7 +776,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
             if (item.finishAt && !song.finishAt) song.finishAt = item.finishAt
           } else {
             originSongs.value.unshift(item)
-            if (item.from === SongRequestFrom.Web) {
+            if (hadExistingSongs && item.from === SongRequestFrom.Web) {
               window.$message.success(`[${item.user?.name}] 直接从网页歌单点播: ${item.songName}`)
             }
           }
@@ -713,9 +859,10 @@ export const useLiveRequest = defineStore('songRequest', () => {
   function startUpdateTimer(gen = lifecycleGen) {
     if (gen !== lifecycleGen) return
     stopUpdateTimer()
+    // 主通道已由 SignalR 实时推送触发，此处仅保留 15s 低频兜底同步
     updateActiveTimer = setInterval(() => {
       void updateActive()
-    }, 3000)
+    }, 15000)
   }
 
   function stopUpdateTimer() {
@@ -784,6 +931,9 @@ export const useLiveRequest = defineStore('songRequest', () => {
     addSong,
     addSongManual,
     updateSongStatus,
+    finishAndStartNext,
+    updateRequestItem,
+    addRequestToSongList,
     batchUpdateStatus,
     reorderSongs,
     moveSong,

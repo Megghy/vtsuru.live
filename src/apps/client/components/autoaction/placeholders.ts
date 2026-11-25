@@ -58,6 +58,21 @@ export const TRIGGER_PLACEHOLDERS: Partial<Record<TriggerType, Placeholder[]>> =
     { name: '{{pointOrder.remark}}', description: '下单备注' },
     { name: '{{pointOrder.orderId}}', description: '订单ID' },
   ],
+  [TriggerType.SONG_REQUEST]: [
+    { name: '{{song.name}}', description: '曲目名称' },
+    { name: '{{song.author}}', description: '原唱歌手' },
+    { name: '{{song.requester}}', description: '点歌观众昵称' },
+    { name: '{{song.source}}', description: '点歌来源（弹幕/SC/礼物/网页）' },
+    { name: '{{song.price}}', description: '点歌花费/SC 金额' },
+    { name: '{{song.queueCount}}', description: '当前待唱队列人数' },
+  ],
+  [TriggerType.SONG_START]: [
+    { name: '{{song.name}}', description: '正在演唱曲目名称' },
+    { name: '{{song.author}}', description: '原唱歌手' },
+    { name: '{{song.requester}}', description: '点歌观众昵称' },
+    { name: '{{song.keyShift}}', description: '升降调备注' },
+    { name: '{{song.queueCount}}', description: '剩余待唱曲目数' },
+  ],
   [TriggerType.LIVE_START]: [
     { name: '{{live.title}}', description: '直播间标题' },
     { name: '{{live.areaName}}', description: '直播分区名称' },

@@ -30,7 +30,15 @@ const musicRequestStore = useMusicRequestProvider()
 
 type MusicRuleDraft = Pick<
   MusicRequestSettings,
-  'orderPrefix' | 'obsTitle' | 'platform' | 'orderMusicFirst' | 'playMusicWhenFree' | 'orderCooldown' | 'blacklist'
+  | 'orderPrefix'
+  | 'obsTitle'
+  | 'platform'
+  | 'orderMusicFirst'
+  | 'playMusicWhenFree'
+  | 'orderCooldown'
+  | 'maxWaitingSize'
+  | 'preventDuplicateInQueue'
+  | 'blacklist'
 >
 
 function normalizeDraft(raw?: Partial<MusicRequestSettings> | null): MusicRuleDraft {
@@ -42,6 +50,8 @@ function normalizeDraft(raw?: Partial<MusicRequestSettings> | null): MusicRuleDr
     orderMusicFirst: raw?.orderMusicFirst ?? base.orderMusicFirst,
     playMusicWhenFree: raw?.playMusicWhenFree ?? base.playMusicWhenFree,
     orderCooldown: raw?.orderCooldown ?? base.orderCooldown,
+    maxWaitingSize: raw?.maxWaitingSize ?? base.maxWaitingSize,
+    preventDuplicateInQueue: raw?.preventDuplicateInQueue ?? base.preventDuplicateInQueue,
     blacklist: [...(raw?.blacklist ?? [])],
   }
 }
@@ -67,6 +77,8 @@ watch(
     musicRequestStore.settings.orderMusicFirst,
     musicRequestStore.settings.playMusicWhenFree,
     musicRequestStore.settings.orderCooldown,
+    musicRequestStore.settings.maxWaitingSize,
+    musicRequestStore.settings.preventDuplicateInQueue,
     musicRequestStore.settings.blacklist,
   ],
   () => {
@@ -278,6 +290,24 @@ onMounted(() => {
               description="单位：秒 (设为 0 不限频)"
               :min="0"
               :max="3600"
+            />
+
+            <SettingRow
+              v-model="draft.maxWaitingSize"
+              type="number"
+              variant="none"
+              title="待播队列上限"
+              description="设为 0 表示不限制排队数量"
+              :min="0"
+              :max="200"
+            />
+
+            <SettingRow
+              v-model="draft.preventDuplicateInQueue"
+              type="switch"
+              variant="none"
+              title="禁止队列内重复点播同首歌"
+              description="当前正在播放或待播中已存在该曲目时自动拦截"
             />
 
             <Separator />

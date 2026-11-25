@@ -23,12 +23,17 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
   const account = useAccount()
   const playing = ref<WaitMusicInfo>()
   const waiting = ref<WaitMusicInfo[]>([])
+  const remoteObsTitle = ref<string | null>(null)
 
   const title = computed(() => {
     const validId = parsePositiveId(toValue(currentId))
     const selfId = account.value?.id && account.value.id > 0 ? String(account.value.id) : ''
     const isSelfContext = !validId || (selfId !== '' && validId === selfId)
-    return (isSelfContext ? account.value?.settings?.musicRequest?.obsTitle?.trim() : '') || '点歌机'
+    return (
+      remoteObsTitle.value?.trim() ||
+      (isSelfContext ? account.value?.settings?.musicRequest?.obsTitle?.trim() : '') ||
+      '点歌机'
+    )
   })
   const countText = computed(() => `已有 ${waiting.value.length ?? 0} 首`)
 
@@ -62,9 +67,12 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
 
   let requestSeq = 0
 
-  function applySnapshot(snapshot: { playing?: WaitMusicInfo; waiting?: WaitMusicInfo[] }) {
+  function applySnapshot(snapshot: { playing?: WaitMusicInfo; waiting?: WaitMusicInfo[]; obsTitle?: string | null }) {
     playing.value = snapshot.playing
     waiting.value = snapshot.waiting ?? []
+    if (snapshot.obsTitle !== undefined) {
+      remoteObsTitle.value = snapshot.obsTitle
+    }
   }
 
   async function update() {

@@ -973,29 +973,33 @@ function scrollToTop() {
             :style="layoutContentBgVars"
           >
             <RouterView v-slot="{ Component, route: viewRoute }">
-              <KeepAlive :max="4">
-                <div
-                  v-if="viewRoute.meta.pageContainer !== 'none'"
-                  class="w-full mx-auto flex flex-col gap-[var(--vtsuru-page-spacing,16px)]"
-                  :class="{
-                    'max-w-[var(--vtsuru-page-max-width,820px)]': !isImmersiveCustomPage,
-                    '[--vtsuru-page-max-width:880px]': viewRoute.meta.pageWidth === 'md',
-                    '[--vtsuru-page-max-width:1080px]': viewRoute.meta.pageWidth === 'lg',
-                    '[--vtsuru-page-max-width:1440px]': viewRoute.meta.pageWidth === 'xl',
-                  }"
-                >
+              <div
+                v-if="viewRoute.meta.pageContainer !== 'none'"
+                class="w-full mx-auto flex flex-col gap-[var(--vtsuru-page-spacing,16px)]"
+                :class="{
+                  'max-w-[var(--vtsuru-page-max-width,820px)]': !isImmersiveCustomPage,
+                  '[--vtsuru-page-max-width:880px]': viewRoute.meta.pageWidth === 'md',
+                  '[--vtsuru-page-max-width:1080px]': viewRoute.meta.pageWidth === 'lg',
+                  '[--vtsuru-page-max-width:1440px]': viewRoute.meta.pageWidth === 'xl',
+                }"
+              >
+                <KeepAlive :max="4">
                   <component
                     :is="Component"
-                    :key="route.fullPath.split('#')[0]"
+                    :key="viewRoute.path"
                     :bili-info="biliUserInfo"
                     :bili-status="biliProfileStatus"
                     :user-info="userInfo"
                   />
-                </div>
+                </KeepAlive>
+              </div>
+              <KeepAlive
+                v-else
+                :max="4"
+              >
                 <component
                   :is="Component"
-                  v-else
-                  :key="route.fullPath.split('#')[0]"
+                  :key="viewRoute.path"
                   :bili-info="biliUserInfo"
                   :bili-status="biliProfileStatus"
                   :user-info="userInfo"
@@ -1072,7 +1076,7 @@ function scrollToTop() {
   border-bottom: 1px solid var(--border, var(--border));
   position: sticky !important;
   top: 0 !important;
-  z-index: 100 !important;
+  z-index: 40 !important;
   flex-shrink: 0;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
@@ -1208,7 +1212,7 @@ function scrollToTop() {
   background-color: var(--popover, var(--background));
   border-right: 1px solid var(--border, var(--border));
   transition: width 0.2s ease;
-  z-index: 90;
+  z-index: 35;
   flex-shrink: 0;
 }
 
@@ -1396,7 +1400,7 @@ function scrollToTop() {
 
 .page-root.bg-host > :deep(.immersive-dock) {
   position: fixed;
-  z-index: 110;
+  z-index: 45;
 }
 
 @media (min-width: 769px) {

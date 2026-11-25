@@ -79,9 +79,11 @@ const filteredSongs = computed<PickerSongItem[]>(() =>
   }),
 )
 
-const shouldScrollMarquee = computed(() => filteredSongs.value.length > 5)
+const MAX_MARQUEE_SONGS = 120
+const marqueeSongs = computed(() => filteredSongs.value.slice(0, MAX_MARQUEE_SONGS))
+const shouldScrollMarquee = computed(() => marqueeSongs.value.length > 5)
 const marqueeDurationSec = computed(() => {
-  const count = Math.max(6, filteredSongs.value.length)
+  const count = Math.max(6, marqueeSongs.value.length)
   const speed = Math.min(3, Math.max(0.5, state.value.scrollSpeed || 1))
   return Number(((count * 2.4) / speed).toFixed(2))
 })
@@ -227,7 +229,7 @@ function songBadges(song: PickerSongItem): string[] {
         >
           <div class="sp-marquee-group">
             <div
-              v-for="song in filteredSongs"
+              v-for="song in marqueeSongs"
               :key="`a-${song.key}`"
               class="sp-song-row"
             >
@@ -265,7 +267,7 @@ function songBadges(song: PickerSongItem): string[] {
             aria-hidden="true"
           >
             <div
-              v-for="song in filteredSongs"
+              v-for="song in marqueeSongs"
               :key="`b-${song.key}`"
               class="sp-song-row"
             >

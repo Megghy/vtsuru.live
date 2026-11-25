@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import ArrowDown24Regular from '@vicons/fluent/es/ArrowDown24Regular'
 import ArrowUp24Regular from '@vicons/fluent/es/ArrowUp24Regular'
+import BookmarkAdd24Regular from '@vicons/fluent/es/BookmarkAdd24Regular'
 import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
 import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
 import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
 import Pin24Filled from '@vicons/fluent/es/Pin24Filled'
 import Pin24Regular from '@vicons/fluent/es/Pin24Regular'
@@ -46,6 +48,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'toggle-select', checked: boolean): void
+  (e: 'edit', song: SongRequestInfo): void
 }>()
 
 const songRequest = useLiveRequest()
@@ -309,6 +312,36 @@ function formatTimeAbsolute(time: number | string | Date) {
             <TooltipContent>下移一位</TooltipContent>
           </Tooltip>
         </template>
+
+        <Tooltip v-if="songRequest.configCanEdit && !song.song">
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :disabled="isItemBusy"
+              aria-label="收入我的歌单"
+              @click="songRequest.addRequestToSongList(song)"
+            >
+              <BookmarkAdd24Regular class="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>收入我的歌单</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :disabled="isItemBusy"
+              aria-label="编辑歌名"
+              @click="emit('edit', song)"
+            >
+              <Edit24Regular class="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>编辑歌名 / 绑定歌单</TooltipContent>
+        </Tooltip>
 
         <Tooltip v-if="hasSong">
           <TooltipTrigger as-child>

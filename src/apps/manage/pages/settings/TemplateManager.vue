@@ -449,29 +449,31 @@ async function setAsDisplayTemplate() {
           <div
             v-if="previewComponent"
             :key="selectedKey"
-            class="flex-1 overflow-y-auto relative"
+            class="flex-1 overflow-y-auto relative bg-background text-foreground"
             :class="{
               'song-list-surface': pageKey === 'songlist',
               'schedule-template-surface': pageKey === 'schedule',
             }"
             :style="previewThemeVars"
           >
-            <Suspense>
-              <component
-                :is="previewComponent"
-                ref="previewRef"
-                :user-info="accountInfo"
-                :bili-info="biliUserInfo"
-                :data="group.Data"
-                :config="currentConfigData"
-                :preview-portrait="
-                  pageKey === 'schedule' && ['pinky', 'liveposter'].includes(selectedKey)
-                    ? nana7miPlaceholder
-                    : undefined
-                "
-                @vue:mounted="onPreviewMounted"
-              />
-            </Suspense>
+            <TooltipProvider>
+              <Suspense>
+                <component
+                  :is="previewComponent"
+                  ref="previewRef"
+                  :user-info="accountInfo"
+                  :bili-info="biliUserInfo"
+                  :data="group.Data"
+                  :config="currentConfigData"
+                  :preview-portrait="
+                    pageKey === 'schedule' && ['pinky', 'liveposter'].includes(selectedKey)
+                      ? nana7miPlaceholder
+                      : undefined
+                  "
+                  @vue:mounted="onPreviewMounted"
+                />
+              </Suspense>
+            </TooltipProvider>
           </div>
         </Transition>
       </div>

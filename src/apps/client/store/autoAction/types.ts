@@ -13,6 +13,8 @@ export enum TriggerType {
   SCHEDULED = 'scheduled', // 定时触发
   SUPER_CHAT = 'super_chat', // SC
   POINT_REDEEM = 'point_redeem', // 积分商品兑换
+  SONG_REQUEST = 'song_request', // 收到点歌
+  SONG_START = 'song_start', // 开始演唱
   LIVE_START = 'live_start', // 开播时
   LIVE_END = 'live_end', // 下播时
   DANMAKU_DISCONNECTED = 'danmaku_disconnected', // 弹幕服务断开/异常

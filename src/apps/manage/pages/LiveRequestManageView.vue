@@ -11,6 +11,8 @@ import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } fro
 import { useAccount } from '@/api/account'
 import type { AppStartData } from '@/api/generated/model'
 import { FunctionTypes, SongRequestStatus } from '@/api/generated/model'
+import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
+import LiveRequestLyricOBS from '@/apps/obs/pages/request/LiveRequestLyricOBS.vue'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
 import LiveRequestProcessedOBS from '@/apps/obs/pages/request/LiveRequestProcessedOBS.vue'
 import SongRequestHistory from '@/apps/open-live/components/request/SongRequestHistory.vue'
@@ -43,7 +45,7 @@ const accountInfo = useAccount()
 const client = await useDanmakuClient().initOpenlive()
 
 const activeMainTab = ref<'requests' | 'history' | 'preview' | 'settings'>('requests')
-const obsPreviewMode = ref<'live-request' | 'live-request-today'>('live-request')
+const obsPreviewMode = ref<'live-request' | 'live-request-today' | 'live-request-lyric'>('live-request')
 
 const obsUrl = computed(() =>
   buildObsSourceUrl({
@@ -65,11 +67,26 @@ const todayObsUrl = computed(() =>
   }),
 )
 
+const lyricObsUrl = computed(() =>
+  buildObsSourceUrl({
+    path: 'obs/live-request-lyric',
+    host: CURRENT_HOST,
+    credential: 'public-id',
+    userId: accountInfo.value?.id,
+    params: { style: 'glass' },
+  }),
+)
+
 const headerLinks = computed<LiveConsoleHeaderLink[]>(() => [
   {
     label: '当前待唱 OBS 源',
     value: obsUrl.value,
     description: '在 OBS 中添加为浏览器源，展示正在演唱与等待队列',
+  },
+  {
+    label: '同步歌词 OBS 源',
+    value: lyricObsUrl.value,
+    description: '展示正在演唱曲目的实时双语滚动歌词（网易云曲目自动匹配）',
   },
   {
     label: '今日已唱 OBS 源',
@@ -79,6 +96,18 @@ const headerLinks = computed<LiveConsoleHeaderLink[]>(() => [
 ])
 
 const liveRequest = useLiveRequest()
+
+// 订阅 SignalR 点播实时通道，收到变更立即同步当前活跃队列
+const { on: onLiveRequestRealtime } = useObsRealtimeSync({
+  topic: () => (accountInfo.value?.id ? `obs:display:live-request:${accountInfo.value.id}` : ''),
+  active: () => Boolean(accountInfo.value?.id),
+  onSync: () => {
+    void liveRequest.updateActive()
+  },
+})
+onLiveRequestRealtime('Changed', () => {
+  void liveRequest.updateActive()
+})
 
 const tabs = computed<LiveConsoleTabItem[]>(() => [
   {
@@ -232,10 +261,26 @@ onUnmounted(() => {
 
     <template #preview>
       <ObsStagePreview
-        :obs-path="obsPreviewMode === 'live-request' ? 'obs/live-request' : 'obs/live-request-today'"
+        :obs-path="
+          obsPreviewMode === 'live-request'
+            ? 'obs/live-request'
+            : obsPreviewMode === 'live-request-lyric'
+              ? 'obs/live-request-lyric'
+              : 'obs/live-request-today'
+        "
         :user-id="accountInfo?.id"
-        :title="obsPreviewMode === 'live-request' ? '当前点播 OBS 预览' : '今日已唱 OBS 预览'"
-        recommended-size="推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。"
+        :title="
+          obsPreviewMode === 'live-request'
+            ? '当前点播 OBS 预览'
+            : obsPreviewMode === 'live-request-lyric'
+              ? '同步歌词 OBS 预览'
+              : '今日已唱 OBS 预览'
+        "
+        :recommended-size="
+          obsPreviewMode === 'live-request-lyric'
+            ? '推荐 OBS 来源尺寸：宽 460px ~ 560px，高 180px ~ 240px。'
+            : '推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。'
+        "
       >
         <template #toolbar>
           <ToggleGroup
@@ -244,6 +289,7 @@ onUnmounted(() => {
             size="xs"
           >
             <ToggleGroupItem value="live-request">待唱队列</ToggleGroupItem>
+            <ToggleGroupItem value="live-request-lyric">同步歌词</ToggleGroupItem>
             <ToggleGroupItem value="live-request-today">今日已唱</ToggleGroupItem>
           </ToggleGroup>
         </template>
@@ -255,6 +301,12 @@ onUnmounted(() => {
             :key="`lr-${accountInfo?.id}-${styleType}-${speedMultiplier}`"
             :theme-style="styleType"
             :speed-multiplier="speedMultiplier"
+          />
+          <LiveRequestLyricOBS
+            v-else-if="obsPreviewMode === 'live-request-lyric'"
+            :id="accountInfo?.id"
+            :key="`lr-lyric-${accountInfo?.id}-${styleType}`"
+            :theme-style="styleType"
           />
           <LiveRequestProcessedOBS
             v-else

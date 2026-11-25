@@ -32,6 +32,15 @@ export default {
       },
     },
     {
+      path: 'live-request-lyric',
+      name: 'obs-live-request-lyric',
+      component: async () => import('@/apps/obs/pages/request/LiveRequestLyricOBS.vue'),
+      meta: {
+        title: '弹幕点播-同步歌词',
+        forceReload: true,
+      },
+    },
+    {
       path: 'queue',
       name: 'obs-queue',
       component: async () => import('@/apps/obs/pages/QueueOBS.vue'),

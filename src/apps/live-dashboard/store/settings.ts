@@ -124,8 +124,8 @@ export interface DashboardSettings {
 
 export const DEFAULT_LAYOUT: DashboardSettings['layout'] = {
   order: [...PANEL_IDS],
-  hidden: ['vote'],
-  sizes: { danmaku: 34, sc: 33, gift: 33, vote: 25 },
+  hidden: ['vote', 'song_request'],
+  sizes: { danmaku: 34, sc: 33, gift: 33, vote: 25, song_request: 25 },
   vertical: false,
   focusMode: false,
   interactionSize: 22,

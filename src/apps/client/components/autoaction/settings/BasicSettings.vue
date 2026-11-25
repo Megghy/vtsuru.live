@@ -54,6 +54,8 @@ const triggerTypeOptions = [
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
   { label: '积分商品兑换', value: TriggerType.POINT_REDEEM },
+  { label: '收到点歌', value: TriggerType.SONG_REQUEST },
+  { label: '开始演唱', value: TriggerType.SONG_START },
   { label: '开播时触发', value: TriggerType.LIVE_START },
   { label: '下播时触发', value: TriggerType.LIVE_END },
   { label: '弹幕连接异常', value: TriggerType.DANMAKU_DISCONNECTED },

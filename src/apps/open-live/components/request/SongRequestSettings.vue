@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Plus, X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -8,6 +9,8 @@ import StickyDraftSaveBar from '@/apps/open-live/components/shared/StickyDraftSa
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { useUnsavedChangesGuard } from '@/shared/composables/useUnsavedChangesGuard'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { FormField } from '@/shared/ui/form-field'
@@ -15,6 +18,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 function createDefaultSongRequestSetting(): SettingSongRequest {
   return {
@@ -60,6 +64,15 @@ function createDefaultSongRequestSetting(): SettingSongRequest {
     allowPointPriority: false,
     pointPriorityKeyword: '插队',
     pointPriorityCost: 100,
+    maxSongsPerUserInQueue: 0,
+    preventSameSongToday: false,
+    songCooldownMinute: 0,
+    songNameBlacklist: [],
+    autoClearOnLiveStart: false,
+    showAuthor: false,
+    showDescription: false,
+    showPrice: false,
+    hideWhenEmpty: false,
   }
 }
 
@@ -69,6 +82,7 @@ function normalizeSetting(raw?: Partial<SettingSongRequest> | null): SettingSong
     ...base,
     ...raw,
     giftNames: [...(raw?.giftNames ?? base.giftNames ?? [])],
+    songNameBlacklist: [...(raw?.songNameBlacklist ?? base.songNameBlacklist ?? [])],
   }
 }
 
@@ -78,6 +92,36 @@ const accountInfo = useAccount()
 const draft = ref<SettingSongRequest>(createDefaultSongRequestSetting())
 const savedSnapshot = ref('')
 const isSaving = ref(false)
+const newGiftName = ref('')
+const newBlacklistWord = ref('')
+
+function addGiftName() {
+  const val = newGiftName.value.trim()
+  if (!val) return
+  const list = draft.value.giftNames ?? []
+  if (!list.includes(val)) {
+    draft.value.giftNames = [...list, val]
+  }
+  newGiftName.value = ''
+}
+
+function removeGiftName(name: string) {
+  draft.value.giftNames = (draft.value.giftNames ?? []).filter((g) => g !== name)
+}
+
+function addBlacklistWord() {
+  const val = newBlacklistWord.value.trim()
+  if (!val) return
+  const list = draft.value.songNameBlacklist ?? []
+  if (!list.includes(val)) {
+    draft.value.songNameBlacklist = [...list, val]
+  }
+  newBlacklistWord.value = ''
+}
+
+function removeBlacklistWord(word: string) {
+  draft.value.songNameBlacklist = (draft.value.songNameBlacklist ?? []).filter((w) => w !== word)
+}
 
 const canEdit = computed(() => liveRequest.configCanEdit)
 
@@ -296,48 +340,234 @@ async function saveSettings() {
             />
           </FormField>
         </div>
+
+        <!-- 礼物点播 -->
+        <div class="pt-2 border-t border-border/60 space-y-2.5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <SettingRow
+              v-model="draft.allowGift"
+              type="switch"
+              variant="card"
+              title="允许送礼物解锁点播"
+              description="观众送出符合条件的礼物后，5 分钟内发点播弹幕将跳过普通门槛"
+              :disabled="!canEdit"
+            />
+            <SettingRow
+              v-model="draft.allowIncreasePaymentBySendGift"
+              type="switch"
+              variant="card"
+              title="送礼自动追加已点曲目付费金额"
+              description="队列内已有待唱曲目时，送礼金额自动累加至付费排序权重"
+              :disabled="!canEdit"
+            />
+          </div>
+
+          <div
+            v-if="draft.allowGift || draft.allowIncreasePaymentBySendGift"
+            class="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <FormField label="礼物最低价值 (元，0 表示不限)">
+                <NumberField
+                  :model-value="draft.minGiftPrice ?? 0"
+                  :min="0"
+                  :disabled="!canEdit"
+                  @update:model-value="(v) => (draft.minGiftPrice = v && v > 0 ? v : null)"
+                />
+              </FormField>
+              <FormField label="礼物名称与价格组合方式">
+                <ToggleGroup
+                  type="single"
+                  size="xs"
+                  :model-value="String(draft.giftFilterType)"
+                  :disabled="!canEdit"
+                  @update:model-value="(v) => v && (draft.giftFilterType = Number(v) as QueueGiftFilterType)"
+                >
+                  <ToggleGroupItem :value="String(QueueGiftFilterType.Or)">满足其一 (OR)</ToggleGroupItem>
+                  <ToggleGroupItem :value="String(QueueGiftFilterType.And)">同时满足 (AND)</ToggleGroupItem>
+                </ToggleGroup>
+              </FormField>
+            </div>
+
+            <FormField label="指定礼物名称（留空则不限名称）">
+              <div class="space-y-2">
+                <div class="flex items-center gap-2 max-w-md">
+                  <Input
+                    v-model="newGiftName"
+                    placeholder="输入礼物名，如：辣条、小花花"
+                    :disabled="!canEdit"
+                    @keyup.enter="addGiftName"
+                  />
+                  <Button
+                    variant="outline"
+                    :disabled="!canEdit || !newGiftName.trim()"
+                    @click="addGiftName"
+                  >
+                    <Plus class="size-3.5 mr-1" />
+                    添加
+                  </Button>
+                </div>
+                <div
+                  v-if="(draft.giftNames ?? []).length > 0"
+                  class="flex flex-wrap gap-1.5"
+                >
+                  <Badge
+                    v-for="gift in draft.giftNames"
+                    :key="gift"
+                    variant="secondary"
+                    class="gap-1 pr-1"
+                  >
+                    {{ gift }}
+                    <button
+                      v-if="canEdit"
+                      type="button"
+                      class="rounded-full p-0.5 hover:bg-black/10"
+                      @click="removeGiftName(gift)"
+                    >
+                      <X class="size-3" />
+                    </button>
+                  </Badge>
+                </div>
+              </div>
+            </FormField>
+
+            <SettingRow
+              v-if="draft.allowIncreasePaymentBySendGift"
+              v-model="draft.allowIncreaseByAnyPayment"
+              type="switch"
+              variant="none"
+              title="任意付费礼物均可追加金额"
+              description="关闭后仅满足上方名称/价格条件的礼物才追加付费金额"
+              :disabled="!canEdit"
+            />
+          </div>
+        </div>
       </CardContent>
     </Card>
 
-    <!-- 歌单与网页点歌 -->
+    <!-- 歌单、防刷与网页点歌 -->
     <Card>
       <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-sm font-semibold">点歌范围与网页自助点歌</CardTitle>
+        <CardTitle class="text-sm font-semibold">点歌范围、防刷限制与网页自助点歌</CardTitle>
       </CardHeader>
-      <CardContent class="p-3.5 pt-2 grid grid-cols-1 md:grid-cols-2 gap-2.5">
-        <SettingRow
-          v-model="draft.onlyAllowSongList"
-          type="switch"
-          variant="card"
-          title="仅允许点歌单内的曲目"
-          description="拦截主播歌单以外的陌生歌曲，可前往「我的歌单」维护曲库"
-          :disabled="!canEdit"
-        />
-        <SettingRow
-          v-model="draft.allowReorderSong"
-          type="switch"
-          variant="card"
-          title="允许队列内重复点播同首歌"
-          description="开启后多名观众可同时点同一首歌"
-          :disabled="!canEdit"
-        />
-        <SettingRow
-          v-model="draft.allowFromWeb"
-          type="switch"
-          variant="card"
-          title="允许观众从公开歌单页网页点歌"
-          description="观众访问个人歌单页面即可一键提交点播"
-          :disabled="!canEdit"
-        />
-        <SettingRow
-          v-if="draft.allowFromWeb"
-          v-model="draft.allowAnonymousFromWeb"
-          type="switch"
-          variant="card"
-          title="允许未登录游客匿名网页点歌"
-          description="关闭时需登录并绑定 B 站账号才可在网页点歌"
-          :disabled="!canEdit"
-        />
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <SettingRow
+            v-model="draft.onlyAllowSongList"
+            type="switch"
+            variant="card"
+            title="仅允许点歌单内的曲目"
+            description="拦截主播歌单以外的陌生歌曲，可前往「我的歌单」维护曲库"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.allowReorderSong"
+            type="switch"
+            variant="card"
+            title="允许队列内重复点播同首歌"
+            description="开启后多名观众可同时点同一首歌"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.preventSameSongToday"
+            type="switch"
+            variant="card"
+            title="今日已唱防重复"
+            description="今天已经唱完的曲目自动拦截，避免反复点同一首歌"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.autoClearOnLiveStart"
+            type="switch"
+            variant="card"
+            title="开播自动清空上次残留队列"
+            description="检测到新开播场次时，自动清理上场未唱完的待唱曲目"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.allowFromWeb"
+            type="switch"
+            variant="card"
+            title="允许观众从公开歌单页网页点歌"
+            description="观众访问个人歌单页面即可一键提交点播"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-if="draft.allowFromWeb"
+            v-model="draft.allowAnonymousFromWeb"
+            type="switch"
+            variant="card"
+            title="允许未登录游客匿名网页点歌"
+            description="关闭时需登录并绑定 B 站账号才可在网页点歌"
+            :disabled="!canEdit"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-border/60">
+          <FormField label="单人同时最多待唱曲数（0 表示不限）">
+            <NumberField
+              :model-value="draft.maxSongsPerUserInQueue ?? 0"
+              :min="0"
+              :max="50"
+              :disabled="!canEdit"
+              @update:model-value="(v) => (draft.maxSongsPerUserInQueue = v ?? 0)"
+            />
+          </FormField>
+          <FormField label="同一首歌冷却时间（分钟，0 表示不限）">
+            <NumberField
+              :model-value="draft.songCooldownMinute ?? 0"
+              :min="0"
+              :max="1440"
+              :disabled="!canEdit"
+              @update:model-value="(v) => (draft.songCooldownMinute = v ?? 0)"
+            />
+          </FormField>
+        </div>
+
+        <FormField
+          label="歌名关键词黑名单"
+          class="pt-2 border-t border-border/60"
+        >
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 max-w-md">
+              <Input
+                v-model="newBlacklistWord"
+                placeholder="输入禁点歌名或敏感词"
+                :disabled="!canEdit"
+                @keyup.enter="addBlacklistWord"
+              />
+              <Button
+                variant="outline"
+                :disabled="!canEdit || !newBlacklistWord.trim()"
+                @click="addBlacklistWord"
+              >
+                <Plus class="size-3.5 mr-1" />
+                添加
+              </Button>
+            </div>
+            <div
+              v-if="(draft.songNameBlacklist ?? []).length > 0"
+              class="flex flex-wrap gap-1.5"
+            >
+              <Badge
+                v-for="kw in draft.songNameBlacklist"
+                :key="kw"
+                variant="destructive"
+                class="gap-1 pr-1"
+              >
+                {{ kw }}
+                <button
+                  v-if="canEdit"
+                  type="button"
+                  class="rounded-full p-0.5 hover:bg-white/20"
+                  @click="removeBlacklistWord(kw)"
+                >
+                  <X class="size-3" />
+                </button>
+              </Badge>
+            </div>
+          </div>
+        </FormField>
       </CardContent>
     </Card>
 
@@ -459,7 +689,37 @@ async function saveSettings() {
             title="显示观众粉丝牌"
             :disabled="!canEdit"
           />
+          <SettingRow
+            v-model="draft.showAuthor"
+            type="switch"
+            variant="card"
+            title="显示歌曲原唱"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.showDescription"
+            type="switch"
+            variant="card"
+            title="显示歌曲备注"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.showPrice"
+            type="switch"
+            variant="card"
+            title="显示 SC / 礼物金额"
+            :disabled="!canEdit"
+          />
         </div>
+
+        <SettingRow
+          v-model="draft.hideWhenEmpty"
+          type="switch"
+          variant="card"
+          title="队列为空时自动隐藏 OBS 面板"
+          description="无正在演唱且无待唱曲目时保持透明隐藏，有新点歌时自动浮现"
+          :disabled="!canEdit"
+        />
       </CardContent>
     </Card>
 

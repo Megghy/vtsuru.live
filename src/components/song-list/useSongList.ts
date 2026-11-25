@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import {
   postApiSongListDelete,
   postApiSongListDeleteBatch,
@@ -341,6 +342,19 @@ export function useSongList(
     return persistSongOrder(nextOrder)
   }
 
+  /** 跨页精准移动歌曲至指定位置（0-based index） */
+  async function moveSongToPosition(key: string, targetIndex: number) {
+    const order = songsInternal.value.map((s) => s.key)
+    const currentIdx = order.indexOf(key)
+    if (currentIdx === -1) return false
+    const clampedTarget = Math.max(0, Math.min(order.length - 1, targetIndex))
+    if (clampedTarget === currentIdx) return false
+    const nextOrder = [...order]
+    const [moved] = nextOrder.splice(currentIdx, 1)
+    nextOrder.splice(clampedTarget, 0, moved)
+    return persistSongOrder(nextOrder)
+  }
+
   async function applyPageReorder(reorderedPageKeys: string[]) {
     if (!canDragReorder.value || reorderedPageKeys.length <= 1) return false
     const fullOrder = songsInternal.value.map((s) => s.key)
@@ -360,8 +374,14 @@ export function useSongList(
 
   // CRUD 操作
   async function updateSong(song: ResponseSongModel) {
-    if (songsInternal.value.some((s) => s.name === song.name.trim() && s.key !== song.key)) {
-      toast.error('已存在相同名称的歌曲')
+    const isCustomSong = song.from === SongPlatform.Custom || song.id <= 0
+    if (
+      isCustomSong &&
+      songsInternal.value.some(
+        (s) => (s.from === SongPlatform.Custom || s.id <= 0) && s.name === song.name.trim() && s.key !== song.key,
+      )
+    ) {
+      toast.error('已存在相同名称的自定义歌曲')
       return false
     }
     isLoading.value = true
@@ -643,6 +663,7 @@ export function useSongList(
     nextPage,
     prevPage,
     moveSong,
+    moveSongToPosition,
     applyPageReorder,
   }
 }

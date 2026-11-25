@@ -16,6 +16,10 @@ export interface ParsedSongCsvRow {
   isPinned?: boolean
   isDisabled?: boolean
   sortOrder?: number
+  aliases?: string[]
+  proficiency?: string
+  keyShift?: string
+  instrumentalUrl?: string
   from: SongPlatform
 }
 
@@ -171,6 +175,10 @@ export function parseSongListCsv(text: string): ParsedSongCsvRow[] {
   const pinnedI = idx(['置顶', 'isPinned'])
   const disabledI = idx(['暂不接歌', '禁用', 'isDisabled'])
   const sortOrderI = idx(['排序', 'sortOrder'])
+  const aliasesI = idx(['别名', '简称', 'aliases'])
+  const proficiencyI = idx(['熟练度', 'proficiency'])
+  const keyShiftI = idx(['升降调', '调性', 'keyShift'])
+  const instrumentalUrlI = idx(['伴奏链接', '乐谱链接', 'instrumentalUrl'])
 
   const result: ParsedSongCsvRow[] = []
   for (const cells of rows.slice(1)) {
@@ -208,6 +216,16 @@ export function parseSongListCsv(text: string): ParsedSongCsvRow[] {
       isPinned: pinnedI >= 0 ? parseBooleanCell(cells[pinnedI]) : undefined,
       isDisabled: disabledI >= 0 ? parseBooleanCell(cells[disabledI]) : undefined,
       sortOrder: Number.isFinite(parsedSort) ? parsedSort : undefined,
+      aliases:
+        aliasesI >= 0 && cells[aliasesI]?.trim()
+          ? cells[aliasesI]
+              .split(/[,，/；;]+/)
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : undefined,
+      proficiency: proficiencyI >= 0 ? (cells[proficiencyI] || undefined)?.trim() || undefined : undefined,
+      keyShift: keyShiftI >= 0 ? (cells[keyShiftI] || undefined)?.trim() || undefined : undefined,
+      instrumentalUrl: instrumentalUrlI >= 0 ? (cells[instrumentalUrlI] || undefined)?.trim() || undefined : undefined,
       from: parseFromLabel(fromI >= 0 ? cells[fromI] : undefined),
     })
   }
@@ -233,6 +251,10 @@ export function parsedRowsToSongsInfo(rows: ParsedSongCsvRow[]): ResponseSongMod
     isPinned: r.isPinned ?? false,
     isDisabled: r.isDisabled ?? false,
     sortOrder: r.sortOrder,
+    aliases: r.aliases ?? [],
+    proficiency: r.proficiency,
+    keyShift: r.keyShift,
+    instrumentalUrl: r.instrumentalUrl,
     createTime: now,
     updateTime: now,
   }))
@@ -240,9 +262,9 @@ export function parsedRowsToSongsInfo(rows: ParsedSongCsvRow[]): ResponseSongMod
 
 export function buildSongListCsvTemplate(): string {
   return [
-    '名称,翻译名称,作者,语言,标签,描述,试听链接,外链,封面,点歌门槛,置顶,暂不接歌',
-    '打上花火,Uchiage Hanabi,DAOKO/米津玄師,日语,"动漫,合唱",降半音唱,,,,舰长;SC>=30,是,否',
-    '晴天,,周杰伦,中文,流行,经典老歌,,,,,,,否',
+    '名称,翻译名称,别名,作者,语言,标签,熟练度,升降调,描述,试听链接,外链,伴奏链接,封面,点歌门槛,置顶,暂不接歌',
+    '打上花火,Uchiage Hanabi,"烟花,花火",DAOKO/米津玄師,日语,"动漫,合唱",拿手,降半音,降半音唱,,,,,舰长;SC>=30,是,否',
+    '晴天,,,周杰伦,中文,流行,熟练,原调,经典老歌,,,,,,,否',
   ].join('\n')
 }
 

@@ -219,6 +219,12 @@ function getTriggerSummary(action: AutoActionItem): string {
       if (parts.length === 0) parts.push('全部积分商品')
       break
     }
+    case TriggerType.SONG_REQUEST:
+      parts.push('新点歌进入队列时')
+      break
+    case TriggerType.SONG_START:
+      parts.push('切换为正在演唱时')
+      break
     case TriggerType.LIVE_START:
       parts.push('直播间开播瞬间')
       break
@@ -335,8 +341,8 @@ const { open: openActionsImport } = useFilePicker({
           ...item,
           id: `auto-action-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           priority: Number(item.priority ?? Priority.NORMAL) as Priority,
-          triggerConfig: { ...(item.triggerConfig || {}) },
-          actionConfig: { ...(item.actionConfig || {}) },
+          triggerConfig: { ...item.triggerConfig },
+          actionConfig: { ...item.actionConfig },
         }
         autoActionStore.autoActions.push(normalized)
         count++

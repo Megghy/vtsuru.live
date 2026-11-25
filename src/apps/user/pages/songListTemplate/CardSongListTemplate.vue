@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExternalLink, Music, Pin, Play } from 'lucide-vue-next'
+import { ExternalLink, Heart, Music, Pin, Play } from 'lucide-vue-next'
 import { ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -8,7 +8,8 @@ import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { SmartImage } from '@/shared/ui/image'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toast } from '@/shared/utils'
 import { getPlayableAudioUrl, getSongExternalLink } from '@/shared/utils/songMedia'
 
@@ -17,10 +18,12 @@ import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRandomDialog from './components/SongRandomDialog.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
-import { getSongRequestTooltip } from './utils/songRequestUtils'
+import SongTagChips from './components/SongTagChips.vue'
+import { canRequestSong, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useProgressiveList } from './utils/useProgressiveList'
-import { useSongListQueryState } from './utils/useSongListQueryState'
-import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
+import { isNewSong, useSongListQueryState } from './utils/useSongListQueryState'
+import { useSongListTemplateCore } from './utils/useSongListTemplateCore'
+import { useSongPreviewPlayer } from './utils/useSongPreviewPlayer'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
@@ -46,27 +49,39 @@ const {
   sortKey,
   sortOrder,
   hideDisabled,
+  onlyRequestable,
+  onlyFavorites,
+  onlyPlayable,
   artistOptions,
   languageOptions,
   tagOptions,
+  topLanguageOptions,
+  topTagOptions,
   disabledCount,
+  playableCount,
+  favoriteCount,
+  isFavorite,
+  toggleFavorite,
   filteredSongs,
   hasFilters,
   clearFilters,
   pickRandomSong,
   copyShareLink,
-} = useSongListQueryState(() => props.data)
-
-const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
-const { listKey } = useFilterListKey({
-  committedKeyword: searchKeyword,
-  tag: selectedTag,
-  author: selectedArtist,
-  language: selectedLanguage,
+} = useSongListQueryState(() => props.data, {
+  ownerId: () => props.userInfo?.id,
+  canRequestPredicate: (song) =>
+    canRequestSong(
+      song,
+      props.userInfo,
+      props.liveRequestSettings,
+      requestAuthState.value.isLoggedIn,
+      requestAuthState.value.isBiliAuthed,
+    ).canRequest,
 })
 
-const previewSong = ref<ResponseSongModel>()
-const isLrcLoading = ref<string>()
+const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
+const { previewSong, isLrcLoading, playSong, closePlayer, isShared: isSharedPlayer } = useSongPreviewPlayer()
+
 const randomDialogOpen = ref(false)
 const randomSong = ref<ResponseSongModel | null>(null)
 
@@ -87,242 +102,242 @@ function handleRandomPick() {
 </script>
 
 <template>
-  <TooltipProvider>
-    <div class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto p-[clamp(12px,2vw,24px)] space-y-3.5">
-      <SongListFilterToolbar
-        v-model:search-keyword="searchKeyword"
-        v-model:selected-artist="selectedArtist"
-        v-model:selected-language="selectedLanguage"
-        v-model:selected-tag="selectedTag"
-        v-model:selected-option="selectedOption"
-        v-model:sort-key="sortKey"
-        v-model:sort-order="sortOrder"
-        v-model:hide-disabled="hideDisabled"
-        :artist-options="artistOptions"
-        :language-options="languageOptions"
-        :tag-options="tagOptions"
-        :total-count="data?.length ?? 0"
-        :filtered-count="filteredSongs.length"
-        :disabled-count="disabledCount"
-        :has-filters="hasFilters"
-        @clear="clearFilters"
-        @random="handleRandomPick"
-        @share="copyShareLink"
-      />
+  <div class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto p-[clamp(12px,2vw,24px)] space-y-3.5">
+    <SongListFilterToolbar
+      v-model:search-keyword="searchKeyword"
+      v-model:selected-artist="selectedArtist"
+      v-model:selected-language="selectedLanguage"
+      v-model:selected-tag="selectedTag"
+      v-model:selected-option="selectedOption"
+      v-model:sort-key="sortKey"
+      v-model:sort-order="sortOrder"
+      v-model:hide-disabled="hideDisabled"
+      v-model:only-requestable="onlyRequestable"
+      v-model:only-favorites="onlyFavorites"
+      v-model:only-playable="onlyPlayable"
+      :artist-options="artistOptions"
+      :language-options="languageOptions"
+      :tag-options="tagOptions"
+      :top-language-options="topLanguageOptions"
+      :top-tag-options="topTagOptions"
+      :total-count="data?.length ?? 0"
+      :filtered-count="filteredSongs.length"
+      :disabled-count="disabledCount"
+      :playable-count="playableCount"
+      :favorite-count="favoriteCount"
+      :has-filters="hasFilters"
+      @clear="clearFilters"
+      @random="handleRandomPick"
+      @share="copyShareLink"
+    />
 
-      <SongPlayer
-        v-if="previewSong"
-        v-model:is-lrc-loading="isLrcLoading"
-        :song="previewSong"
-        @close="previewSong = undefined"
-      />
+    <SongPlayer
+      v-if="!isSharedPlayer && previewSong"
+      v-model:is-lrc-loading="isLrcLoading"
+      :song="previewSong"
+      @close="closePlayer"
+    />
 
-      <Empty
-        v-if="!data || filteredSongs.length === 0"
-        :key="`empty-${listKey}`"
-        class="empty-state py-12"
-        :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
-      />
+    <Empty
+      v-if="!data || filteredSongs.length === 0"
+      class="empty-state py-12"
+      :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
+    />
 
-      <div
-        v-else
-        :key="listKey"
-        class="song-cards grid grid-cols-1 md:grid-cols-2 gap-3"
+    <div
+      v-else
+      class="song-cards grid grid-cols-1 md:grid-cols-2 gap-3"
+    >
+      <article
+        v-for="song in visibleItems"
+        :key="song.key"
+        class="song-card p-3 rounded-[var(--vtsuru-page-radius,var(--radius))] border border-border/80 bg-card flex flex-col justify-between gap-2 transition hover:border-primary/50"
+        :class="{
+          'is-active': activeSongKeySet.has(song.key),
+          'is-singing': singingSongKeySet.has(song.key),
+          'is-pinned': song.isPinned,
+          'is-disabled': song.isDisabled,
+        }"
       >
-        <article
-          v-for="song in visibleItems"
-          :key="song.key"
-          class="song-card p-3 rounded-[var(--vtsuru-page-radius,var(--radius))] border border-border/80 bg-card flex flex-col justify-between gap-2 transition hover:border-primary/50"
-          :class="{
-            'is-active': activeSongKeySet.has(song.key),
-            'is-singing': singingSongKeySet.has(song.key),
-            'is-pinned': song.isPinned,
-            'is-disabled': song.isDisabled,
-          }"
-        >
-          <div class="card-top flex items-start justify-between gap-2 min-w-0">
-            <div class="title-left flex items-start gap-2.5 min-w-0 flex-1">
-              <div class="size-9 rounded-md overflow-hidden bg-muted/60 flex-center shrink-0 text-muted-foreground">
-                <img
-                  v-if="song.cover"
-                  :src="song.cover"
-                  :alt="song.name"
-                  loading="lazy"
-                  referrerpolicy="no-referrer"
-                  class="size-full object-cover"
-                />
-                <Music
-                  v-else
-                  class="size-4"
-                />
-              </div>
-
-              <div class="title-block min-w-0 flex-1">
-                <div class="flex items-center gap-1 min-w-0">
-                  <Pin
-                    v-if="song.isPinned"
-                    class="size-3 text-primary shrink-0"
-                  />
-                  <Tooltip :disabled="isSelf || Boolean(song.isDisabled)">
-                    <TooltipTrigger as-child>
-                      <button
-                        class="song-title text-left font-medium text-xs text-foreground hover:text-primary transition truncate block flex-1 min-w-0 cursor-pointer disabled:cursor-default disabled:hover:text-foreground"
-                        type="button"
-                        :disabled="isSelf || Boolean(song.isDisabled)"
-                        @click="requestSong(song)"
-                      >
-                        {{ song.name }}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-
-                <div
-                  v-if="song.translateName"
-                  class="text-[11px] text-muted-foreground truncate mt-0.5"
-                >
-                  {{ song.translateName }}
-                </div>
-
-                <div
-                  v-if="song.author?.length"
-                  class="text-[11px] text-muted-foreground truncate mt-0.5"
-                >
-                  {{ song.author.join(' / ') }}
-                </div>
-              </div>
+        <div class="card-top flex items-start justify-between gap-2 min-w-0">
+          <div class="title-left flex items-start gap-2.5 min-w-0 flex-1">
+            <div class="size-9 rounded-md overflow-hidden bg-muted/60 flex-center shrink-0 text-muted-foreground">
+              <SmartImage
+                v-if="song.cover"
+                :src="song.cover"
+                :alt="song.name"
+                class="size-full object-cover"
+              />
+              <Music
+                v-else
+                class="size-4"
+              />
             </div>
 
-            <div class="title-right flex items-center gap-1 shrink-0">
-              <Badge
-                v-if="song.isDisabled"
-                variant="secondary"
-                size="xs"
+            <div class="title-block min-w-0 flex-1">
+              <div class="flex items-center gap-1 min-w-0">
+                <Pin
+                  v-if="song.isPinned"
+                  class="size-3 text-primary shrink-0"
+                />
+                <Tooltip :disabled="isSelf || Boolean(song.isDisabled)">
+                  <TooltipTrigger as-child>
+                    <button
+                      class="song-title text-left font-medium text-xs text-foreground hover:text-primary transition truncate block min-w-0 cursor-pointer disabled:cursor-default disabled:hover:text-foreground"
+                      type="button"
+                      :disabled="isSelf || Boolean(song.isDisabled)"
+                      @click="requestSong(song)"
+                    >
+                      {{ song.name }}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
+                  </TooltipContent>
+                </Tooltip>
+                <Badge
+                  v-if="isNewSong(song)"
+                  variant="brand"
+                  size="xs"
+                >
+                  NEW
+                </Badge>
+              </div>
+
+              <div
+                v-if="song.translateName"
+                class="text-[11px] text-muted-foreground truncate mt-0.5"
               >
-                暂不接歌
-              </Badge>
-              <SongStatusBadge
-                :song-key="song.key"
-                :singing-keys="singingSongKeySet"
-                :queued-keys="activeSongKeySet"
-                variant="tag"
+                {{ song.translateName }}
+              </div>
+
+              <div
+                v-if="song.author?.length"
+                class="text-[11px] text-muted-foreground truncate mt-0.5"
+              >
+                {{ song.author.join(' / ') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="title-right flex items-center gap-1 shrink-0">
+            <Badge
+              v-if="song.isDisabled"
+              variant="secondary"
+              size="xs"
+            >
+              暂不接歌
+            </Badge>
+            <SongStatusBadge
+              :song-key="song.key"
+              :singing-keys="singingSongKeySet"
+              :queued-keys="activeSongKeySet"
+              variant="tag"
+            />
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :class="isFavorite(song.key) ? 'text-rose-500' : 'text-muted-foreground'"
+              :aria-label="isFavorite(song.key) ? `取消收藏《${song.name}》` : `收藏《${song.name}》`"
+              @click="toggleFavorite(song.key)"
+            >
+              <Heart
+                class="size-3.5"
+                :class="{ 'fill-current': isFavorite(song.key) }"
               />
+            </Button>
+            <Button
+              v-if="getPlayableAudioUrl(song)"
+              size="icon-xs"
+              variant="ghost"
+              :disabled="isLrcLoading === song.key"
+              :aria-label="`试听《${song.name}》`"
+              @click="playSong(song)"
+            >
+              <Play class="size-3.5" />
+            </Button>
+            <a
+              v-if="getSongExternalLink(song)"
+              :href="getSongExternalLink(song)!.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Button
-                v-if="getPlayableAudioUrl(song)"
                 size="icon-xs"
                 variant="ghost"
-                :disabled="isLrcLoading === song.key"
-                :aria-label="`试听《${song.name}》`"
-                @click="previewSong = song"
+                :aria-label="getSongExternalLink(song)!.label"
               >
-                <Play class="size-3.5" />
+                <ExternalLink class="size-3.5" />
               </Button>
-              <a
-                v-if="getSongExternalLink(song)"
-                :href="getSongExternalLink(song)!.url"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  :aria-label="getSongExternalLink(song)!.label"
-                >
-                  <ExternalLink class="size-3.5" />
-                </Button>
-              </a>
-              <SongRequestButton
-                :song="song"
-                :live-request-settings="liveRequestSettings"
-                :auth-state="requestAuthState"
-                :loading="requestingKey === song.key"
-                :hidden="isSelf"
-                size="tiny"
-                :circle="false"
-                @request="requestSong"
-              />
-            </div>
+            </a>
+            <SongRequestButton
+              :song="song"
+              :live-request-settings="liveRequestSettings"
+              :auth-state="requestAuthState"
+              :loading="requestingKey === song.key"
+              :hidden="isSelf"
+              size="tiny"
+              :circle="false"
+              @request="requestSong"
+            />
           </div>
-
-          <div
-            v-if="song.tags?.length || song.language?.length || song.options || song.description"
-            class="card-bottom flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-border/40 text-[11px]"
-          >
-            <div class="pills flex items-center gap-1 flex-wrap min-w-0">
-              <button
-                v-for="tag in (song.tags ?? []).slice(0, 3)"
-                :key="tag"
-                type="button"
-                class="px-1.5 py-0.5 rounded text-[10px] truncate max-w-24 cursor-pointer transition-colors"
-                :class="
-                  selectedTag === tag
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'bg-muted/60 text-muted-foreground hover:bg-muted'
-                "
-                @click="selectedTag = selectedTag === tag ? null : tag"
-              >
-                {{ tag }}
-              </button>
-              <button
-                v-for="lang in (song.language ?? []).slice(0, 2)"
-                :key="lang"
-                type="button"
-                class="px-1.5 py-0.5 rounded text-[10px] truncate max-w-24 cursor-pointer transition-colors"
-                :class="
-                  selectedLanguage === lang
-                    ? 'bg-primary/15 text-primary font-medium'
-                    : 'bg-muted/40 text-muted-foreground/80 hover:bg-muted/60'
-                "
-                @click="selectedLanguage = selectedLanguage === lang ? null : lang"
-              >
-                {{ lang }}
-              </button>
-            </div>
-
-            <div class="flex items-center gap-2 ml-auto min-w-0">
-              <SongOptionBadges
-                :options="song.options"
-                variant="guard"
-                size="tiny"
-              />
-              <Tooltip v-if="song.description">
-                <TooltipTrigger as-child>
-                  <span class="text-muted-foreground truncate max-w-40 text-right cursor-help">
-                    {{ song.description }}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent class="max-w-xs">{{ song.description }}</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        </article>
+        </div>
 
         <div
-          v-if="hasMore"
-          ref="loadMoreTrigger"
-          class="load-more col-span-full flex justify-center py-4"
+          v-if="song.tags?.length || song.language?.length || song.options || song.description"
+          class="card-bottom flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-border/40 text-[11px]"
         >
-          <Button
-            variant="outline"
-            @click="loadMore"
-          >
-            加载更多
-          </Button>
-        </div>
-      </div>
+          <SongTagChips
+            :tags="song.tags"
+            :languages="song.language"
+            :selected-tag="selectedTag"
+            :selected-language="selectedLanguage"
+            :max-tags="3"
+            :max-languages="2"
+            @toggle-tag="selectedTag = selectedTag === $event ? null : $event"
+            @toggle-language="selectedLanguage = selectedLanguage === $event ? null : $event"
+          />
 
-      <SongRandomDialog
-        v-model:open="randomDialogOpen"
-        :song="randomSong"
-        :is-self="isSelf"
-        :live-request-settings="liveRequestSettings"
-        :can-reroll="filteredSongs.filter((s) => !s.isDisabled).length > 1"
-        @reroll="handleRandomPick"
-        @request="requestSong"
-      />
+          <div class="flex items-center gap-2 ml-auto min-w-0">
+            <SongOptionBadges
+              :options="song.options"
+              variant="guard"
+              size="tiny"
+            />
+            <Tooltip v-if="song.description">
+              <TooltipTrigger as-child>
+                <span class="text-muted-foreground truncate max-w-40 text-right cursor-help">
+                  {{ song.description }}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent class="max-w-xs">{{ song.description }}</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      </article>
+
+      <div
+        v-if="hasMore"
+        ref="loadMoreTrigger"
+        class="load-more col-span-full flex justify-center py-4"
+      >
+        <Button
+          variant="outline"
+          @click="loadMore"
+        >
+          加载更多 ({{ visibleItems.length }} / {{ filteredSongs.length }})
+        </Button>
+      </div>
     </div>
-  </TooltipProvider>
+
+    <SongRandomDialog
+      v-model:open="randomDialogOpen"
+      :song="randomSong"
+      :is-self="isSelf"
+      :live-request-settings="liveRequestSettings"
+      :can-reroll="filteredSongs.filter((s) => !s.isDisabled).length > 1"
+      @reroll="handleRandomPick"
+      @request="requestSong"
+    />
+  </div>
 </template>

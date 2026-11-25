@@ -33,7 +33,7 @@ import { type CommandItem, useCommandPalette } from '@/shared/composables/useCom
 import { isTauri } from '@/shared/config'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
-const TRIGGER_LABELS: Record<TriggerType, string> = {
+const TRIGGER_LABELS: Partial<Record<TriggerType, string>> = {
   [TriggerType.DANMAKU]: '自动回复',
   [TriggerType.GIFT]: '礼物感谢',
   [TriggerType.GUARD]: '上舰感谢',
@@ -42,6 +42,12 @@ const TRIGGER_LABELS: Record<TriggerType, string> = {
   [TriggerType.SCHEDULED]: '定时发送',
   [TriggerType.SUPER_CHAT]: 'SC 感谢',
   [TriggerType.POINT_REDEEM]: '积分兑换',
+  [TriggerType.SONG_REQUEST]: '收到点歌',
+  [TriggerType.SONG_START]: '开始演唱',
+  [TriggerType.LIVE_START]: '开播触发',
+  [TriggerType.LIVE_END]: '下播触发',
+  [TriggerType.DANMAKU_DISCONNECTED]: '弹幕断连',
+  [TriggerType.COOKIE_INVALID]: 'Cookie 失效',
 }
 
 const router = useRouter()

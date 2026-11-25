@@ -4,8 +4,9 @@ import { computed, onScopeDispose, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account.js'
-import type { EventModel } from '@/api/client-types'
-import { EventDataTypes } from '@/api/generated/model'
+import type { EventModel, SongRequestInfo } from '@/api/client-types'
+import { getApiLiveRequestGetActive } from '@/api/generated/live-request/live-request'
+import { EventDataTypes, SongRequestStatus } from '@/api/generated/model'
 import { canUseVts } from '@/shared/config'
 import { useRealtimeTopic } from '@/shared/realtime'
 import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
@@ -23,7 +24,13 @@ import { matchesGiftTrigger, useGiftThank } from './autoAction/modules/giftThank
 import { matchesGuardTrigger, pickGuardGiftCode, useGuardPm } from './autoAction/modules/guardPm'
 import type { PointOrderRedeemedHubEvent } from './autoAction/modules/pointRedeem'
 import { matchesPointRedeemTrigger, normalizePointRedeemEvent, usePointRedeem } from './autoAction/modules/pointRedeem'
+import {
+  buildMockSongRequestEvent,
+  normalizeSongRequestEvent,
+  useSongRequestAutoAction,
+} from './autoAction/modules/songRequest'
 import { matchesSuperChatTrigger, useSuperChatThank } from './autoAction/modules/superChatThank'
+import { syncNowPlayingFile, useNowPlayingSettings } from '../utils/nowPlayingWriter'
 import type { AutoActionItem, RuntimeState, SingleActionTestResult } from './autoAction/types.js'
 import {
   ActionType,
@@ -53,7 +60,15 @@ export const useAutoAction = defineStore('autoAction', () => {
   const accountManager = useBiliAccountManager()
   const userEventsTopic = computed(() => (account.value.id > 0 ? `user:events:${account.value.id}` : ''))
   const { on: onUserEvent } = useRealtimeTopic(userEventsTopic)
+  const liveRequestTopic = computed(() =>
+    account.value.id > 0 ? `obs:display:live-request:${account.value.id}` : '',
+  )
+  const { on: onLiveRequestEvent } = useRealtimeTopic(liveRequestTopic)
+  const nowPlayingSettings = useNowPlayingSettings()
   let userEventsRegistered = false
+  let hasHydratedSongRequests = false
+  let knownSongRequestIds = new Set<number>()
+  let lastSingingRequestId: number | null = null
 
   // 共享状态（统一消费 info.ts 全局单一在播真源）
   const isLive = computed(() => isLiveStreaming.value)
@@ -86,6 +101,8 @@ export const useAutoAction = defineStore('autoAction', () => {
     [TriggerType.SCHEDULED]: true,
     [TriggerType.SUPER_CHAT]: true,
     [TriggerType.POINT_REDEEM]: true,
+    [TriggerType.SONG_REQUEST]: true,
+    [TriggerType.SONG_START]: true,
     [TriggerType.LIVE_START]: true,
     [TriggerType.LIVE_END]: true,
     [TriggerType.DANMAKU_DISCONNECTED]: true,
@@ -431,6 +448,8 @@ export const useAutoAction = defineStore('autoAction', () => {
             [TriggerType.SCHEDULED]: true,
             [TriggerType.SUPER_CHAT]: true,
             [TriggerType.POINT_REDEEM]: true,
+            [TriggerType.SONG_REQUEST]: true,
+            [TriggerType.SONG_START]: true,
             [TriggerType.LIVE_START]: true,
             [TriggerType.LIVE_END]: true,
             [TriggerType.DANMAKU_DISCONNECTED]: true,
@@ -624,6 +643,13 @@ export const useAutoAction = defineStore('autoAction', () => {
     biliFunc.sendLiveDanmaku,
     async (userId: number, message: string) => biliFunc.sendPrivateMessage(userId, message),
   )
+  const songRequestModule = useSongRequestAutoAction(
+    isLive,
+    roomId,
+    isTianXuanActive,
+    biliFunc.sendLiveDanmaku,
+    async (userId: number, message: string) => biliFunc.sendPrivateMessage(userId, message),
+  )
 
   /**
    * 向弹幕客户端注册事件监听器
@@ -652,11 +678,77 @@ export const useAutoAction = defineStore('autoAction', () => {
     }
   }
 
+  async function syncSongRequestChanges() {
+    const uid = account.value.id
+    if (!uid) return
+    const hasSongRules = autoActions.value.some(
+      (a) =>
+        a.enabled &&
+        (a.triggerType === TriggerType.SONG_REQUEST || a.triggerType === TriggerType.SONG_START),
+    )
+    if (!hasSongRules && !nowPlayingSettings.value.enabled) return
+
+    try {
+      const resp = await getApiLiveRequestGetActive({ id: uid })
+      if (resp.code !== 200 || !Array.isArray(resp.data)) return
+      const activeList = resp.data as unknown as SongRequestInfo[]
+      const singing = activeList.find((s) => s.status === SongRequestStatus.Singing) ?? null
+      const waiting = activeList.filter((s) => s.status === SongRequestStatus.Waiting)
+
+      if (nowPlayingSettings.value.enabled) {
+        void syncNowPlayingFile(singing, waiting.length, nowPlayingSettings.value)
+      }
+
+      const currentIds = new Set(activeList.map((s) => s.id))
+      if (!hasHydratedSongRequests) {
+        hasHydratedSongRequests = true
+        knownSongRequestIds = currentIds
+        lastSingingRequestId = singing?.id ?? null
+        return
+      }
+
+      if (enabledTriggerTypes.value?.[TriggerType.SONG_REQUEST]) {
+        for (const item of activeList) {
+          if (!knownSongRequestIds.has(item.id)) {
+            songRequestModule.processSongRequestTrigger(
+              TriggerType.SONG_REQUEST,
+              normalizeSongRequestEvent(item, waiting.length),
+              autoActions.value,
+              runtimeState.value,
+            )
+          }
+        }
+      }
+
+      if (
+        singing &&
+        singing.id !== lastSingingRequestId &&
+        enabledTriggerTypes.value?.[TriggerType.SONG_START]
+      ) {
+        songRequestModule.processSongRequestTrigger(
+          TriggerType.SONG_START,
+          normalizeSongRequestEvent(singing, waiting.length),
+          autoActions.value,
+          runtimeState.value,
+        )
+      }
+
+      knownSongRequestIds = currentIds
+      lastSingingRequestId = singing?.id ?? null
+    } catch {
+      // 网络波动时忽略，等待下一次实时事件同步
+    }
+  }
+
   async function registerCheckInResultListener() {
     if (userEventsRegistered) return
     userEventsRegistered = true
     onUserEvent<CheckInHubEvent>('CheckInResult', onCheckInResult)
     onUserEvent<PointOrderRedeemedHubEvent>('PointOrderRedeemed', onPointOrderRedeemed)
+    onLiveRequestEvent('Changed', () => {
+      void syncSongRequestChanges()
+    })
+    void syncSongRequestChanges()
     console.log('[AutoAction] Hub 事件监听器已注册.')
   }
 
@@ -1014,6 +1106,18 @@ export const useAutoAction = defineStore('autoAction', () => {
         price: order.point,
       }
       extraVars = { pointOrder: order, live: buildLiveVariables() }
+    } else if (triggerType === TriggerType.SONG_REQUEST || triggerType === TriggerType.SONG_START) {
+      const mockSong = buildMockSongRequestEvent({
+        requester: options?.mockEvent?.uname || '测试观众',
+        requesterUid: options?.mockEvent?.uid || 10000,
+      })
+      event = {
+        ...buildDefaultMockEvent(TriggerType.DANMAKU, options?.mockEvent),
+        uname: mockSong.requester,
+        uid: mockSong.requesterUid,
+        msg: mockSong.name,
+      }
+      extraVars = { song: mockSong, live: buildLiveVariables() }
     } else if (LIFECYCLE_TRIGGER_TYPES.has(triggerType)) {
       extraVars = {
         live: buildLiveVariables(),
@@ -1210,6 +1314,15 @@ export const useAutoAction = defineStore('autoAction', () => {
       }
       pointRedeemModule.processPointRedeem(testPayload, autoActions.value, runtimeState.value, true)
       toast.success('已发送积分兑换测试事件')
+      return
+    }
+
+    if (triggerType === TriggerType.SONG_REQUEST || triggerType === TriggerType.SONG_START) {
+      const mockSong = buildMockSongRequestEvent({
+        requesterUid: testUid || 10000,
+      })
+      songRequestModule.processSongRequestTrigger(triggerType, mockSong, autoActions.value, runtimeState.value, true)
+      toast.success(triggerType === TriggerType.SONG_REQUEST ? '已发送收到点歌测试事件' : '已发送开始演唱测试事件')
       return
     }
 

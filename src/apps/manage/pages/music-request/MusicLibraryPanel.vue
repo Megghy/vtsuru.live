@@ -116,9 +116,22 @@ async function syncFromMySongList() {
   try {
     const res = await getApiSongListGet()
     if (res.code === 200 && res.data && res.data.length > 0) {
-      const addRes = await postApiMusicRequestAdd(res.data as any)
+      const playableSongs = res.data.filter(
+        (s) => !s.isDisabled && (Boolean(s.url?.trim()) || (s.from === SongPlatform.Netease && s.id > 0)),
+      )
+      if (playableSongs.length === 0) {
+        message.warning('我的歌单中暂无可播放且未停用的曲目可同步')
+        return
+      }
+      const skippedUnplayable = res.data.length - playableSongs.length
+      const addRes = await postApiMusicRequestAdd(playableSongs as any)
       if (addRes.code === 200) {
-        message.success(`已成功从我的歌单同步 ${res.data.length} 首歌曲`)
+        const addedCount = Array.isArray(addRes.data) ? addRes.data.length : playableSongs.length
+        const skippedDup = Math.max(0, playableSongs.length - addedCount)
+        const parts = [`新增 ${addedCount} 首`]
+        if (skippedDup > 0) parts.push(`跳过已存在 ${skippedDup} 首`)
+        if (skippedUnplayable > 0) parts.push(`过滤不可播/停用 ${skippedUnplayable} 首`)
+        message.success(`同步完成：${parts.join('，')}`)
         await musicRequestStore.loadLibrary()
       } else {
         message.error(addRes.message || '导入失败')

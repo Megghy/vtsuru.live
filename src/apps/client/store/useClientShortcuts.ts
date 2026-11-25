@@ -28,6 +28,8 @@ export type ClientShortcutActionType =
   | 'gift_window_toggle'
   | 'tts_skip_current'
   | 'tts_toggle_pause'
+  | 'song_request_finish_and_next'
+  | 'song_request_start_next'
 
 export interface ClientShortcutItem {
   id: string
@@ -41,7 +43,7 @@ export interface ClientShortcutItem {
 
 export const CLIENT_SHORTCUT_ACTION_META: Record<
   ClientShortcutActionType,
-  { label: string; group: 'OBS' | 'VTS' | '浮窗' | 'TTS'; needsTarget?: string }
+  { label: string; group: 'OBS' | 'VTS' | '浮窗' | 'TTS' | '点歌'; needsTarget?: string }
 > = {
   obs_switch_scene: { label: 'OBS：切换本地场景', group: 'OBS', needsTarget: 'OBS 场景名' },
   obs_scene_switch: { label: 'VTsuru 场景：切换子场景', group: 'OBS', needsTarget: 'VTsuru 子场景' },
@@ -57,6 +59,8 @@ export const CLIENT_SHORTCUT_ACTION_META: Record<
   gift_window_toggle: { label: '浮窗：开关礼物排行浮窗', group: '浮窗' },
   tts_skip_current: { label: '读弹幕：跳过当前播报', group: 'TTS' },
   tts_toggle_pause: { label: '读弹幕：暂停/恢复播报', group: 'TTS' },
+  song_request_finish_and_next: { label: '点歌：完成当前并切下一首', group: '点歌' },
+  song_request_start_next: { label: '点歌：开始演唱队首曲目', group: '点歌' },
 }
 
 const STORAGE_KEY = 'client.globalShortcuts'
@@ -184,6 +188,26 @@ export const useClientShortcuts = defineStore('clientShortcuts', () => {
         const speech = useSpeechService()
         speech.togglePause()
         toast.info(speech.isPaused.value ? '已暂停读弹幕' : '已恢复读弹幕')
+        return
+      }
+      case 'song_request_finish_and_next': {
+        const { useLiveRequest } = await import('@/composables/useLiveRequest')
+        const liveRequest = useLiveRequest()
+        await liveRequest.updateActive()
+        await liveRequest.finishAndStartNext()
+        return
+      }
+      case 'song_request_start_next': {
+        const { SongRequestStatus } = await import('@/api/generated/model')
+        const { useLiveRequest } = await import('@/composables/useLiveRequest')
+        const liveRequest = useLiveRequest()
+        await liveRequest.updateActive()
+        const firstWaiting = liveRequest.unfilteredActiveSongs.find((s) => s.status === SongRequestStatus.Waiting)
+        if (!firstWaiting) {
+          toast.info('当前待唱队列为空')
+          return
+        }
+        await liveRequest.updateSongStatus(firstWaiting, SongRequestStatus.Singing)
       }
     }
   }

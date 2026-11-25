@@ -132,6 +132,53 @@ export function mergeLyrics(originalLyrics: string, translatedLyrics: string): s
   return resultLines.join('\n')
 }
 
+export interface SyncedLyricLine {
+  timeMs: number
+  text: string
+  translation?: string
+}
+
+/**
+ * 将网易云原版歌词与翻译歌词解析为按时间排序的结构化行列表，供 OBS 同步歌词挂件使用。
+ */
+export function parseSyncedLrcLines(originalLyrics: string, translatedLyrics = ''): SyncedLyricLine[] {
+  const translatedByExact = new Map<number, string>()
+  const translatedByCenti = new Map<number, string>()
+
+  for (const rawLine of translatedLyrics.split(/\r?\n/)) {
+    const line = rawLine.trim()
+    if (!line) continue
+    const tags = parseLrcTimeTags(line)
+    if (tags.length === 0) continue
+    const text = line.replace(LRC_TIME_TAG_RE, '').trim()
+    if (!text) continue
+    for (const tag of tags) {
+      if (!translatedByExact.has(tag.timeMs)) translatedByExact.set(tag.timeMs, text)
+      if (!translatedByCenti.has(tag.centiMs)) translatedByCenti.set(tag.centiMs, text)
+    }
+  }
+
+  const lines: SyncedLyricLine[] = []
+  for (const rawLine of originalLyrics.split(/\r?\n/)) {
+    const line = rawLine.trim()
+    if (!line) continue
+    const tags = parseLrcTimeTags(line)
+    if (tags.length === 0) continue
+    const text = line.replace(LRC_TIME_TAG_RE, '').trim()
+    if (!text) continue
+    for (const tag of tags) {
+      const translation = translatedByExact.get(tag.timeMs) ?? translatedByCenti.get(tag.centiMs)
+      lines.push({
+        timeMs: tag.timeMs,
+        text,
+        translation,
+      })
+    }
+  }
+
+  return lines.toSorted((a, b) => a.timeMs - b.timeMs)
+}
+
 /**
  * 拉取指定网易云歌曲 ID 的合并双语歌词。
  */
@@ -143,5 +190,19 @@ export async function fetchNeteaseMergedLyric(songId: number): Promise<string> {
     return res.data.tlyric ? mergeLyrics(res.data.lyric ?? '', res.data.tlyric) : (res.data.lyric ?? '')
   } catch {
     return ''
+  }
+}
+
+/**
+ * 拉取指定网易云歌曲 ID 的结构化同步歌词行。
+ */
+export async function fetchNeteaseSyncedLyricLines(songId: number): Promise<SyncedLyricLine[]> {
+  if (!songId) return []
+  try {
+    const res = await getApiSongListGetNeteaseLyric({ id: songId })
+    if (res.code !== 200 || !res.data?.lyric) return []
+    return parseSyncedLrcLines(res.data.lyric, res.data.tlyric ?? '')
+  } catch {
+    return []
   }
 }

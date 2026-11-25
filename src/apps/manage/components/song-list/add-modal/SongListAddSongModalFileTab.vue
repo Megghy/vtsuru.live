@@ -38,12 +38,18 @@ const emit = defineEmits<{
 const message = useMessage()
 
 const DEFAULT_MAPPINGS = {
+  id: 'id,平台id',
+  from: '来自,来源,平台,from',
   name: '名称,歌名,标题,title,name',
   translateName: '翻译名称,译名,translated,translate,translateName',
+  aliases: '别名,简称,aliases',
   author: '作者,歌手,演唱,singer,author,artist',
   description: '描述,备注,说明,description,note,remark',
   url: '链接,试听链接,地址,url,link',
   externalUrl: '外链,作品链接,externalUrl',
+  instrumentalUrl: '伴奏链接,乐谱链接,instrumentalUrl',
+  proficiency: '熟练度,proficiency',
+  keyShift: '升降调,调性,keyShift',
   cover: '封面,cover',
   language: '语言,language',
   tags: '标签,类别,分类,tag,tags,category',
@@ -148,18 +154,32 @@ function parseExcelFile() {
     const headers = json[0] as unknown[]
     const rows = json.slice(1) as unknown[][]
 
+    const idHeaders = getMappingList('id')
+    const fromHeaders = getMappingList('from')
     const nameHeaders = getMappingList('name')
     const translateHeaders = getMappingList('translateName')
+    const aliasesHeaders = getMappingList('aliases')
     const authorHeaders = getMappingList('author')
     const descHeaders = getMappingList('description')
     const urlHeaders = getMappingList('url')
     const externalUrlHeaders = getMappingList('externalUrl')
+    const instrumentalUrlHeaders = getMappingList('instrumentalUrl')
+    const proficiencyHeaders = getMappingList('proficiency')
+    const keyShiftHeaders = getMappingList('keyShift')
     const coverHeaders = getMappingList('cover')
     const languageHeaders = getMappingList('language')
     const tagsHeaders = getMappingList('tags')
     const optionsHeaders = getMappingList('options')
     const pinnedHeaders = getMappingList('isPinned')
     const disabledHeaders = getMappingList('isDisabled')
+
+    const parsePlatform = (label: string): SongPlatform => {
+      const lower = label.trim().toLowerCase()
+      if (lower.includes('网易') || lower === 'netease') return SongPlatform.Netease
+      if (lower.includes('5sing') || lower === 'fivesing') return SongPlatform.FiveSing
+      if (lower.includes('酷狗') || lower === 'kugou') return SongPlatform.Kugou
+      return SongPlatform.Custom
+    }
 
     const parsedRows: ParsedFileSongRow[] = []
     rows.forEach((row, idx) => {
@@ -171,6 +191,7 @@ function parseExcelFile() {
         author: [],
         tags: [],
         language: [],
+        aliases: [],
         createTime: Date.now(),
         updateTime: Date.now(),
       } as ResponseSongModel
@@ -184,12 +205,20 @@ function parseExcelFile() {
         const value = row[i]
         const textVal = value !== null && value !== undefined ? String(value).trim() : ''
 
-        if (nameHeaders.includes(headerFromFile) && textVal) song.name = textVal
+        if (idHeaders.includes(headerFromFile) && textVal) {
+          const parsedId = Number(textVal)
+          if (Number.isFinite(parsedId) && parsedId > 0) song.id = parsedId
+        } else if (fromHeaders.includes(headerFromFile) && textVal) song.from = parsePlatform(textVal)
+        else if (nameHeaders.includes(headerFromFile) && textVal) song.name = textVal
         else if (translateHeaders.includes(headerFromFile) && textVal) song.translateName = textVal
+        else if (aliasesHeaders.includes(headerFromFile) && textVal) song.aliases = parseMultipleValues(value)
         else if (authorHeaders.includes(headerFromFile) && textVal) song.author = parseMultipleValues(value)
         else if (descHeaders.includes(headerFromFile) && textVal) song.description = textVal
         else if (urlHeaders.includes(headerFromFile) && textVal) song.url = textVal
         else if (externalUrlHeaders.includes(headerFromFile) && textVal) song.externalUrl = textVal
+        else if (instrumentalUrlHeaders.includes(headerFromFile) && textVal) song.instrumentalUrl = textVal
+        else if (proficiencyHeaders.includes(headerFromFile) && textVal) song.proficiency = textVal
+        else if (keyShiftHeaders.includes(headerFromFile) && textVal) song.keyShift = textVal
         else if (coverHeaders.includes(headerFromFile) && textVal) song.cover = textVal
         else if (languageHeaders.includes(headerFromFile) && textVal) song.language = parseMultipleValues(value)
         else if (tagsHeaders.includes(headerFromFile) && textVal) song.tags = parseMultipleValues(value)
@@ -222,15 +251,29 @@ async function addUploadFileSong() {
     const selectedSet = new Set(selecteduploadSongs.value)
     const songsToAdd = uploadSongsFromFile.value.filter((r) => selectedSet.has(r.rowKey)).map((r) => r.song)
 
-    const data = await addSongsToSongList(songsToAdd, SongPlatform.Custom)
-    if (data.code !== 200) {
-      message.error(`添加失败: ${data.message}`)
-      return
+    const groups = new Map<SongPlatform, ResponseSongModel[]>()
+    for (const song of songsToAdd) {
+      const platform = song.from ?? SongPlatform.Custom
+      const list = groups.get(platform) ?? []
+      list.push(song)
+      groups.set(platform, list)
     }
 
-    message.success(`已添加 ${data.data.length} 首歌曲`)
+    const added: ResponseSongModel[] = []
+    for (const [platform, list] of groups) {
+      const data = await addSongsToSongList(list, platform)
+      if (data.code !== 200) {
+        message.error(`添加失败: ${data.message}`)
+        return
+      }
+      if (data.data?.length) {
+        added.push(...(data.data as unknown as ResponseSongModel[]))
+      }
+    }
+
+    message.success(`已添加 ${added.length} 首歌曲`)
     selecteduploadSongs.value = []
-    emit('added', data.data as unknown as ResponseSongModel[])
+    emit('added', added)
   } catch (err) {
     message.error(`添加失败: ${err}`)
     console.error(err)
@@ -249,15 +292,7 @@ async function addUploadFileSong() {
       >
         <AlertDescription class="flex-between flex-wrap gap-2 w-full">
           <span>
-            支持 Excel (.xlsx/.xls) 或 CSV 导入，格式说明见
-            <a
-              href="https://www.wolai.com/hZWizjCnAdc6hDdntuWgcU"
-              target="_blank"
-              rel="noreferrer"
-              class="underline font-medium hover:text-foreground ml-1"
-            >
-              导入说明页面
-            </a>
+            支持 Excel (.xlsx/.xls) 或 CSV 导入，必填「名称」列，可选「作者 / 语言 / 标签 / 别名 / 熟练度 / 升降调 / 来源 / 点歌门槛」等列。
           </span>
           <Button
             size="xs"

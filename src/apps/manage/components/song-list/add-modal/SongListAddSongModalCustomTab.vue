@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Info, Sparkles } from 'lucide-vue-next'
+import { Info, Sparkles, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel, SongRequestOption } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { getApiSongListSearchNetease } from '@/api/generated/song-list/song-list'
+import { getApiSongListSearchNeteaseList } from '@/api/songRequestExtras'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import SongTagChipInput from '@/components/song-list/SongTagChipInput.vue'
 import { Button } from '@/shared/ui/button'
@@ -60,6 +61,7 @@ function createEmptyModel(): ResponseSongModel {
 const addSongModel = ref<ResponseSongModel>(createEmptyModel())
 const onlyResetNameOnAdded = ref(true)
 const isMatchingNetease = ref(false)
+const neteaseCandidates = ref<ResponseSongModel[]>([])
 
 defineExpose({
   add: addCustomSong,
@@ -84,6 +86,16 @@ function resetAddingSong(onlyName = false) {
   emit('resetRender')
 }
 
+function applyNeteaseCandidate(matched: ResponseSongModel) {
+  if (matched.cover) addSongModel.value.cover = matched.cover
+  if (matched.translateName) addSongModel.value.translateName = matched.translateName
+  if (matched.author?.length) addSongModel.value.author = [...matched.author]
+  if (matched.id > 0) addSongModel.value.externalUrl = `https://music.163.com/#/song?id=${matched.id}`
+  if (matched.url) addSongModel.value.url = matched.url
+  neteaseCandidates.value = []
+  message.success(`已匹配网易云曲目《${matched.name}》`)
+}
+
 async function handleMatchNetease() {
   const keyword = addSongModel.value.name?.trim()
   if (!keyword) {
@@ -91,7 +103,21 @@ async function handleMatchNetease() {
     return
   }
   isMatchingNetease.value = true
+  neteaseCandidates.value = []
   try {
+    try {
+      const listRes = await getApiSongListSearchNeteaseList({ keyword, limit: 8 })
+      if (listRes.code === 200 && listRes.data?.length) {
+        if (listRes.data.length === 1) {
+          applyNeteaseCandidate(listRes.data[0])
+        } else {
+          neteaseCandidates.value = listRes.data
+        }
+        return
+      }
+    } catch {
+      // 兼容旧后端
+    }
     const res = await getApiSongListSearchNetease({ keyword })
     if (res.code !== 200) {
       message.error(res.message || '匹配失败')
@@ -102,21 +128,7 @@ async function handleMatchNetease() {
       message.info('未在网易云匹配到同名曲目')
       return
     }
-
-    if (!addSongModel.value.cover && matched.cover) addSongModel.value.cover = matched.cover
-    if (!addSongModel.value.translateName && matched.translateName) {
-      addSongModel.value.translateName = matched.translateName
-    }
-    if (!addSongModel.value.author?.length && matched.author?.length) {
-      addSongModel.value.author = [...matched.author]
-    }
-    if (!addSongModel.value.externalUrl && matched.id > 0) {
-      addSongModel.value.externalUrl = `https://music.163.com/#/song?id=${matched.id}`
-    }
-    if (!addSongModel.value.url && matched.url) {
-      addSongModel.value.url = matched.url
-    }
-    message.success(`已匹配网易云曲目《${matched.name}》`)
+    applyNeteaseCandidate(matched)
   } catch (err) {
     message.error(`匹配失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
@@ -164,6 +176,47 @@ async function addCustomSong() {
 <template>
   <TooltipProvider>
     <div class="space-y-4 text-xs">
+      <div
+        v-if="neteaseCandidates.length > 0"
+        class="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-2"
+      >
+        <div class="flex-between gap-2">
+          <span class="font-medium text-foreground">选择要补全的网易云版本（{{ neteaseCandidates.length }} 个候选）</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="关闭候选列表"
+            @click="neteaseCandidates = []"
+          >
+            <X class="size-3.5" />
+          </Button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-44 overflow-y-auto scrollbar-thin">
+          <button
+            v-for="cand in neteaseCandidates"
+            :key="cand.id"
+            type="button"
+            class="flex items-center gap-2 p-1.5 rounded-md border border-border/70 bg-card hover:border-primary/60 text-left transition-colors min-w-0"
+            @click="applyNeteaseCandidate(cand)"
+          >
+            <img
+              v-if="cand.cover"
+              :src="cand.cover"
+              :alt="cand.name"
+              class="size-8 rounded object-cover shrink-0 border border-border/60"
+              referrerpolicy="no-referrer"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="font-medium text-foreground truncate">{{ cand.name }}</div>
+              <div class="text-[11px] text-muted-foreground truncate">
+                {{ cand.author?.join(' / ') || '未知歌手' }}{{ cand.translateName ? ` · ${cand.translateName}` : '' }}
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <FormField
           label="歌曲名称"

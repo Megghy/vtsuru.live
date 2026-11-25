@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Info, Sparkles } from 'lucide-vue-next'
+import { Info, Sparkles, X } from 'lucide-vue-next'
 import { ref } from 'vue'
 
 import type { ResponseSongModel, SongRequestOption } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { getApiSongListSearchNetease } from '@/api/generated/song-list/song-list'
+import { getApiSongListSearchNeteaseList } from '@/api/songRequestExtras'
 import SongTagChipInput from '@/components/song-list/SongTagChipInput.vue'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -12,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toast } from '@/shared/utils'
@@ -35,16 +37,56 @@ const show = ref(false)
 const model = ref<ResponseSongModel>({} as ResponseSongModel)
 const loading = ref(false)
 const isMatchingNetease = ref(false)
+const neteaseCandidates = ref<ResponseSongModel[]>([])
+
+const PROFICIENCY_OPTIONS = ['拿手', '熟练', '练唱中', '现学']
 
 function open(song: ResponseSongModel) {
   const cloned = JSON.parse(JSON.stringify(song)) as ResponseSongModel
   cloned.author = cloned.author ?? []
   cloned.language = cloned.language ?? []
   cloned.tags = cloned.tags ?? []
+  cloned.aliases = cloned.aliases ?? []
   cloned.isPinned = Boolean(cloned.isPinned)
   cloned.isDisabled = Boolean(cloned.isDisabled)
   model.value = cloned
+  neteaseCandidates.value = []
   show.value = true
+}
+
+function applyNeteaseCandidate(matched: ResponseSongModel, forceOverwrite = false) {
+  let filled = 0
+  if ((forceOverwrite || !model.value.cover) && matched.cover) {
+    model.value.cover = matched.cover
+    filled++
+  }
+  if ((forceOverwrite || !model.value.translateName) && matched.translateName) {
+    model.value.translateName = matched.translateName
+    filled++
+  }
+  if (
+    (forceOverwrite ||
+      !model.value.author?.length ||
+      (model.value.author.length === 1 && model.value.author[0] === '未知')) &&
+    matched.author?.length
+  ) {
+    model.value.author = [...matched.author]
+    filled++
+  }
+  if ((forceOverwrite || !model.value.externalUrl) && matched.id > 0) {
+    model.value.externalUrl = `https://music.163.com/#/song?id=${matched.id}`
+    filled++
+  }
+  if ((forceOverwrite || !model.value.url) && matched.url) {
+    model.value.url = matched.url
+    filled++
+  }
+  neteaseCandidates.value = []
+  if (filled === 0) {
+    toast.info(`已选择《${matched.name}》，当前字段均已填写无需补充`)
+  } else {
+    toast.success(`已从网易云《${matched.name}》补充 ${filled} 项信息`)
+  }
 }
 
 async function handleMatchNetease() {
@@ -54,48 +96,31 @@ async function handleMatchNetease() {
     return
   }
   isMatchingNetease.value = true
+  neteaseCandidates.value = []
   try {
+    try {
+      const listRes = await getApiSongListSearchNeteaseList({ keyword, limit: 8 })
+      if (listRes.code === 200 && listRes.data?.length) {
+        if (listRes.data.length === 1) {
+          applyNeteaseCandidate(listRes.data[0])
+        } else {
+          neteaseCandidates.value = listRes.data
+        }
+        return
+      }
+    } catch {
+      // 兼容旧后端：降级到单条搜索接口
+    }
     const res = await getApiSongListSearchNetease({ keyword })
     if (res.code !== 200) {
       toast.error(res.message || '匹配失败')
       return
     }
-    const matched = res.data
-    if (!matched) {
+    if (!res.data) {
       toast.info('未在网易云匹配到同名曲目')
       return
     }
-
-    let filled = 0
-    if (!model.value.cover && matched.cover) {
-      model.value.cover = matched.cover
-      filled++
-    }
-    if (!model.value.translateName && matched.translateName) {
-      model.value.translateName = matched.translateName
-      filled++
-    }
-    if (
-      (!model.value.author?.length || (model.value.author.length === 1 && model.value.author[0] === '未知')) &&
-      matched.author?.length
-    ) {
-      model.value.author = [...matched.author]
-      filled++
-    }
-    if (!model.value.externalUrl && matched.id > 0) {
-      model.value.externalUrl = `https://music.163.com/#/song?id=${matched.id}`
-      filled++
-    }
-    if (!model.value.url && matched.url) {
-      model.value.url = matched.url
-      filled++
-    }
-
-    if (filled === 0) {
-      toast.info(`已匹配《${matched.name}》，当前字段均已填写无需补充`)
-    } else {
-      toast.success(`已从网易云补充 ${filled} 项信息`)
-    }
+    applyNeteaseCandidate(res.data)
   } catch (err) {
     toast.error(`匹配失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
@@ -143,6 +168,48 @@ defineExpose({ open, close, loading })
         </DialogHeader>
 
         <div class="space-y-3 text-xs">
+          <!-- 网易云多候选选择器 -->
+          <div
+            v-if="neteaseCandidates.length > 0"
+            class="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-2"
+          >
+            <div class="flex-between gap-2">
+              <span class="font-medium text-foreground">选择要补全的网易云版本（{{ neteaseCandidates.length }} 个候选）</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                aria-label="关闭候选列表"
+                @click="neteaseCandidates = []"
+              >
+                <X class="size-3.5" />
+              </Button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto scrollbar-thin">
+              <button
+                v-for="cand in neteaseCandidates"
+                :key="cand.id"
+                type="button"
+                class="flex items-center gap-2 p-1.5 rounded-md border border-border/70 bg-card hover:border-primary/60 text-left transition-colors min-w-0"
+                @click="applyNeteaseCandidate(cand, true)"
+              >
+                <img
+                  v-if="cand.cover"
+                  :src="cand.cover"
+                  :alt="cand.name"
+                  class="size-8 rounded object-cover shrink-0 border border-border/60"
+                  referrerpolicy="no-referrer"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium text-foreground truncate">{{ cand.name }}</div>
+                  <div class="text-[11px] text-muted-foreground truncate">
+                    {{ cand.author?.join(' / ') || '未知歌手' }}{{ cand.translateName ? ` · ${cand.translateName}` : '' }}
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FormField
               v-model="model.name"
@@ -198,6 +265,60 @@ defineExpose({ open, close, loading })
                 @update:model-value="model.tags = $event"
               />
             </FormField>
+
+            <FormField
+              label="点歌别名（用于弹幕简称/容错匹配）"
+              class="sm:col-span-2 min-w-0"
+            >
+              <SongTagChipInput
+                :model-value="model.aliases ?? []"
+                :options="[]"
+                placeholder="如：花火、千本樱；按回车添加"
+                @update:model-value="model.aliases = $event"
+              />
+            </FormField>
+
+            <FormField
+              label="熟练度"
+              class="min-w-0"
+            >
+              <Select
+                :model-value="model.proficiency || '__none'"
+                @update:model-value="model.proficiency = $event === '__none' ? null : String($event)"
+              >
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="未设置" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">未设置</SelectItem>
+                  <SelectItem
+                    v-for="p in PROFICIENCY_OPTIONS"
+                    :key="p"
+                    :value="p"
+                  >
+                    {{ p }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
+
+            <FormField
+              v-model="model.keyShift"
+              type="text"
+              label="常用升降调"
+              maxlength="50"
+              placeholder="如：原调 / 升2 / 降半音"
+              class="min-w-0"
+            />
+
+            <FormField
+              v-model="model.instrumentalUrl"
+              type="text"
+              label="伴奏 / 乐谱链接"
+              maxlength="500"
+              placeholder="可选，伴奏或歌词谱面外链"
+              class="sm:col-span-2 min-w-0"
+            />
 
             <FormField
               v-model="model.url"

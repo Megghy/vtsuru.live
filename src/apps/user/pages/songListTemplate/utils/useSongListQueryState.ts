@@ -5,8 +5,11 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import { copyToClipboard } from '@/shared/utils'
+import { normalizeTimestampMs } from '@/shared/utils/queue'
+import { getPlayableAudioUrl } from '@/shared/utils/songMedia'
 
-import { filterSongs, getSongFieldOptions } from './songListData'
+import { filterSongs, getSongFieldOptions, getSongFieldTopOptions } from './songListData'
+import { useSongFavorites } from './useSongFavorites'
 
 export type SongListPublicOptionFilter = 'all' | 'unset' | 'captain' | 'admiral' | 'governor' | 'medal' | 'sc'
 export type SongListPublicSortKey =
@@ -19,6 +22,8 @@ export type SongListPublicSortKey =
   | 'description'
   | 'popular'
   | 'newest'
+
+const NEW_SONG_WINDOW_MS = 14 * 24 * 60 * 60 * 1000
 
 const OPTION_FILTERS: Record<Exclude<SongListPublicOptionFilter, 'all'>, (song: ResponseSongModel) => boolean> = {
   unset: (song) =>
@@ -57,6 +62,14 @@ export const PUBLIC_SORT_ITEMS: { label: string; value: SongListPublicSortKey }[
   { label: '按备注', value: 'description' },
 ]
 
+const QUERY_KEYS = ['q', 'artist', 'lang', 'tag', 'opt', 'sort', 'dir', 'avail', 'req', 'fav', 'audio'] as const
+
+export function isNewSong(song: ResponseSongModel, nowMs = Date.now()): boolean {
+  if (!song.createTime) return false
+  const ms = normalizeTimestampMs(song.createTime)
+  return ms > 0 && nowMs - ms <= NEW_SONG_WINDOW_MS && ms <= nowMs + 60_000
+}
+
 function getSortValue(song: ResponseSongModel, key: SongListPublicSortKey): string {
   if (key === 'options') return song.options ? '1' : '0'
   const val = song[key as keyof ResponseSongModel]
@@ -73,9 +86,15 @@ function compareSongs(left: ResponseSongModel, right: ResponseSongModel, key: So
   return getSortValue(left, key).localeCompare(getSortValue(right, key), 'zh-CN', { numeric: true })
 }
 
+export interface SongListQueryStateOptions {
+  syncUrl?: boolean
+  ownerId?: MaybeRefOrGetter<number | string | null | undefined>
+  canRequestPredicate?: (song: ResponseSongModel) => boolean
+}
+
 export function useSongListQueryState(
   songsSource: MaybeRefOrGetter<ResponseSongModel[] | undefined>,
-  options: { syncUrl?: boolean } = {},
+  options: SongListQueryStateOptions = {},
 ) {
   const syncUrl = options.syncUrl ?? true
   let route: ReturnType<typeof useRoute> | null = null
@@ -106,6 +125,11 @@ export function useSongListQueryState(
   )
   const sortOrder = ref<'asc' | 'desc'>(q.dir === 'desc' ? 'desc' : 'asc')
   const hideDisabled = ref(q.avail === '1')
+  const onlyRequestable = ref(q.req === '1')
+  const onlyFavorites = ref(q.fav === '1')
+  const onlyPlayable = ref(q.audio === '1')
+
+  const { favoriteKeys, favoriteCount, isFavorite, toggleFavorite } = useSongFavorites(options.ownerId)
 
   const artistOptions = computed(() => getSongFieldOptions(toValue(songsSource), 'author'))
   const languageOptions = computed(() => [
@@ -116,7 +140,10 @@ export function useSongListQueryState(
     { label: '未设定', value: '__unset' },
     ...getSongFieldOptions(toValue(songsSource), 'tags'),
   ])
+  const topLanguageOptions = computed(() => getSongFieldTopOptions(toValue(songsSource), 'language', 4))
+  const topTagOptions = computed(() => getSongFieldTopOptions(toValue(songsSource), 'tags', 8))
   const disabledCount = computed(() => (toValue(songsSource) ?? []).filter((s) => s.isDisabled).length)
+  const playableCount = computed(() => (toValue(songsSource) ?? []).filter((s) => Boolean(getPlayableAudioUrl(s))).length)
 
   function matchesField(values: string[] | null | undefined, selected: string | null) {
     if (!selected || selected === 'all') return true
@@ -129,6 +156,12 @@ export function useSongListQueryState(
       author: selectedArtist.value,
     }).filter((song) => {
       if (hideDisabled.value && song.isDisabled) return false
+      if (onlyRequestable.value) {
+        if (song.isDisabled) return false
+        if (options.canRequestPredicate && !options.canRequestPredicate(song)) return false
+      }
+      if (onlyFavorites.value && !favoriteKeys.value.has(song.key)) return false
+      if (onlyPlayable.value && !getPlayableAudioUrl(song)) return false
       if (!matchesField(song.language, selectedLanguage.value)) return false
       if (!matchesField(song.tags, selectedTag.value)) return false
       if (selectedOption.value !== 'all' && !OPTION_FILTERS[selectedOption.value]?.(song)) return false
@@ -153,7 +186,10 @@ export function useSongListQueryState(
       Boolean(selectedLanguage.value) ||
       Boolean(selectedTag.value) ||
       selectedOption.value !== 'all' ||
-      hideDisabled.value,
+      hideDisabled.value ||
+      onlyRequestable.value ||
+      onlyFavorites.value ||
+      onlyPlayable.value,
   )
 
   function setSort(nextKey: SongListPublicSortKey) {
@@ -172,6 +208,9 @@ export function useSongListQueryState(
     selectedTag.value = null
     selectedOption.value = 'all'
     hideDisabled.value = false
+    onlyRequestable.value = false
+    onlyFavorites.value = false
+    onlyPlayable.value = false
   }
 
   function pickRandomSong(excludeKey?: string): ResponseSongModel | null {
@@ -199,11 +238,14 @@ export function useSongListQueryState(
         sortKey,
         sortOrder,
         hideDisabled,
+        onlyRequestable,
+        onlyFavorites,
+        onlyPlayable,
       ],
       () => {
         const nextQuery: Record<string, string> = {}
         for (const [k, v] of Object.entries(route!.query)) {
-          if (!['q', 'artist', 'lang', 'tag', 'opt', 'sort', 'dir', 'avail'].includes(k) && typeof v === 'string') {
+          if (!(QUERY_KEYS as readonly string[]).includes(k) && typeof v === 'string') {
             nextQuery[k] = v
           }
         }
@@ -217,6 +259,9 @@ export function useSongListQueryState(
           nextQuery.dir = sortOrder.value
         }
         if (hideDisabled.value) nextQuery.avail = '1'
+        if (onlyRequestable.value) nextQuery.req = '1'
+        if (onlyFavorites.value) nextQuery.fav = '1'
+        if (onlyPlayable.value) nextQuery.audio = '1'
         void router!.replace({ query: nextQuery }).catch(() => {})
       },
     )
@@ -232,10 +277,20 @@ export function useSongListQueryState(
     sortKey,
     sortOrder,
     hideDisabled,
+    onlyRequestable,
+    onlyFavorites,
+    onlyPlayable,
     artistOptions,
     languageOptions,
     tagOptions,
+    topLanguageOptions,
+    topTagOptions,
     disabledCount,
+    playableCount,
+    favoriteKeys,
+    favoriteCount,
+    isFavorite,
+    toggleFavorite,
     filteredSongs,
     hasFilters,
     setSort,

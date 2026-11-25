@@ -31,25 +31,45 @@ export function useLiveRequestObsView(currentId: MaybeRefOrGetter<string | numbe
   })
 
   const items = computed<ObsDisplayItem[]>(() => {
-    return data.activeSongs.value.map((song) => ({
-      id: song.id,
-      primary: song.songName || '未知歌曲',
-      badges: [
-        data.settings.value.showUserName
-          ? {
-              text: song.from === SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户',
-              tone: song.from === SongRequestFrom.Manual ? 'accent' : 'muted',
-            }
-          : null,
-        data.settings.value.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0
-          ? {
-              text: `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}`.trim(),
-              tone: 'muted',
-            }
-          : null,
-      ].filter(Boolean) as NonNullable<ObsDisplayItem['badges']>,
-    }))
+    return data.activeSongs.value.map((song) => {
+      const secondaryParts: string[] = []
+      if (data.settings.value.showAuthor && song.song?.author?.length) {
+        secondaryParts.push(song.song.author.join('/'))
+      }
+      if (data.settings.value.showDescription && song.song?.description) {
+        secondaryParts.push(song.song.description)
+      }
+
+      return {
+        id: song.id,
+        primary: song.songName || '未知歌曲',
+        secondary: secondaryParts.length > 0 ? secondaryParts.join(' · ') : undefined,
+        badges: [
+          data.settings.value.showPrice && song.price && song.price > 0
+            ? {
+                text: `${song.from === SongRequestFrom.Gift ? '礼物' : 'SC'} ¥${song.price}`,
+                tone: 'accent',
+              }
+            : null,
+          data.settings.value.showUserName
+            ? {
+                text: song.from === SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户',
+                tone: song.from === SongRequestFrom.Manual ? 'accent' : 'muted',
+              }
+            : null,
+          data.settings.value.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0
+            ? {
+                text: `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}`.trim(),
+                tone: 'muted',
+              }
+            : null,
+        ].filter(Boolean) as NonNullable<ObsDisplayItem['badges']>,
+      }
+    })
   })
+
+  const hideWhenEmpty = computed(() => Boolean(data.settings.value.hideWhenEmpty))
+  const isEmpty = computed(() => !data.singing.value && data.activeSongs.value.length === 0)
 
   const footerTags = computed<ObsDisplayFooterTag[]>(() => {
     if (!data.settings.value.showRequireInfo) {
@@ -95,5 +115,7 @@ export function useLiveRequestObsView(currentId: MaybeRefOrGetter<string | numbe
     current,
     items,
     footerTags,
+    hideWhenEmpty,
+    isEmpty,
   }
 }

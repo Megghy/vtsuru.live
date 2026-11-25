@@ -134,6 +134,27 @@ function buildPreviewPayload(triggerType: TriggerType) {
           },
         },
       }
+    case TriggerType.SONG_REQUEST:
+    case TriggerType.SONG_START:
+      return {
+        event: { ...baseEvent, type: EventDataTypes.Message, msg: '打上花火' },
+        extra: {
+          song: {
+            id: 99999,
+            name: '打上花火',
+            author: 'DAOKO / 米津玄师',
+            requester: '测试观众',
+            requesterUid: 12345,
+            requesterOpenId: '1234567890',
+            source: '弹幕点歌',
+            price: 0,
+            isPriority: false,
+            keyShift: '+2',
+            queueCount: 3,
+            timestamp: Date.now(),
+          },
+        },
+      }
     default:
       return { event: baseEvent }
   }

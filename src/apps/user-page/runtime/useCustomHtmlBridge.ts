@@ -10,8 +10,8 @@ import { fetchPublicSongRequestState } from '@/apps/user-page/api'
 import type { CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
 import { getEnabledUserFunctions, USER_FEATURE_DEFINITIONS } from '@/apps/user-page/featureNavigation'
 import type { BiliProfile } from '@/apps/user-page/types'
+import { getSongRequestCooldownMs, setSongRequestCooldown } from '@/apps/user/pages/songListTemplate/utils/songRequestCooldown'
 import { canRequestSong } from '@/apps/user/pages/songListTemplate/utils/songRequestUtils'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import { useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -50,7 +50,6 @@ function createSongRequestAction(user: () => ResponseUserInfo, data: ReturnType<
   const account = useAccount(),
     auth = useBiliAuth(),
     message = useMessage()
-  const nextRequestTime = usePersistedStorage('SongList.NextRequestTime', new Date())
   const confirmation = createSongConfirmation()
   let activeRequest: ReturnType<typeof runRequest> | null = null
   let generation = 0
@@ -79,13 +78,14 @@ function createSongRequestAction(user: () => ResponseUserInfo, data: ReturnType<
     const [selected, state] = await Promise.all([data.findSong(params), fetchPublicSongRequestState(ownerId)])
     assertSession(ownerId, started)
     if (!selected) throw new Error('歌曲不存在')
+    const cooldownMs = getSongRequestCooldownMs(ownerId)
     const check = canRequestSong(
       selected,
       user(),
       state.setting,
       Boolean(account.value.id),
       auth.isAuthed,
-      nextRequestTime.value,
+      cooldownMs,
     )
     if (check.shouldCopyOnly) {
       await navigator.clipboard.writeText(`${state.setting?.orderPrefix ?? ''} ${selected.name}`.trim())
@@ -94,14 +94,14 @@ function createSongRequestAction(user: () => ResponseUserInfo, data: ReturnType<
       return { action: 'copied', message: check.reason }
     }
     if (!check.canRequest) throw new Error(check.reason)
-    if (Date.now() < nextRequestTime.value.getTime()) throw new Error('点歌冷却中')
+    if (cooldownMs !== undefined && Date.now() < cooldownMs) throw new Error('点歌冷却中')
     const approved = await confirmation.wait(selected)
     if (!approved) return { action: 'cancelled', message: '已取消点歌' }
     assertSession(ownerId, started)
     const requestOptions = auth.isAuthed ? { headers: Object.fromEntries(await auth.getBiliAuthHeaders()) } : undefined
     assertSession(ownerId, started)
     unwrapOk(await postApiLiveRequestAddFromWeb({ target: ownerId, song: selected.key }, requestOptions), '点歌失败')
-    nextRequestTime.value = new Date(Date.now() + 30_000)
+    setSongRequestCooldown(ownerId, 30)
     assertSession(ownerId, started)
     message.success('点歌成功')
     return { action: 'requested', message: '点歌成功' }

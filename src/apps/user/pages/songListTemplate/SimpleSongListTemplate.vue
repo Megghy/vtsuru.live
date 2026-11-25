@@ -1,5 +1,19 @@
 <script setup lang="ts">
-import { ExternalLink, Pin, Play, RotateCcw, Search, Shuffle, SlidersHorizontal } from 'lucide-vue-next'
+import {
+  CheckCircle2,
+  ExternalLink,
+  EyeOff,
+  Headphones,
+  Heart,
+  Pin,
+  Play,
+  RotateCcw,
+  Search,
+  Share2,
+  Shuffle,
+  SlidersHorizontal,
+  X,
+} from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -12,6 +26,7 @@ import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toast } from '@/shared/utils'
 import { getPlayableAudioUrl, getSongExternalLink } from '@/shared/utils/songMedia'
 
@@ -19,15 +34,19 @@ import SongOptionBadges from './components/SongOptionBadges.vue'
 import SongRandomDialog from './components/SongRandomDialog.vue'
 import SongRequestButton from './components/SongRequestButton.vue'
 import SongStatusBadge from './components/SongStatusBadge.vue'
+import SongTagChips from './components/SongTagChips.vue'
+import { canRequestSong, getSongRequestTooltip } from './utils/songRequestUtils'
 import { useProgressiveList } from './utils/useProgressiveList'
 import {
+  isNewSong,
   PUBLIC_OPTION_FILTER_ITEMS,
   PUBLIC_SORT_ITEMS,
   type SongListPublicOptionFilter,
   type SongListPublicSortKey,
   useSongListQueryState,
 } from './utils/useSongListQueryState'
-import { useFilterListKey, useSongListTemplateCore } from './utils/useSongListTemplateCore'
+import { useSongListTemplateCore } from './utils/useSongListTemplateCore'
+import { useSongPreviewPlayer } from './utils/useSongPreviewPlayer'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
@@ -52,17 +71,37 @@ const {
   selectedOption,
   sortKey,
   sortOrder,
+  hideDisabled,
+  onlyRequestable,
+  onlyFavorites,
+  onlyPlayable,
   artistOptions,
   languageOptions,
   tagOptions,
+  disabledCount,
+  playableCount,
+  favoriteCount,
+  isFavorite,
+  toggleFavorite,
   filteredSongs,
   hasFilters,
   clearFilters,
   pickRandomSong,
-} = useSongListQueryState(() => props.data)
+  copyShareLink,
+} = useSongListQueryState(() => props.data, {
+  ownerId: () => props.userInfo?.id,
+  canRequestPredicate: (song) =>
+    canRequestSong(
+      song,
+      props.userInfo,
+      props.liveRequestSettings,
+      requestAuthState.value.isLoggedIn,
+      requestAuthState.value.isBiliAuthed,
+    ).canRequest,
+})
 
-const selectedSong = ref<ResponseSongModel>()
-const isLrcLoading = ref<string>()
+const { previewSong, isLrcLoading, playSong, closePlayer, isShared: isSharedPlayer } = useSongPreviewPlayer()
+
 const mobileFiltersOpen = ref(false)
 const randomDialogOpen = ref(false)
 const randomSong = ref<ResponseSongModel | null>(null)
@@ -72,11 +111,6 @@ const showRequestQueue = computed(
   () => props.userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest) ?? false,
 )
 
-const { listKey } = useFilterListKey({
-  tag: selectedTag,
-  author: selectedArtist,
-  language: selectedLanguage,
-})
 const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
 
 function toggleTag(tag: string) {
@@ -131,6 +165,15 @@ function handleRandomPick() {
                 清除
               </Button>
               <Button
+                variant="ghost"
+                size="icon-xs"
+                class="text-muted-foreground"
+                aria-label="分享当前筛选"
+                @click="copyShareLink"
+              >
+                <Share2 class="size-3.5" />
+              </Button>
+              <Button
                 variant="secondary"
                 size="xs"
                 class="gap-1"
@@ -153,18 +196,79 @@ function handleRandomPick() {
           </header>
 
           <div class="relative w-full">
-            <Search class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               v-model="searchKeyword"
-              class="pl-8 w-full"
-              placeholder="搜索歌名、歌手或标签"
+              class="pl-8 pr-7 w-full"
+              placeholder="搜索歌名、拼音首字母、歌手或标签"
             />
+            <Button
+              v-if="searchKeyword"
+              type="button"
+              variant="ghost"
+              size="none"
+              class="size-5 rounded-full absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="清空搜索"
+              @click="searchKeyword = ''"
+            >
+              <X class="size-3" />
+            </Button>
           </div>
 
           <div
             class="space-y-3"
             :class="mobileFiltersOpen ? 'block' : 'hidden md:block'"
           >
+            <!-- 快捷状态过滤 -->
+            <div class="flex flex-wrap gap-1.5">
+              <Button
+                type="button"
+                :variant="onlyRequestable ? 'default' : 'outline'"
+                size="xs"
+                class="gap-1"
+                @click="onlyRequestable = !onlyRequestable"
+              >
+                <CheckCircle2 class="size-3" />
+                我当前可点
+              </Button>
+              <Button
+                v-if="favoriteCount > 0 || onlyFavorites"
+                type="button"
+                :variant="onlyFavorites ? 'default' : 'outline'"
+                size="xs"
+                class="gap-1"
+                @click="onlyFavorites = !onlyFavorites"
+              >
+                <Heart
+                  class="size-3"
+                  :class="{ 'fill-current': onlyFavorites }"
+                />
+                收藏 ({{ favoriteCount }})
+              </Button>
+              <Button
+                v-if="playableCount > 0"
+                type="button"
+                :variant="onlyPlayable ? 'secondary' : 'outline'"
+                size="xs"
+                class="gap-1"
+                @click="onlyPlayable = !onlyPlayable"
+              >
+                <Headphones class="size-3" />
+                可试听
+              </Button>
+              <Button
+                v-if="disabledCount > 0"
+                type="button"
+                :variant="hideDisabled ? 'secondary' : 'outline'"
+                size="xs"
+                class="gap-1"
+                @click="hideDisabled = !hideDisabled"
+              >
+                <EyeOff class="size-3" />
+                {{ hideDisabled ? '已隐藏暂不接歌' : `隐藏暂不接歌 (${disabledCount})` }}
+              </Button>
+            </div>
+
             <div class="space-y-2">
               <Select
                 :model-value="selectedArtist || 'all'"
@@ -260,20 +364,20 @@ function handleRandomPick() {
                 :key="tag"
                 :variant="selectedTag === tag ? 'default' : 'secondary'"
                 size="xs"
-                class="rounded-full font-normal"
+                class="rounded-full font-normal max-w-full"
                 :aria-pressed="selectedTag === tag"
                 @click="toggleTag(tag)"
               >
-                {{ tag }}
+                <span class="truncate">{{ tag }}</span>
               </Button>
             </div>
           </div>
 
           <SongPlayer
-            v-if="selectedSong"
+            v-if="!isSharedPlayer && previewSong"
             v-model:is-lrc-loading="isLrcLoading"
-            :song="selectedSong"
-            @close="selectedSong = undefined"
+            :song="previewSong"
+            @close="closePlayer"
           />
 
           <section
@@ -290,14 +394,12 @@ function handleRandomPick() {
       <main class="song-content min-w-0">
         <Empty
           v-if="filteredSongs.length === 0"
-          :key="`empty-${listKey}`"
           class="empty-state py-12"
           :description="data?.length ? '没有符合条件的歌曲' : '暂无曲目'"
         />
 
         <div
           v-else
-          :key="listKey"
           class="song-list space-y-4"
         >
           <div class="song-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -319,12 +421,29 @@ function handleRandomPick() {
                       v-if="item.isPinned"
                       class="size-3 text-primary shrink-0"
                     />
-                    <strong
-                      class="text-xs font-medium text-foreground block truncate"
-                      :title="item.name"
+                    <Tooltip :disabled="isSelf || Boolean(item.isDisabled)">
+                      <TooltipTrigger as-child>
+                        <button
+                          type="button"
+                          class="text-xs font-medium text-foreground hover:text-primary transition block truncate text-left cursor-pointer disabled:cursor-default disabled:hover:text-foreground"
+                          :title="item.name"
+                          :disabled="isSelf || Boolean(item.isDisabled)"
+                          @click="requestSong(item)"
+                        >
+                          {{ item.name }}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {{ getSongRequestTooltip(item, liveRequestSettings, requestAuthState) }}
+                      </TooltipContent>
+                    </Tooltip>
+                    <Badge
+                      v-if="isNewSong(item)"
+                      variant="brand"
+                      size="xs"
                     >
-                      {{ item.name }}
-                    </strong>
+                      NEW
+                    </Badge>
                   </div>
                   <small
                     v-if="item.translateName"
@@ -353,19 +472,21 @@ function handleRandomPick() {
 
               <div
                 v-if="item.author?.length"
-                class="author-list flex items-center gap-1.5 flex-wrap text-xs text-muted-foreground"
+                class="author-list flex items-center gap-1 flex-wrap text-xs text-muted-foreground"
               >
-                <button
+                <Button
                   v-for="author in item.author"
                   :key="author"
                   type="button"
-                  class="hover:text-primary transition cursor-pointer"
-                  :class="{ 'text-primary font-medium': selectedArtist === author }"
+                  variant="ghost"
+                  size="none"
+                  class="h-auto px-1 py-0.5 text-xs font-normal"
+                  :class="selectedArtist === author ? 'text-primary font-medium' : 'text-muted-foreground'"
                   :aria-pressed="selectedArtist === author"
                   @click="toggleAuthor(author)"
                 >
                   {{ author }}
-                </button>
+                </Button>
               </div>
 
               <p
@@ -382,31 +503,31 @@ function handleRandomPick() {
               />
 
               <footer class="flex-between gap-2 pt-2 border-t border-border/50 text-xs">
-                <div class="card-tags flex items-center gap-1 flex-wrap min-w-0">
-                  <button
-                    v-for="tag in (item.tags ?? []).slice(0, 3)"
-                    :key="tag"
-                    type="button"
-                    class="px-1.5 py-0.5 rounded text-[10px] transition cursor-pointer"
-                    :class="
-                      selectedTag === tag
-                        ? 'bg-primary text-primary-foreground font-medium'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    "
-                    :aria-pressed="selectedTag === tag"
-                    @click="toggleTag(tag)"
-                  >
-                    {{ tag }}
-                  </button>
-                  <small
-                    v-if="(item.tags?.length ?? 0) > 3"
-                    class="text-muted-foreground text-[10px]"
-                  >
-                    +{{ (item.tags?.length ?? 0) - 3 }}
-                  </small>
-                </div>
+                <SongTagChips
+                  :tags="item.tags"
+                  :languages="item.language"
+                  :selected-tag="selectedTag"
+                  :selected-language="selectedLanguage"
+                  :max-tags="3"
+                  :max-languages="1"
+                  @toggle-tag="toggleTag"
+                  @toggle-language="selectedLanguage = selectedLanguage === $event ? null : $event"
+                />
 
                 <div class="actions flex items-center gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="rounded-full"
+                    :class="isFavorite(item.key) ? 'text-rose-500' : 'text-muted-foreground'"
+                    :aria-label="isFavorite(item.key) ? `取消收藏《${item.name}》` : `收藏《${item.name}》`"
+                    @click="toggleFavorite(item.key)"
+                  >
+                    <Heart
+                      class="size-3.5"
+                      :class="{ 'fill-current': isFavorite(item.key) }"
+                    />
+                  </Button>
                   <Button
                     v-if="getPlayableAudioUrl(item)"
                     variant="ghost"
@@ -414,7 +535,7 @@ function handleRandomPick() {
                     class="rounded-full text-muted-foreground"
                     :aria-label="`试听《${item.name}》`"
                     :disabled="isLrcLoading === item.key"
-                    @click="selectedSong = item"
+                    @click="playSong(item)"
                   >
                     <Play class="size-3.5" />
                   </Button>
@@ -456,7 +577,7 @@ function handleRandomPick() {
               variant="outline"
               @click="loadMore"
             >
-              加载更多
+              加载更多 ({{ visibleItems.length }} / {{ filteredSongs.length }})
             </Button>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { computed } from 'vue'
 
 import type { ResponseSongModel, SettingSongRequest } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { getSongRequestTooltip } from '../utils/songRequestUtils'
 
@@ -49,28 +49,26 @@ const buttonSize = computed(() => {
 </script>
 
 <template>
-  <TooltipProvider v-if="!hidden">
-    <Tooltip>
-      <TooltipTrigger as-child>
-        <span class="inline-flex">
-          <Button
-            :variant="secondary ? 'secondary' : 'default'"
-            :size="buttonSize"
-            :class="[circle && !label ? 'rounded-full' : '']"
-            :disabled="isUnavailable || loading"
-            :aria-label="song.isDisabled ? `${song.name} 暂不接歌` : `点歌《${song.name}》`"
-            @click="emit('request', song)"
-          >
-            <component
-              :is="song.isDisabled ? Ban : Send"
-              class="size-3.5"
-              :class="{ 'mr-1': !!label }"
-            />
-            <span v-if="label">{{ song.isDisabled ? '暂不接歌' : label }}</span>
-          </Button>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{{ tooltip }}</TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+  <Tooltip v-if="!hidden">
+    <TooltipTrigger as-child>
+      <span class="inline-flex">
+        <Button
+          :variant="secondary ? 'secondary' : 'default'"
+          :size="buttonSize"
+          :class="[circle && !label ? 'rounded-full' : '']"
+          :disabled="isUnavailable || loading"
+          :aria-label="song.isDisabled ? `${song.name} 暂不接歌` : `点歌《${song.name}》`"
+          @click="emit('request', song)"
+        >
+          <component
+            :is="song.isDisabled ? Ban : Send"
+            class="size-3.5"
+            :class="{ 'mr-1': !!label }"
+          />
+          <span v-if="label">{{ song.isDisabled ? '暂不接歌' : label }}</span>
+        </Button>
+      </span>
+    </TooltipTrigger>
+    <TooltipContent>{{ tooltip }}</TooltipContent>
+  </Tooltip>
 </template>
