@@ -15,6 +15,7 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 
 import type { PaidReadFilter } from '../store/settings'
 import { useLiveDashboard } from '../store/useLiveDashboard'
@@ -50,6 +51,7 @@ function markAllRead() {
 <template>
   <PanelShell
     :title="panel === 'sc' ? '醒目留言' : '礼物'"
+    :panel-id="panel"
     :count="items.length"
     :unread="dashboard.unreadCounts[panel]"
     :blurred="blurred"
@@ -98,31 +100,34 @@ function markAllRead() {
         </PopoverContent>
       </Popover>
       <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button
-            variant="ghost"
-            :size="readFilterLabel ? 'xs' : 'icon-xs'"
-            :class="[readFilter !== 'all' ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground']"
-            aria-label="筛选已读状态"
-            :title="
-              readFilter === 'unread'
-                ? '仅显示未读'
-                : readFilter === 'read'
-                  ? '仅显示已读'
-                  : '已读筛选（当前显示全部，受全局隐藏已读影响）'
-            "
-          >
-            <component
-              :is="readFilter === 'unread' ? EyeOff : Eye"
-              class="size-3.5 shrink-0"
-            />
-            <span
-              v-if="readFilterLabel"
-              class="leading-none"
-              >{{ readFilterLabel }}</span
+        <SimpleTooltip
+          :content="
+            readFilter === 'unread'
+              ? '仅显示未读'
+              : readFilter === 'read'
+                ? '仅显示已读'
+                : '已读筛选（当前显示全部，受全局隐藏已读影响）'
+          "
+        >
+          <DropdownMenuTrigger as-child>
+            <Button
+              variant="ghost"
+              :size="readFilterLabel ? 'xs' : 'icon-xs'"
+              :class="[readFilter !== 'all' ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground']"
+              aria-label="筛选已读状态"
             >
-          </Button>
-        </DropdownMenuTrigger>
+              <component
+                :is="readFilter === 'unread' ? EyeOff : Eye"
+                class="size-3.5 shrink-0"
+              />
+              <span
+                v-if="readFilterLabel"
+                class="leading-none"
+                >{{ readFilterLabel }}</span
+              >
+            </Button>
+          </DropdownMenuTrigger>
+        </SimpleTooltip>
         <DropdownMenuContent align="end">
           <DropdownMenuRadioGroup v-model="readFilter">
             <DropdownMenuRadioItem value="all"> 全部 </DropdownMenuRadioItem>

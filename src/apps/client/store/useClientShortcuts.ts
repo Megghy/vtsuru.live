@@ -30,6 +30,8 @@ export type ClientShortcutActionType =
   | 'tts_toggle_pause'
   | 'song_request_finish_and_next'
   | 'song_request_start_next'
+  | 'music_request_toggle_play'
+  | 'music_request_next'
   | 'queue_finish_and_next_batch'
   | 'queue_next_batch'
 
@@ -61,8 +63,10 @@ export const CLIENT_SHORTCUT_ACTION_META: Record<
   gift_window_toggle: { label: '浮窗：开关礼物排行浮窗', group: '浮窗' },
   tts_skip_current: { label: '读弹幕：跳过当前播报', group: 'TTS' },
   tts_toggle_pause: { label: '读弹幕：暂停/恢复播报', group: 'TTS' },
-  song_request_finish_and_next: { label: '点歌：完成当前并切下一首', group: '点歌' },
-  song_request_start_next: { label: '点歌：开始演唱队首曲目', group: '点歌' },
+  song_request_finish_and_next: { label: '点播：完成当前并切下一首', group: '点歌' },
+  song_request_start_next: { label: '点播：开始演唱队首曲目', group: '点歌' },
+  music_request_toggle_play: { label: '点歌机：播放 / 暂停', group: '点歌' },
+  music_request_next: { label: '点歌机：切下一首', group: '点歌' },
   queue_finish_and_next_batch: { label: '排队：结束本局并拉下一队', group: '排队' },
   queue_next_batch: { label: '排队：拉下一队上车', group: '排队' },
 }
@@ -212,6 +216,18 @@ export const useClientShortcuts = defineStore('clientShortcuts', () => {
           return
         }
         await liveRequest.updateSongStatus(firstWaiting, SongRequestStatus.Singing)
+        return
+      }
+      case 'music_request_toggle_play': {
+        const { useMusicRequestProvider } = await import('@/store/useMusicRequest')
+        const store = useMusicRequestProvider()
+        store.togglePlay()
+        toast.info(store.isPlaying ? '点歌机已继续播放' : '点歌机已暂停')
+        return
+      }
+      case 'music_request_next': {
+        const { useMusicRequestProvider } = await import('@/store/useMusicRequest')
+        useMusicRequestProvider().nextMusic()
         return
       }
       case 'queue_finish_and_next_batch': {

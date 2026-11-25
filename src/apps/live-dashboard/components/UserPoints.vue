@@ -7,6 +7,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Spin } from '@/shared/ui/spin'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
@@ -72,12 +73,12 @@ async function give(sign: 1 | -1) {
         v-if="loading"
         class="h-3 w-3"
       />
-      <span
+      <SimpleTooltip
         v-else-if="error"
-        class="text-destructive truncate max-w-[200px]"
-        :title="error"
-        >{{ error }}</span
+        :content="error"
       >
+        <span class="text-destructive truncate max-w-[200px]">{{ error }}</span>
+      </SimpleTooltip>
       <span
         v-else
         class="font-semibold tabular-nums text-foreground"

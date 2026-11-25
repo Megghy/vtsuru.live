@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { isInBiliBlackList } from '@/api/account'
+import { isInBiliBlackList, useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
 import { EventDataTypes } from '@/api/generated/model'
 import { getApiVtsuruBlivechatEmoticon } from '@/api/generated/vtsuru/vtsuru'
+import { fetchRoomEmoticons } from '@/api/bili-extra'
 import * as constants from '@/apps/obs/components/blivechat/constants'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 import { getRichContent } from '@/apps/obs/components/blivechat/richContent'
@@ -46,6 +47,7 @@ const isOBS = computed(() => {
   return typeof window !== 'undefined' && window.obsstudio !== undefined
 })
 
+const accountInfo = useAccount()
 const effectiveConfig = useDanmujiConfig(props)
 useGoogleFont(computed(() => effectiveConfig.value.style.fontFamily || undefined))
 const effectiveCss = computed(() => props.customCss ?? buildDanmujiCss(effectiveConfig.value.style))
@@ -65,12 +67,12 @@ watch(
   { immediate: true },
 )
 
-let textEmoticons: { keyword: string; url: string }[] = []
+const textEmoticons = ref<{ keyword: string; url: string }[]>([])
 
 // 表情词典树计算
 const emoticonsTrie = computed(() => {
   const res = new trie.Trie<{ keyword: string; url: string }>()
-  for (const emoticons of [effectiveConfig.value.emoticons, textEmoticons]) {
+  for (const emoticons of [effectiveConfig.value.emoticons, textEmoticons.value]) {
     for (const emoticon of emoticons) {
       if (emoticon.keyword !== '' && emoticon.url !== '') {
         res.set(emoticon.keyword, emoticon)
@@ -428,14 +430,27 @@ onMounted(async () => {
     emit('ready')
   })
 
-  // 加载通用静态表情包
+  // 加载通用静态表情包 + 房间专属表情包
   try {
     const result = await getApiVtsuruBlivechatEmoticon()
     if (result.code === 200 && Array.isArray(result.data)) {
-      textEmoticons = result.data
+      textEmoticons.value = result.data
     }
   } catch (error) {
     console.error('加载表情包失败:', error)
+  }
+
+  const roomId = Number(accountInfo.value?.biliRoomId || 0)
+  if (roomId > 0) {
+    void fetchRoomEmoticons(roomId)
+      .then((res) => {
+        if (!res?.room) return
+        const extras = Object.entries(res.room).map(([keyword, url]) => ({ keyword, url }))
+        if (extras.length > 0) {
+          textEmoticons.value = [...textEmoticons.value, ...extras]
+        }
+      })
+      .catch(() => {})
   }
 
   // 预览模式：不建立真实弹幕连接、不拉取远端配置、不发系统消息、不轮询

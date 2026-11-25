@@ -43,6 +43,7 @@ import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { canUseVts, isClientWebDebug } from '@/shared/config'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -225,18 +226,20 @@ function refreshModels() {
               >
                 {{ vts.currentModelName || '未加载模型' }}
               </span>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                :disabled="refreshingModels"
-                title="刷新模型与热键状态"
-                @click="refreshModels"
-              >
-                <RefreshCw
-                  class="size-3.5"
-                  :class="refreshingModels ? 'animate-spin' : ''"
-                />
-              </Button>
+              <SimpleTooltip content="刷新模型与热键状态">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  :disabled="refreshingModels"
+                  aria-label="刷新模型与热键状态"
+                  @click="refreshModels"
+                >
+                  <RefreshCw
+                    class="size-3.5"
+                    :class="refreshingModels ? 'animate-spin' : ''"
+                  />
+                </Button>
+              </SimpleTooltip>
             </div>
 
             <Badge
@@ -282,32 +285,34 @@ function refreshModels() {
                 ({{ activeExpressionCount }})
               </span>
             </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              class="gap-1"
-              :title="vts.panicConfig.calibrateHotkeyId ? '触发校准热键' : '请先在「设置」中绑定校准热键'"
-              @click="
-                vts.panicConfig.calibrateHotkeyId ? run(() => vts.panicCalibrate(), '已校准') : (tab = 'settings')
-              "
-            >
-              <Crosshair class="size-3" />
-              校准
-            </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              class="gap-1"
-              :title="vts.panicConfig.resetPhysicsHotkeyId ? '触发重置物理热键' : '请先在「设置」中绑定重置物理热键'"
-              @click="
-                vts.panicConfig.resetPhysicsHotkeyId
-                  ? run(() => vts.panicResetPhysics(), '已重置物理')
-                  : (tab = 'settings')
-              "
-            >
-              <RotateCcw class="size-3" />
-              重置物理
-            </Button>
+            <SimpleTooltip :content="vts.panicConfig.calibrateHotkeyId ? '触发校准热键' : '请先在「设置」中绑定校准热键'">
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                @click="
+                  vts.panicConfig.calibrateHotkeyId ? run(() => vts.panicCalibrate(), '已校准') : (tab = 'settings')
+                "
+              >
+                <Crosshair class="size-3" />
+                校准
+              </Button>
+            </SimpleTooltip>
+            <SimpleTooltip :content="vts.panicConfig.resetPhysicsHotkeyId ? '触发重置物理热键' : '请先在「设置」中绑定重置物理热键'">
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                @click="
+                  vts.panicConfig.resetPhysicsHotkeyId
+                    ? run(() => vts.panicResetPhysics(), '已重置物理')
+                    : (tab = 'settings')
+                "
+              >
+                <RotateCcw class="size-3" />
+                重置物理
+              </Button>
+            </SimpleTooltip>
           </div>
         </CardContent>
       </Card>

@@ -42,6 +42,14 @@ const baseSettings: SettingSongRequest = {
   allowPointPriority: false,
   pointPriorityKeyword: '插队',
   pointPriorityCost: 100,
+  maxSongsPerUserInQueue: 0,
+  preventSameSongToday: false,
+  songCooldownMinute: 0,
+  autoClearOnLiveStart: false,
+  showAuthor: true,
+  showDescription: true,
+  showPrice: true,
+  hideWhenEmpty: false,
 }
 
 const streamer: ResponseUserInfo = {
@@ -69,6 +77,7 @@ function createSong(
     from: SongPlatform.Netease,
     url: '',
     tags: [],
+    aliases: [],
     createTime: 0,
     updateTime: 0,
     options: options

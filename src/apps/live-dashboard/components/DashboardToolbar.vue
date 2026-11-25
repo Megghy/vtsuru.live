@@ -3,6 +3,7 @@ import {
   BookmarkPlus,
   Cake,
   Check,
+  Clapperboard,
   Ellipsis,
   ExternalLink,
   Eye,
@@ -17,10 +18,11 @@ import {
   Settings,
   Shield,
   ShieldOff,
+  ShoppingBag,
   Sun,
   X,
 } from 'lucide-vue-next'
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import { CURRENT_HOST, isTauri } from '@/shared/config'
@@ -41,10 +43,11 @@ import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { SimpleTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 
 import { avatarUrl, formatDuration, formatPrice } from '../core/format'
+import { PANEL_META } from '../core/types'
 import { DEFAULT_TOOLBAR_ORDER, type ToolbarStatKey } from '../store/settings'
 import { useDashboardUi } from '../store/ui'
 import { useLiveDashboard } from '../store/useLiveDashboard'
@@ -53,6 +56,7 @@ import LayoutMenu from './LayoutMenu.vue'
 import SpeechStatusPill from './SpeechStatusPill.vue'
 
 const ClientLiveQuickControl = defineAsyncComponent(() => import('./ClientLiveQuickControl.vue'))
+const ClientAutoActionQuickControl = defineAsyncComponent(() => import('./ClientAutoActionQuickControl.vue'))
 
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
@@ -62,21 +66,47 @@ const stats = computed(() => dashboard.stats)
 const officialStats = computed(() => dashboard.officialStats)
 const client = computed(() => dashboard.client)
 const searchInputRef = ref<{ focus: () => void } | null>(null)
+const searchExpanded = ref(false)
 const reconnecting = ref(false)
+
+/** 客户端底部状态栏已展示的统计项，窄宽下默认去重 */
+const CLIENT_REDUNDANT_STATS: ReadonlySet<ToolbarStatKey> = new Set([
+  'onlineRank',
+  'totalLikes',
+  'watched',
+  'totalRevenue',
+])
 
 const activeToolbarKeys = computed({
   get() {
     const order = dashboard.settings.toolbarOrder || DEFAULT_TOOLBAR_ORDER
     const statsConfig = dashboard.settings.toolbarStats
-    return order.filter((key) => statsConfig[key])
+    const dedupe = inTauri && dashboard.settings.hideRedundantClientStats
+    return order.filter((key) => statsConfig[key] && (!dedupe || !CLIENT_REDUNDANT_STATS.has(key)))
   },
   set(newActiveKeys: ToolbarStatKey[]) {
-    const hiddenKeys = (dashboard.settings.toolbarOrder || DEFAULT_TOOLBAR_ORDER).filter(
-      (k) => !dashboard.settings.toolbarStats[k],
-    )
-    dashboard.settings.toolbarOrder = [...newActiveKeys, ...hiddenKeys]
+    const activeSet = new Set(newActiveKeys)
+    const restKeys = (dashboard.settings.toolbarOrder || DEFAULT_TOOLBAR_ORDER).filter((k) => !activeSet.has(k))
+    dashboard.settings.toolbarOrder = [...newActiveKeys, ...restKeys]
   },
 })
+
+async function expandSearch() {
+  searchExpanded.value = true
+  await nextTick()
+  searchInputRef.value?.focus()
+}
+
+function onSearchBlur() {
+  if (!dashboard.search) {
+    searchExpanded.value = false
+  }
+}
+
+function clearAndCollapseSearch() {
+  dashboard.search = ''
+  searchExpanded.value = false
+}
 
 function formatStatCount(num: number | null | undefined): string {
   if (!num || num <= 0) return '0'
@@ -88,7 +118,7 @@ function formatStatCount(num: number | null | undefined): string {
 
 watch(
   () => ui.searchFocusTick,
-  () => searchInputRef.value?.focus(),
+  () => void expandSearch(),
 )
 
 const statusColor = computed(() => {
@@ -161,6 +191,18 @@ function onStatsWheel(e: WheelEvent) {
 
 const hasMoreMenuActiveState = computed(() => dashboard.settings.hideRead || privacyMode.value)
 
+const visiblePanelCount = computed(() => {
+  const layout = dashboard.settings.layout
+  return layout.order.filter((id) => !layout.hidden.includes(id) && (inTauri || !PANEL_META[id].clientOnly)).length
+})
+
+function openRedeemPanel() {
+  const layout = dashboard.settings.layout
+  if (layout.hidden.includes('point_redeem')) {
+    layout.hidden = layout.hidden.filter((id) => id !== 'point_redeem')
+  }
+}
+
 const SEARCH_HELP = [
   'type:superchat,gift,toast,message,enter,follow,like',
   'uid:12345  username:名字  message:内容  medal:勋章  note:备注',
@@ -171,10 +213,29 @@ const SEARCH_HELP = [
 
 <template>
   <header
-    class="relative flex items-center gap-2 h-11 px-2.5 border-b border-border bg-card shrink-0 min-w-0 text-sm"
+    class="relative flex items-center gap-1.5 h-10 px-2 border-b border-border bg-card shrink-0 min-w-0 text-sm"
   >
     <div class="flex items-center gap-1 shrink-0">
-      <div class="relative w-[136px] xl:w-[176px]">
+      <!-- 窄屏未搜索时收敛为图标按钮，点击或 Ctrl+F 展开；宽屏常驻输入框 -->
+      <SimpleTooltip
+        v-if="!searchExpanded && !dashboard.search"
+        content="搜索事件 (Ctrl+F)"
+      >
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          class="xl:hidden text-muted-foreground hover:text-foreground shrink-0"
+          aria-label="搜索事件 (Ctrl+F)"
+          @click="expandSearch"
+        >
+          <Search class="size-3.5" />
+        </Button>
+      </SimpleTooltip>
+
+      <div
+        class="relative"
+        :class="searchExpanded || dashboard.search ? 'w-[148px] xl:w-[176px]' : 'hidden xl:block xl:w-[176px]'"
+      >
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
@@ -197,6 +258,8 @@ const SEARCH_HELP = [
           v-model="dashboard.search"
           placeholder="搜索（Ctrl+F）"
           class="pl-8 pr-6"
+          @blur="onSearchBlur"
+          @keydown.esc="clearAndCollapseSearch"
         />
 
         <Button
@@ -205,7 +268,7 @@ const SEARCH_HELP = [
           size="none"
           class="absolute right-1 top-1/2 -translate-y-1/2 size-5 text-muted-foreground"
           aria-label="清除搜索"
-          @click="dashboard.search = ''"
+          @click="clearAndCollapseSearch"
         >
           <X class="size-3" />
         </Button>
@@ -213,25 +276,26 @@ const SEARCH_HELP = [
 
       <!-- 历史筛选：Popover 按钮 -->
       <Popover>
-        <PopoverTrigger as-child>
-          <Button
-            size="xs"
-            :variant="range ? 'default' : 'ghost'"
-            :class="range ? 'gap-1 px-2' : 'gap-1 px-1.5 text-muted-foreground hover:text-foreground'"
-            aria-label="历史事件回溯筛选"
-            title="历史事件回溯筛选"
-          >
-            <History class="size-3.5" />
-            <span :class="range ? 'hidden sm:inline' : 'hidden 2xl:inline'">
-              {{ range ? '已选历史' : '历史回溯' }}
-            </span>
-            <X
-              v-if="range"
-              class="size-3 ml-0.5 hover:text-destructive"
-              @click.stop="range = null"
-            />
-          </Button>
-        </PopoverTrigger>
+        <SimpleTooltip content="历史事件回溯筛选">
+          <PopoverTrigger as-child>
+            <Button
+              size="xs"
+              :variant="range ? 'default' : 'ghost'"
+              :class="range ? 'gap-1 px-2' : 'gap-1 px-1.5 text-muted-foreground hover:text-foreground'"
+              aria-label="历史事件回溯筛选"
+            >
+              <History class="size-3.5" />
+              <span :class="range ? 'hidden sm:inline' : 'hidden 2xl:inline'">
+                {{ range ? '已选历史' : '历史回溯' }}
+              </span>
+              <X
+                v-if="range"
+                class="size-3 ml-0.5 hover:text-destructive"
+                @click.stop="range = null"
+              />
+            </Button>
+          </PopoverTrigger>
+        </SimpleTooltip>
 
         <PopoverContent
           align="start"
@@ -373,86 +437,92 @@ const SEARCH_HELP = [
         </div>
 
         <!-- 在线观众 -->
-        <div
+        <SimpleTooltip
           v-else-if="key === 'onlineRank'"
-          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
-          :title="
+          :content="
             officialStats.onlineRank !== null
               ? '在线高能观众数（每 15 秒更新或实时推送）'
               : '未获取时显示近 20 分钟互动去重用户数'
           "
         >
-          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">在线观众</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
-            officialStats.onlineRankText ||
-            (officialStats.onlineRank !== null ? officialStats.onlineRank : stats.onlineCount)
-          }}</span>
-        </div>
+          <div class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing">
+            <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">在线观众</span>
+            <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+              officialStats.onlineRankText ||
+              (officialStats.onlineRank !== null ? officialStats.onlineRank : stats.onlineCount)
+            }}</span>
+          </div>
+        </SimpleTooltip>
 
         <!-- 本场点赞 -->
-        <div
+        <SimpleTooltip
           v-else-if="key === 'totalLikes'"
-          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
-          :title="
+          :content="
             officialStats.totalLikes !== null
               ? `本场累计总点赞数：${officialStats.totalLikes}（会话接收点赞：${stats.counters.like}）`
               : '会话内收到的点赞数'
           "
         >
-          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">本场点赞</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
-            officialStats.totalLikes !== null ? formatStatCount(officialStats.totalLikes) : stats.counters.like
-          }}</span>
-        </div>
+          <div class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing">
+            <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">本场点赞</span>
+            <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+              officialStats.totalLikes !== null ? formatStatCount(officialStats.totalLikes) : stats.counters.like
+            }}</span>
+          </div>
+        </SimpleTooltip>
 
         <!-- 累计看过 -->
-        <div
+        <SimpleTooltip
           v-else-if="key === 'watched'"
-          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
-          title="累计观看人次"
+          content="累计观看人次"
         >
-          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">累计看过</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
-            officialStats.watchedText ||
-            (officialStats.watchedCount !== null ? formatStatCount(officialStats.watchedCount) : '暂无')
-          }}</span>
-        </div>
+          <div class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing">
+            <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">累计看过</span>
+            <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+              officialStats.watchedText ||
+              (officialStats.watchedCount !== null ? formatStatCount(officialStats.watchedCount) : '暂无')
+            }}</span>
+          </div>
+        </SimpleTooltip>
 
         <!-- 人气值 -->
-        <div
+        <SimpleTooltip
           v-else-if="key === 'popularity'"
-          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
-          title="直播间热度值"
+          content="直播间热度值"
         >
-          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">人气</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
-            officialStats.popularity ?? dashboard.officialOnline ?? '暂无'
-          }}</span>
-        </div>
+          <div class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing">
+            <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">人气</span>
+            <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+              officialStats.popularity ?? dashboard.officialOnline ?? '暂无'
+            }}</span>
+          </div>
+        </SimpleTooltip>
 
         <!-- 近 20 分钟互动 -->
-        <div
+        <SimpleTooltip
           v-else-if="key === 'activeUsers'"
-          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
-          title="最近 20 分钟内收到互动事件的去重用户数"
+          content="最近 20 分钟内收到互动事件的去重用户数"
         >
-          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">近 20 分钟互动</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
-            stats.onlineCount
-          }}</span>
-        </div>
+          <div class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing">
+            <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">近 20 分钟互动</span>
+            <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+              stats.onlineCount
+            }}</span>
+          </div>
+        </SimpleTooltip>
 
         <!-- 总收益 -->
-        <div
+        <SimpleTooltip
           v-else-if="key === 'totalRevenue'"
-          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
-          title="本场礼物、SC 与大航海汇总"
+          content="本场礼物、SC 与大航海汇总"
         >
-          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">总收益</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
-            formatPrice(stats.totals.totalRevenue)
-          }}</span>
-        </div>
+          <div class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing">
+            <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">总收益</span>
+            <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+              formatPrice(stats.totals.totalRevenue)
+            }}</span>
+          </div>
+        </SimpleTooltip>
 
         <!-- 醒目留言 -->
         <div
@@ -499,83 +569,130 @@ const SEARCH_HELP = [
         </div>
 
         <!-- 盲盒盈亏 -->
-        <div
+        <SimpleTooltip
           v-else-if="key === 'mysteryBox'"
-          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
-          :title="`共 ${stats.totals.mysteryBoxCount} 个盲盒｜投入 ${formatPrice(stats.totals.mysteryBoxCost)} → 爆出 ${formatPrice(stats.totals.mysteryBoxValue)}`"
+          :content="`共 ${stats.totals.mysteryBoxCount} 个盲盒｜投入 ${formatPrice(stats.totals.mysteryBoxCost)} → 爆出 ${formatPrice(stats.totals.mysteryBoxValue)}`"
         >
-          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">盲盒盈亏</span>
-          <span
-            class="text-xs font-semibold whitespace-nowrap [font-feature-settings:'tnum']"
-            :class="
-              stats.totals.mysteryBoxProfit > 0
-                ? 'text-emerald-500'
-                : stats.totals.mysteryBoxProfit < 0
-                  ? 'text-rose-500'
-                  : 'text-foreground'
-            "
-          >
-            {{ stats.totals.mysteryBoxProfit >= 0 ? '+' : '-'
-            }}{{ formatPrice(Math.abs(stats.totals.mysteryBoxProfit)) }}
-          </span>
-        </div>
+          <div class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing">
+            <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">盲盒盈亏</span>
+            <span
+              class="text-xs font-semibold whitespace-nowrap [font-feature-settings:'tnum']"
+              :class="
+                stats.totals.mysteryBoxProfit > 0
+                  ? 'text-emerald-500'
+                  : stats.totals.mysteryBoxProfit < 0
+                    ? 'text-rose-500'
+                    : 'text-foreground'
+              "
+            >
+              {{ stats.totals.mysteryBoxProfit >= 0 ? '+' : '-'
+              }}{{ formatPrice(Math.abs(stats.totals.mysteryBoxProfit)) }}
+            </span>
+          </div>
+        </SimpleTooltip>
 
         <!-- Top Payers（单节点包裹，避免 Sortable 索引错位） -->
         <div
           v-else-if="key === 'topPayers'"
           class="flex items-center gap-1 shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
-          <div
+          <SimpleTooltip
             v-for="payer in stats.topPayers"
             :key="payer.userKey"
-            class="flex items-center gap-1.5 py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0"
-            :title="payer.uname"
+            :content="payer.uname"
           >
-            <img
-              v-if="payer.uface"
-              class="size-[22px] rounded-full shrink-0"
-              :src="avatarUrl(payer.uface, 48)"
-              referrerpolicy="no-referrer"
-            />
-            <div class="flex flex-col min-w-0">
-              <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap max-w-20 truncate">{{
-                payer.uname
-              }}</span>
-              <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
-                formatPrice(payer.total)
-              }}</span>
+            <div class="flex items-center gap-1.5 py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0">
+              <img
+                v-if="payer.uface"
+                class="size-[22px] rounded-full shrink-0"
+                :src="avatarUrl(payer.uface, 48)"
+                referrerpolicy="no-referrer"
+              />
+              <div class="flex flex-col min-w-0">
+                <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap max-w-20 truncate">{{
+                  payer.uname
+                }}</span>
+                <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+                  formatPrice(payer.total)
+                }}</span>
+              </div>
             </div>
-          </div>
+          </SimpleTooltip>
         </div>
       </template>
     </VueDraggable>
 
     <div class="flex items-center gap-1 shrink-0">
       <ClientLiveQuickControl v-if="inTauri" />
+      <ClientAutoActionQuickControl v-if="inTauri" />
+      <TooltipProvider
+        v-if="inTauri"
+        :delay-duration="300"
+      >
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="xs"
+              :variant="dashboard.settings.streamDeckOpen ? 'secondary' : 'ghost'"
+              :class="dashboard.settings.streamDeckOpen ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground hover:text-foreground gap-1 px-1.5'"
+              aria-label="演播快捷板"
+              @click="dashboard.settings.streamDeckOpen = !dashboard.settings.streamDeckOpen"
+            >
+              <Clapperboard class="size-3.5" />
+              <span class="hidden 2xl:inline">快捷板</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {{ dashboard.settings.streamDeckOpen ? '收起演播快捷板' : '展开自定义演播快捷板（VTS / OBS / 切片 / 场控）' }}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <SpeechStatusPill />
 
-      <Popover>
-        <PopoverTrigger as-child>
-          <Button
-            variant="ghost"
-            :size="dashboard.markers.length > 0 ? 'xs' : 'icon-xs'"
-            :class="dashboard.markers.length > 0 ? 'gap-1 px-1.5' : '2xl:w-auto 2xl:px-2 2xl:gap-1'"
-            class="text-muted-foreground hover:text-foreground"
-            aria-label="高光打点"
-            title="高光打点 (Alt+M)"
-          >
-            <BookmarkPlus class="size-3.5" />
-            <span class="hidden 2xl:inline">打点</span>
-            <Badge
-              v-if="dashboard.markers.length > 0"
+      <TooltipProvider
+        v-if="ui.pendingRedeemCount > 0"
+        :delay-duration="300"
+      >
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
               size="xs"
-              variant="secondary"
-              class="px-1 tabular-nums"
+              class="gap-1 px-1.5 text-amber-600 dark:text-amber-400"
+              aria-label="待核销积分订单"
+              @click="openRedeemPanel"
             >
-              {{ dashboard.markers.length }}
-            </Badge>
-          </Button>
-        </PopoverTrigger>
+              <ShoppingBag class="size-3.5" />
+              <span class="tabular-nums text-[11px]">{{ ui.pendingRedeemCount }}</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>有 {{ ui.pendingRedeemCount }} 条待核销积分订单，点击打开核销栏位</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <Popover>
+        <SimpleTooltip content="高光打点 (Alt+M)">
+          <PopoverTrigger as-child>
+            <Button
+              variant="ghost"
+              :size="dashboard.markers.length > 0 ? 'xs' : 'icon-xs'"
+              :class="dashboard.markers.length > 0 ? 'gap-1 px-1.5' : '2xl:w-auto 2xl:px-2 2xl:gap-1'"
+              class="text-muted-foreground hover:text-foreground"
+              aria-label="高光打点"
+            >
+              <BookmarkPlus class="size-3.5" />
+              <span class="hidden 2xl:inline">打点</span>
+              <Badge
+                v-if="dashboard.markers.length > 0"
+                size="xs"
+                variant="secondary"
+                class="px-1 tabular-nums"
+              >
+                {{ dashboard.markers.length }}
+              </Badge>
+            </Button>
+          </PopoverTrigger>
+        </SimpleTooltip>
         <PopoverContent
           align="end"
           class="w-72 p-3 space-y-2.5 text-xs"
@@ -673,8 +790,11 @@ const SEARCH_HELP = [
         @click="togglePrivacyMode"
       />
 
-      <!-- 弹幕连接状态与重连二合一 -->
-      <TooltipProvider :delay-duration="300">
+      <!-- 弹幕连接状态与重连二合一：客户端已由底栏展示正常状态，仅异常/重连时在顶栏显式提示 -->
+      <TooltipProvider
+        v-if="!inTauri || reconnecting || (client.phase !== 'connected' && !client.hasRemoteSource)"
+        :delay-duration="300"
+      >
         <Tooltip>
           <TooltipTrigger as-child>
             <Button
@@ -715,16 +835,26 @@ const SEARCH_HELP = [
       />
 
       <Popover>
-        <PopoverTrigger as-child>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            aria-label="面板布局"
-            title="面板布局"
-          >
-            <LayoutGrid class="size-3.5 text-muted-foreground" />
-          </Button>
-        </PopoverTrigger>
+        <SimpleTooltip content="切换显示栏位、场景预设与排列顺序">
+          <PopoverTrigger as-child>
+            <Button
+              variant="outline"
+              size="xs"
+              class="gap-1.5 px-2 shrink-0"
+              aria-label="调整栏位与场景预设"
+            >
+              <LayoutGrid class="size-3.5 text-primary" />
+              <span>栏位</span>
+              <Badge
+                variant="secondary"
+                size="xs"
+                class="px-1 tabular-nums"
+              >
+                {{ visiblePanelCount }}
+              </Badge>
+            </Button>
+          </PopoverTrigger>
+        </SimpleTooltip>
         <PopoverContent
           align="end"
           class="p-2 w-auto"
@@ -740,21 +870,22 @@ const SEARCH_HELP = [
       />
 
       <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            class="relative text-muted-foreground hover:text-foreground"
-            aria-label="更多操作"
-            title="更多操作"
-          >
-            <Ellipsis class="size-3.5" />
-            <span
-              v-if="hasMoreMenuActiveState"
-              class="absolute top-1 right-1 size-1.5 rounded-full bg-primary"
-            />
-          </Button>
-        </DropdownMenuTrigger>
+        <SimpleTooltip content="更多操作">
+          <DropdownMenuTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="relative text-muted-foreground hover:text-foreground"
+              aria-label="更多操作"
+            >
+              <Ellipsis class="size-3.5" />
+              <span
+                v-if="hasMoreMenuActiveState"
+                class="absolute top-1 right-1 size-1.5 rounded-full bg-primary"
+              />
+            </Button>
+          </DropdownMenuTrigger>
+        </SimpleTooltip>
         <DropdownMenuContent
           align="end"
           class="w-52"

@@ -87,6 +87,10 @@ const actionTypeOptions = [
   { label: 'OBS：控制源显隐', value: ActionType.OBS_SOURCE_VISIBLE },
   { label: 'OBS：控制滤镜开关', value: ActionType.OBS_FILTER_ENABLED },
   { label: 'OBS：保存高光回放', value: ActionType.OBS_SAVE_REPLAY },
+  { label: 'B 站场控：禁言触发用户', value: ActionType.BAN_USER },
+  { label: 'B 站动态：发布动态', value: ActionType.PUBLISH_DYNAMIC },
+  { label: 'B 站动态：删除开播动态', value: ActionType.DELETE_LIVE_DYNAMIC },
+  { label: '直播流：保存高能回溯切片', value: ActionType.SAVE_STREAM_CLIP },
 ]
 
 const priorityOptions = [

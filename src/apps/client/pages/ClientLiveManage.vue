@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { Monitor, Radio } from 'lucide-vue-next'
+import { Monitor, Radio, Scissors, Send, Shield, Sparkles } from 'lucide-vue-next'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
+import BiliDynamicPanel from '@/apps/client/components/live-manage/BiliDynamicPanel.vue'
 import FaceAuthModal from '@/apps/client/components/live-manage/FaceAuthModal.vue'
 import LiveControlPanel from '@/apps/client/components/live-manage/LiveControlPanel.vue'
 import LivePreflightPanel from '@/apps/client/components/live-manage/LivePreflightPanel.vue'
 import LiveStreamInfo from '@/apps/client/components/live-manage/LiveStreamInfo.vue'
 import ObsControlPanel from '@/apps/client/components/live-manage/ObsControlPanel.vue'
+import RoomModerationPanel from '@/apps/client/components/live-manage/RoomModerationPanel.vue'
+import StreamReplayClipPanel from '@/apps/client/components/live-manage/StreamReplayClipPanel.vue'
+import TianxuanPanel from '@/apps/client/components/live-manage/TianxuanPanel.vue'
 import type { CheckTarget } from '@/apps/client/components/live-manage/preflight'
 import { useLiveControl } from '@/apps/client/composables/useLiveControl'
 import { useLivePreflight } from '@/apps/client/composables/useLivePreflight'
@@ -89,7 +93,7 @@ async function navigateCheck(target: CheckTarget) {
         v-model="activeTab"
         class="w-full"
       >
-        <TabsList class="grid w-full max-w-xs grid-cols-2">
+        <TabsList class="inline-flex flex-wrap gap-1">
           <TabsTrigger
             value="control"
             class="gap-1.5"
@@ -103,6 +107,34 @@ async function navigateCheck(target: CheckTarget) {
           >
             <Monitor class="size-3.5" />
             OBS 与统计
+          </TabsTrigger>
+          <TabsTrigger
+            value="moderation"
+            class="gap-1.5"
+          >
+            <Shield class="size-3.5" />
+            场控与房管
+          </TabsTrigger>
+          <TabsTrigger
+            value="dynamic"
+            class="gap-1.5"
+          >
+            <Send class="size-3.5" />
+            动态与联动
+          </TabsTrigger>
+          <TabsTrigger
+            value="tianxuan"
+            class="gap-1.5"
+          >
+            <Sparkles class="size-3.5" />
+            天选时刻
+          </TabsTrigger>
+          <TabsTrigger
+            value="clip"
+            class="gap-1.5"
+          >
+            <Scissors class="size-3.5" />
+            高光切片
           </TabsTrigger>
         </TabsList>
 
@@ -119,6 +151,34 @@ async function navigateCheck(target: CheckTarget) {
           class="pt-3 client-readable"
         >
           <ObsControlPanel :control="control" />
+        </TabsContent>
+
+        <TabsContent
+          value="moderation"
+          class="pt-3 client-readable"
+        >
+          <RoomModerationPanel />
+        </TabsContent>
+
+        <TabsContent
+          value="dynamic"
+          class="pt-3 client-readable"
+        >
+          <BiliDynamicPanel />
+        </TabsContent>
+
+        <TabsContent
+          value="tianxuan"
+          class="pt-3 client-readable"
+        >
+          <TianxuanPanel />
+        </TabsContent>
+
+        <TabsContent
+          value="clip"
+          class="pt-3 client-readable"
+        >
+          <StreamReplayClipPanel />
         </TabsContent>
       </Tabs>
     </div>

@@ -99,7 +99,7 @@ export const postApiAssistantActionsIdSchedule = async (
   return vtsuruMutator<ResponseResultOfAssistantProposalDto>(getPostApiAssistantActionsIdScheduleUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(assistantScheduleRequest),
   })
 }
@@ -133,7 +133,7 @@ export const postApiAssistantActionsIdUpdate = async (
   return vtsuruMutator<ResponseResultOfAssistantProposalDto>(getPostApiAssistantActionsIdUpdateUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(assistantUpdateRequest),
   })
 }
@@ -233,7 +233,7 @@ export const postApiAssistantConversationsIdRename = async (
   return vtsuruMutator<ResponseResult>(getPostApiAssistantConversationsIdRenameUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(assistantConversationRenameRequest),
   })
 }
@@ -282,7 +282,7 @@ export const postApiAssistantMessage = async (
   return vtsuruMutator<void>(getPostApiAssistantMessageUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(assistantMessageRequest),
   })
 }

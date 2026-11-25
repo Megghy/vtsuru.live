@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HelpCircle, Layers, LayoutGrid, List } from 'lucide-vue-next'
+import { Activity, HelpCircle, Layers, LayoutGrid, List } from 'lucide-vue-next'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, defineAsyncComponent } from 'vue'
 
@@ -7,6 +7,7 @@ import { isTauri } from '@/shared/config'
 
 import { useLiveDashboard } from '../store/useLiveDashboard'
 import CardModeGrid from './CardModeGrid.vue'
+import DanmakuPulseBar from './DanmakuPulseBar.vue'
 import DanmakuRow from './DanmakuRow.vue'
 import EventList from './EventList.vue'
 import IconAction from './IconAction.vue'
@@ -31,10 +32,17 @@ function onResized({ panes }: { panes: { size: number }[] }) {
 <template>
   <PanelShell
     title="弹幕"
+    panel-id="danmaku"
     :count="dashboard.danmakuList.length"
     :blurred="blurred"
   >
     <template #actions>
+      <IconAction
+        :icon="Activity"
+        :tip="dashboard.settings.showDanmakuPulse ? '隐藏顶部热度折线与热词条' : '显示顶部热度折线与热词条'"
+        :active="dashboard.settings.showDanmakuPulse"
+        @click="dashboard.settings.showDanmakuPulse = !dashboard.settings.showDanmakuPulse"
+      />
       <IconAction
         :icon="HelpCircle"
         :tip="dashboard.questionOnly ? '当前仅看提问/提及，点击恢复全部' : '仅看提问 / @提及弹幕'"
@@ -56,6 +64,7 @@ function onResized({ panes }: { panes: { size: number }[] }) {
       />
     </template>
     <div class="flex flex-col h-full min-h-0">
+      <DanmakuPulseBar v-if="dashboard.settings.showDanmakuPulse" />
       <Splitpanes
         horizontal
         class="dash-split flex-1 min-h-0"

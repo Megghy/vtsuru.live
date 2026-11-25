@@ -53,7 +53,7 @@ export const postApiVoteCreate = async (
   return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestCreateBulletVote),
   })
 }
@@ -131,7 +131,7 @@ export const postApiVoteExtend = async (
   return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteExtendUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestExtendVote),
   })
 }
@@ -211,7 +211,7 @@ export const postApiVoteMergeOption = async (
   return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteMergeOptionUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestMergeVoteOption),
   })
 }
@@ -302,7 +302,7 @@ export const postApiVoteRemoveOption = async (
   return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteRemoveOptionUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestRemoveVoteOption),
   })
 }
@@ -345,7 +345,7 @@ export const postApiVoteSaveConfig = async (
   return vtsuruMutator<ResponseResult>(getPostApiVoteSaveConfigUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(voteConfig),
   })
 }
@@ -375,7 +375,7 @@ export const postApiVoteTiebreakDraw = async (
   return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteTiebreakDrawUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestTiebreakDraw),
   })
 }
@@ -405,7 +405,7 @@ export const postApiVoteTiebreakOvertime = async (
   return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteTiebreakOvertimeUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestTiebreakOvertime),
   })
 }
@@ -435,7 +435,7 @@ export const postApiVoteTryVote = async (
   return vtsuruMutator<ResponseResultOfResponseVoteSession>(getPostApiVoteTryVoteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestProcessVoteEvent),
   })
 }

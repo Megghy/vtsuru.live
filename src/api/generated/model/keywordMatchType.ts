@@ -10,4 +10,5 @@ export enum KeywordMatchType {
   Full = 0,
   Contains = 1,
   Regex = 2,
+  Prefix = 3,
 }

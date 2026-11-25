@@ -91,7 +91,7 @@ export const postApiForumCreate = async (
   return vtsuruMutator<ResponseResultOfResponseForumModel>(getPostApiForumCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestCreateForum),
   })
 }
@@ -586,7 +586,7 @@ export const postApiForumManageUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiForumManageUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(forumSetting),
   })
 }
@@ -616,7 +616,7 @@ export const postApiForumPostComment = async (
   return vtsuruMutator<ResponseResultOfResponseForumCommentBaseModel>(getPostApiForumPostCommentUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPostComment),
   })
 }
@@ -646,7 +646,7 @@ export const postApiForumPostReply = async (
   return vtsuruMutator<ResponseResultOfResponseForumCommentReplyBaseModel>(getPostApiForumPostReplyUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPostReply),
   })
 }
@@ -676,7 +676,7 @@ export const postApiForumPostTopic = async (
   return vtsuruMutator<ResponseResultOfResponseForumTopicModel>(getPostApiForumPostTopicUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPostTopic),
   })
 }
@@ -706,7 +706,7 @@ export const postApiForumUpdate = async (
   return vtsuruMutator<ResponseResult>(getPostApiForumUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestCreateForum),
   })
 }

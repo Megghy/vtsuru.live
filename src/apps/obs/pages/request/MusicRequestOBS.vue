@@ -62,7 +62,13 @@ const panelComponent = computed(() => {
   }
 })
 
-const { title, countText, current, items, footerTags, update, applySnapshot } = useMusicRequestObsView(currentId)
+const { title, countText, current, items, footerTags, hideWhenEmpty, isEmpty, update, applySnapshot } =
+  useMusicRequestObsView(currentId)
+
+const shouldHide = computed(() => {
+  if (props.id !== undefined) return false
+  return hideWhenEmpty.value && isEmpty.value
+})
 
 const obsNotification = useOBSNotification()
 const { on } = useObsRealtimeSync({
@@ -87,6 +93,7 @@ onMounted(() => {
 <template>
   <component
     :is="panelComponent"
+    v-if="!shouldHide"
     :title="title"
     :count-text="countText"
     :current="current"

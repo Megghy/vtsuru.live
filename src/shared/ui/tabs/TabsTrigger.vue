@@ -25,10 +25,10 @@ const delegatedProps = reactiveOmit(props, 'class', 'size')
 const forwardedProps = useForwardProps(delegatedProps)
 
 const sizeClasses: Record<string, string> = {
-  default: 'h-full px-3 text-sm',
-  sm: 'h-full px-2.5 text-xs',
-  xs: 'h-full px-2 text-xs',
-  lg: 'h-full px-4 text-base',
+  default: 'h-full min-h-7 py-1 px-3 text-sm',
+  sm: 'h-full min-h-7 py-1 px-2.5 text-xs',
+  xs: 'h-full min-h-6 py-0.5 px-2 text-xs',
+  lg: 'h-full min-h-8 py-1.5 px-4 text-base',
 }
 </script>
 
@@ -37,7 +37,7 @@ const sizeClasses: Record<string, string> = {
     v-bind="forwardedProps"
     :class="
       cn(
-        'inline-flex-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0',
         sizeClasses[resolvedSize] || sizeClasses.default,
         props.class,
       )

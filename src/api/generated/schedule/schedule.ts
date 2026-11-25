@@ -46,7 +46,7 @@ export const postApiScheduleAddBatch = async (
   return vtsuruMutator<ResponseResult>(getPostApiScheduleAddBatchUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestAddBatchScheduleModel),
   })
 }
@@ -139,7 +139,7 @@ export const postApiScheduleCopy = async (
   return vtsuruMutator<ResponseResultOfResponseScheduleModel>(getPostApiScheduleCopyUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestCopyScheduleModel),
   })
 }
@@ -241,7 +241,7 @@ export const postApiScheduleUpdate = async (
   return vtsuruMutator<ResponseResultOfResponseScheduleModel>(getPostApiScheduleUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestUpdateScheduleModel),
   })
 }

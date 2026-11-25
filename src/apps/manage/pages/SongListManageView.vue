@@ -2,7 +2,7 @@
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { GitMerge, MoreHorizontal, Sparkles } from 'lucide-vue-next'
+import { Download, GitMerge, MoreHorizontal, Sparkles } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -11,6 +11,8 @@ import type { AddSongModel, ResponseSongModel } from '@/api/generated/model'
 import { FunctionTypes, SongPlatform } from '@/api/generated/model'
 import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import { postApiSongListUpsertBatch } from '@/api/songRequestExtras'
+import type { BiliCollectionVideoItem } from '@/api/bili-extra'
+import BiliCollectionImportDialog from '@/apps/manage/components/BiliCollectionImportDialog.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAddSongModal.vue'
 import SongListBatchCompleteModal from '@/apps/manage/components/song-list/SongListBatchCompleteModal.vue'
@@ -47,6 +49,7 @@ const isImporting = ref(false)
 const showModal = ref(false)
 const showBatchCompleteModal = ref(false)
 const showDuplicateModal = ref(false)
+const showBiliImportModal = ref(false)
 const pendingCsvSongs = ref<ResponseSongModel[] | null>(null)
 const songs = ref<ResponseSongModel[]>([])
 const { open: openCsvPicker } = useFilePicker({
@@ -152,6 +155,9 @@ function handleMoreAction(key: string) {
       break
     case 'import':
       openCsvPicker()
+      break
+    case 'bili-import':
+      showBiliImportModal.value = true
       break
     case 'download-template':
       downloadTemplate()
@@ -267,6 +273,47 @@ function onDuplicatesMerged(payload: { primary: ResponseSongModel; removedKeys: 
     .map((s) => (s.key === payload.primary.key ? payload.primary : s))
 }
 
+async function handleBiliCollectionImport(items: BiliCollectionVideoItem[]) {
+  if (!items.length) return
+  isImporting.value = true
+  try {
+    const existingNames = new Set(songs.value.map((s) => s.name.trim().toLowerCase()))
+    const toAdd: ResponseSongModel[] = []
+    for (const item of items) {
+      const title = item.title.trim()
+      if (!title || existingNames.has(title.toLowerCase())) continue
+      existingNames.add(title.toLowerCase())
+      toAdd.push({
+        id: -1,
+        key: '',
+        name: title,
+        author: item.ownerName ? [item.ownerName] : [],
+        from: SongPlatform.Custom,
+        url: `https://www.bilibili.com/video/${item.bvid}`,
+        cover: item.cover,
+        tags: item.tags.slice(0, 5),
+        language: [],
+        createTime: Date.now(),
+        updateTime: Date.now(),
+      } as ResponseSongModel)
+    }
+    if (toAdd.length === 0) {
+      message.info('所选视频标题均已在歌单中')
+      return
+    }
+    const resp = await addSongsToSongList(toAdd, SongPlatform.Custom)
+    if (resp.code !== 200) throw new Error(resp.message || '导入失败')
+    if (resp.data?.length) {
+      songs.value = [...songs.value, ...(resp.data as unknown as ResponseSongModel[])]
+    }
+    message.success(`已从 B 站合集/收藏夹导入 ${resp.data?.length ?? toAdd.length} 首曲目`)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : String(err))
+  } finally {
+    isImporting.value = false
+  }
+}
+
 onMounted(getSongs)
 </script>
 
@@ -318,6 +365,10 @@ onMounted(getSongs)
               <DropdownMenuItem @click="handleMoreAction('template')"> 修改展示模板 </DropdownMenuItem>
               <DropdownMenuItem @click="handleMoreAction('export')"> 导出为 CSV </DropdownMenuItem>
               <DropdownMenuItem @click="handleMoreAction('import')"> 从 CSV 导入 / 回导更新 </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('bili-import')">
+                <Download class="size-3.5 mr-1.5" />
+                从 B 站收藏夹 / 合集导入
+              </DropdownMenuItem>
               <DropdownMenuItem @click="handleMoreAction('download-template')"> 下载 CSV 导入模板 </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem @click="handleMoreAction('live-request')"> 前往点播管理页 </DropdownMenuItem>
@@ -344,6 +395,13 @@ onMounted(getSongs)
       v-model:open="showDuplicateModal"
       :songs="songs"
       @merged="onDuplicatesMerged"
+    />
+
+    <BiliCollectionImportDialog
+      v-model:open="showBiliImportModal"
+      title="从 B 站收藏夹 / 合集导入歌单"
+      description="解析公开收藏夹或合集中的翻唱/伴奏视频，将视频标题与链接批量导入为歌单曲目（自动跳过同名曲目）"
+      @confirm="handleBiliCollectionImport"
     />
 
     <!-- CSV 导入模式选择弹窗 -->

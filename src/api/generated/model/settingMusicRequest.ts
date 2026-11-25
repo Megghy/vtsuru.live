@@ -7,8 +7,10 @@
  */
 
 export interface SettingMusicRequest {
+  enabled: boolean
   orderPrefix: string
   platform: string
+  autoFallbackPlatform: boolean
   orderCooldown: number
   orderMusicFirst: boolean
   playMusicWhenFree: boolean
@@ -18,4 +20,18 @@ export interface SettingMusicRequest {
   blacklist: string[]
   /** @nullable */
   obsTitle?: string | null
+  hideWhenEmpty: boolean
+  obsMaxDisplayCount: number
+  maxWaitingSize: number
+  maxSongsPerUser: number
+  preventDuplicateInQueue: boolean
+  onlyAllowLibrary: boolean
+  requireFansMedal: boolean
+  minFansMedalLevel: number
+  guardIgnoreCooldown: boolean
+  guardAutoPin: boolean
+  allowSkipCommand: boolean
+  skipPrefix: string
+  allowCancelCommand: boolean
+  cancelPrefix: string
 }

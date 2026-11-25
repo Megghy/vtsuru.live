@@ -199,13 +199,27 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 flex-wrap">
                 <div class="flex items-center gap-1.5 text-muted-foreground">
                   <span>开播推送</span>
                   <Switch
                     disabled
                     :checked="group.notify.liveStart"
                     @update:checked="(value: boolean) => toggleLiveStart(group, value)"
+                  />
+                </div>
+                <div class="flex items-center gap-1.5 text-muted-foreground">
+                  <span>动态推送</span>
+                  <Switch
+                    disabled
+                    :checked="!!group.notify.biliDynamic"
+                  />
+                </div>
+                <div class="flex items-center gap-1.5 text-muted-foreground">
+                  <span>投稿推送</span>
+                  <Switch
+                    disabled
+                    :checked="!!group.notify.biliVideo"
                   />
                 </div>
 

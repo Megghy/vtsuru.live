@@ -17,6 +17,7 @@ import { SettingRow } from '@/shared/ui/setting-row'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 
 import type { ExportFormat } from '../core/archive'
@@ -156,6 +157,22 @@ function resetToolbarOrder() {
         >
           <Switch v-model="dashboard.settings.collapseRepeated" />
         </SettingRow>
+        <SettingRow
+          v-if="isTauri()"
+          variant="none"
+          title="进入中控台自动收起侧栏"
+          description="自动折叠客户端左侧菜单以释放栏位宽度，切离时恢复"
+        >
+          <Switch v-model="dashboard.settings.autoCollapseClientSidebar" />
+        </SettingRow>
+        <SettingRow
+          v-if="isTauri()"
+          variant="none"
+          title="精简顶栏重复统计指标"
+          description="隐藏底部状态栏已显示的在线、点赞、看过与总收益"
+        >
+          <Switch v-model="dashboard.settings.hideRedundantClientStats" />
+        </SettingRow>
         <FormField
           label="字号"
           :extra="`${dashboard.settings.fontSize}px`"
@@ -199,23 +216,21 @@ function resetToolbarOrder() {
           class="grid gap-1.5"
           ghost-class="settings__stat-ghost"
         >
-          <div
+          <SimpleTooltip
             v-for="opt in orderedStatOptions"
             :key="opt.key"
-            class="flex-between gap-2 py-1 px-1.5 rounded-[var(--radius)] bg-popover transition-colors hover:bg-muted/80"
-            :title="opt.description"
+            :content="opt.description"
           >
-            <div class="flex items-center gap-1.5">
-              <span
-                class="drag-handle cursor-grab text-muted-foreground"
-                title="按住拖拽排序"
-              >
-                <GripVertical class="size-3.5" />
-              </span>
-              <span>{{ opt.label }}</span>
+            <div class="flex-between gap-2 py-1 px-1.5 rounded-[var(--radius)] bg-popover transition-colors hover:bg-muted/80">
+              <div class="flex items-center gap-1.5">
+                <span class="drag-handle cursor-grab text-muted-foreground">
+                  <GripVertical class="size-3.5" />
+                </span>
+                <span>{{ opt.label }}</span>
+              </div>
+              <Switch v-model="dashboard.settings.toolbarStats[opt.key]" />
             </div>
-            <Switch v-model="dashboard.settings.toolbarStats[opt.key]" />
-          </div>
+          </SimpleTooltip>
         </VueDraggable>
 
         <Separator />

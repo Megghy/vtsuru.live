@@ -17,6 +17,7 @@ import type {
   PostApiLiveRequestActiveParams,
   PostApiLiveRequestAddFromWebParams,
   PostApiLiveRequestAddParams,
+  PostApiLiveRequestCancelFromWebParams,
   PostApiLiveRequestCancelParams,
   PostApiLiveRequestDeactivateParams,
   PostApiLiveRequestFinishParams,
@@ -24,6 +25,8 @@ import type {
   PostApiLiveRequestSingingParams,
   ResponseResult,
   ResponseResultOfBoolean,
+  ResponseResultOfCancelFromWebResult,
+  ResponseResultOfFinishAndNextResult,
   ResponseResultOfInt32,
   ResponseResultOfInt64Array,
   ResponseResultOfListOfResponseSongRequestModel,
@@ -33,6 +36,7 @@ import type {
   ResponseResultOfString,
   SettingSongRequest,
   ToggleLiveRequestPinModel,
+  UpdateLiveRequestItemModel,
 } from '../model'
 
 // https://stackoverflow.com/questions/49579094/typescript-conditional-types-filter-out-readonly-properties-pick-only-requir/49579497#49579497
@@ -151,8 +155,34 @@ export const postApiLiveRequestBatchStatus = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestBatchStatusUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchLiveRequestStatusModel),
+  })
+}
+
+export const getPostApiLiveRequestCancelFromWebUrl = (params?: PostApiLiveRequestCancelFromWebParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/live-request/cancel-from-web?${stringifiedParams}`
+    : `/api/live-request/cancel-from-web`
+}
+
+export const postApiLiveRequestCancelFromWeb = async (
+  params?: PostApiLiveRequestCancelFromWebParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfCancelFromWebResult> => {
+  return vtsuruMutator<ResponseResultOfCancelFromWebResult>(getPostApiLiveRequestCancelFromWebUrl(params), {
+    ...options,
+    method: 'POST',
   })
 }
 
@@ -231,8 +261,21 @@ export const postApiLiveRequestDelete = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiLiveRequestDeleteBody),
+  })
+}
+
+export const getPostApiLiveRequestFinishAndNextUrl = () => {
+  return `/api/live-request/finish-and-next`
+}
+
+export const postApiLiveRequestFinishAndNext = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfFinishAndNextResult> => {
+  return vtsuruMutator<ResponseResultOfFinishAndNextResult>(getPostApiLiveRequestFinishAndNextUrl(), {
+    ...options,
+    method: 'POST',
   })
 }
 
@@ -419,7 +462,7 @@ export const postApiLiveRequestPin = async (
   return vtsuruMutator<ResponseResultOfBoolean>(getPostApiLiveRequestPinUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(toggleLiveRequestPinModel),
   })
 }
@@ -475,7 +518,7 @@ export const postApiLiveRequestReorder = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiLiveRequestReorderUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiLiveRequestReorderBody),
   })
 }
@@ -555,8 +598,38 @@ export const postApiLiveRequestTryAdd = async (
   return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestTryAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(eventModel),
+  })
+}
+
+export const getPostApiLiveRequestUpdateItemUrl = () => {
+  return `/api/live-request/update-item`
+}
+
+export const postApiLiveRequestUpdateItem = async (
+  updateLiveRequestItemModel?: UpdateLiveRequestItemModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseSongRequestModel> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestUpdateItemUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateLiveRequestItemModel),
   })
 }
 
@@ -585,7 +658,7 @@ export const postApiLiveRequestUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiLiveRequestUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(settingSongRequest),
   })
 }

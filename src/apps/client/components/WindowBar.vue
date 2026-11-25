@@ -58,10 +58,7 @@ async function closeWindow() {
   if (settingsStore.settings.closeWindowAction === 'exit' && isTauri()) {
     try {
       const { useWebFetcher } = await import('@/store/useWebFetcher')
-      await Promise.race([
-        useWebFetcher().Stop(),
-        new Promise((resolve) => setTimeout(resolve, 1500)),
-      ])
+      await Promise.race([useWebFetcher().Stop(), new Promise((resolve) => setTimeout(resolve, 1500))])
     } catch {
       // 忽略清理异常，确保正常退出
     }
@@ -73,22 +70,6 @@ async function closeWindow() {
   if (appWindow) await appWindow.hide()
 }
 
-let lastClickTime = 0
-async function handleTitlebarMouseDown(e: MouseEvent) {
-  if (e.button !== 0) return
-
-  const now = Date.now()
-  if (now - lastClickTime < 300) {
-    void toggleMaximizeWindow()
-    lastClickTime = 0
-    return
-  }
-  lastClickTime = now
-
-  const appWindow = await getTauriWindow()
-  if (appWindow) await appWindow.startDragging()
-}
-
 function goToLiveManage() {
   router.push({ name: 'client-live-manage' })
 }
@@ -96,15 +77,14 @@ function goToLiveManage() {
 
 <template>
   <header
-    class="flex justify-between items-center h-9 bg-background border-b border-border select-none relative z-[1000] px-2.5"
+    class="flex justify-between items-center h-9 bg-background border-b border-border select-none relative z-[1000] px-2.5 pointer-events-auto"
   >
     <!-- 左侧可拖拽区域：标题与状态 -->
     <div
       class="flex items-center gap-3 flex-1 h-full cursor-default"
       data-tauri-drag-region
-      @mousedown="handleTitlebarMouseDown"
     >
-      <span class="text-xs font-semibold text-foreground tracking-[0.5px]">VTsuru.Client</span>
+      <span class="text-xs font-semibold text-foreground tracking-[0.5px] pointer-events-none">VTsuru.Client</span>
 
       <TooltipProvider v-if="isLiveStreaming">
         <Tooltip>
@@ -113,6 +93,7 @@ function goToLiveManage() {
               variant="destructive"
               size="sm"
               class="cursor-pointer"
+              data-tauri-drag-region="false"
               @click="goToLiveManage"
             >
               <span class="inline-block size-1.5 rounded-full bg-current mr-1 animate-pulse" />
@@ -131,6 +112,7 @@ function goToLiveManage() {
         v-else
         variant="secondary"
         size="sm"
+        class="pointer-events-none"
       >
         未开播
       </Badge>

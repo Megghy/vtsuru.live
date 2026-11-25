@@ -25,6 +25,7 @@ export const useDashboardUi = defineStore('LiveDashboardUi', () => {
   const searchFocusTick = ref(0)
   const replyDraft = ref('')
   const composerFocusTick = ref(0)
+  const pendingRedeemCount = ref(0)
   const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 
   function insertReplyTarget(uname: string) {
@@ -62,6 +63,7 @@ export const useDashboardUi = defineStore('LiveDashboardUi', () => {
     searchFocusTick,
     replyDraft,
     composerFocusTick,
+    pendingRedeemCount,
     openUserMenu,
     openContextMenu,
     insertReplyTarget,

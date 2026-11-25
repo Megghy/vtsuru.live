@@ -264,6 +264,11 @@ export function useLiveControl() {
             console.error('自动开始 OBS 推流异常:', err)
           }
         }
+
+        // 开播自动发动态（若主播开启了联动）
+        void import('@/apps/client/store/useBiliDynamicAutomation').then(({ useBiliDynamicAutomation }) => {
+          void useBiliDynamicAutomation().handleLiveStarted(liveTitle.value || roomInfo.value?.title, roomId)
+        })
       } else {
         toast.error(`开播失败: ${response.message || response.msg}`)
         console.error('开播失败详情:', response)
@@ -355,6 +360,11 @@ export function useLiveControl() {
             console.error('下播场景切换异常:', err)
           }
         }
+
+        // 下播自动清理开播动态并恢复原置顶
+        void import('@/apps/client/store/useBiliDynamicAutomation').then(({ useBiliDynamicAutomation }) => {
+          void useBiliDynamicAutomation().handleLiveEnded()
+        })
       } else {
         toast.error(`下播失败: ${response.message || response.msg}`)
       }

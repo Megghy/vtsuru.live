@@ -70,6 +70,7 @@ function makeSong(key: string, name: string, sortOrder = 0, extra?: Partial<Resp
     from: SongPlatform.Netease,
     url: '',
     tags: [],
+    aliases: [],
     createTime: 0,
     updateTime: 0,
     sortOrder,

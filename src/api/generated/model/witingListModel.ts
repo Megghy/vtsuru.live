@@ -10,4 +10,8 @@ import type { WaitingMusicModel } from './waitingMusicModel'
 export interface WitingListModel {
   playing?: WaitingMusicModel
   waiting: WaitingMusicModel[]
+  /** @nullable */
+  obsTitle?: string | null
+  hideWhenEmpty: boolean
+  maxDisplayCount: number
 }

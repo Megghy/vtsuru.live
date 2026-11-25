@@ -137,7 +137,18 @@ const blockGroups = [
   {
     key: 'content',
     label: '内容与媒体',
-    types: ['cardList', 'videoList', 'embed', 'image', 'imageGallery', 'musicPlayer', 'voiceBoard', 'qrcode'],
+    types: [
+      'cardList',
+      'videoList',
+      'biliVideos',
+      'biliDynamics',
+      'embed',
+      'image',
+      'imageGallery',
+      'musicPlayer',
+      'voiceBoard',
+      'qrcode',
+    ],
   },
   {
     key: 'social',

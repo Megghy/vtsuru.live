@@ -19,6 +19,7 @@ import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { isDarkMode, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
+import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
 const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
@@ -28,6 +29,7 @@ const accountInfo = useAccount()
 const route = useRoute()
 const router = useRouter()
 const biliAuth = useBiliAuth()
+const musicRequestStore = useMusicRequestProvider()
 const { workspace } = useManageWorkspace()
 
 const showShell = computed(() => {
@@ -40,6 +42,12 @@ const showShell = computed(() => {
 watch(
   () => accountInfo.value.id,
   (accountId, previousId) => {
+    if (accountId > 0) {
+      musicRequestStore.startDanmakuListener()
+      if (musicRequestStore.originMusics.length === 0) {
+        void musicRequestStore.loadLibrary()
+      }
+    }
     if (
       accountId > 0 &&
       !previousId &&
@@ -51,6 +59,7 @@ watch(
       void router.replace({ name: 'bili-user-points' })
     }
   },
+  { immediate: true },
 )
 
 onMounted(() => {

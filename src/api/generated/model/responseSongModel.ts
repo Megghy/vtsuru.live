@@ -36,8 +36,17 @@ export interface ResponseSongModel {
   isPinned?: boolean | null
   /** @nullable */
   isDisabled?: boolean | null
+  aliases: string[]
+  /** @nullable */
+  proficiency?: string | null
+  /** @nullable */
+  keyShift?: string | null
+  /** @nullable */
+  instrumentalUrl?: string | null
   /** @nullable */
   requestCount?: number | null
+  /** @nullable */
+  finishCount?: number | null
   /** @nullable */
   lastRequestedAt?: number | null
 }

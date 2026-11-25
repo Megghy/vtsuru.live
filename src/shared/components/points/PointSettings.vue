@@ -858,9 +858,9 @@ defineExpose({ isDirty })
                 variant="outline"
                 size="xs"
                 as="a"
-                href="/manage/music-request"
+                href="/manage/live-request"
               >
-                前往点歌设置
+                前往点播设置
               </Button>
             </div>
 

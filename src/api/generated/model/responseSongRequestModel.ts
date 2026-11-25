@@ -33,4 +33,6 @@ export interface ResponseSongRequestModel {
   finishAt?: number | null
   /** @nullable */
   requestBy?: string | null
+  /** @nullable */
+  liveId?: string | null
 }

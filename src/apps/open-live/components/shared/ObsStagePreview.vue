@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import Color24Regular from '@vicons/fluent/es/Color24Regular'
-import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
-import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
-import { computed, ref } from 'vue'
+import { Copy, Eye, Palette } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
 
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
@@ -25,6 +23,7 @@ const props = withDefaults(
     token?: string
     recommendedSize?: string
     defaultStyle?: ObsStageStyleType
+    styleType?: ObsStageStyleType
     copySuccessMessage?: string
   }>(),
   {
@@ -36,11 +35,30 @@ const props = withDefaults(
   },
 )
 
+const emit = defineEmits<{
+  (e: 'update:styleType', value: ObsStageStyleType): void
+}>()
+
 const message = useMessage()
 
-const obsStyleType = ref<ObsStageStyleType>(props.defaultStyle)
+const internalStyleType = ref<ObsStageStyleType>(props.styleType ?? props.defaultStyle)
+watch(
+  () => props.styleType,
+  (val) => {
+    if (val) internalStyleType.value = val
+  },
+)
+
+const obsStyleType = computed<ObsStageStyleType>({
+  get: () => props.styleType ?? internalStyleType.value,
+  set: (val) => {
+    internalStyleType.value = val
+    emit('update:styleType', val)
+  },
+})
+
 const obsScrollSpeed = ref(1.0)
-const previewBg = ref<ObsStagePreviewBg>('checker')
+const previewBg = ref<ObsStagePreviewBg>('dark')
 
 const stylePresets: { key: ObsStageStyleType; label: string }[] = [
   { key: 'glass', label: '毛玻璃质感 (Modern Glass)' },
@@ -90,8 +108,8 @@ async function copyObsLink() {
       <CardHeader class="p-3.5">
         <div class="flex-between gap-3 flex-wrap">
           <div class="flex items-center gap-2">
-            <Eye24Regular class="size-4 text-muted-foreground" />
-            <CardTitle class="text-sm">{{ title }}</CardTitle>
+            <Eye class="size-4 text-muted-foreground" />
+            <CardTitle class="text-xs font-semibold">{{ title }}</CardTitle>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
@@ -115,16 +133,16 @@ async function copyObsLink() {
 
       <CardContent class="p-4 flex-1 flex flex-col justify-between gap-4">
         <div
-          class="rounded-lg border border-border p-6 flex-center min-h-[460px] transition-colors"
+          class="rounded-lg border border-border p-6 flex-center min-h-[560px] transition-colors"
           :class="{
-            'bg-[#121214]': previewBg === 'dark',
-            'bg-[#f4f4f5]': previewBg === 'light',
-            'bg-[#0b132b]': previewBg === 'game',
+            'bg-zinc-950': previewBg === 'dark',
+            'bg-zinc-100': previewBg === 'light',
+            'bg-slate-950': previewBg === 'game',
             'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]':
               previewBg === 'checker',
           }"
         >
-          <div class="w-[380px] max-w-full">
+          <div class="w-[380px] max-w-full h-[540px]">
             <slot
               :style-type="obsStyleType"
               :speed-multiplier="obsScrollSpeed"
@@ -139,7 +157,7 @@ async function copyObsLink() {
             variant="default"
             @click="copyObsLink"
           >
-            <Copy24Regular class="size-4 mr-1" />
+            <Copy class="size-3.5 mr-1" />
             复制当前样式 OBS 链接
           </Button>
         </div>
@@ -151,8 +169,8 @@ async function copyObsLink() {
       <Card>
         <CardHeader class="p-3.5">
           <div class="flex items-center gap-2">
-            <Color24Regular class="size-4 text-muted-foreground" />
-            <CardTitle class="text-sm">OBS 视觉预设</CardTitle>
+            <Palette class="size-4 text-muted-foreground" />
+            <CardTitle class="text-xs font-semibold">OBS 视觉预设</CardTitle>
           </div>
         </CardHeader>
 

@@ -45,6 +45,8 @@ export const BLOCK_TYPES = [
   'ocProfile',
   'commission',
   'voiceBoard',
+  'biliVideos',
+  'biliDynamics',
 ] as const
 
 export type BlockType = (typeof BLOCK_TYPES)[number]

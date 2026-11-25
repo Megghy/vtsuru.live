@@ -56,4 +56,14 @@ export interface SettingSongRequest {
   allowPointPriority: boolean
   pointPriorityKeyword: string
   pointPriorityCost: number
+  maxSongsPerUserInQueue: number
+  preventSameSongToday: boolean
+  songCooldownMinute: number
+  /** @nullable */
+  songNameBlacklist?: string[] | null
+  autoClearOnLiveStart: boolean
+  showAuthor: boolean
+  showDescription: boolean
+  showPrice: boolean
+  hideWhenEmpty: boolean
 }

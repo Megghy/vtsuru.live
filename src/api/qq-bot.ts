@@ -24,6 +24,8 @@ export interface QqBotGroupNotify {
   lottery: boolean
   vote: boolean
   superChat: boolean
+  biliDynamic?: boolean
+  biliVideo?: boolean
 }
 
 export interface QqBotGroup {
@@ -51,6 +53,10 @@ export function unbindQqBotGroup(groupOpenId: string) {
   return postApiQqBotGroupsUnbind({ groupOpenId })
 }
 
-export function updateQqBotGroupNotify(groupOpenId: string, liveStart: boolean) {
-  return postApiQqBotGroupsNotify({ groupOpenId, liveStart })
+export function updateQqBotGroupNotify(
+  groupOpenId: string,
+  liveStart: boolean,
+  extra?: { biliDynamic?: boolean; biliVideo?: boolean },
+) {
+  return postApiQqBotGroupsNotify({ groupOpenId, liveStart, ...extra } as any)
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 import { parseMessage } from '../core/message'
@@ -32,12 +33,12 @@ const segments = computed(() => parseMessage(props.msg, liveEmoji.merged))
         referrerpolicy="no-referrer"
         loading="lazy"
       />
-      <span
+      <SimpleTooltip
         v-else-if="seg.kind === 'spoiler'"
-        class="blur-[5px] hover:blur-none transition-[filter] duration-150 cursor-help"
-        :title="seg.text"
-        >{{ seg.text }}</span
+        :content="seg.text"
       >
+        <span class="blur-[5px] hover:blur-none transition-[filter] duration-150 cursor-help">{{ seg.text }}</span>
+      </SimpleTooltip>
       <template v-else>{{ seg.text }}</template>
     </template>
   </template>

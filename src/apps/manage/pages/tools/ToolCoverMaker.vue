@@ -6,7 +6,13 @@ import TextOutline from '@vicons/ionicons5/es/TextOutline'
 import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { isTauri } from '@/shared/config'
+
+const BiliQuickDynamicDialog = defineAsyncComponent(() => import('@/apps/client/components/BiliQuickDynamicDialog.vue'))
+const inTauri = isTauri()
+const dynamicDialogOpen = ref(false)
+const dynamicCoverBlobs = ref<Blob[]>([])
 
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
@@ -108,6 +114,12 @@ async function download() {
   })
   message.success('已下载')
 }
+async function openPublishDynamic() {
+  if (!editorRef.value) return
+  const blob = await editorRef.value.exportImage()
+  dynamicCoverBlobs.value = [blob]
+  dynamicDialogOpen.value = true
+}
 async function exportProject() {
   if (!editorRef.value) return
   const json = await editorRef.value.exportJSON()
@@ -175,9 +187,22 @@ async function onRemoveBgConfirm(blob: Blob) {
         >
           导入项目
         </Button>
+        <Button
+          v-if="inTauri"
+          variant="secondary"
+          @click="openPublishDynamic"
+        >
+          发 B 站动态
+        </Button>
         <Button @click="download"> 下载 PNG </Button>
       </div>
     </div>
+    <BiliQuickDynamicDialog
+      v-if="inTauri"
+      v-model:open="dynamicDialogOpen"
+      :blobs="dynamicCoverBlobs"
+      title="发布封面到 B 站动态"
+    />
 
     <div class="editor-body">
       <!-- Left panel: layers -->

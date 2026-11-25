@@ -7,6 +7,7 @@ import { toast } from 'vue-sonner'
 import { useAccount } from '@/api/account'
 import { isDev } from '@/shared/config'
 
+import { banLiveRoomUser } from '../api/room-control'
 import { onSendLiveDanmakuFailed, onSendPrivateMessageFailed } from '../data/notification'
 import { QueryBiliAPI } from '../data/utils'
 import { useBiliAccountManager } from './useBiliAccountManager'
@@ -169,6 +170,39 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       clearTimeout(pmTimer.value)
       pmTimer.value = null
     }
+  }
+
+  const danmakuQueuePreview = computed(() =>
+    danmakuQueue.value.map((item) => ({ roomId: item.roomId, message: item.message })),
+  )
+  const pmQueuePreview = computed(() =>
+    pmQueue.value.map((item) => ({ receiverId: item.receiverId, message: item.message })),
+  )
+
+  function clearDanmakuQueue(): number {
+    if (danmakuTimer.value) {
+      clearTimeout(danmakuTimer.value)
+      danmakuTimer.value = null
+    }
+    const startIdx = isDanmakuProcessing.value ? 1 : 0
+    const dropped = danmakuQueue.value.splice(startIdx)
+    for (const item of dropped) {
+      item.resolve(false)
+    }
+    return dropped.length
+  }
+
+  function clearPmQueue(): number {
+    if (pmTimer.value) {
+      clearTimeout(pmTimer.value)
+      pmTimer.value = null
+    }
+    const startIdx = isPmProcessing.value ? 1 : 0
+    const dropped = pmQueue.value.splice(startIdx)
+    for (const item of dropped) {
+      item.resolve(false)
+    }
+    return dropped.length
   }
 
   let isInited = false
@@ -483,52 +517,18 @@ export const useBiliFunction = defineStore('biliFunction', () => {
    * 封禁直播间用户 (需要主播或房管权限)
    * @param roomId 直播间 ID
    * @param userId 要封禁的用户 UID
-   * @param hours 封禁时长 (小时, 1-720)
+   * @param hours 封禁时长 (-1 永久, 0 本场, 1-720 小时)
    */
-  async function banLiveUser(roomId: number, userId: number, hours: number = 1): Promise<unknown> {
-    // 房管封禁操作必须严格使用主播号凭证
+  async function banLiveUser(roomId: number, userId: number, hours: number = 1, msg: string = ''): Promise<unknown> {
     if (!mainCsrf.value || !mainCookie.value) {
       console.error('封禁用户失败：主播账号缺少 cookie 或 csrf token')
       return
     }
-    // 确保 hours 在 1 到 720 之间
-    const validHours = Math.max(1, Math.min(hours, 720))
-    const url = 'https://api.live.bilibili.com/banned_service/v2/Silent/add_user'
-    const data = {
-      room_id: roomId.toString(),
-      block_uid: userId.toString(),
-      hour: validHours.toString(),
-      csrf: mainCsrf.value,
-      csrf_token: mainCsrf.value,
-      visit_id: '',
-    }
-
     try {
-      const params = new URLSearchParams(data)
-      const response = await tauriFetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Cookie: mainCookie.value,
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36',
-          Referer: `https://live.bilibili.com/p/html/live-room-setting/#/room-manager/black-list?room_id=${roomId}`,
-        },
-        body: params,
-      })
-      if (!response.ok) {
-        console.error('封禁用户失败:', response.status, await response.text())
-        return response.statusText
-      }
-      const json = (await response.json()) as { code: number; message?: string; msg?: string; data: unknown }
-      if (json.code !== 0) {
-        console.error('封禁用户API失败:', json.code, json.message || json.msg)
-        return json.data
-      }
-      console.log('封禁用户成功:', json.data)
-      return json.data
+      return await banLiveRoomUser(roomId, userId, hours, msg)
     } catch (error) {
       console.error('封禁用户时发生错误:', error)
+      return undefined
     }
   }
 
@@ -545,6 +545,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     pmInterval,
     setDanmakuInterval,
     setPmInterval,
+    danmakuQueuePreview,
+    pmQueuePreview,
+    clearDanmakuQueue,
+    clearPmQueue,
     encWbi,
   }
 })

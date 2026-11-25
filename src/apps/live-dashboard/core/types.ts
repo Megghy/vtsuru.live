@@ -32,18 +32,65 @@ export interface DashboardEvent {
   deleted: boolean
 }
 
-/** 顺序即快捷键 Alt+1..n */
-export const PANEL_IDS = ['danmaku', 'sc', 'gift', 'vote', 'song_request', 'queue'] as const
+/** 顺序即快捷键 Alt+1..9（前 9 项支持数字键快速切换） */
+export const PANEL_IDS = [
+  'danmaku',
+  'sc',
+  'gift',
+  'vote',
+  'song_request',
+  'queue',
+  'todo',
+  'question_box',
+  'point_redeem',
+  'video_collect',
+  'lottery',
+  'checklist',
+  'transcript',
+] as const
 export type PanelId = (typeof PANEL_IDS)[number]
 
-export const PANEL_TITLES: Record<PanelId, string> = {
-  danmaku: '弹幕',
-  sc: '醒目留言',
-  gift: '礼物',
-  vote: '投票',
-  song_request: '点歌',
-  queue: '排队',
+export type PanelCategory = 'core' | 'interact' | 'assist'
+
+export interface PanelMeta {
+  id: PanelId
+  title: string
+  description: string
+  category: PanelCategory
+  clientOnly?: boolean
 }
+
+export const PANEL_META: Record<PanelId, PanelMeta> = {
+  danmaku: { id: 'danmaku', title: '弹幕', description: '实时弹幕流、互动区与热度脉冲', category: 'core' },
+  sc: { id: 'sc', title: '醒目留言', description: 'SC 留言列表与已读管理', category: 'core' },
+  gift: { id: 'gift', title: '礼物', description: '礼物与大航海实时流水', category: 'core' },
+  todo: { id: 'todo', title: '待处理', description: '聚合未读上舰、大额 SC 与提问弹幕', category: 'core' },
+  vote: { id: 'vote', title: '投票', description: '发起并控制直播间实时投票', category: 'interact' },
+  song_request: { id: 'song_request', title: '点歌', description: '管理待唱队列与演唱进度', category: 'interact' },
+  queue: { id: 'queue', title: '排队', description: '管理观众连麦/上车排队', category: 'interact' },
+  question_box: { id: 'question_box', title: '提问箱', description: '速览未读棉花糖并投屏 OBS', category: 'interact' },
+  point_redeem: { id: 'point_redeem', title: '积分核销', description: '实时处理观众积分商城兑换订单', category: 'interact' },
+  video_collect: { id: 'video_collect', title: '视频征集', description: '按顺序浏览已通过投稿并标记已看', category: 'interact' },
+  lottery: { id: 'lottery', title: '抽奖控台', description: '站内弹幕抽奖与天选时刻合一', category: 'interact' },
+  checklist: { id: 'checklist', title: '直播提纲', description: '本场话题清单与日程表导入', category: 'assist' },
+  transcript: {
+    id: 'transcript',
+    title: '语音转写',
+    description: '实时口播字幕流，点击即打高光点',
+    category: 'assist',
+    clientOnly: true,
+  },
+}
+
+export const PANEL_CATEGORY_LABELS: Record<PanelCategory, string> = {
+  core: '核心消息流',
+  interact: '互动与运营',
+  assist: '直播辅助',
+}
+
+export const PANEL_TITLES: Record<PanelId, string> = Object.fromEntries(
+  PANEL_IDS.map((id) => [id, PANEL_META[id].title]),
+) as Record<PanelId, string>
 
 /** 付费事件（参与已读、按价格排序） */
 export const PAID_TYPES = new Set([EventDataTypes.SC, EventDataTypes.Gift, EventDataTypes.Guard])

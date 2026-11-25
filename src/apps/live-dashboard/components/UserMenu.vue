@@ -14,8 +14,10 @@ import {
   Filter,
   Image as ImageIcon,
   Loader2,
+  ShieldBan,
   Sparkles,
   Star,
+  UserCheck,
   UserRoundSearch,
 } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -26,6 +28,7 @@ import { useFanPrivacy } from '@/shared/composables/useFanPrivacy'
 import { isTauri } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { copyToClipboard, useMessage } from '@/shared/utils'
@@ -156,6 +159,34 @@ function run(action: () => void) {
   close()
 }
 
+async function handleBiliBan(hours: number) {
+  const e = event.value
+  const roomId = account.value?.biliRoomId
+  if (!e || !roomId || e.uid <= 0) return
+  try {
+    const { banLiveRoomUser } = await import('@/apps/client/api/room-control')
+    await banLiveRoomUser(roomId, e.uid, hours, e.msg || '')
+    message.success(`已禁言 ${e.uname || e.uid}（${hours === -1 ? '永久' : `${hours}小时`}）`)
+    close()
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '直播间禁言失败')
+  }
+}
+
+async function handleBiliAddAdmin() {
+  const e = event.value
+  const roomId = account.value?.biliRoomId
+  if (!e || !roomId || e.uid <= 0) return
+  try {
+    const { addRoomAdmin } = await import('@/apps/client/api/room-control')
+    await addRoomAdmin(roomId, e.uid)
+    message.success(`已将 ${e.uname || e.uid} 设为房管`)
+    close()
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '任命房管失败')
+  }
+}
+
 const popoverStyle = computed(() => {
   if (!menu.value) return {}
   const maxX = typeof window !== 'undefined' ? Math.max(8, window.innerWidth - 376) : menu.value.x
@@ -192,19 +223,23 @@ onUnmounted(() => {
         />
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1 flex-wrap font-semibold text-sm leading-tight">
-            <button
+            <SimpleTooltip
               v-if="event.ouid || event.uid > 0"
-              type="button"
-              class="inline-flex items-center justify-center rounded-sm hover:bg-accent p-0.5 transition-colors"
-              :disabled="togglingStar"
-              :title="cloudProfile?.isStarred ? '取消重点粉丝' : '设为重点粉丝'"
-              @click="handleToggleStar"
+              :content="cloudProfile?.isStarred ? '取消重点粉丝' : '设为重点粉丝'"
             >
-              <Star
-                class="size-3.5"
-                :class="cloudProfile?.isStarred ? 'fill-amber-400 text-amber-500' : 'text-muted-foreground'"
-              />
-            </button>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-sm hover:bg-accent p-0.5 transition-colors"
+                :disabled="togglingStar"
+                :aria-label="cloudProfile?.isStarred ? '取消重点粉丝' : '设为重点粉丝'"
+                @click="handleToggleStar"
+              >
+                <Star
+                  class="size-3.5"
+                  :class="cloudProfile?.isStarred ? 'fill-amber-400 text-amber-500' : 'text-muted-foreground'"
+                />
+              </button>
+            </SimpleTooltip>
             <span v-if="cloudProfile?.nickname" class="text-brand">{{ cloudProfile.nickname }}</span>
             <span :class="cloudProfile?.nickname ? 'text-xs text-muted-foreground font-normal' : ''">
               {{ event.uname || '匿名用户' }}
@@ -217,27 +252,32 @@ onUnmounted(() => {
           <div class="flex items-center gap-2 flex-wrap mt-0.5 text-[11px] text-muted-foreground tabular-nums">
             <span v-if="event.uid > 0">UID {{ event.uid }}</span>
             <span v-if="cloudProfile?.pronunciation">读音: {{ cloudProfile.pronunciation }}</span>
-            <button
+            <SimpleTooltip
               v-if="cloudProfile?.birthdayMonth && cloudProfile?.birthdayDay"
-              type="button"
-              class="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 hover:underline"
-              :title="privacyMode ? '已开启防露屏模式' : birthdayRevealed ? '点击隐藏生日' : '点击查看生日'"
-              @click="birthdayRevealed = !birthdayRevealed"
+              :content="privacyMode ? '已开启防露屏模式' : birthdayRevealed ? '点击隐藏生日' : '点击查看生日'"
             >
-              <Cake class="size-3" />
-              <span>{{ formatBirthday(cloudProfile.birthdayMonth, cloudProfile.birthdayDay, birthdayRevealed) }}</span>
-              <EyeOff
-                v-if="birthdayRevealed && !privacyMode"
-                class="size-2.5 opacity-70"
-              />
-              <Eye
-                v-else
-                class="size-2.5 opacity-70"
-              />
-            </button>
-            <span :title="dashboard.settings.absoluteTime ? formatRelative(event.time) : formatClock(event.time)">
-              {{ dashboard.settings.absoluteTime ? formatClock(event.time) : formatRelative(event.time) }}
-            </span>
+              <button
+                type="button"
+                class="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 hover:underline"
+                @click="birthdayRevealed = !birthdayRevealed"
+              >
+                <Cake class="size-3" />
+                <span>{{ formatBirthday(cloudProfile.birthdayMonth, cloudProfile.birthdayDay, birthdayRevealed) }}</span>
+                <EyeOff
+                  v-if="birthdayRevealed && !privacyMode"
+                  class="size-2.5 opacity-70"
+                />
+                <Eye
+                  v-else
+                  class="size-2.5 opacity-70"
+                />
+              </button>
+            </SimpleTooltip>
+            <SimpleTooltip :content="dashboard.settings.absoluteTime ? formatRelative(event.time) : formatClock(event.time)">
+              <span>
+                {{ dashboard.settings.absoluteTime ? formatClock(event.time) : formatRelative(event.time) }}
+              </span>
+            </SimpleTooltip>
           </div>
           <div
             v-if="cloudProfile?.tags?.length"
@@ -410,6 +450,24 @@ onUnmounted(() => {
         >
           <Ban class="size-3.5 mr-1" />
           {{ actions.isBlocked(event) ? '移出黑名单' : '拉黑' }}
+        </Button>
+        <Button
+          v-if="isTauri() && event.uid > 0 && account.biliRoomId"
+          variant="destructive"
+          size="xs"
+          @click="handleBiliBan(1)"
+        >
+          <ShieldBan class="size-3.5 mr-1" />
+          禁言 1h
+        </Button>
+        <Button
+          v-if="isTauri() && event.uid > 0 && account.biliRoomId"
+          variant="secondary"
+          size="xs"
+          @click="handleBiliAddAdmin"
+        >
+          <UserCheck class="size-3.5 mr-1" />
+          设为房管
         </Button>
       </div>
 

@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import ArrowDown24Regular from '@vicons/fluent/es/ArrowDown24Regular'
-import ArrowUp24Regular from '@vicons/fluent/es/ArrowUp24Regular'
-import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
-import MusicNote2Play20Filled from '@vicons/fluent/es/MusicNote2Play20Filled'
-import Pin24Filled from '@vicons/fluent/es/Pin24Filled'
-import Pin24Regular from '@vicons/fluent/es/Pin24Regular'
-import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
+import { ArrowDown, ArrowUp, Ban, GripVertical, Pin, PinOff, Play, X } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -24,6 +18,9 @@ const props = defineProps<{
   canBlockUser?: boolean
   canMoveUp?: boolean
   canMoveDown?: boolean
+  draggable?: boolean
+  isDragging?: boolean
+  isDragOver?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -49,10 +46,21 @@ const platformTag = computed(() => {
 </script>
 
 <template>
-  <LiveQueueRowShell :index="index">
+  <LiveQueueRowShell
+    :index="index"
+    :class="[
+      isDragging && 'opacity-50',
+      isDragOver && 'ring-1 ring-primary bg-primary/5',
+      draggable && 'cursor-grab active:cursor-grabbing',
+    ]"
+  >
     <template #primary>
+      <GripVertical
+        v-if="draggable"
+        class="size-3.5 text-muted-foreground/50 shrink-0 -ml-1"
+      />
       <span
-        class="font-medium text-sm text-foreground truncate min-w-0"
+        class="font-medium text-xs text-foreground truncate min-w-0"
         :title="music.name"
       >
         {{ music.name }}
@@ -86,7 +94,7 @@ const platformTag = computed(() => {
     </template>
 
     <template #actions>
-      <TooltipProvider>
+      <TooltipProvider :delay-duration="250">
         <Tooltip>
           <TooltipTrigger as-child>
             <Button
@@ -96,11 +104,11 @@ const platformTag = computed(() => {
               :aria-label="isPinned ? '取消置顶' : '置顶'"
               @click="emit('pin')"
             >
-              <Pin24Filled
+              <PinOff
                 v-if="isPinned"
                 class="size-3.5"
               />
-              <Pin24Regular
+              <Pin
                 v-else
                 class="size-3.5"
               />
@@ -118,7 +126,7 @@ const platformTag = computed(() => {
               aria-label="上移"
               @click="emit('move-up')"
             >
-              <ArrowUp24Regular class="size-3.5" />
+              <ArrowUp class="size-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>上移</TooltipContent>
@@ -133,7 +141,7 @@ const platformTag = computed(() => {
               aria-label="下移"
               @click="emit('move-down')"
             >
-              <ArrowDown24Regular class="size-3.5" />
+              <ArrowDown class="size-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>下移</TooltipContent>
@@ -144,11 +152,11 @@ const platformTag = computed(() => {
             <Button
               size="icon-xs"
               variant="ghost"
-              class="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+              class="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
               aria-label="立即播放"
               @click="emit('play')"
             >
-              <MusicNote2Play20Filled class="size-4" />
+              <Play class="size-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>立即切播</TooltipContent>
@@ -159,14 +167,14 @@ const platformTag = computed(() => {
             <Button
               size="icon-xs"
               variant="ghost"
-              class="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
+              class="text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
               aria-label="屏蔽选项"
             >
-              <PresenceBlocked16Regular class="size-4" />
+              <Ban class="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem @click="emit('block-song')"> 将歌曲名「{{ music.name }}」加入黑名单 </DropdownMenuItem>
+            <DropdownMenuItem @click="emit('block-song')">将歌曲名「{{ music.name }}」加入黑名单</DropdownMenuItem>
             <DropdownMenuItem
               v-if="canBlockUser"
               class="text-destructive focus:text-destructive"
@@ -186,7 +194,7 @@ const platformTag = computed(() => {
               aria-label="取消点歌"
               @click="emit('cancel')"
             >
-              <Dismiss16Filled class="size-4" />
+              <X class="size-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>取消点歌</TooltipContent>

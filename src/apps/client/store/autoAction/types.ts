@@ -48,6 +48,10 @@ export enum ActionType {
   OBS_SOURCE_VISIBLE = 'obs_source_visible', // OBS 源显隐
   OBS_FILTER_ENABLED = 'obs_filter_enabled', // OBS 源滤镜开关
   OBS_SAVE_REPLAY = 'obs_save_replay', // OBS 保存回放缓存
+  BAN_USER = 'ban_user', // 直播间禁言触发用户
+  PUBLISH_DYNAMIC = 'publish_dynamic', // 发布 B 站动态
+  DELETE_LIVE_DYNAMIC = 'delete_live_dynamic', // 删除本次开播自动发布的动态
+  SAVE_STREAM_CLIP = 'save_stream_clip', // 保存直播流本地高能回溯切片
 }
 
 export const LIFECYCLE_TRIGGER_TYPES = new Set<TriggerType>([
@@ -184,6 +188,14 @@ export interface AutoActionItem {
     webhookMethod?: 'POST' | 'PUT'
     webhookHeadersJson?: string
     webhookBodyTemplate?: string
+
+    // --- B 站场控 / 动态 / 直播流切片配置 ---
+    banHours?: number // -1 永久, 0 本场, 1-720 小时
+    banSkipGuard?: boolean // 默认 true，跳过大航海用户
+    dynamicPinOnPublish?: boolean // 发布后置顶
+    dynamicRecordAsLivePost?: boolean // 标记为开播动态，供下播自动删除
+    clipDurationSeconds?: number // 本地回溯切片保存时长（秒）
+    clipLabel?: string // 切片文件标签
   }
 }
 

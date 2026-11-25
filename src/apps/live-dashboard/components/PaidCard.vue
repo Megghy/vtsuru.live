@@ -4,6 +4,7 @@ import { computed } from 'vue'
 
 import { EventDataTypes } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { getGuardColor } from '@/shared/utils/queue'
 
 import { avatarUrl, formatClock, formatPrice, formatRelative, paidSummary, superChatTier } from '../core/format'
@@ -84,14 +85,15 @@ const timeText = computed(() => {
             </template>
             <template v-else>{{ event.uname || '匿名用户' }}</template>
           </Button>
-          <span
+          <SimpleTooltip
             v-if="fanMeta.isBirthdayToday"
-            class="inline-flex items-center gap-0.5 rounded px-1 py-0.2 bg-amber-500/20 text-amber-200 text-[0.75em] font-medium"
-            title="今天过生日"
+            content="今天过生日"
           >
-            <Cake class="size-3" />
-            生日
-          </span>
+            <span class="inline-flex items-center gap-0.5 rounded px-1 py-0.2 bg-amber-500/20 text-amber-200 text-[0.75em] font-medium">
+              <Cake class="size-3" />
+              生日
+            </span>
+          </SimpleTooltip>
           <span
             v-for="tag in fanMeta.tags"
             :key="tag"
@@ -115,34 +117,40 @@ const timeText = computed(() => {
             />
             {{ paidSummary(event) }}
           </span>
-          <span
+          <SimpleTooltip
             v-if="mysteryBoxProfit !== null"
-            class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.78em] font-medium tabular-nums"
-            :class="mysteryBoxProfit >= 0 ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'"
-            :title="`盲盒 ${event.mysteryBoxName || ''} 投入 ${formatPrice(event.price)} → 爆出 ${formatPrice(event.mysteryBoxPrice ?? 0)}`"
+            :content="`盲盒 ${event.mysteryBoxName || ''} 投入 ${formatPrice(event.price)} → 爆出 ${formatPrice(event.mysteryBoxPrice ?? 0)}`"
           >
-            {{ event.mysteryBoxName ? `${event.mysteryBoxName} · ` : '' }}爆出{{
-              formatPrice(event.mysteryBoxPrice ?? 0)
-            }}
-            ({{ mysteryBoxProfit >= 0 ? '+' : '-' }}{{ formatPrice(Math.abs(mysteryBoxProfit)) }})
-          </span>
-          <span class="ml-auto inline-flex items-center gap-1.5">
-            <Button
-              v-if="read"
-              variant="ghost"
-              size="xs"
-              class="h-auto gap-0.5 px-1.5 py-0.5 rounded-full text-[0.75em] leading-none border"
-              :class="
-                colors
-                  ? 'bg-black/25 text-white border-white/25 hover:bg-black/40 hover:text-white'
-                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-              "
-              title="已读（点击标为未读）"
-              @click.stop="dashboard.toggleRead(event)"
+            <span
+              class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.78em] font-medium tabular-nums"
+              :class="mysteryBoxProfit >= 0 ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'"
             >
-              <Check class="size-3" />
-              已读
-            </Button>
+              {{ event.mysteryBoxName ? `${event.mysteryBoxName} · ` : '' }}爆出{{
+                formatPrice(event.mysteryBoxPrice ?? 0)
+              }}
+              ({{ mysteryBoxProfit >= 0 ? '+' : '-' }}{{ formatPrice(Math.abs(mysteryBoxProfit)) }})
+            </span>
+          </SimpleTooltip>
+          <span class="ml-auto inline-flex items-center gap-1.5">
+            <SimpleTooltip
+              v-if="read"
+              content="已读（点击标为未读）"
+            >
+              <Button
+                variant="ghost"
+                size="xs"
+                class="h-auto gap-0.5 px-1.5 py-0.5 rounded-full text-[0.75em] leading-none border"
+                :class="
+                  colors
+                    ? 'bg-black/25 text-white border-white/25 hover:bg-black/40 hover:text-white'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                "
+                @click.stop="dashboard.toggleRead(event)"
+              >
+                <Check class="size-3" />
+                已读
+              </Button>
+            </SimpleTooltip>
             <span class="text-[0.8em] opacity-75">{{ timeText }}</span>
           </span>
         </div>

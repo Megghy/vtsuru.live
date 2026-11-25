@@ -48,6 +48,8 @@ const VIEWERS: Record<BlockType, AsyncComponentLoader> = {
   ocProfile: async () => import('./blocks/OcProfileBlock.vue'),
   commission: async () => import('./blocks/CommissionBlock.vue'),
   voiceBoard: async () => import('./blocks/VoiceBoardBlock.vue'),
+  biliVideos: async () => import('./blocks/BiliVideosBlock.vue'),
+  biliDynamics: async () => import('./blocks/BiliDynamicsBlock.vue'),
 }
 
 const AsyncBlockLoading = () =>

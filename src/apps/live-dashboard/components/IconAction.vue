@@ -2,32 +2,25 @@
 import type { Component } from 'vue'
 
 import { Button } from '@/shared/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 
 defineProps<{ icon: Component; tip: string; active?: boolean }>()
 defineEmits<{ click: [MouseEvent] }>()
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="400">
-    <Tooltip>
-      <TooltipTrigger as-child>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          :class="active ? 'text-primary' : 'text-muted-foreground'"
-          :aria-label="tip"
-          @click="$emit('click', $event)"
-        >
-          <component
-            :is="icon"
-            class="size-3.5"
-          />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        {{ tip }}
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+  <SimpleTooltip :content="tip">
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      :class="active ? 'text-primary' : 'text-muted-foreground'"
+      :aria-label="tip"
+      @click="$emit('click', $event)"
+    >
+      <component
+        :is="icon"
+        class="size-3.5"
+      />
+    </Button>
+  </SimpleTooltip>
 </template>

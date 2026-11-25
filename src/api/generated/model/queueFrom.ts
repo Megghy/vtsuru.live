@@ -11,4 +11,5 @@ export enum QueueFrom {
   Danmaku = 1,
   Gift = 2,
   Web = 3,
+  SC = 4,
 }

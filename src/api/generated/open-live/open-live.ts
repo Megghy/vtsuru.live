@@ -46,7 +46,7 @@ export const postApiOpenLiveHeartbeat = async (
   return vtsuruMutator<ResponseResultOfString>(getPostApiOpenLiveHeartbeatUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestStartOpenLiveModel),
   })
 }
@@ -89,7 +89,7 @@ export const getApiOpenLiveStart = async (
   return vtsuruMutator<ResponseResultOfAppStartData>(getGetApiOpenLiveStartUrl(), {
     ...options,
     method: 'GET',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestStartOpenLiveModel),
   })
 }
@@ -119,7 +119,7 @@ export const postApiOpenLiveStart = async (
   return vtsuruMutator<ResponseResultOfAppStartData>(getPostApiOpenLiveStartUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestStartOpenLiveModel),
   })
 }

@@ -1,11 +1,6 @@
 <script setup lang="ts">
-import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
-import Desktop24Regular from '@vicons/fluent/es/Desktop24Regular'
-import History24Regular from '@vicons/fluent/es/History24Regular'
-import MusicNote224Filled from '@vicons/fluent/es/MusicNote224Filled'
-import MusicNote224Regular from '@vicons/fluent/es/MusicNote224Regular'
-import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
-import { computed, onActivated, onMounted, onUnmounted, ref } from 'vue'
+import { Copy, Disc3, History, ListMusic, Monitor, Power, Settings2 } from 'lucide-vue-next'
+import { computed, onActivated, onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { AppStartData } from '@/api/generated/model'
@@ -18,7 +13,7 @@ import LiveConsolePageShell, {
   type LiveConsoleHeaderLink,
   type LiveConsoleTabItem,
 } from '@/apps/open-live/components/shared/LiveConsolePageShell.vue'
-import ObsStagePreview from '@/apps/open-live/components/shared/ObsStagePreview.vue'
+import ObsStagePreview, { type ObsStageStyleType } from '@/apps/open-live/components/shared/ObsStagePreview.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Button } from '@/shared/ui/button'
@@ -35,10 +30,12 @@ defineProps<{
 
 const message = useMessage()
 const accountInfo = useAccount()
-const client = await useDanmakuClient().initOpenlive()
+const danmakuClient = useDanmakuClient()
 const musicRequestStore = useMusicRequestProvider()
 
 const activeMainTab = ref<'queue' | 'songlist' | 'history' | 'preview' | 'settings'>('queue')
+const selectedObsStyle = ref<ObsStageStyleType>('glass')
+const isTogglingEnabled = ref(false)
 
 const obsUrl = computed(() =>
   buildObsSourceUrl({
@@ -46,7 +43,7 @@ const obsUrl = computed(() =>
     host: CURRENT_HOST,
     credential: 'public-id',
     userId: accountInfo.value?.id,
-    params: { style: 'glass' },
+    params: { style: selectedObsStyle.value },
   }),
 )
 
@@ -54,7 +51,7 @@ const headerLinks = computed<LiveConsoleHeaderLink[]>(() => [
   {
     label: 'OBS 浏览器源地址',
     value: obsUrl.value,
-    description: '将此链接作为 OBS 浏览器源添加，建议分辨率 400x600 或按需调整',
+    description: '将此链接作为 OBS 浏览器源添加，建议分辨率 400x600；切换下方预览样式会自动更新此链接',
   },
 ])
 
@@ -62,14 +59,33 @@ const tabs = computed<LiveConsoleTabItem[]>(() => [
   {
     value: 'queue',
     label: '待播点歌',
-    icon: MusicNote224Filled,
+    icon: ListMusic,
     badge: musicRequestStore.waitingMusics.length,
   },
-  { value: 'songlist', label: '闲置曲库', icon: MusicNote224Regular },
-  { value: 'history', label: '点歌历史', icon: History24Regular },
-  { value: 'preview', label: 'OBS 预览', icon: Desktop24Regular },
-  { value: 'settings', label: '规则与屏蔽', icon: Settings24Regular, keepMounted: true },
+  {
+    value: 'songlist',
+    label: '闲置曲库',
+    icon: Disc3,
+    badge: musicRequestStore.originMusics.length || undefined,
+  },
+  { value: 'history', label: '点歌历史', icon: History },
+  { value: 'preview', label: 'OBS 预览', icon: Monitor },
+  { value: 'settings', label: '规则与屏蔽', icon: Settings2, keepMounted: true },
 ])
+
+async function toggleAcceptingRequests() {
+  if (isTogglingEnabled.value) return
+  isTogglingEnabled.value = true
+  try {
+    const nextEnabled = !musicRequestStore.settings.enabled
+    const ok = await musicRequestStore.saveSettings({ enabled: nextEnabled }, { silent: true })
+    if (ok) {
+      message.success(nextEnabled ? '已开启观众弹幕点歌接单' : '已暂停观众弹幕点歌（不影响当前播放）')
+    }
+  } finally {
+    isTogglingEnabled.value = false
+  }
+}
 
 function copyWaitingList() {
   const text = formatListForCopy(musicRequestStore.waitingMusics, (item) => `${item.music.name} - ${item.from?.name}`)
@@ -90,16 +106,14 @@ function copySongList() {
 }
 
 onMounted(() => {
-  client.onEvent('danmaku', musicRequestStore.handleDanmaku)
+  void danmakuClient.initOpenlive()
+  musicRequestStore.startDanmakuListener()
   void musicRequestStore.loadLibrary()
 })
 
 onActivated(() => {
+  musicRequestStore.startDanmakuListener()
   void musicRequestStore.loadLibrary()
-})
-
-onUnmounted(() => {
-  client.offEvent('danmaku', musicRequestStore.handleDanmaku)
 })
 </script>
 
@@ -107,24 +121,34 @@ onUnmounted(() => {
   <LiveConsolePageShell
     v-model="activeMainTab"
     title="点歌机系统"
-    subtitle="观众通过发送点歌弹幕指令自动点歌并播放音频，支持闲置曲库轮播、冷却与黑名单拦截、以及 OBS 实时状态呈现"
+    subtitle="自动播放背景音乐并接收弹幕点歌插播，支持多候选搜歌、粉丝牌与大航海规则、以及 OBS 实时排队展示"
     :links="headerLinks"
     :tabs="tabs"
   >
     <template #header-action>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <Button
+          :variant="musicRequestStore.settings.enabled ? 'default' : 'outline'"
+          :loading="isTogglingEnabled"
+          @click="toggleAcceptingRequests"
+        >
+          <Power class="size-3.5 mr-1" />
+          {{ musicRequestStore.settings.enabled ? '接单中' : '已暂停接单' }}
+        </Button>
+
         <Button
           variant="outline"
           @click="copyWaitingList"
         >
-          <Copy24Regular class="size-4 mr-1" />
+          <Copy class="size-3.5 mr-1" />
           复制待播单
         </Button>
+
         <Button
           variant="outline"
           @click="copySongList"
         >
-          <MusicNote224Regular class="size-4 mr-1" />
+          <Disc3 class="size-3.5 mr-1" />
           复制曲库
         </Button>
       </div>
@@ -144,6 +168,7 @@ onUnmounted(() => {
 
     <template #preview>
       <ObsStagePreview
+        v-model:style-type="selectedObsStyle"
         obs-path="obs/music-request"
         :user-id="accountInfo?.id"
         copy-success-message="点歌机 OBS 源链接已复制 (已携带当前样式参数)"
@@ -152,7 +177,7 @@ onUnmounted(() => {
         <template #default="{ styleType, speedMultiplier }">
           <MusicRequestOBS
             :id="accountInfo?.id"
-            :key="`${accountInfo?.id}-${styleType}-${speedMultiplier}`"
+            :key="`${accountInfo?.id}-${styleType}`"
             :theme-style="styleType"
             :speed-multiplier="speedMultiplier"
           />

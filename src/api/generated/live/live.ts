@@ -11,11 +11,18 @@ import type {
   GetApiLiveGetTranscriptSegmentsParams,
   GetApiLiveGetTranscriptSessionsParams,
   GetApiLiveRankingParams,
+  GetApiLiveReplayChaptersParams,
+  GetApiLiveReplayMatchParams,
+  GetApiLiveReplayParams,
+  RequestSaveLiveReplay,
   ResponseResultOfListOfResponseLiveInfoModel,
   ResponseResultOfListOfResponseLiveRankingEntryModel,
+  ResponseResultOfListOfResponseLiveReplayMatchCandidate,
   ResponseResultOfListOfResponseLiveTranscriptSessionModel,
   ResponseResultOfResponseCurrentLiveModel,
   ResponseResultOfResponseLiveDetailModel,
+  ResponseResultOfResponseLiveReplayInfo,
+  ResponseResultOfResponseLiveTimelineChapters,
   ResponseResultOfResponseLiveTranscriptSegmentPage,
 } from '../model'
 
@@ -146,6 +153,108 @@ export const getApiLiveRanking = async (
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfListOfResponseLiveRankingEntryModel> => {
   return vtsuruMutator<ResponseResultOfListOfResponseLiveRankingEntryModel>(getGetApiLiveRankingUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetApiLiveReplayUrl = (params?: GetApiLiveReplayParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/live/replay?${stringifiedParams}` : `/api/live/replay`
+}
+
+export const getApiLiveReplay = async (
+  params?: GetApiLiveReplayParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseLiveReplayInfo> => {
+  return vtsuruMutator<ResponseResultOfResponseLiveReplayInfo>(getGetApiLiveReplayUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getPostApiLiveReplayUrl = () => {
+  return `/api/live/replay`
+}
+
+export const postApiLiveReplay = async (
+  requestSaveLiveReplay?: RequestSaveLiveReplay,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseLiveReplayInfo> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseLiveReplayInfo>(getPostApiLiveReplayUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestSaveLiveReplay),
+  })
+}
+
+export const getGetApiLiveReplayChaptersUrl = (params?: GetApiLiveReplayChaptersParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/live/replay/chapters?${stringifiedParams}` : `/api/live/replay/chapters`
+}
+
+export const getApiLiveReplayChapters = async (
+  params?: GetApiLiveReplayChaptersParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseLiveTimelineChapters> => {
+  return vtsuruMutator<ResponseResultOfResponseLiveTimelineChapters>(getGetApiLiveReplayChaptersUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetApiLiveReplayMatchUrl = (params?: GetApiLiveReplayMatchParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/live/replay/match?${stringifiedParams}` : `/api/live/replay/match`
+}
+
+export const getApiLiveReplayMatch = async (
+  params?: GetApiLiveReplayMatchParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfListOfResponseLiveReplayMatchCandidate> => {
+  return vtsuruMutator<ResponseResultOfListOfResponseLiveReplayMatchCandidate>(getGetApiLiveReplayMatchUrl(params), {
     ...options,
     method: 'GET',
   })

@@ -18,6 +18,9 @@ import { Switch } from '@/shared/ui/switch'
 import { useBlockPropsEditor } from './block-props-editors/useBlockPropsEditor'
 import PropsGrid from './PropsGrid.vue'
 
+const BiliContentPropsEditor = defineAsyncComponent(
+  () => import('./block-props-editors/BiliContentPropsEditor.vue'),
+)
 const BasicContentPropsEditor = defineAsyncComponent(
   () => import('./block-props-editors/BasicContentPropsEditor.vue'),
 )
@@ -98,6 +101,8 @@ const editorByType: Partial<Record<BlockType, Component>> = {
   ocProfile: OcProfilePropsEditor,
   commission: CommissionPropsEditor,
   voiceBoard: VoiceBoardPropsEditor,
+  biliVideos: BiliContentPropsEditor,
+  biliDynamics: BiliContentPropsEditor,
 }
 
 const unframedTypes = new Set<BlockType>([

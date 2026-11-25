@@ -6,8 +6,14 @@ import { computed, onUnmounted, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 
 import { useFilePicker } from '@/composables/useFilePicker'
+import { isTauri } from '@/shared/config'
 import { trackManageToolSuccess } from '@/shared/services/analytics'
 import { Button } from '@/shared/ui/button'
+import { defineAsyncComponent } from 'vue'
+
+const BiliQuickDynamicDialog = defineAsyncComponent(() => import('@/apps/client/components/BiliQuickDynamicDialog.vue'))
+const inTauri = isTauri()
+const dynamicDialogOpen = ref(false)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -643,6 +649,12 @@ watchEffect(async () => {
                   @click="backToEdit"
                   >返回编辑</Button
                 >
+                <Button
+                  v-if="inTauri"
+                  variant="secondary"
+                  @click="dynamicDialogOpen = true"
+                  >一键发 B 站动态</Button
+                >
                 <Button @click="downloadZip">打包下载 ZIP</Button>
               </div>
             </div>
@@ -670,6 +682,13 @@ watchEffect(async () => {
         </Transition>
       </CardContent>
     </Card>
+
+    <BiliQuickDynamicDialog
+      v-if="inTauri"
+      v-model:open="dynamicDialogOpen"
+      :blobs="finalBlobs"
+      title="发布九图到 B 站动态"
+    />
 
     <ImgCutter
       ref="imgCutterRef"

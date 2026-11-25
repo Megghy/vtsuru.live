@@ -652,6 +652,83 @@ export function executeActions(
         )
         break
 
+      case ActionType.BAN_USER:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            if (!event || !event.uid || event.uid <= 0) {
+              throw new Error('触发事件缺少有效的用户 UID，无法执行禁言')
+            }
+            if (action.actionConfig.banSkipGuard !== false && (event.guard_level ?? 0) > 0) {
+              return `已跳过大航海用户 ${event.uname} (${event.uid})`
+            }
+            const { banLiveRoomUser } = await import('@/apps/client/api/room-control')
+            const hours = action.actionConfig.banHours ?? 1
+            await banLiveRoomUser(roomId, event.uid, hours, event.msg || '')
+            const label = hours === -1 ? '永久' : hours === 0 ? '本场' : `${hours}小时`
+            return `已禁言 ${event.uname || event.uid} (${label})`
+          },
+          '直播间禁言',
+        )
+        break
+
+      case ActionType.PUBLISH_DYNAMIC:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            const text = processTemplate(action, context)
+            const { useBiliDynamicAutomation } = await import('@/apps/client/store/useBiliDynamicAutomation')
+            const dynStore = useBiliDynamicAutomation()
+            const dynId = await dynStore.publishLiveDynamic(text, {
+              pin: action.actionConfig.dynamicPinOnPublish,
+              recordAsLivePost: action.actionConfig.dynamicRecordAsLivePost !== false,
+              roomId,
+            })
+            return `已发布动态 ${dynId}`
+          },
+          '发布 B 站动态',
+        )
+        break
+
+      case ActionType.DELETE_LIVE_DYNAMIC:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            const { useBiliDynamicAutomation } = await import('@/apps/client/store/useBiliDynamicAutomation')
+            const dynStore = useBiliDynamicAutomation()
+            const res = await dynStore.cleanupLastLiveDynamic()
+            return res.deleted ? `已删除开播动态 ${res.dynId}` : '无待清理开播动态'
+          },
+          '删除开播动态',
+        )
+        break
+
+      case ActionType.SAVE_STREAM_CLIP:
+        runAsyncSideEffectAction(
+          action,
+          context,
+          runtimeState,
+          options,
+          async () => {
+            const { useStreamClipRecorder } = await import('@/apps/client/store/useStreamClipRecorder')
+            const recorder = useStreamClipRecorder()
+            const label = action.actionConfig.clipLabel || action.name || '自动高光切片'
+            const clip = await recorder.saveClip(label, action.actionConfig.clipDurationSeconds)
+            return `已保存切片 ${clip.filePath}`
+          },
+          '保存直播流高光切片',
+        )
+        break
+
       default:
         console.warn(`[AutoAction] 未知的操作类型: ${action.actionType}`)
     }

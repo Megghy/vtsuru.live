@@ -9,12 +9,16 @@ import {
   Image as ImageIcon,
   Languages,
   Quote,
+  ShieldBan,
   User,
+  UserCheck,
   Volume2,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import { computed, onMounted, onUnmounted } from 'vue'
+import { toast } from 'vue-sonner'
 
+import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/generated/model'
 import { isTauri } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
@@ -27,7 +31,32 @@ import { useLiveDashboard } from '../store/useLiveDashboard'
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
 const actions = useEventActions()
+const account = useAccount()
 const inTauri = isTauri()
+
+async function runBiliRoomBan(uid: number, uname: string, hours: number, msg: string) {
+  const roomId = account.value?.biliRoomId
+  if (!roomId || uid <= 0) return
+  try {
+    const { banLiveRoomUser } = await import('@/apps/client/api/room-control')
+    await banLiveRoomUser(roomId, uid, hours, msg)
+    toast.success(`已禁言 ${uname || uid}（${hours === -1 ? '永久' : `${hours}小时`}）`)
+  } catch (err) {
+    toast.error('直播间禁言失败', { description: err instanceof Error ? err.message : String(err) })
+  }
+}
+
+async function runBiliAddAdmin(uid: number, uname: string) {
+  const roomId = account.value?.biliRoomId
+  if (!roomId || uid <= 0) return
+  try {
+    const { addRoomAdmin } = await import('@/apps/client/api/room-control')
+    await addRoomAdmin(roomId, uid)
+    toast.success(`已将 ${uname || uid} 设为直播间房管`)
+  } catch (err) {
+    toast.error('任命房管失败', { description: err instanceof Error ? err.message : String(err) })
+  }
+}
 
 const menu = computed(() => ui.contextMenu)
 
@@ -85,6 +114,27 @@ const items = computed<MenuItem[]>(() => {
       run: () => actions.toggleBlock(event),
       show: !!event.ouid,
     },
+    {
+      key: 'bili-ban-1h',
+      label: '直播间禁言 1 小时',
+      icon: ShieldBan,
+      run: () => runBiliRoomBan(event.uid, event.uname, 1, event.msg || ''),
+      show: inTauri && event.uid > 0 && !!account.value?.biliRoomId,
+    },
+    {
+      key: 'bili-ban-forever',
+      label: '直播间永久禁言',
+      icon: ShieldBan,
+      run: () => runBiliRoomBan(event.uid, event.uname, -1, event.msg || ''),
+      show: inTauri && event.uid > 0 && !!account.value?.biliRoomId,
+    },
+    {
+      key: 'bili-add-admin',
+      label: '设为直播间房管',
+      icon: UserCheck,
+      run: () => runBiliAddAdmin(event.uid, event.uname),
+      show: inTauri && event.uid > 0 && !!account.value?.biliRoomId,
+    },
   ].filter((item) => item.show !== false)
 })
 
@@ -137,7 +187,13 @@ onUnmounted(() => {
       variant="ghost"
       size="xs"
       class="w-full justify-start gap-2 h-auto py-1.5 px-2 font-normal"
-      :class="item.key === 'block' && !actions.isBlocked(menu.event) ? 'text-destructive hover:text-destructive' : ''"
+      :class="
+        (item.key === 'block' && !actions.isBlocked(menu.event)) ||
+        item.key === 'bili-ban-1h' ||
+        item.key === 'bili-ban-forever'
+          ? 'text-destructive hover:text-destructive'
+          : ''
+      "
       @click="onSelect(item)"
     >
       <component

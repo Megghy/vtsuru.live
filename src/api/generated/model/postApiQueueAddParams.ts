@@ -12,4 +12,9 @@ export type PostApiQueueAddParams = {
    * @maxLength 30
    */
   name?: string
+  /**
+   * @minLength 0
+   * @maxLength 100
+   */
+  content?: string
 }

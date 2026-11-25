@@ -98,6 +98,14 @@ export interface DashboardSettings {
   cardMode: boolean
   /** 列表模式下合并连续重复弹幕 */
   collapseRepeated: boolean
+  /** 弹幕面板顶部显示实时热度折线与热词条 */
+  showDanmakuPulse: boolean
+  /** 客户端演播快捷板折叠条是否展开 */
+  streamDeckOpen: boolean
+  /** 客户端顶栏隐藏底部状态栏已显示的重复指标（在线/点赞/看过/总收益） */
+  hideRedundantClientStats: boolean
+  /** 客户端进入中控台时自动收起左侧导航栏 */
+  autoCollapseClientSidebar: boolean
   card: { size: number; autoHide: boolean; autoHideThreshold: number; autoHideSeconds: number }
   sort: Record<'sc' | 'gift', PanelSort>
   paidReadFilter: Record<'sc' | 'gift', PaidReadFilter>
@@ -122,10 +130,88 @@ export interface DashboardSettings {
   }
 }
 
+export interface LayoutPreset {
+  id: string
+  label: string
+  description: string
+  panels: PanelId[]
+  sizes?: Partial<Record<PanelId, number>>
+}
+
+export const LAYOUT_PRESETS: LayoutPreset[] = [
+  {
+    id: 'default',
+    label: '默认三栏',
+    description: '弹幕 + 醒目留言 + 礼物',
+    panels: ['danmaku', 'sc', 'gift'],
+    sizes: { danmaku: 34, sc: 33, gift: 33 },
+  },
+  {
+    id: 'chat',
+    label: '杂谈读棉',
+    description: '弹幕 + 醒目留言 + 提问箱 + 直播提纲',
+    panels: ['danmaku', 'sc', 'question_box', 'checklist'],
+    sizes: { danmaku: 30, sc: 22, question_box: 28, checklist: 20 },
+  },
+  {
+    id: 'sing',
+    label: '歌回点歌',
+    description: '弹幕 + 醒目留言 + 礼物 + 点歌',
+    panels: ['danmaku', 'sc', 'gift', 'song_request'],
+    sizes: { danmaku: 30, sc: 22, gift: 22, song_request: 26 },
+  },
+  {
+    id: 'interact',
+    label: '抽奖核销',
+    description: '弹幕 + 醒目留言 + 抽奖控台 + 积分核销',
+    panels: ['danmaku', 'sc', 'lottery', 'point_redeem'],
+    sizes: { danmaku: 28, sc: 20, lottery: 28, point_redeem: 24 },
+  },
+  {
+    id: 'watch',
+    label: '看片鉴赏',
+    description: '弹幕 + 视频征集 + 待处理',
+    panels: ['danmaku', 'video_collect', 'todo'],
+    sizes: { danmaku: 36, video_collect: 38, todo: 26 },
+  },
+  {
+    id: 'game',
+    label: '游戏减噪',
+    description: '弹幕 + 待处理 + 礼物',
+    panels: ['danmaku', 'todo', 'gift'],
+    sizes: { danmaku: 38, todo: 32, gift: 30 },
+  },
+]
+
 export const DEFAULT_LAYOUT: DashboardSettings['layout'] = {
   order: [...PANEL_IDS],
-  hidden: ['vote', 'song_request', 'queue'],
-  sizes: { danmaku: 34, sc: 33, gift: 33, vote: 25, song_request: 25, queue: 25 },
+  hidden: [
+    'vote',
+    'song_request',
+    'queue',
+    'todo',
+    'question_box',
+    'point_redeem',
+    'video_collect',
+    'lottery',
+    'checklist',
+    'transcript',
+  ],
+  sizes: {
+    danmaku: 34,
+    sc: 33,
+    gift: 33,
+    vote: 25,
+    song_request: 25,
+    queue: 25,
+    todo: 26,
+    question_box: 26,
+    point_redeem: 25,
+    video_collect: 28,
+    lottery: 28,
+    checklist: 22,
+    transcript: 24,
+  },
   vertical: false,
   focusMode: false,
   interactionSize: 22,
@@ -137,6 +223,10 @@ const DEFAULT_SETTINGS: DashboardSettings = {
   hideRead: false,
   cardMode: false,
   collapseRepeated: false,
+  showDanmakuPulse: true,
+  streamDeckOpen: false,
+  hideRedundantClientStats: true,
+  autoCollapseClientSidebar: true,
   card: { size: 24, autoHide: false, autoHideThreshold: 10, autoHideSeconds: 60 },
   sort: { sc: 'time', gift: 'time' },
   paidReadFilter: { sc: 'all', gift: 'all' },
@@ -162,10 +252,24 @@ export function mergeLayout(
   defaults: DashboardSettings['layout'],
 ) {
   const layout = { ...defaults, ...stored, sizes: { ...defaults.sizes, ...stored?.sizes } }
-  const added = PANEL_IDS.filter((id) => !layout.order.includes(id))
-  layout.order = [...layout.order, ...added]
-  layout.hidden = [...layout.hidden, ...added.filter((id) => defaults.hidden.includes(id))]
+  const validOrder = layout.order.filter((id) => PANEL_IDS.includes(id))
+  const validHidden = layout.hidden.filter((id) => PANEL_IDS.includes(id))
+  const added = PANEL_IDS.filter((id) => !validOrder.includes(id))
+  layout.order = [...validOrder, ...added]
+  layout.hidden = [...validHidden, ...added.filter((id) => defaults.hidden.includes(id))]
   return layout
+}
+
+export function applyLayoutPreset(settings: DashboardSettings, presetId: string) {
+  const preset = LAYOUT_PRESETS.find((p) => p.id === presetId)
+  if (!preset) return
+  const activeSet = new Set(preset.panels)
+  const rest = PANEL_IDS.filter((id) => !activeSet.has(id))
+  settings.layout.order = [...preset.panels, ...rest]
+  settings.layout.hidden = [...rest]
+  if (preset.sizes) {
+    settings.layout.sizes = { ...settings.layout.sizes, ...preset.sizes }
+  }
 }
 
 export function mergeToolbarOrder(stored: ToolbarStatKey[] | undefined, defaults: ToolbarStatKey[]) {

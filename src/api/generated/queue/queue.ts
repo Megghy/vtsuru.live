@@ -14,20 +14,28 @@ import type {
   GetApiQueueGetParams,
   PaginationResponseOfListOfResponseQueueModel,
   PostApiQueueAddParams,
+  PostApiQueueCancelFromWebParams,
   PostApiQueueDeactivateParams,
+  PostApiQueueFinishAndNextBatchParams,
   PostApiQueueJoinFromWebParams,
+  PostApiQueueNextBatchParams,
   PostApiQueuePriorityFromWebParams,
   PostApiQueueSetStatusParams,
+  ReplaceQueueMemberModel,
   ResponseResult,
   ResponseResultOfBoolean,
+  ResponseResultOfCancelQueueFromWebResult,
   ResponseResultOfInt32,
   ResponseResultOfInt64Array,
   ResponseResultOfListOfResponseQueueModel,
+  ResponseResultOfQueueBatchActionResult,
+  ResponseResultOfReplaceQueueMemberResult,
   ResponseResultOfResponseQueueModel,
   ResponseResultOfResponseQueueResponseAndSettings,
   ResponseResultOfResponseQueueStatsModel,
   SettingQueue,
   ToggleQueuePinModel,
+  UpdateQueueItemModel,
 } from '../model'
 
 // https://stackoverflow.com/questions/49579094/typescript-conditional-types-filter-out-readonly-properties-pick-only-requir/49579497#49579497
@@ -96,8 +104,32 @@ export const postApiQueueBatchStatus = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiQueueBatchStatusUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchQueueStatusModel),
+  })
+}
+
+export const getPostApiQueueCancelFromWebUrl = (params?: PostApiQueueCancelFromWebParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/queue/cancel-from-web?${stringifiedParams}` : `/api/queue/cancel-from-web`
+}
+
+export const postApiQueueCancelFromWeb = async (
+  params?: PostApiQueueCancelFromWebParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfCancelQueueFromWebResult> => {
+  return vtsuruMutator<ResponseResultOfCancelQueueFromWebResult>(getPostApiQueueCancelFromWebUrl(params), {
+    ...options,
+    method: 'POST',
   })
 }
 
@@ -150,8 +182,34 @@ export const postApiQueueDelete = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiQueueDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiQueueDeleteBody),
+  })
+}
+
+export const getPostApiQueueFinishAndNextBatchUrl = (params?: PostApiQueueFinishAndNextBatchParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/queue/finish-and-next-batch?${stringifiedParams}`
+    : `/api/queue/finish-and-next-batch`
+}
+
+export const postApiQueueFinishAndNextBatch = async (
+  params?: PostApiQueueFinishAndNextBatchParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfQueueBatchActionResult> => {
+  return vtsuruMutator<ResponseResultOfQueueBatchActionResult>(getPostApiQueueFinishAndNextBatchUrl(params), {
+    ...options,
+    method: 'POST',
   })
 }
 
@@ -269,6 +327,30 @@ export const postApiQueueJoinFromWeb = async (
   })
 }
 
+export const getPostApiQueueNextBatchUrl = (params?: PostApiQueueNextBatchParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/queue/next-batch?${stringifiedParams}` : `/api/queue/next-batch`
+}
+
+export const postApiQueueNextBatch = async (
+  params?: PostApiQueueNextBatchParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfQueueBatchActionResult> => {
+  return vtsuruMutator<ResponseResultOfQueueBatchActionResult>(getPostApiQueueNextBatchUrl(params), {
+    ...options,
+    method: 'POST',
+  })
+}
+
 export const getPostApiQueuePinUrl = () => {
   return `/api/queue/pin`
 }
@@ -294,7 +376,7 @@ export const postApiQueuePin = async (
   return vtsuruMutator<ResponseResultOfBoolean>(getPostApiQueuePinUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(toggleQueuePinModel),
   })
 }
@@ -350,8 +432,38 @@ export const postApiQueueReorder = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiQueueReorderUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiQueueReorderBody),
+  })
+}
+
+export const getPostApiQueueReplaceMemberUrl = () => {
+  return `/api/queue/replace-member`
+}
+
+export const postApiQueueReplaceMember = async (
+  replaceQueueMemberModel?: ReplaceQueueMemberModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfReplaceQueueMemberResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfReplaceQueueMemberResult>(getPostApiQueueReplaceMemberUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceQueueMemberModel),
   })
 }
 
@@ -430,8 +542,38 @@ export const postApiQueueTryAdd = async (
   return vtsuruMutator<ResponseResultOfResponseQueueModel>(getPostApiQueueTryAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(eventModel),
+  })
+}
+
+export const getPostApiQueueUpdateItemUrl = () => {
+  return `/api/queue/update-item`
+}
+
+export const postApiQueueUpdateItem = async (
+  updateQueueItemModel?: UpdateQueueItemModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseQueueModel> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseQueueModel>(getPostApiQueueUpdateItemUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateQueueItemModel),
   })
 }
 
@@ -460,7 +602,7 @@ export const postApiQueueUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiQueueUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(settingQueue),
   })
 }

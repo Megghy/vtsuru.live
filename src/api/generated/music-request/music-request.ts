@@ -9,13 +9,14 @@ import { vtsuruMutator } from '../../orval-mutator'
 import type {
   AddSongModel,
   GetApiMusicRequestGetWaitingParams,
+  GetApiMusicRequestSearchKugouListParams,
   GetApiMusicRequestSearchKugouParams,
+  GetApiMusicRequestSearchNeteaseListParams,
   GetApiMusicRequestSearchNeteaseParams,
   ResponseResult,
   ResponseResultOfInt32,
   ResponseResultOfListOfResponseSongModel,
   ResponseResultOfResponseSongModel,
-  ResponseResultOfResponseSongModelArray,
   ResponseResultOfWitingListModel,
   WitingListModel,
 } from '../model'
@@ -45,7 +46,7 @@ export const postApiMusicRequestAdd = async (
   return vtsuruMutator<ResponseResultOfListOfResponseSongModel>(getPostApiMusicRequestAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(addSongModel),
   })
 }
@@ -88,7 +89,7 @@ export const postApiMusicRequestDelete = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiMusicRequestDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiMusicRequestDeleteBody),
   })
 }
@@ -132,6 +133,32 @@ export const getApiMusicRequestGet = async (
   })
 }
 
+export const getGetApiMusicRequestSearchKugouListUrl = (params?: GetApiMusicRequestSearchKugouListParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/music-request/search-kugou-list?${stringifiedParams}`
+    : `/api/music-request/search-kugou-list`
+}
+
+export const getApiMusicRequestSearchKugouList = async (
+  params?: GetApiMusicRequestSearchKugouListParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfListOfResponseSongModel> => {
+  return vtsuruMutator<ResponseResultOfListOfResponseSongModel>(getGetApiMusicRequestSearchKugouListUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
 export const getGetApiMusicRequestSearchKugouUrl = (params?: GetApiMusicRequestSearchKugouParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -153,6 +180,32 @@ export const getApiMusicRequestSearchKugou = async (
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponseSongModel> => {
   return vtsuruMutator<ResponseResultOfResponseSongModel>(getGetApiMusicRequestSearchKugouUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetApiMusicRequestSearchNeteaseListUrl = (params?: GetApiMusicRequestSearchNeteaseListParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/music-request/search-netease-list?${stringifiedParams}`
+    : `/api/music-request/search-netease-list`
+}
+
+export const getApiMusicRequestSearchNeteaseList = async (
+  params?: GetApiMusicRequestSearchNeteaseListParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfListOfResponseSongModel> => {
+  return vtsuruMutator<ResponseResultOfListOfResponseSongModel>(getGetApiMusicRequestSearchNeteaseListUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -191,7 +244,7 @@ export const getPostApiMusicRequestUpdateWaitingUrl = () => {
 export const postApiMusicRequestUpdateWaiting = async (
   witingListModel?: WitingListModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfResponseSongModelArray> => {
+): Promise<ResponseResultOfWitingListModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -206,10 +259,10 @@ export const postApiMusicRequestUpdateWaiting = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfResponseSongModelArray>(getPostApiMusicRequestUpdateWaitingUrl(), {
+  return vtsuruMutator<ResponseResultOfWitingListModel>(getPostApiMusicRequestUpdateWaitingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(witingListModel),
   })
 }

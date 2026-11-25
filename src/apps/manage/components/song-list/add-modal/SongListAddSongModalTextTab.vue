@@ -115,6 +115,7 @@ function parseLines() {
         from: SongPlatform.Custom,
         language,
         tags,
+        aliases: [],
         description,
         createTime: now,
         updateTime: now,

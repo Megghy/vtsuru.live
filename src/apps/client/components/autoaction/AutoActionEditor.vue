@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import type { Placeholder } from './placeholders'
 import AdvancedSettings from './settings/AdvancedSettings.vue'
 import AudioSettings from './settings/AudioSettings.vue'
+import BanUserSettings from './settings/BanUserSettings.vue'
 import BasicSettings from './settings/BasicSettings.vue'
 import DanmakuSettings from './settings/DanmakuSettings.vue'
 import EnterSettings from './settings/EnterSettings.vue'
@@ -53,6 +54,7 @@ const showTemplate = computed(() =>
     ActionType.OBS_NOTIFY,
     ActionType.SPEAK_TTS,
     ActionType.SEND_WEBHOOK,
+    ActionType.PUBLISH_DYNAMIC,
   ].includes(props.action.actionType),
 )
 
@@ -61,6 +63,7 @@ const showObsSettings = computed(() => OBS_ACTION_TYPES.has(props.action.actionT
 const showNotificationSettings = computed(() => NOTIFICATION_ACTION_TYPES.has(props.action.actionType))
 const showAudioSettings = computed(() => props.action.actionType === ActionType.PLAY_AUDIO)
 const showPngtuberSettings = computed(() => props.action.actionType === ActionType.PNGTUBER_EXPRESSION)
+const showBanUserSettings = computed(() => props.action.actionType === ActionType.BAN_USER)
 
 const TriggerSettings = computed(() => {
   if (props.hideTriggerSettings) return null
@@ -123,11 +126,15 @@ const advancedSummary = computed(() => {
       </CardContent>
     </Card>
 
-    <!-- 3. 执行内容 (通知 / 模板 / 音效 / PNGtuber / VTS / OBS) -->
+    <!-- 3. 执行内容 (通知 / 模板 / 音效 / PNGtuber / VTS / OBS / 场控) -->
     <div
-      v-if="showNotificationSettings || showTemplate || showVtsSettings || showObsSettings || showPngtuberSettings || showAudioSettings"
+      v-if="showNotificationSettings || showTemplate || showVtsSettings || showObsSettings || showPngtuberSettings || showAudioSettings || showBanUserSettings"
       class="content-settings-section space-y-3.5"
     >
+      <BanUserSettings
+        v-if="showBanUserSettings"
+        :action="action"
+      />
       <NotificationActionSettings
         v-if="showNotificationSettings"
         :action="action"

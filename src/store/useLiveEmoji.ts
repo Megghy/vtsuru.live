@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import { fetchRoomEmoticons } from '@/api/bili-extra'
 import { getApiVtsuruClientLiveEmoji } from '@/api/generated/vtsuru/vtsuru'
 import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 
@@ -10,16 +11,22 @@ export interface LiveEmojiData {
 }
 
 const STALE_MS = 24 * 60 * 60 * 1000
+const ROOM_STALE_MS = 30 * 60 * 1000
 
-/** B 站直播间通用表情（`[表情名]` → 图片 URL），弹幕窗口与中控台共用 */
+/** B 站直播间通用表情 + 房间专属/大航海表情（`[表情名]` → 图片 URL），弹幕窗口、回放与中控台共用 */
 export const useLiveEmoji = defineStore('LiveEmoji', () => {
   const emojiData = usePersistedStorage<{ updateAt: number; data: LiveEmojiData }>('Data.Emoji', {
     updateAt: 0,
     data: { inline: {}, plain: {} },
   })
+  const roomEmojiMap = ref<Record<string, string>>({})
+  const roomCacheMeta = new Map<number, number>()
+  const inflightRoomMap = new Map<number, Promise<void>>()
+
   const merged = computed<Record<string, string>>(() => ({
     ...emojiData.value.data.plain,
     ...emojiData.value.data.inline,
+    ...roomEmojiMap.value,
   }))
 
   async function refresh() {
@@ -41,5 +48,31 @@ export const useLiveEmoji = defineStore('LiveEmoji', () => {
     return inflightEnsure
   }
 
-  return { emojiData, merged, refresh, ensureFresh }
+  async function ensureRoomEmojis(roomId: number, force = false) {
+    if (!roomId || roomId <= 0) return
+    const lastAt = roomCacheMeta.get(roomId) ?? 0
+    if (!force && Date.now() - lastAt < ROOM_STALE_MS) return
+
+    const inflight = inflightRoomMap.get(roomId)
+    if (inflight) return inflight
+
+    const task = (async () => {
+      try {
+        const res = await fetchRoomEmoticons(roomId)
+        if (res?.room && Object.keys(res.room).length > 0) {
+          roomEmojiMap.value = { ...roomEmojiMap.value, ...res.room }
+        }
+        roomCacheMeta.set(roomId, Date.now())
+      } catch (err) {
+        console.warn('[LiveEmoji] 拉取房间专属表情失败:', err)
+      }
+    })().finally(() => {
+      inflightRoomMap.delete(roomId)
+    })
+
+    inflightRoomMap.set(roomId, task)
+    return task
+  }
+
+  return { emojiData, roomEmojiMap, merged, refresh, ensureFresh, ensureRoomEmojis }
 })

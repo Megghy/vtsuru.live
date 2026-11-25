@@ -179,7 +179,7 @@ export const postApiOrgOrgIdInvitesMember = async (
   return vtsuruMutator<ResponseResultOfOrgInviteResponseModel>(getPostApiOrgOrgIdInvitesMemberUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(createOrgInviteModel),
   })
 }
@@ -251,7 +251,7 @@ export const postApiOrgOrgIdInvitesStreamer = async (
   return vtsuruMutator<ResponseResultOfOrgInviteResponseModel>(getPostApiOrgOrgIdInvitesStreamerUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(createOrgStreamerInviteModel),
   })
 }
@@ -321,7 +321,7 @@ export const postApiOrgOrgIdMemberPermission = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdMemberPermissionUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateOrgMemberPermissionModel),
   })
 }
@@ -352,7 +352,7 @@ export const postApiOrgOrgIdMemberRemove = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdMemberRemoveUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(removeOrgMemberModel),
   })
 }
@@ -383,7 +383,7 @@ export const postApiOrgOrgIdMemberRole = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdMemberRoleUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateOrgMemberRoleModel),
   })
 }
@@ -485,7 +485,7 @@ export const postApiOrgOrgIdPointsOrdersExpress = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdPointsOrdersExpressUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateOrgOrderExpressModel),
   })
 }
@@ -518,7 +518,7 @@ export const postApiOrgOrgIdPointsOrdersServiceUpdate = async (
     {
       ...options,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+      headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
       body: JSON.stringify(updateOrgServiceOrderModel),
     },
   )
@@ -550,7 +550,7 @@ export const postApiOrgOrgIdPointsOrdersStatus = async (
   return vtsuruMutator<ResponseResultOfInt32Array>(getPostApiOrgOrgIdPointsOrdersStatusUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateOrgOrdersStatusModel),
   })
 }
@@ -627,7 +627,7 @@ export const postApiOrgOrgIdPointsSettingsUpdate = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdPointsSettingsUpdateUrl(orgId, params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(settingPoint),
   })
 }
@@ -685,7 +685,7 @@ export const postApiOrgOrgIdStreamerRemove = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdStreamerRemoveUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(removeOrgStreamerModel),
   })
 }
@@ -730,7 +730,7 @@ export const postApiOrgOrgIdStreamerSelfPermission = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdStreamerSelfPermissionUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateStreamerSelfPermissionModel),
   })
 }
@@ -761,7 +761,7 @@ export const postApiOrgOrgIdStreamerUpdate = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdStreamerUpdateUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateOrgStreamerModel),
   })
 }
@@ -854,7 +854,7 @@ export const postApiOrgOrgIdTransferOwner = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdTransferOwnerUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(transferOrgOwnerModel),
   })
 }
@@ -885,7 +885,7 @@ export const postApiOrgOrgIdUpdate = async (
   return vtsuruMutator<ResponseResult>(getPostApiOrgOrgIdUpdateUrl(orgId), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateOrgModel),
   })
 }
@@ -915,7 +915,7 @@ export const postApiOrgCreate = async (
   return vtsuruMutator<ResponseResultOfOrgInfoModel>(getPostApiOrgCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(createOrgModel),
   })
 }

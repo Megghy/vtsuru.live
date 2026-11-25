@@ -157,6 +157,11 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     queueWrite(event)
     if (event.time > pageLoadedAt) {
       fans.evaluateRealtimeTriggers(event)
+      if (event.type === EventDataTypes.Message && isTauri()) {
+        void import('@/apps/client/store/useStreamClipRecorder').then(({ useStreamClipRecorder }) => {
+          useStreamClipRecorder().recordDanmakuForBurst()
+        })
+      }
     }
 
     // 弹幕打点指令识别（例如 !mark 精彩五杀）
@@ -220,11 +225,21 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     const shouldSaveReplay = saveReplay ?? settings.value.highlight.autoSaveReplayOnMark
     if (shouldSaveReplay && isTauri()) {
       try {
+        const { useStreamClipRecorder } = await import('@/apps/client/store/useStreamClipRecorder')
+        const recorder = useStreamClipRecorder()
+        if (recorder.isBuffering) {
+          await recorder.saveClip(cleanLabel)
+          replaySaved = true
+        }
+      } catch {
+        // 本地流切片异常时不阻塞打点与 OBS 回放保存
+      }
+      try {
         const { useOBSStore } = await import('@/apps/client/store/useOBSStore')
         const obsStore = useOBSStore()
         const res = await obsStore.saveReplayBuffer()
-        replaySaved = res.ok
-        if (!res.ok && saveReplay) {
+        replaySaved = replaySaved || res.ok
+        if (!res.ok && saveReplay && !replaySaved) {
           toast.warning(res.message)
         }
       } catch {
@@ -457,6 +472,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     scrollTarget,
     historyRange,
     danmakuList,
+    rawMessages: messages,
     interactionList,
     scList,
     giftList,

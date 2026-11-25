@@ -138,6 +138,7 @@ function parseAudioFileName(fileName: string, filePath: string, folderTags: stri
     description: undefined,
     language: [],
     tags: useFolderAsTag.value ? folderTags.filter(Boolean) : [],
+    aliases: [],
     from: SongPlatform.Custom,
     createTime: Date.now(),
     updateTime: Date.now(),

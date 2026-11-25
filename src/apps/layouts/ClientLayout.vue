@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Mic,
+  Music2,
   Plug,
   Radio,
   RefreshCw,
@@ -27,15 +28,17 @@ import {
   XCircle,
   Zap,
 } from 'lucide-vue-next'
-import { type Component, computed, onMounted, ref } from 'vue'
+import { type Component, computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
+import emitter from '@/app/mitt'
 import ClientCommandSource from '@/apps/client/components/ClientCommandSource.vue'
 import ClientStatusBar from '@/apps/client/components/ClientStatusBar.vue'
 import SpeechMiniController from '@/apps/client/components/SpeechMiniController.vue'
 import WindowBar from '@/apps/client/components/WindowBar.vue'
+import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
 import {
   checkUpdate,
   clientInited,
@@ -65,6 +68,7 @@ import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
+import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
 import '@/apps/client/styles/client-page.css'
@@ -73,7 +77,21 @@ const router = useRouter()
 const route = useRoute()
 const webfetcher = useWebFetcher()
 const rpcServer = useFetcherRpcServer()
+const musicRequestStore = useMusicRequestProvider()
 const { openPalette } = useCommandPalette()
+
+watch(
+  isLoggedIn,
+  (loggedIn) => {
+    if (loggedIn) {
+      musicRequestStore.startDanmakuListener()
+      if (musicRequestStore.originMusics.length === 0) {
+        void musicRequestStore.loadLibrary()
+      }
+    }
+  },
+  { immediate: true },
+)
 
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
 const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
@@ -85,6 +103,25 @@ const biliCookie = useBiliCookie()
 
 const token = ref('')
 const siderCollapsed = ref(false)
+let siderStateBeforeAutoCollapse: boolean | null = null
+
+function handleSidebarAutoCollapse({ active }: { active: boolean }) {
+  if (active) {
+    if (siderStateBeforeAutoCollapse === null) {
+      siderStateBeforeAutoCollapse = siderCollapsed.value
+    }
+    siderCollapsed.value = true
+  } else if (siderStateBeforeAutoCollapse !== null) {
+    siderCollapsed.value = siderStateBeforeAutoCollapse
+    siderStateBeforeAutoCollapse = null
+  }
+}
+
+emitter.on('client:sidebar-auto-collapse', handleSidebarAutoCollapse)
+
+onUnmounted(() => {
+  emitter.off('client:sidebar-auto-collapse', handleSidebarAutoCollapse)
+})
 
 const cookieStatusType = computed(() => {
   if (!biliCookie.hasBiliCookie) return 'warning'
@@ -127,6 +164,7 @@ const routeNameToMenuKey: Record<string, string> = {
   'client-account-manage': 'account-manage',
   'client-fetcher': 'fetcher',
   'client-live-manage': 'live-manage',
+  'client-music-request': 'music-request',
   'client-live-dashboard': 'live-dashboard',
   'client-danmaku-window-manage': 'danmaku-window-manage',
   'client-gift-window-manage': 'gift-window-manage',
@@ -204,6 +242,13 @@ const menuGroups: ClientMenuGroup[] = [
     items: [
       { key: 'live-dashboard', name: 'client-live-dashboard', label: '中控台', icon: LayoutDashboard },
       { key: 'live-manage', name: 'client-live-manage', label: '直播管理', icon: Radio },
+      {
+        key: 'music-request',
+        name: 'client-music-request',
+        label: '点歌机',
+        icon: Music2,
+        hasIndicator: () => musicRequestStore.isPlaying,
+      },
       {
         key: 'danmaku-window-manage',
         name: 'client-danmaku-window-manage',
@@ -644,31 +689,41 @@ onMounted(() => {
           </Button>
         </div>
 
-        <div class="client-page flex-1 min-h-0 overflow-y-auto scrollbar-thin">
+        <div
+          class="client-page flex-1 min-h-0 scrollbar-thin"
+          :class="
+            route.meta.pageBleed
+              ? 'client-page--bleed'
+              : route.meta.pageViewport
+                ? 'client-page--viewport'
+                : 'overflow-y-auto'
+          "
+        >
           <RouterView v-slot="{ Component, route: viewRoute }">
-            <KeepAlive>
-              <div
-                v-if="viewRoute.meta.pageContainer !== 'none'"
-                :class="[
-                  'client-page-inner',
-                  viewRoute.meta.pageWidth === 'md' && 'client-page-inner--md',
-                  viewRoute.meta.pageWidth === 'xl' && 'client-page-inner--xl',
-                  viewRoute.meta.pageWidth === 'full' && 'client-page-inner--full',
-                ]"
-              >
+            <div
+              :class="
+                viewRoute.meta.pageContainer === 'none'
+                  ? 'h-full w-full min-h-0'
+                  : [
+                      'client-page-inner',
+                      viewRoute.meta.pageWidth === 'md' && 'client-page-inner--md',
+                      viewRoute.meta.pageWidth === 'xl' && 'client-page-inner--xl',
+                      viewRoute.meta.pageWidth === 'full' && 'client-page-inner--full',
+                      viewRoute.meta.pageViewport && 'client-page-inner--viewport',
+                    ]
+              "
+            >
+              <KeepAlive>
                 <component
                   :is="Component"
-                  :key="viewRoute.fullPath.split('#')[0]"
+                  :key="viewRoute.path"
                 />
-              </div>
-              <component
-                :is="Component"
-                v-else
-                :key="viewRoute.fullPath.split('#')[0]"
-              />
-            </KeepAlive>
+              </KeepAlive>
+            </div>
           </RouterView>
         </div>
+
+        <ManageMusicPlayer />
       </main>
 
       <SpeechMiniController />

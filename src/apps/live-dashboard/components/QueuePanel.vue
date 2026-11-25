@@ -25,6 +25,7 @@ import { CURRENT_HOST, isTauri } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { copyToClipboard } from '@/shared/utils'
 import { formatListForCopy } from '@/shared/utils/queue'
 
@@ -136,6 +137,7 @@ onMounted(() => {
 <template>
   <PanelShell
     title="排队"
+    panel-id="queue"
     :blurred="blurred"
   >
     <template #actions>
@@ -175,15 +177,19 @@ onMounted(() => {
             {{ isTeamMode ? `本局车队（${progressing.length}/${queue.teamSize}）` : '正在进行' }}
           </span>
           <div class="flex items-center gap-1">
-            <Button
+            <SimpleTooltip
               v-if="progressing.length > 0"
-              size="icon-xs"
-              variant="ghost"
-              title="复制本队名单"
-              @click="copyParty"
+              content="复制本队名单"
             >
-              <Copy class="size-3" />
-            </Button>
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                aria-label="复制本队名单"
+                @click="copyParty"
+              >
+                <Copy class="size-3" />
+              </Button>
+            </SimpleTooltip>
           </div>
         </div>
 
@@ -198,53 +204,64 @@ onMounted(() => {
                 <div class="font-medium text-foreground text-xs truncate">
                   {{ item.user?.name || '未知用户' }}
                 </div>
-                <button
+                <SimpleTooltip
                   v-if="item.content"
-                  type="button"
-                  class="inline-flex items-center gap-1 max-w-full text-[11px] text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
-                  title="点击复制游戏 ID / 备注"
-                  @click="copyNote(item.content)"
+                  content="点击复制游戏 ID / 备注"
                 >
-                  <span class="truncate">{{ item.content }}</span>
-                  <Copy class="size-2.5 shrink-0" />
-                </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 max-w-full text-[11px] text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+                    @click="copyNote(item.content)"
+                  >
+                    <span class="truncate">{{ item.content }}</span>
+                    <Copy class="size-2.5 shrink-0" />
+                  </button>
+                </SimpleTooltip>
               </div>
               <div class="flex items-center gap-0.5 shrink-0">
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  class="text-amber-600"
-                  title="暂离顺延并补位"
-                  @click="queue.replaceMember(item, 'defer', false, true)"
-                >
-                  <Clock class="size-3" />
-                </Button>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  class="text-destructive"
-                  title="取消并补位"
-                  @click="queue.replaceMember(item, 'cancel', false, true)"
-                >
-                  <UserMinus class="size-3" />
-                </Button>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  title="退回等待"
-                  @click="queue.updateStatus(item, QueueStatus.Waiting)"
-                >
-                  <RotateCcw class="size-3" />
-                </Button>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  class="text-emerald-600"
-                  title="单独标记完成"
-                  @click="queue.updateStatus(item, QueueStatus.Finish)"
-                >
-                  <Check class="size-3" />
-                </Button>
+                <SimpleTooltip content="暂离顺延并补位">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    class="text-amber-600"
+                    aria-label="暂离顺延并补位"
+                    @click="queue.replaceMember(item, 'defer', false, true)"
+                  >
+                    <Clock class="size-3" />
+                  </Button>
+                </SimpleTooltip>
+                <SimpleTooltip content="取消并补位">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    class="text-destructive"
+                    aria-label="取消并补位"
+                    @click="queue.replaceMember(item, 'cancel', false, true)"
+                  >
+                    <UserMinus class="size-3" />
+                  </Button>
+                </SimpleTooltip>
+                <SimpleTooltip content="退回等待">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label="退回等待"
+                    @click="queue.updateStatus(item, QueueStatus.Waiting)"
+                  >
+                    <RotateCcw class="size-3" />
+                  </Button>
+                </SimpleTooltip>
+                <SimpleTooltip content="单独标记完成">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    class="text-emerald-600"
+                    aria-label="单独标记完成"
+                    @click="queue.updateStatus(item, QueueStatus.Finish)"
+                  >
+                    <Check class="size-3" />
+                  </Button>
+                </SimpleTooltip>
               </div>
             </div>
           </div>
@@ -309,17 +326,19 @@ onMounted(() => {
           class="w-24 shrink-0"
           @keydown.enter="handleQuickAdd"
         />
-        <Button
-          size="icon"
-          variant="outline"
-          class="shrink-0"
-          :loading="isAdding"
-          :disabled="!quickName.trim()"
-          title="加入排队队列"
-          @click="handleQuickAdd"
-        >
-          <Plus class="size-3.5" />
-        </Button>
+        <SimpleTooltip content="加入排队队列">
+          <Button
+            size="icon"
+            variant="outline"
+            class="shrink-0"
+            :loading="isAdding"
+            :disabled="!quickName.trim()"
+            aria-label="加入排队队列"
+            @click="handleQuickAdd"
+          >
+            <Plus class="size-3.5" />
+          </Button>
+        </SimpleTooltip>
       </div>
 
       <!-- 等待队列 -->
@@ -377,47 +396,58 @@ onMounted(() => {
                   {{ getSourceTag(item.from) }}
                 </Badge>
               </div>
-              <button
+              <SimpleTooltip
                 v-if="item.content"
-                type="button"
-                class="text-[11px] text-muted-foreground hover:text-foreground truncate block max-w-full cursor-pointer text-left"
-                title="点击复制备注"
-                @click="copyNote(item.content)"
+                content="点击复制备注"
               >
-                {{ item.content }}
-              </button>
+                <button
+                  type="button"
+                  class="text-[11px] text-muted-foreground hover:text-foreground truncate block max-w-full cursor-pointer text-left"
+                  @click="copyNote(item.content)"
+                >
+                  {{ item.content }}
+                </button>
+              </SimpleTooltip>
             </div>
 
             <div class="flex items-center gap-0.5 shrink-0">
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                class="text-primary hover:bg-primary/10"
-                :disabled="remainingSlots <= 0"
-                :title="remainingSlots <= 0 ? '当前车队已满' : '拉入本局'"
-                @click="queue.updateStatus(item, QueueStatus.Progressing)"
-              >
-                <Play class="size-3" />
-              </Button>
-              <Button
+              <SimpleTooltip :content="remainingSlots <= 0 ? '当前车队已满' : '拉入本局'">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-primary hover:bg-primary/10"
+                  :disabled="remainingSlots <= 0"
+                  :aria-label="remainingSlots <= 0 ? '当前车队已满' : '拉入本局'"
+                  @click="queue.updateStatus(item, QueueStatus.Progressing)"
+                >
+                  <Play class="size-3" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip
                 v-if="idx > 0"
-                size="icon-xs"
-                variant="ghost"
-                class="text-muted-foreground"
-                title="置顶至队首"
-                @click="queue.pinQueue(item)"
+                content="置顶至队首"
               >
-                <ArrowUpToLine class="size-3" />
-              </Button>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                class="text-muted-foreground hover:text-destructive"
-                title="取消排队"
-                @click="queue.updateStatus(item, QueueStatus.Cancel)"
-              >
-                <X class="size-3" />
-              </Button>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground"
+                  aria-label="置顶至队首"
+                  @click="queue.pinQueue(item)"
+                >
+                  <ArrowUpToLine class="size-3" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip content="取消排队">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-destructive"
+                  aria-label="取消排队"
+                  @click="queue.updateStatus(item, QueueStatus.Cancel)"
+                >
+                  <X class="size-3" />
+                </Button>
+              </SimpleTooltip>
             </div>
           </div>
         </div>

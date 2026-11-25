@@ -21,7 +21,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { SimpleTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -297,46 +297,40 @@ function toggleGiftWindow() {
     <!-- 中间：实时直播互动数据指标 (点击可一键前往中控台) -->
     <div
       class="group flex-1 flex-center cursor-pointer px-2 py-0.5 rounded whitespace-nowrap transition-colors duration-150 hover:bg-popover hover:text-foreground"
-      title="点击前往「中控台」查看全景大盘"
       @click="goToDashboard"
     >
       <div class="inline-flex items-center gap-3.5">
-        <div
-          class="inline-flex items-center gap-1 font-medium"
-          title="累计观看人次"
-        >
-          <Eye class="size-3.5 opacity-80" />
-          <span class="text-foreground">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
-        </div>
+        <SimpleTooltip content="累计观看人次（点击前往中控台）">
+          <div class="inline-flex items-center gap-1 font-medium">
+            <Eye class="size-3.5 opacity-80" />
+            <span class="text-foreground">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
+          </div>
+        </SimpleTooltip>
 
-        <div
-          class="inline-flex items-center gap-1 font-medium"
-          title="本场累计点赞数"
-        >
-          <ThumbsUp class="size-3.5 opacity-80" />
-          <span class="text-foreground">{{ formatStatCount(liveStats.likeCount) }}</span>
-        </div>
+        <SimpleTooltip content="本场累计点赞数（点击前往中控台）">
+          <div class="inline-flex items-center gap-1 font-medium">
+            <ThumbsUp class="size-3.5 opacity-80" />
+            <span class="text-foreground">{{ formatStatCount(liveStats.likeCount) }}</span>
+          </div>
+        </SimpleTooltip>
 
-        <div
-          class="inline-flex items-center gap-1 font-medium"
-          title="在线观众人数"
-        >
-          <Users class="size-3.5 opacity-80" />
-          <span class="text-foreground">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
-        </div>
+        <SimpleTooltip content="在线观众人数（点击前往中控台）">
+          <div class="inline-flex items-center gap-1 font-medium">
+            <Users class="size-3.5 opacity-80" />
+            <span class="text-foreground">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
+          </div>
+        </SimpleTooltip>
 
-        <div
-          class="inline-flex items-center gap-1 font-medium"
-          title="本场总收益（打赏 + SC + 大航海）"
-        >
-          <Wallet class="size-3.5 opacity-80" />
-          <span class="text-amber-500 font-semibold">¥ {{ isIncomeHidden ? '***' : formatIncome(liveStats.totalIncome) }}</span>
-        </div>
+        <SimpleTooltip content="本场总收益（打赏 + SC + 大航海）">
+          <div class="inline-flex items-center gap-1 font-medium">
+            <Wallet class="size-3.5 opacity-80" />
+            <span class="text-amber-500 font-semibold">¥ {{ isIncomeHidden ? '***' : formatIncome(liveStats.totalIncome) }}</span>
+          </div>
+        </SimpleTooltip>
 
-        <LayoutDashboard
-          class="size-3.5 opacity-40 transition-transform duration-150 group-hover:opacity-90 group-hover:scale-110"
-          title="进入中控台"
-        />
+        <SimpleTooltip content="进入中控台">
+          <LayoutDashboard class="size-3.5 opacity-40 transition-transform duration-150 group-hover:opacity-90 group-hover:scale-110" />
+        </SimpleTooltip>
       </div>
     </div>
 

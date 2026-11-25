@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
+import { PANEL_IDS, PANEL_TITLES } from '../core/types'
 import { useDashboardUi } from '../store/ui'
 
 const ui = useDashboardUi()
@@ -9,14 +10,7 @@ const mod = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'
 const GROUPS = [
   {
     title: '面板',
-    items: [
-      ['Alt + 1', '显示 / 隐藏弹幕面板'],
-      ['Alt + 2', '显示 / 隐藏醒目留言面板'],
-      ['Alt + 3', '显示 / 隐藏礼物面板'],
-      ['Alt + 4', '显示 / 隐藏投票面板'],
-      ['Alt + 5', '显示 / 隐藏点歌面板'],
-      ['Alt + 6', '显示 / 隐藏排队面板'],
-    ],
+    items: PANEL_IDS.slice(0, 9).map((id, idx) => [`Alt + ${idx + 1}`, `显示 / 隐藏${PANEL_TITLES[id]}面板`]),
   },
   {
     title: '视图',

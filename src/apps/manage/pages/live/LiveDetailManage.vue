@@ -3,11 +3,12 @@ import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
 import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
 import DataPie24Regular from '@vicons/fluent/es/DataPie24Regular'
 import Mic24Regular from '@vicons/fluent/es/Mic24Regular'
-import { Check, Loader2, Sparkles, UserRoundSearch } from 'lucide-vue-next'
+import { Check, Film, Loader2, Sparkles, UserRoundSearch } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 import type { DanmakuModel } from '@/api/client-types'
 import {
   extractLiveFanFacts,
@@ -20,6 +21,7 @@ import { EventDataTypes } from '@/api/generated/model'
 import DanmakuContainer from '@/apps/manage/components/live/DanmakuContainer.vue'
 import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.vue'
 import LiveOverviewPanel from '@/apps/manage/components/live/LiveOverviewPanel.vue'
+import LiveReplayPanel from '@/apps/manage/components/live/LiveReplayPanel.vue'
 import LiveTranscriptPanel from '@/apps/manage/components/live/LiveTranscriptPanel.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useRealtimeTopic } from '@/shared/realtime'
@@ -55,7 +57,7 @@ const liveInfo = ref<ResponseLiveDetail | undefined>()
 const danmakuContainerRef = ref<InstanceType<typeof DanmakuContainer> | null>(null)
 const transcriptPanelRef = ref<InstanceType<typeof LiveTranscriptPanel> | null>(null)
 
-const activeTab = ref<'overview' | 'danmaku' | 'transcript'>('overview')
+const activeTab = ref<'overview' | 'danmaku' | 'transcript' | 'replay'>('overview')
 
 const isLiveFinished = computed(() => liveInfo.value?.live?.isFinish === true)
 
@@ -160,7 +162,7 @@ function onNewDanmaku(event: DanmakuModel) {
 }
 
 function handleTabChange(tab: string | number) {
-  activeTab.value = tab as 'overview' | 'danmaku' | 'transcript'
+  activeTab.value = tab as 'overview' | 'danmaku' | 'transcript' | 'replay'
   if (tab === 'transcript') {
     nextTick(() => transcriptPanelRef.value?.load())
   }
@@ -169,6 +171,9 @@ function handleTabChange(tab: string | number) {
 onUserEvent<DanmakuModel>('NewDanmaku', onNewDanmaku)
 
 onMounted(async () => {
+  if (account.value.biliRoomId > 0) {
+    void useLiveEmoji().ensureRoomEmojis(account.value.biliRoomId)
+  }
   await loadInitialData()
 })
 </script>
@@ -248,7 +253,7 @@ onMounted(async () => {
         class="w-full space-y-4"
         @update:model-value="handleTabChange"
       >
-        <TabsList class="grid grid-cols-3 w-full sm:w-96">
+        <TabsList class="grid grid-cols-4 w-full sm:w-[460px]">
           <TabsTrigger value="overview">
             <component
               :is="DataPie24Regular"
@@ -269,6 +274,10 @@ onMounted(async () => {
               class="h-3.5 w-3.5 mr-1"
             />
             语音转写
+          </TabsTrigger>
+          <TabsTrigger value="replay">
+            <Film class="size-3.5 mr-1" />
+            录播与空降
           </TabsTrigger>
         </TabsList>
 
@@ -303,6 +312,13 @@ onMounted(async () => {
             ref="transcriptPanelRef"
             :live-id="liveInfo.live.liveId"
           />
+        </TabsContent>
+
+        <TabsContent
+          value="replay"
+          class="space-y-4"
+        >
+          <LiveReplayPanel :live-id="liveInfo.live.liveId" />
         </TabsContent>
       </Tabs>
     </template>

@@ -9,4 +9,8 @@
 export interface QqBotNotifyRequest {
   groupOpenId: string
   liveStart: boolean
+  /** @nullable */
+  biliDynamic?: boolean | null
+  /** @nullable */
+  biliVideo?: boolean | null
 }

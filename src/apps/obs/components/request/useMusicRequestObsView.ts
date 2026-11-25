@@ -15,27 +15,52 @@ interface WaitMusicInfo {
   isPinned?: boolean
 }
 
+interface MusicRequestSnapshotPayload {
+  playing?: WaitMusicInfo
+  waiting?: WaitMusicInfo[]
+  obsTitle?: string | null
+  hideWhenEmpty?: boolean
+  maxDisplayCount?: number
+}
+
 /**
- * 点歌 OBS 展示数据, 复用与排队相同的展示面板契约 (current / items / footerTags),
- * 使其支持 classic / fresh / minimal 三种样式与滚动速度。
+ * 点歌机 OBS 展示数据，复用统一展示面板契约 (current / items / footerTags)
  */
 export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const account = useAccount()
   const playing = ref<WaitMusicInfo>()
   const waiting = ref<WaitMusicInfo[]>([])
   const remoteObsTitle = ref<string | null>(null)
+  const remoteHideWhenEmpty = ref<boolean | null>(null)
+  const remoteMaxDisplayCount = ref<number | null>(null)
 
-  const title = computed(() => {
+  const isSelfContext = computed(() => {
     const validId = parsePositiveId(toValue(currentId))
     const selfId = account.value?.id && account.value.id > 0 ? String(account.value.id) : ''
-    const isSelfContext = !validId || (selfId !== '' && validId === selfId)
+    return !validId || (selfId !== '' && validId === selfId)
+  })
+
+  const title = computed(() => {
     return (
       remoteObsTitle.value?.trim() ||
-      (isSelfContext ? account.value?.settings?.musicRequest?.obsTitle?.trim() : '') ||
+      (isSelfContext.value ? account.value?.settings?.musicRequest?.obsTitle?.trim() : '') ||
       '点歌机'
     )
   })
-  const countText = computed(() => `已有 ${waiting.value.length ?? 0} 首`)
+
+  const hideWhenEmpty = computed(() => {
+    if (remoteHideWhenEmpty.value !== null) return remoteHideWhenEmpty.value
+    return isSelfContext.value ? Boolean(account.value?.settings?.musicRequest?.hideWhenEmpty) : false
+  })
+
+  const maxDisplayCount = computed(() => {
+    if (remoteMaxDisplayCount.value !== null) return Math.max(0, remoteMaxDisplayCount.value)
+    return isSelfContext.value ? Math.max(0, account.value?.settings?.musicRequest?.obsMaxDisplayCount ?? 0) : 0
+  })
+
+  const isEmpty = computed(() => !playing.value && waiting.value.length === 0)
+
+  const countText = computed(() => `待播 ${waiting.value.length ?? 0} 首`)
 
   const current = computed<ObsDisplayCurrent>(() => {
     if (!playing.value) {
@@ -53,9 +78,11 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
   })
 
   const items = computed<ObsDisplayItem[]>(() => {
-    return waiting.value.map((item, index) => ({
+    const list = maxDisplayCount.value > 0 ? waiting.value.slice(0, maxDisplayCount.value) : waiting.value
+    return list.map((item, index) => ({
       id: item.requestId || (item.music.id ? `${item.music.id}-${index}` : `wait-${index}`),
       primary: item.music.name,
+      secondary: item.music.author?.length ? item.music.author.join('/') : undefined,
       badges: [
         ...(item.isPinned ? [{ text: '置顶', tone: 'accent' as const }] : []),
         { text: item.from ? item.from.name : '主播添加', tone: 'default' as const },
@@ -67,11 +94,17 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
 
   let requestSeq = 0
 
-  function applySnapshot(snapshot: { playing?: WaitMusicInfo; waiting?: WaitMusicInfo[]; obsTitle?: string | null }) {
+  function applySnapshot(snapshot: MusicRequestSnapshotPayload) {
     playing.value = snapshot.playing
     waiting.value = snapshot.waiting ?? []
     if (snapshot.obsTitle !== undefined) {
       remoteObsTitle.value = snapshot.obsTitle
+    }
+    if (snapshot.hideWhenEmpty !== undefined) {
+      remoteHideWhenEmpty.value = Boolean(snapshot.hideWhenEmpty)
+    }
+    if (snapshot.maxDisplayCount !== undefined) {
+      remoteMaxDisplayCount.value = Math.max(0, Number(snapshot.maxDisplayCount) || 0)
     }
   }
 
@@ -81,7 +114,7 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
     try {
       const data = await getApiMusicRequestGetWaiting(validId ? { id: Number(validId) } : {})
       if (seq !== requestSeq) return
-      if (data.code === 200) applySnapshot(data.data)
+      if (data.code === 200 && data.data) applySnapshot(data.data)
     } catch (err) {
       if (seq === requestSeq) {
         console.error('[MUSIC-REQUEST-OBS] 获取点歌队列失败', err)
@@ -104,6 +137,8 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
     current,
     items,
     footerTags,
+    hideWhenEmpty,
+    isEmpty,
     update,
     applySnapshot,
   }

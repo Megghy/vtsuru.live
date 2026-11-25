@@ -36,6 +36,8 @@ import {
   postApiVideoCollectSetStatus,
   postApiVideoCollectUpdate,
 } from '@/api/generated/video-collect/video-collect'
+import { batchImportVideoCollect, type BiliCollectionVideoItem } from '@/api/bili-extra'
+import BiliCollectionImportDialog from '@/apps/manage/components/BiliCollectionImportDialog.vue'
 import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
 import { formatDuration } from '@/apps/manage/composables/formatters'
 import { CURRENT_HOST } from '@/shared/config'
@@ -86,6 +88,8 @@ const tableOperation = ref<string>()
 const videoOperation = ref<string>()
 const shareModalVisible = ref(false)
 const editModalVisible = ref(false)
+const biliImportModalVisible = ref(false)
+const isBiliImporting = ref(false)
 const previewModalVisible = ref(false)
 const previewBvid = ref('')
 const safePreviewBvid = computed(() => {
@@ -203,6 +207,26 @@ function currentId() {
 
 function latestSubmitTime(info: VideoCollectInfo) {
   return Math.max(...info.senders.map((sender) => toTimestamp(sender.sendAt)), 0)
+}
+
+async function handleBiliCollectionImport(items: BiliCollectionVideoItem[]) {
+  if (!table.value || items.length === 0) return
+  isBiliImporting.value = true
+  try {
+    const res = await batchImportVideoCollect(
+      table.value.id,
+      items.map((i) => i.bvid),
+    )
+    const parts = [`新增 ${res.imported} 个`]
+    if (res.skipped > 0) parts.push(`跳过重复 ${res.skipped} 个`)
+    if (res.failed.length > 0) parts.push(`失败 ${res.failed.length} 个`)
+    message.success(`导入完成：${parts.join('，')}`)
+    await loadData()
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '批量导入失败')
+  } finally {
+    isBiliImporting.value = false
+  }
 }
 
 async function loadData() {
@@ -462,6 +486,18 @@ function openVideoInBili(bvid: string) {
         </div>
 
         <div class="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            :disabled="isBiliImporting"
+            @click="biliImportModalVisible = true"
+          >
+            <component
+              :is="ArrowDownload24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
+            导入收藏夹/合集
+          </Button>
+
           <Button
             variant="outline"
             @click="shareModalVisible = true"
@@ -938,6 +974,14 @@ function openVideoInBili(bvid: string) {
       :initial-value="editValue"
       :loading="tableOperation === 'edit'"
       @submit="updateTable"
+    />
+
+    <!-- 从 B 站收藏夹 / 合集批量导入 -->
+    <BiliCollectionImportDialog
+      v-model:open="biliImportModalVisible"
+      title="从 B 站收藏夹 / 合集批量导入征集表"
+      description="支持公开收藏夹、UP 主合集链接或 BV 号，勾选后自动拉取视频信息并导入当前征集表"
+      @confirm="handleBiliCollectionImport"
     />
 
     <!-- 就地播放预览弹窗 -->

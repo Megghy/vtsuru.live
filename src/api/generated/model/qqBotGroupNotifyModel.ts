@@ -13,4 +13,6 @@ export interface QqBotGroupNotifyModel {
   lottery: boolean
   vote: boolean
   superChat: boolean
+  biliDynamic: boolean
+  biliVideo: boolean
 }

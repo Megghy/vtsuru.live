@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useEventListener, whenever } from '@vueuse/core'
 import { Pane, Splitpanes } from 'splitpanes'
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted, watch } from 'vue'
+import { computed, defineAsyncComponent, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { isLoadingAccount, isLoggedIn } from '@/api/account'
+import { isLoadingAccount, isLoggedIn, useAccount } from '@/api/account'
+import emitter from '@/app/mitt'
+import { isTauri } from '@/shared/config'
 
 import 'splitpanes/dist/splitpanes.css'
 import { Button } from '@/shared/ui/button'
@@ -25,13 +27,25 @@ import SongRequestPanel from '../components/SongRequestPanel.vue'
 import UserMenu from '../components/UserMenu.vue'
 import VotePanel from '../components/VotePanel.vue'
 import type { PanelId } from '../core/types'
-import { PANEL_IDS } from '../core/types'
+import { PANEL_IDS, PANEL_META } from '../core/types'
 import { DEFAULT_LAYOUT } from '../store/settings'
 import { useDashboardUi } from '../store/ui'
 import { useLiveDashboard } from '../store/useLiveDashboard'
 
+const TodoQueuePanel = defineAsyncComponent(() => import('../components/TodoQueuePanel.vue'))
+const QuestionBoxPanel = defineAsyncComponent(() => import('../components/QuestionBoxPanel.vue'))
+const PointRedeemPanel = defineAsyncComponent(() => import('../components/PointRedeemPanel.vue'))
+const VideoCollectWatchPanel = defineAsyncComponent(() => import('../components/VideoCollectWatchPanel.vue'))
+const LotteryHubPanel = defineAsyncComponent(() => import('../components/LotteryHubPanel.vue'))
+const ChecklistPanel = defineAsyncComponent(() => import('../components/ChecklistPanel.vue'))
+const TranscriptPanel = defineAsyncComponent(() => import('../components/TranscriptPanel.vue'))
+const ClientStreamDeckBar = defineAsyncComponent(() => import('../components/ClientStreamDeckBar.vue'))
+
+const inTauri = isTauri()
+
 const route = useRoute()
 const router = useRouter()
+const account = useAccount()
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
 const liveEmoji = useLiveEmoji()
@@ -69,10 +83,10 @@ watch(
   },
 )
 
-/** 专注模式下隐藏面板原地虚化，否则直接移除 */
+/** 专注模式下隐藏面板原地虚化，否则直接移除；网页端过滤仅客户端面板 */
 const panes = computed(() =>
   layout.value.order
-    .filter((id) => layout.value.focusMode || !layout.value.hidden.includes(id))
+    .filter((id) => (inTauri || !PANEL_META[id].clientOnly) && (layout.value.focusMode || !layout.value.hidden.includes(id)))
     .map((id) => ({ id, blurred: layout.value.hidden.includes(id) })),
 )
 
@@ -101,10 +115,9 @@ function togglePanel(id: PanelId) {
   layout.value.hidden = hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id]
 }
 
-const PANEL_KEYS = Object.fromEntries(PANEL_IDS.map((id, index) => [`Digit${index + 1}`, id])) as Record<
-  string,
-  PanelId
->
+const PANEL_KEYS = Object.fromEntries(
+  PANEL_IDS.slice(0, 9).map((id, index) => [`Digit${index + 1}`, id]),
+) as Record<string, PanelId>
 
 // 客户端内页面被 KeepAlive 缓存，离开时停用快捷键与后台轮询
 let active = true
@@ -140,9 +153,40 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   } else if (e.key === '?') ui.shortcutsOpen = !ui.shortcutsOpen
 })
 
+const isDashboardActive = ref(false)
+
 onMounted(() => {
+  isDashboardActive.value = true
   void liveEmoji.ensureFresh()
 })
+
+onActivated(() => {
+  isDashboardActive.value = true
+})
+
+onDeactivated(() => {
+  isDashboardActive.value = false
+})
+
+watch(
+  () => inTauri && isDashboardActive.value && dashboard.settings.autoCollapseClientSidebar,
+  (active) => {
+    if (inTauri) {
+      emitter.emit('client:sidebar-auto-collapse', { active })
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => account.value?.biliRoomId,
+  (roomId) => {
+    if (roomId && roomId > 0) {
+      void liveEmoji.ensureRoomEmojis(roomId)
+    }
+  },
+  { immediate: true },
+)
 
 whenever(
   () => !isLoadingAccount.value && isLoggedIn.value,
@@ -150,7 +194,13 @@ whenever(
   { immediate: true, once: true },
 )
 
-onUnmounted(() => void dashboard.stop())
+onUnmounted(() => {
+  isDashboardActive.value = false
+  if (inTauri) {
+    emitter.emit('client:sidebar-auto-collapse', { active: false })
+  }
+  void dashboard.stop()
+})
 </script>
 
 <template>
@@ -177,6 +227,7 @@ onUnmounted(() => void dashboard.stop())
     </div>
     <template v-else>
       <DashboardToolbar />
+      <ClientStreamDeckBar v-if="inTauri && dashboard.settings.streamDeckOpen" />
       <FanAlertStrip />
       <Splitpanes
         class="flex-1 min-h-0 dash-split"
@@ -207,8 +258,36 @@ onUnmounted(() => void dashboard.stop())
             v-else-if="pane.id === 'queue'"
             :blurred="pane.blurred"
           />
+          <TodoQueuePanel
+            v-else-if="pane.id === 'todo'"
+            :blurred="pane.blurred"
+          />
+          <QuestionBoxPanel
+            v-else-if="pane.id === 'question_box'"
+            :blurred="pane.blurred"
+          />
+          <PointRedeemPanel
+            v-else-if="pane.id === 'point_redeem'"
+            :blurred="pane.blurred"
+          />
+          <VideoCollectWatchPanel
+            v-else-if="pane.id === 'video_collect'"
+            :blurred="pane.blurred"
+          />
+          <LotteryHubPanel
+            v-else-if="pane.id === 'lottery'"
+            :blurred="pane.blurred"
+          />
+          <ChecklistPanel
+            v-else-if="pane.id === 'checklist'"
+            :blurred="pane.blurred"
+          />
+          <TranscriptPanel
+            v-else-if="pane.id === 'transcript'"
+            :blurred="pane.blurred"
+          />
           <PaidPanel
-            v-else
+            v-else-if="pane.id === 'sc' || pane.id === 'gift'"
             :panel="pane.id"
             :blurred="pane.blurred"
           />

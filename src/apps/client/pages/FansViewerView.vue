@@ -10,7 +10,11 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
+
+import GuardAndMedalPanel from '../components/fans/GuardAndMedalPanel.vue'
 
 import {
   batchFetchFollowerStats,
@@ -23,6 +27,7 @@ import {
 
 const accountStore = useAccount()
 const biliCookieStore = useBiliCookie()
+const activeMainTab = ref('followers')
 
 const followers = ref<BiliFollowerItem[]>([])
 const totalFollowers = ref(0)
@@ -322,7 +327,27 @@ onMounted(async () => {
 
 <template>
   <div class="h-full flex flex-col p-4 space-y-3 overflow-hidden">
-    <!-- 顶部标题与总体统计 -->
+    <Tabs
+      v-model="activeMainTab"
+      class="flex-1 min-h-0 flex flex-col"
+    >
+      <TabsList class="inline-flex w-fit mb-2 shrink-0">
+        <TabsTrigger value="followers">粉丝列表与回关</TabsTrigger>
+        <TabsTrigger value="guard-medal">在舰到期 / 粉丝团 / 批量私信</TabsTrigger>
+      </TabsList>
+
+      <TabsContent
+        value="guard-medal"
+        class="flex-1 min-h-0 overflow-y-auto scrollbar-thin mt-0"
+      >
+        <GuardAndMedalPanel />
+      </TabsContent>
+
+      <TabsContent
+        value="followers"
+        class="flex-1 min-h-0 flex flex-col space-y-3 mt-0 overflow-hidden"
+      >
+        <!-- 顶部标题与总体统计 -->
     <div class="flex flex-col gap-1.5 flex-shrink-0">
       <div class="flex-between gap-3">
         <div class="flex flex-wrap items-center gap-2 min-w-0">
@@ -593,14 +618,16 @@ onMounted(async () => {
           </div>
 
           <!-- 打开空间主页 -->
-          <Button
-            variant="ghost"
-            class="text-muted-foreground hover:text-foreground"
-            title="在浏览器中查看个人主页"
-            @click="openSpace(item.mid)"
-          >
-            <ExternalLink class="size-3.5" />
-          </Button>
+          <SimpleTooltip content="在浏览器中查看个人主页">
+            <Button
+              variant="ghost"
+              class="text-muted-foreground hover:text-foreground"
+              aria-label="在浏览器中查看个人主页"
+              @click="openSpace(item.mid)"
+            >
+              <ExternalLink class="size-3.5" />
+            </Button>
+          </SimpleTooltip>
         </div>
       </div>
 
@@ -629,5 +656,7 @@ onMounted(async () => {
         已加载全部已关注粉丝 (共 {{ followers.length }} 人)
       </div>
     </div>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>

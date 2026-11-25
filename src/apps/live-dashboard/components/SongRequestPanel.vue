@@ -28,6 +28,7 @@ import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { CURRENT_HOST, isTauri } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { SettingRow } from '@/shared/ui/setting-row'
@@ -127,6 +128,39 @@ function getSourceTag(from: SongRequestFrom | number | undefined): string | null
   return null
 }
 
+interface SongRuntimeMeta {
+  keyShift?: string | null
+  proficiency?: string | null
+  instrumentalUrl?: string | null
+  description?: string | null
+}
+
+function songMetaOf(song: unknown): SongRuntimeMeta {
+  if (!song || typeof song !== 'object') return {}
+  const record = song as Record<string, unknown>
+  return {
+    keyShift: typeof record.keyShift === 'string' && record.keyShift.trim() ? record.keyShift.trim() : null,
+    proficiency: typeof record.proficiency === 'string' && record.proficiency.trim() ? record.proficiency.trim() : null,
+    instrumentalUrl:
+      typeof record.instrumentalUrl === 'string' && record.instrumentalUrl.trim() ? record.instrumentalUrl.trim() : null,
+    description: typeof record.description === 'string' && record.description.trim() ? record.description.trim() : null,
+  }
+}
+
+async function openExternalUrl(url: string) {
+  if (isTauri()) {
+    const { openUrl } = await import('@tauri-apps/plugin-opener')
+    await openUrl(url)
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+}
+
+async function copyUrl(url: string) {
+  await navigator.clipboard.writeText(url)
+  toast.success('已复制伴奏链接')
+}
+
 onMounted(async () => {
   void liveRequest.updateActive()
   if (isDesktop) {
@@ -142,6 +176,7 @@ onUnmounted(() => {
 <template>
   <PanelShell
     title="点歌"
+    panel-id="song_request"
     :blurred="blurred"
   >
     <template #actions>
@@ -172,13 +207,22 @@ onUnmounted(() => {
             <Music2 class="size-3.5 text-primary" />
             正在演唱
           </span>
-          <Badge
-            v-if="singing?.song?.keyShift"
-            variant="outline"
-            size="xs"
-          >
-            调性 {{ singing.song.keyShift }}
-          </Badge>
+          <div class="flex items-center gap-1">
+            <Badge
+              v-if="songMetaOf(singing?.song).proficiency"
+              variant="secondary"
+              size="xs"
+            >
+              {{ songMetaOf(singing?.song).proficiency }}
+            </Badge>
+            <Badge
+              v-if="songMetaOf(singing?.song).keyShift"
+              variant="outline"
+              size="xs"
+            >
+              调性 {{ songMetaOf(singing?.song).keyShift }}
+            </Badge>
+          </div>
         </div>
 
         <template v-if="singing">
@@ -189,6 +233,12 @@ onUnmounted(() => {
               <template v-if="singing.song?.author?.length">
                 · {{ singing.song.author.join(' / ') }}
               </template>
+            </div>
+            <div
+              v-if="songMetaOf(singing.song).description"
+              class="mt-1 rounded bg-muted/50 px-1.5 py-0.5 text-[11px] text-muted-foreground break-words"
+            >
+              备注：{{ songMetaOf(singing.song).description }}
             </div>
           </div>
 
@@ -202,36 +252,48 @@ onUnmounted(() => {
               <SkipForward class="size-3.5" />
               {{ waiting.length > 0 ? '完成并唱下一首' : '标记已唱完' }}
             </Button>
-            <Button
-              size="icon-xs"
-              variant="outline"
-              title="仅标记已唱完"
-              @click="liveRequest.updateSongStatus(singing, SongRequestStatus.Finish)"
-            >
-              <Check class="size-3.5" />
-            </Button>
-            <Button
-              size="icon-xs"
-              variant="outline"
-              title="退回待唱"
-              @click="liveRequest.updateSongStatus(singing, SongRequestStatus.Waiting)"
-            >
-              <RotateCcw class="size-3.5" />
-            </Button>
-            <a
-              v-if="singing.song?.instrumentalUrl"
-              :href="singing.song.instrumentalUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <SimpleTooltip content="仅标记已唱完">
               <Button
                 size="icon-xs"
                 variant="outline"
-                title="打开伴奏 / 乐谱"
+                aria-label="仅标记已唱完"
+                @click="liveRequest.updateSongStatus(singing, SongRequestStatus.Finish)"
               >
-                <ExternalLink class="size-3.5" />
+                <Check class="size-3.5" />
               </Button>
-            </a>
+            </SimpleTooltip>
+            <SimpleTooltip content="退回待唱">
+              <Button
+                size="icon-xs"
+                variant="outline"
+                aria-label="退回待唱"
+                @click="liveRequest.updateSongStatus(singing, SongRequestStatus.Waiting)"
+              >
+                <RotateCcw class="size-3.5" />
+              </Button>
+            </SimpleTooltip>
+            <template v-if="songMetaOf(singing.song).instrumentalUrl">
+              <SimpleTooltip content="打开伴奏 / 乐谱">
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  aria-label="打开伴奏 / 乐谱"
+                  @click="openExternalUrl(songMetaOf(singing.song).instrumentalUrl!)"
+                >
+                  <ExternalLink class="size-3.5" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip content="复制伴奏链接">
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  aria-label="复制伴奏链接"
+                  @click="copyUrl(songMetaOf(singing.song).instrumentalUrl!)"
+                >
+                  <Copy class="size-3.5" />
+                </Button>
+              </SimpleTooltip>
+            </template>
           </div>
         </template>
 
@@ -261,17 +323,19 @@ onUnmounted(() => {
           class="flex-1 min-w-0"
           @keydown.enter="handleQuickAdd"
         />
-        <Button
-          size="icon"
-          variant="outline"
-          class="shrink-0"
-          :loading="isAdding"
-          :disabled="!quickSongName.trim()"
-          title="加入待唱队列"
-          @click="handleQuickAdd"
-        >
-          <Plus class="size-3.5" />
-        </Button>
+        <SimpleTooltip content="加入待唱队列">
+          <Button
+            size="icon"
+            variant="outline"
+            class="shrink-0"
+            :loading="isAdding"
+            :disabled="!quickSongName.trim()"
+            aria-label="加入待唱队列"
+            @click="handleQuickAdd"
+          >
+            <Plus class="size-3.5" />
+          </Button>
+        </SimpleTooltip>
       </div>
 
       <!-- 等待队列 -->
@@ -310,39 +374,70 @@ onUnmounted(() => {
               </div>
               <div class="text-[11px] text-muted-foreground truncate">
                 {{ item.user?.name || '主播添加' }}
-                <template v-if="item.song?.keyShift"> · {{ item.song.keyShift }}</template>
+                <template v-if="songMetaOf(item.song).keyShift"> · {{ songMetaOf(item.song).keyShift }}</template>
+                <template v-if="songMetaOf(item.song).proficiency"> · {{ songMetaOf(item.song).proficiency }}</template>
               </div>
+              <SimpleTooltip
+                v-if="songMetaOf(item.song).description"
+                :content="songMetaOf(item.song).description!"
+              >
+                <div class="text-[10px] text-muted-foreground/85 truncate">
+                  备注：{{ songMetaOf(item.song).description }}
+                </div>
+              </SimpleTooltip>
             </div>
 
             <div class="flex items-center gap-0.5 shrink-0">
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                class="text-primary hover:bg-primary/10"
-                title="开始演唱"
-                @click="liveRequest.updateSongStatus(item, SongRequestStatus.Singing)"
+              <SimpleTooltip
+                v-if="songMetaOf(item.song).instrumentalUrl"
+                content="打开伴奏链接"
               >
-                <Play class="size-3" />
-              </Button>
-              <Button
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-primary"
+                  aria-label="打开伴奏链接"
+                  @click="openExternalUrl(songMetaOf(item.song).instrumentalUrl!)"
+                >
+                  <ExternalLink class="size-3" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip content="开始演唱">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-primary hover:bg-primary/10"
+                  aria-label="开始演唱"
+                  @click="liveRequest.updateSongStatus(item, SongRequestStatus.Singing)"
+                >
+                  <Play class="size-3" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip
                 v-if="idx > 0"
-                size="icon-xs"
-                variant="ghost"
-                class="text-muted-foreground"
-                title="置顶至队首"
-                @click="liveRequest.pinSong(item)"
+                content="置顶至队首"
               >
-                <ArrowUpToLine class="size-3" />
-              </Button>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                class="text-muted-foreground hover:text-destructive"
-                title="取消点播"
-                @click="liveRequest.updateSongStatus(item, SongRequestStatus.Cancel)"
-              >
-                <X class="size-3" />
-              </Button>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground"
+                  aria-label="置顶至队首"
+                  @click="liveRequest.pinSong(item)"
+                >
+                  <ArrowUpToLine class="size-3" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip content="取消点播">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-destructive"
+                  aria-label="取消点播"
+                  @click="liveRequest.updateSongStatus(item, SongRequestStatus.Cancel)"
+                >
+                  <X class="size-3" />
+                </Button>
+              </SimpleTooltip>
             </div>
           </div>
         </div>
@@ -373,14 +468,16 @@ onUnmounted(() => {
         >
           <FileText class="size-3 shrink-0" />
           <span class="truncate flex-1 font-mono">{{ resolvedNowPlayingPath || 'obs-text/now_playing.txt' }}</span>
-          <Button
-            size="icon-xs"
-            variant="ghost"
-            title="复制文件路径"
-            @click="copyNowPlayingPath"
-          >
-            <Copy class="size-3" />
-          </Button>
+          <SimpleTooltip content="复制文件路径">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              aria-label="复制文件路径"
+              @click="copyNowPlayingPath"
+            >
+              <Copy class="size-3" />
+            </Button>
+          </SimpleTooltip>
         </div>
       </section>
     </div>

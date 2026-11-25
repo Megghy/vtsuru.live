@@ -31,6 +31,12 @@ export interface ResponseQueueModel {
   user?: DanmakuUserInfo
   createAt: number
   /** @nullable */
+  startAt?: number | null
+  /** @nullable */
   finishAt?: number | null
+  /** @nullable */
+  liveId?: string | null
+  /** @nullable */
+  batchNo?: number | null
   requestBy: string
 }

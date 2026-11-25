@@ -106,6 +106,8 @@ const ICONS: Record<BlockType, Component> = {
   ocProfile: Palette,
   commission: Briefcase,
   voiceBoard: Volume2,
+  biliVideos: Film,
+  biliDynamics: Megaphone,
 }
 
 export const BLOCK_DEFINITIONS = SHARED_BLOCK_DEFINITIONS.map((definition): BlockDefinition => ({

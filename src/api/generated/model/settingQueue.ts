@@ -47,4 +47,14 @@ export interface SettingQueue {
   allowPointPriority: boolean
   pointPriorityKeyword: string
   pointPriorityCost: number
+  teamSize: number
+  leaveKeyword: string
+  allowSC: boolean
+  minSCPrice: number
+  scIgnoreLimit?: boolean
+  preventSameLiveRepeat: boolean
+  maxJoinPerLive: number
+  autoClearOnLiveStart: boolean
+  hideWhenEmpty: boolean
+  showContent: boolean
 }

@@ -58,4 +58,24 @@ export interface AddSongModel {
   isPinned?: boolean | null
   /** @nullable */
   isDisabled?: boolean | null
+  /** @nullable */
+  aliases?: string[] | null
+  /**
+   * @minLength 0
+   * @maxLength 50
+   * @nullable
+   */
+  proficiency?: string | null
+  /**
+   * @minLength 0
+   * @maxLength 50
+   * @nullable
+   */
+  keyShift?: string | null
+  /**
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
+  instrumentalUrl?: string | null
 }

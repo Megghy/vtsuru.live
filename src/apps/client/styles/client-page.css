@@ -12,9 +12,21 @@
 }
 
 .client-page {
-  min-height: 100%;
   padding: var(--client-space-lg);
   box-sizing: border-box;
+}
+
+.client-page--viewport {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.client-page--bleed {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .client-page-inner {
@@ -26,6 +38,12 @@
   gap: var(--client-space-md);
   min-height: 100%;
   box-sizing: border-box;
+}
+
+.client-page-inner--viewport {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
 }
 
 .client-page-inner--md {

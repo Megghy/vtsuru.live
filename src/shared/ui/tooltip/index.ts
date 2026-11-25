@@ -1,3 +1,4 @@
+export { default as SimpleTooltip } from './SimpleTooltip.vue'
 export { default as Tooltip } from './Tooltip.vue'
 export { default as TooltipContent } from './TooltipContent.vue'
 export { default as TooltipProvider } from './TooltipProvider.vue'

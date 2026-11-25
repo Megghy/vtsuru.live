@@ -1146,6 +1146,46 @@ export const SHARED_BLOCK_DEFINITIONS = [
       }
     }),
   ),
+  definition(
+    'biliVideos',
+    'B 站最新投稿 / 合集',
+    'media',
+    ['视频', '投稿', '合集', 'bilibili', 'b站', '翻唱', '切片'],
+    {
+      title: '最新视频',
+      keyword: '',
+      seasonId: 0,
+      count: 6,
+      columns: 3,
+      framed: true,
+      backgrounded: true,
+    },
+    withProps((p, path, errors) => {
+      optionalString(p, 'title', path, errors)
+      optionalString(p, 'keyword', path, errors)
+      optionalNumber(p, 'seasonId', 0, 2147483647, path, errors, true)
+      optionalNumber(p, 'count', 1, 24, path, errors, true)
+      optionalNumber(p, 'columns', 1, 4, path, errors, true)
+    }),
+  ),
+  definition(
+    'biliDynamics',
+    'B 站空间动态',
+    'data',
+    ['动态', 'bilibili', 'b站', '更新', '时间线'],
+    {
+      title: 'B 站动态',
+      count: 5,
+      showImages: true,
+      framed: true,
+      backgrounded: true,
+    },
+    withProps((p, path, errors) => {
+      optionalString(p, 'title', path, errors)
+      optionalNumber(p, 'count', 1, 15, path, errors, true)
+      optionalBoolean(p, 'showImages', path, errors)
+    }),
+  ),
 ] as const satisfies readonly SharedBlockDefinition[]
 
 export const SHARED_BLOCK_DEFINITION_MAP = Object.fromEntries(

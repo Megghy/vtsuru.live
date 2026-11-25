@@ -13,9 +13,11 @@ import type {
   PostApiVideoCollectFinishParams,
   PostApiVideoCollectSetStatusParams,
   RequestAddVideo,
+  RequestBatchImportVideos,
   RequestVideoTable,
   ResponseResult,
   ResponseResultOfIEnumerableOfResponseVideoCollectModel,
+  ResponseResultOfResponseBatchImportVideos,
   ResponseResultOfResponseVideoCollectDetail,
   ResponseResultOfResponseVideoCollectModel,
 } from '../model'
@@ -45,8 +47,38 @@ export const postApiVideoCollectAdd = async (
   return vtsuruMutator<ResponseResult>(getPostApiVideoCollectAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestAddVideo),
+  })
+}
+
+export const getPostApiVideoCollectBatchImportUrl = () => {
+  return `/api/video-collect/batch-import`
+}
+
+export const postApiVideoCollectBatchImport = async (
+  requestBatchImportVideos?: RequestBatchImportVideos,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseBatchImportVideos> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseBatchImportVideos>(getPostApiVideoCollectBatchImportUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestBatchImportVideos),
   })
 }
 
@@ -75,7 +107,7 @@ export const postApiVideoCollectCreate = async (
   return vtsuruMutator<ResponseResultOfResponseVideoCollectModel>(getPostApiVideoCollectCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestVideoTable),
   })
 }
@@ -245,7 +277,7 @@ export const postApiVideoCollectUpdate = async (
   return vtsuruMutator<ResponseResultOfResponseVideoCollectModel>(getPostApiVideoCollectUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestVideoTable),
   })
 }

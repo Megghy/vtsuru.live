@@ -6,7 +6,101 @@ import { vtsuruMutator } from '../../orval-mutator'
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GetApiBiliRoomStatsParams, ResponseResultOfResponseLiveRoomStats } from '../model'
+import type {
+  GetApiBiliGiftConfigParams,
+  GetApiBiliRoomEmoticonsParams,
+  GetApiBiliRoomStatsParams,
+  GetApiBiliSpaceDynamicsParams,
+  GetApiBiliSpaceVideosParams,
+  ParseCollectionRequest,
+  RecordTianxuanRequest,
+  ResponseResultOfBiliCollectionParseResult,
+  ResponseResultOfBiliRoomEmoticonsResult,
+  ResponseResultOfIReadOnlyListOfBiliGiftConfigItem,
+  ResponseResultOfIReadOnlyListOfBiliSpaceDynamicItem,
+  ResponseResultOfIReadOnlyListOfBiliSpaceVideoItem,
+  ResponseResultOfListOfBiliTianxuanRecord,
+  ResponseResultOfObject,
+  ResponseResultOfResponseLiveRoomStats,
+} from '../model'
+
+export const getGetApiBiliGiftConfigUrl = (params?: GetApiBiliGiftConfigParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/bili/gift-config?${stringifiedParams}` : `/api/bili/gift-config`
+}
+
+export const getApiBiliGiftConfig = async (
+  params?: GetApiBiliGiftConfigParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfIReadOnlyListOfBiliGiftConfigItem> => {
+  return vtsuruMutator<ResponseResultOfIReadOnlyListOfBiliGiftConfigItem>(getGetApiBiliGiftConfigUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getPostApiBiliParseCollectionUrl = () => {
+  return `/api/bili/parse-collection`
+}
+
+export const postApiBiliParseCollection = async (
+  parseCollectionRequest?: ParseCollectionRequest,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfBiliCollectionParseResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfBiliCollectionParseResult>(getPostApiBiliParseCollectionUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(parseCollectionRequest),
+  })
+}
+
+export const getGetApiBiliRoomEmoticonsUrl = (params?: GetApiBiliRoomEmoticonsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/bili/room-emoticons?${stringifiedParams}` : `/api/bili/room-emoticons`
+}
+
+export const getApiBiliRoomEmoticons = async (
+  params?: GetApiBiliRoomEmoticonsParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfBiliRoomEmoticonsResult> => {
+  return vtsuruMutator<ResponseResultOfBiliRoomEmoticonsResult>(getGetApiBiliRoomEmoticonsUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
 
 export const getGetApiBiliRoomStatsUrl = (params?: GetApiBiliRoomStatsParams) => {
   const normalizedParams = new URLSearchParams()
@@ -29,5 +123,96 @@ export const getApiBiliRoomStats = async (
   return vtsuruMutator<ResponseResultOfResponseLiveRoomStats>(getGetApiBiliRoomStatsUrl(params), {
     ...options,
     method: 'GET',
+  })
+}
+
+export const getGetApiBiliSpaceDynamicsUrl = (params?: GetApiBiliSpaceDynamicsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/bili/space-dynamics?${stringifiedParams}` : `/api/bili/space-dynamics`
+}
+
+export const getApiBiliSpaceDynamics = async (
+  params?: GetApiBiliSpaceDynamicsParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfIReadOnlyListOfBiliSpaceDynamicItem> => {
+  return vtsuruMutator<ResponseResultOfIReadOnlyListOfBiliSpaceDynamicItem>(getGetApiBiliSpaceDynamicsUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetApiBiliSpaceVideosUrl = (params?: GetApiBiliSpaceVideosParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/bili/space-videos?${stringifiedParams}` : `/api/bili/space-videos`
+}
+
+export const getApiBiliSpaceVideos = async (
+  params?: GetApiBiliSpaceVideosParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfIReadOnlyListOfBiliSpaceVideoItem> => {
+  return vtsuruMutator<ResponseResultOfIReadOnlyListOfBiliSpaceVideoItem>(getGetApiBiliSpaceVideosUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetApiBiliTianxuanHistoryUrl = () => {
+  return `/api/bili/tianxuan/history`
+}
+
+export const getApiBiliTianxuanHistory = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfListOfBiliTianxuanRecord> => {
+  return vtsuruMutator<ResponseResultOfListOfBiliTianxuanRecord>(getGetApiBiliTianxuanHistoryUrl(), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getPostApiBiliTianxuanRecordUrl = () => {
+  return `/api/bili/tianxuan/record`
+}
+
+export const postApiBiliTianxuanRecord = async (
+  recordTianxuanRequest?: RecordTianxuanRequest,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfObject> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfObject>(getPostApiBiliTianxuanRecordUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(recordTianxuanRequest),
   })
 }

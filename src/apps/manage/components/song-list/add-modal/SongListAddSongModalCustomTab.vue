@@ -46,6 +46,7 @@ function createEmptyModel(): ResponseSongModel {
     author: [],
     language: [],
     tags: [],
+    aliases: [],
     url: '',
     externalUrl: '',
     cover: '',

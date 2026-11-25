@@ -71,6 +71,7 @@ export default {
         title: '自动操作管理',
         forceReload: true,
         pageWidth: 'full',
+        pageViewport: true,
       },
     },
     {
@@ -142,6 +143,7 @@ export default {
         title: '中控台',
         pageWidth: 'full',
         pageContainer: 'none',
+        pageBleed: true,
       },
     },
     {
@@ -151,6 +153,15 @@ export default {
       meta: {
         title: '直播管理',
         forceReload: true,
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'music-request',
+      name: 'client-music-request',
+      component: async () => import('@/apps/manage/pages/MusicRequestManageView.vue'),
+      meta: {
+        title: '点歌机',
         pageWidth: 'xl',
       },
     },

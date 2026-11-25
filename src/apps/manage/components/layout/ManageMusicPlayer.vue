@@ -1,410 +1,616 @@
 <script setup lang="ts">
-import ArrowNext20Filled from '@vicons/fluent/es/ArrowNext20Filled'
-import ArrowPrevious20Filled from '@vicons/fluent/es/ArrowPrevious20Filled'
-import ChevronDown24Regular from '@vicons/fluent/es/ChevronDown24Regular'
-import ChevronUp24Regular from '@vicons/fluent/es/ChevronUp24Regular'
-import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
-import DesktopSpeaker24Filled from '@vicons/fluent/es/DesktopSpeaker24Filled'
-import MusicNote224Filled from '@vicons/fluent/es/MusicNote224Filled'
-import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import { useElementSize } from '@vueuse/core'
-import { Pause } from 'lucide-vue-next'
-import { computed, onUnmounted, ref, watch } from 'vue'
-// @ts-ignore
-import APlayer from 'vue3-aplayer'
+import {
+  Ban,
+  ChevronDown,
+  ChevronUp,
+  ListMusic,
+  Loader2,
+  Music2,
+  Pause,
+  Play,
+  Repeat,
+  Repeat1,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  Trash2,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Slider } from '@/shared/ui/slider'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { formatAudioTime } from '@/store/musicRequestHelpers'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
 const emit = defineEmits<{
   (e: 'heightChange', height: number): void
 }>()
 
-const musicRquestStore = useMusicRequestProvider()
+const musicRequestStore = useMusicRequestProvider()
 
-const musicPlayerCardRef = ref<HTMLElement | null>(null)
-const { height: musicPlayerCardHeight } = useElementSize(musicPlayerCardRef)
+const audioRef = ref<HTMLAudioElement | null>(null)
+const playerCardRef = ref<HTMLElement | null>(null)
+const { height: playerCardHeight } = useElementSize(playerCardRef)
+
+const isPlayerMinimized = usePersistedStorage('Settings.MusicPlayer.Minimized', false)
+const lastNonZeroVolume = ref(0.5)
+const isSeeking = ref(false)
+const seekPreviewTime = ref(0)
 
 const isPlayerVisible = computed(
   () =>
-    musicRquestStore.originMusics.length > 0 ||
-    musicRquestStore.waitingMusics.length > 0 ||
-    Boolean(musicRquestStore.currentOriginMusic) ||
-    Boolean(musicRquestStore.currentMusic.src) ||
-    musicRquestStore.isPlayingOrderMusic,
+    !musicRequestStore.isPlayerDismissed &&
+    (musicRequestStore.originMusics.length > 0 ||
+      musicRequestStore.waitingMusics.length > 0 ||
+      Boolean(musicRequestStore.currentOriginMusic) ||
+      Boolean(musicRequestStore.currentMusic.src) ||
+      musicRequestStore.isPlayingOrderMusic),
 )
 
-const isPlayerMinimized = usePersistedStorage('Settings.MusicPlayer.Minimized', false)
+const hasTrack = computed(() => Boolean(musicRequestStore.currentMusic.src))
 
-const playerVolume = computed({
-  get: () => musicRquestStore.settings.volume,
-  set: (value) => (musicRquestStore.settings.volume = value),
-})
+const canGoNext = computed(
+  () =>
+    musicRequestStore.isPlayingOrderMusic ||
+    musicRequestStore.waitingMusics.length > 0 ||
+    musicRequestStore.originMusics.length > 0,
+)
 
-const aplayer = ref<any>()
+const displayTime = computed(() => (isSeeking.value ? seekPreviewTime.value : musicRequestStore.currentTime))
 
-const sliderVolume = computed({
-  get: () => [playerVolume.value * 100],
-  set: (val) => {
-    if (val && val.length > 0) playerVolume.value = val[0] / 100
+const progressValue = computed({
+  get: () => [displayTime.value],
+  set: (val: number[]) => {
+    if (!val?.length) return
+    isSeeking.value = true
+    seekPreviewTime.value = val[0]
   },
 })
-watch(aplayer, (instance) => {
-  musicRquestStore.aplayerRef = instance
-  if (instance && musicRquestStore.currentMusic.src) {
-    instance.thenPlay?.()
+
+function commitSeek(val: number[]) {
+  isSeeking.value = false
+  if (val?.length) {
+    musicRequestStore.seekTo(val[0])
+  }
+}
+
+const volumePercent = computed(() => Math.round((musicRequestStore.settings.volume ?? 0.5) * 100))
+
+const sliderVolume = computed({
+  get: () => [volumePercent.value],
+  set: (val: number[]) => {
+    if (!val?.length) return
+    const nextVol = Math.min(1, Math.max(0, val[0] / 100))
+    if (nextVol > 0) lastNonZeroVolume.value = nextVol
+    musicRequestStore.updatePlaybackPreference({ volume: nextVol })
+  },
+})
+
+function toggleMute() {
+  const current = musicRequestStore.settings.volume ?? 0.5
+  if (current > 0) {
+    lastNonZeroVolume.value = current
+    musicRequestStore.updatePlaybackPreference({ volume: 0 })
+  } else {
+    musicRequestStore.updatePlaybackPreference({ volume: lastNonZeroVolume.value || 0.5 })
+  }
+}
+
+function toggleShuffle() {
+  musicRequestStore.updatePlaybackPreference({ shuffle: !musicRequestStore.settings.shuffle })
+}
+
+function cycleRepeat() {
+  const order: Array<'repeat-all' | 'repeat-one' | 'no-repeat'> = ['repeat-all', 'repeat-one', 'no-repeat']
+  const idx = order.indexOf(musicRequestStore.settings.repeat)
+  const next = order[(idx + 1) % order.length]
+  musicRequestStore.updatePlaybackPreference({ repeat: next })
+}
+
+const repeatTooltip = computed(() => {
+  switch (musicRequestStore.settings.repeat) {
+    case 'repeat-one':
+      return '循环模式：单曲循环'
+    case 'no-repeat':
+      return '循环模式：顺序播完停止'
+    default:
+      return '循环模式：列表循环'
   }
 })
 
-onUnmounted(() => {
-  if (musicRquestStore.aplayerRef === aplayer.value) {
-    musicRquestStore.aplayerRef = undefined
+const currentSourceBadge = computed(() => {
+  if (musicRequestStore.currentOriginMusic && musicRequestStore.isPlayingOrderMusic) {
+    return {
+      variant: 'brand' as const,
+      label: `点歌 · ${musicRequestStore.currentOriginMusic.from?.name || '观众'}`,
+    }
   }
-})
-
-const currentPlayingInfo = computed(() => {
-  if (musicRquestStore.currentOriginMusic && musicRquestStore.isPlayingOrderMusic) {
+  if (musicRequestStore.currentMusic.title) {
     return {
-      type: 'request',
-      info: `正在播放 ${musicRquestStore.currentOriginMusic.from?.name || '观众'} 点的歌`,
-    } as const
-  } else if (musicRquestStore.currentMusic && musicRquestStore.currentMusic.title) {
-    return {
-      type: 'normal',
-      info: '正在播放背景音乐',
-    } as const
+      variant: 'secondary' as const,
+      label: '背景轮播',
+    }
   }
   return null
 })
 
 const footerHeight = computed(() => {
   if (!isPlayerVisible.value) return 0
-  return musicPlayerCardHeight.value + 16
+  return playerCardHeight.value + 12
 })
 
 watch(footerHeight, (val) => emit('heightChange', val), { immediate: true })
 
-function onNextMusic() {
-  musicRquestStore.nextMusic()
-}
+watch(
+  () => musicRequestStore.settings.volume,
+  (vol) => {
+    if (audioRef.value) {
+      audioRef.value.volume = Math.min(1, Math.max(0, vol ?? 0.5))
+    }
+  },
+)
 
-function togglePlay() {
-  if (!aplayer.value) return
-  const audio = aplayer.value.audio
-  if (audio.paused) aplayer.value.play()
-  else aplayer.value.pause()
-}
+onMounted(() => {
+  musicRequestStore.attachAudioElement(audioRef.value)
+})
 
-function onPreviousMusic() {
-  if (!aplayer.value) return
-  if (aplayer.value.audio.currentTime > 3) {
-    aplayer.value.audio.currentTime = 0
-    return
+onUnmounted(() => {
+  if (musicRequestStore.audioEl === audioRef.value) {
+    musicRequestStore.attachAudioElement(null)
   }
-  const currentIndex = musicRquestStore.originMusics.findIndex((music) => music.id === musicRquestStore.currentMusic.id)
-  if (currentIndex > 0) {
-    musicRquestStore.isPlayingOrderMusic = false
-    musicRquestStore.currentOriginMusic = undefined
-    musicRquestStore.playMusic(musicRquestStore.originMusics[currentIndex - 1])
-  }
+})
+
+function handleTimeUpdate() {
+  if (!audioRef.value || isSeeking.value) return
+  musicRequestStore.onTimeUpdate(audioRef.value.currentTime, audioRef.value.duration)
 }
 
-function clearWaitingQueue() {
-  musicRquestStore.clearWaitingWithUndo()
-}
-
-function togglePlayerMinimize() {
-  isPlayerMinimized.value = !isPlayerMinimized.value
+function handleLoadedMetadata() {
+  if (!audioRef.value) return
+  musicRequestStore.onTimeUpdate(audioRef.value.currentTime, audioRef.value.duration)
 }
 </script>
 
 <template>
+  <!-- 原生隐藏 audio 引擎，跨折叠态与页面切换持续保活 -->
+  <audio
+    ref="audioRef"
+    preload="auto"
+    class="hidden"
+    @play="musicRequestStore.onMusicPlay()"
+    @pause="musicRequestStore.onMusicPause()"
+    @ended="musicRequestStore.onMusicEnd()"
+    @error="musicRequestStore.onMusicError()"
+    @waiting="musicRequestStore.isBuffering = true"
+    @canplay="musicRequestStore.isBuffering = false"
+    @timeupdate="handleTimeUpdate"
+    @loadedmetadata="handleLoadedMetadata"
+  />
+
   <footer
     v-if="isPlayerVisible"
-    class="shrink-0 z-20 bg-background/90 backdrop-blur-md border-t border-border px-3 py-2 transition-all duration-200"
+    class="shrink-0 z-20 bg-background/95 backdrop-blur-md border-t border-border px-3 py-1.5"
   >
-    <div
-      ref="musicPlayerCardRef"
-      class="rounded-lg border border-border bg-card shadow-sm p-2.5 max-w-7xl mx-auto"
-    >
-      <!-- 顶部状态栏 -->
-      <div class="flex-between gap-2 pb-1.5 border-b border-border/50 text-xs">
-        <div class="flex items-center gap-2 min-w-0">
-          <MusicNote224Filled class="size-4 text-primary shrink-0" />
-          <span class="font-semibold text-foreground shrink-0">音乐播放器</span>
-
-          <Badge
-            v-if="currentPlayingInfo && !isPlayerMinimized"
-            :variant="currentPlayingInfo.type === 'request' ? 'default' : 'secondary'"
-            size="sm"
-            class="truncate"
-          >
-            {{ currentPlayingInfo.info }}
-          </Badge>
-
-          <template v-if="isPlayerMinimized">
+    <TooltipProvider :delay-duration="250">
+      <div
+        ref="playerCardRef"
+        class="max-w-7xl mx-auto rounded-lg border border-border bg-card shadow-xs"
+        :class="isPlayerMinimized ? 'px-3 py-1.5' : 'px-3 py-2'"
+      >
+        <!-- 收起态：极简单行 -->
+        <div
+          v-if="isPlayerMinimized"
+          class="flex-between gap-2 text-xs"
+        >
+          <div class="flex items-center gap-2 min-w-0">
             <span
-              v-if="musicRquestStore.currentMusic.title"
-              class="text-xs text-muted-foreground truncate max-w-xs"
-            >
-              {{ musicRquestStore.currentMusic.title }} - {{ musicRquestStore.currentMusic.artist }}
+              class="size-2 rounded-full shrink-0"
+              :class="musicRequestStore.isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'"
+            />
+            <span class="font-medium text-foreground truncate">
+              {{ musicRequestStore.currentMusic.title || '点歌机待机中' }}
             </span>
             <span
-              v-else
-              class="text-xs text-muted-foreground/60"
+              v-if="musicRequestStore.currentMusic.artist"
+              class="text-muted-foreground truncate hidden sm:inline"
             >
-              暂无播放
+              - {{ musicRequestStore.currentMusic.artist }}
             </span>
-          </template>
-        </div>
-
-        <div class="flex items-center gap-2 shrink-0">
-          <template v-if="isPlayerMinimized">
             <Badge
-              v-if="musicRquestStore.waitingMusics.length > 0"
-              variant="destructive"
+              v-if="currentSourceBadge"
+              :variant="currentSourceBadge.variant"
               size="xs"
+              class="shrink-0 hidden md:inline-flex"
             >
-              {{ musicRquestStore.waitingMusics.length }}
+              {{ currentSourceBadge.label }}
             </Badge>
+          </div>
 
+          <div class="flex items-center gap-1 shrink-0">
+            <Badge
+              v-if="musicRequestStore.waitingMusics.length > 0"
+              variant="brand"
+              size="xs"
+              class="tabular-nums mr-1"
+            >
+              待播 {{ musicRequestStore.waitingMusics.length }}
+            </Badge>
             <Button
               size="icon-xs"
               variant="ghost"
-              :disabled="!musicRquestStore.currentMusic.src"
-              @click.stop="togglePlay"
+              :aria-label="musicRequestStore.isPlaying ? '暂停' : '播放'"
+              @click="musicRequestStore.togglePlay()"
             >
               <Pause
-                v-if="aplayer?.audio?.paused === false"
+                v-if="musicRequestStore.isPlaying"
                 class="size-3.5"
               />
-              <Play24Filled
+              <Play
                 v-else
                 class="size-3.5"
               />
             </Button>
-
             <Button
               size="icon-xs"
               variant="ghost"
-              :disabled="
-                !musicRquestStore.isPlayingOrderMusic &&
-                musicRquestStore.waitingMusics.length === 0 &&
-                musicRquestStore.aplayerMusics.length <= 1
-              "
-              @click.stop="onNextMusic"
+              :disabled="!canGoNext"
+              aria-label="下一首"
+              @click="musicRequestStore.nextMusic()"
             >
-              <ArrowNext20Filled class="size-3.5" />
+              <SkipForward class="size-3.5" />
             </Button>
-          </template>
-
-          <Button
-            size="icon-xs"
-            variant="ghost"
-            :aria-label="isPlayerMinimized ? '展开播放器' : '收起播放器'"
-            @click="togglePlayerMinimize"
-          >
-            <ChevronUp24Regular
-              v-if="isPlayerMinimized"
-              class="size-4"
-            />
-            <ChevronDown24Regular
-              v-else
-              class="size-4"
-            />
-          </Button>
-        </div>
-      </div>
-
-      <!-- 主体展开区 -->
-      <div
-        v-show="!isPlayerMinimized"
-        class="pt-2 flex items-center gap-4 flex-wrap md:flex-nowrap"
-      >
-        <div class="flex-1 min-w-[280px]">
-          <APlayer
-            ref="aplayer"
-            v-model:music="musicRquestStore.currentMusic"
-            v-model:volume="playerVolume"
-            v-model:shuffle="musicRquestStore.settings.shuffle"
-            v-model:repeat="musicRquestStore.settings.repeat"
-            :list="musicRquestStore.aplayerMusics"
-            list-max-height="200"
-            mutex
-            list-folded
-            @ended="musicRquestStore.onMusicEnd"
-            @error="musicRquestStore.onMusicError"
-            @play="musicRquestStore.onMusicPlay"
-          />
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label="展开播放器"
+                  @click="isPlayerMinimized = false"
+                >
+                  <ChevronUp class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>展开播放器</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label="关闭播放器"
+                  @click="musicRequestStore.closePlayer()"
+                >
+                  <X class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>关闭播放器</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
 
-        <div class="music-control-panel flex items-center gap-6 shrink-0 flex-wrap">
-          <!-- 播放控制 -->
-          <div class="flex flex-col items-center gap-1.5">
-            <span class="text-xs font-medium text-muted-foreground">播放控制</span>
-            <div class="flex items-center gap-1">
-              <Button
-                size="icon-sm"
-                variant="outline"
-                aria-label="上一首 / 重播"
-                :disabled="musicRquestStore.aplayerMusics.length === 0"
-                @click="onPreviousMusic"
-              >
-                <ArrowPrevious20Filled class="size-3.5" />
-              </Button>
+        <!-- 展开态：单行三段式现代播放条 -->
+        <div
+          v-else
+          class="flex items-center gap-3 flex-wrap md:flex-nowrap"
+        >
+          <!-- 左：封面 + 曲目信息 -->
+          <div class="flex items-center gap-2.5 min-w-0 w-full md:w-64 lg:w-72 shrink-0">
+            <div class="relative size-9 rounded-md border border-border bg-muted flex-center overflow-hidden shrink-0">
+              <img
+                v-if="musicRequestStore.currentMusic.pic"
+                :src="musicRequestStore.currentMusic.pic"
+                :alt="musicRequestStore.currentMusic.title"
+                class="size-full object-cover"
+                referrerpolicy="no-referrer"
+              />
+              <Music2
+                v-else
+                class="size-4 text-muted-foreground"
+              />
+              <span
+                v-if="musicRequestStore.isPlaying"
+                class="absolute bottom-0.5 right-0.5 size-2 rounded-full bg-emerald-500 ring-2 ring-card"
+              />
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span
+                  class="font-medium text-xs text-foreground truncate"
+                  :title="musicRequestStore.currentMusic.title"
+                >
+                  {{ musicRequestStore.currentMusic.title || '点歌机待机中' }}
+                </span>
+                <Badge
+                  v-if="currentSourceBadge"
+                  :variant="currentSourceBadge.variant"
+                  size="xs"
+                  class="shrink-0"
+                >
+                  {{ currentSourceBadge.label }}
+                </Badge>
+              </div>
+              <div class="text-[11px] text-muted-foreground truncate">
+                {{
+                  musicRequestStore.currentMusic.artist ||
+                  (musicRequestStore.originMusics.length > 0
+                    ? `闲置曲库 ${musicRequestStore.originMusics.length} 首就绪`
+                    : '等待观众点歌')
+                }}
+              </div>
+            </div>
+          </div>
+
+          <!-- 中：核心播控 + 进度条 -->
+          <div class="flex-1 min-w-[220px] flex flex-col gap-1">
+            <div class="flex items-center justify-center gap-1">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    :disabled="!hasTrack && musicRequestStore.originMusics.length === 0"
+                    aria-label="上一首 / 重播"
+                    @click="musicRequestStore.playPrevious()"
+                  >
+                    <SkipBack class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>上一首 / 从头重播</TooltipContent>
+              </Tooltip>
 
               <Button
-                size="icon-sm"
+                size="icon-xs"
                 variant="default"
-                :aria-label="aplayer?.audio?.paused !== false ? '播放' : '暂停'"
-                :disabled="!musicRquestStore.currentMusic.src"
-                @click="togglePlay"
+                class="rounded-full"
+                :aria-label="musicRequestStore.isPlaying ? '暂停' : '播放'"
+                @click="musicRequestStore.togglePlay()"
               >
+                <Loader2
+                  v-if="musicRequestStore.isBuffering"
+                  class="size-3.5 animate-spin"
+                />
                 <Pause
-                  v-if="aplayer?.audio?.paused === false"
+                  v-else-if="musicRequestStore.isPlaying"
                   class="size-3.5"
                 />
-                <Play24Filled
+                <Play
                   v-else
                   class="size-3.5"
                 />
               </Button>
 
-              <Button
-                size="icon-sm"
-                variant="outline"
-                aria-label="下一首"
-                :disabled="
-                  !musicRquestStore.isPlayingOrderMusic &&
-                  musicRquestStore.waitingMusics.length === 0 &&
-                  musicRquestStore.aplayerMusics.length <= 1
-                "
-                @click="onNextMusic"
-              >
-                <ArrowNext20Filled class="size-3.5" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    :disabled="!canGoNext"
+                    aria-label="下一首"
+                    @click="musicRequestStore.nextMusic()"
+                  >
+                    <SkipForward class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>切下一首</TooltipContent>
+              </Tooltip>
+
+              <Tooltip v-if="hasTrack">
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    aria-label="拉黑当前歌曲并切歌"
+                    @click="musicRequestStore.blockCurrentSongAndSkip()"
+                  >
+                    <Ban class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>拉黑当前歌名关键词并切下一首</TooltipContent>
+              </Tooltip>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono tabular-nums text-muted-foreground w-9 text-right shrink-0">
+                {{ formatAudioTime(displayTime) }}
+              </span>
+              <Slider
+                v-model="progressValue"
+                :max="musicRequestStore.duration > 0 ? musicRequestStore.duration : 100"
+                :step="0.5"
+                :disabled="!hasTrack || musicRequestStore.duration <= 0"
+                class="flex-1"
+                @value-commit="commitSeek"
+              />
+              <span class="text-[11px] font-mono tabular-nums text-muted-foreground w-9 shrink-0">
+                {{ formatAudioTime(musicRequestStore.duration) }}
+              </span>
             </div>
           </div>
 
-          <!-- 队列管理 -->
-          <div class="flex flex-col items-center gap-1">
-            <span class="text-xs font-medium text-muted-foreground">队列管理</span>
-            <div class="flex items-center gap-1.5">
-              <Badge
-                variant="secondary"
-                size="sm"
-              >
-                等待: {{ musicRquestStore.waitingMusics.length }}
-              </Badge>
-              <Badge
-                variant="outline"
-                size="sm"
-              >
-                歌单: {{ musicRquestStore.originMusics.length }}
-              </Badge>
-              <Button
-                v-if="musicRquestStore.waitingMusics.length > 0"
-                size="xs"
-                variant="destructive"
-                title="清空所有等待中的点歌"
-                @click="clearWaitingQueue"
-              >
-                <Delete24Regular class="size-3 mr-0.5" />
-                清空
-              </Button>
-            </div>
-          </div>
+          <!-- 右：模式 + 音量 + 待播弹窗 + 收起 -->
+          <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon-xs"
+                  :variant="musicRequestStore.settings.shuffle ? 'secondary' : 'ghost'"
+                  :class="musicRequestStore.settings.shuffle ? 'text-primary' : 'text-muted-foreground'"
+                  aria-label="随机播放"
+                  @click="toggleShuffle"
+                >
+                  <Shuffle class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>随机播放：{{ musicRequestStore.settings.shuffle ? '已开启' : '已关闭' }}</TooltipContent>
+            </Tooltip>
 
-          <!-- 音量控制 -->
-          <div class="flex flex-col items-center gap-1.5 min-w-[90px]">
-            <div class="flex items-center gap-1 text-xs text-muted-foreground">
-              <DesktopSpeaker24Filled class="size-3.5" />
-              <span>音量 {{ Math.round(playerVolume * 100) }}%</span>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon-xs"
+                  :variant="musicRequestStore.settings.repeat !== 'no-repeat' ? 'secondary' : 'ghost'"
+                  :class="musicRequestStore.settings.repeat !== 'no-repeat' ? 'text-primary' : 'text-muted-foreground'"
+                  :aria-label="repeatTooltip"
+                  @click="cycleRepeat"
+                >
+                  <Repeat1
+                    v-if="musicRequestStore.settings.repeat === 'repeat-one'"
+                    class="size-3.5"
+                  />
+                  <Repeat
+                    v-else
+                    class="size-3.5"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{{ repeatTooltip }}</TooltipContent>
+            </Tooltip>
+
+            <div class="flex items-center gap-1.5 px-1">
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                aria-label="静音/取消静音"
+                @click="toggleMute"
+              >
+                <VolumeX
+                  v-if="volumePercent === 0"
+                  class="size-3.5 text-muted-foreground"
+                />
+                <Volume2
+                  v-else
+                  class="size-3.5 text-muted-foreground"
+                />
+              </Button>
+              <Slider
+                v-model="sliderVolume"
+                :max="100"
+                :step="1"
+                class="w-18"
+              />
+              <span class="text-[11px] font-mono tabular-nums text-muted-foreground w-7 text-right">
+                {{ volumePercent }}%
+              </span>
             </div>
-            <Slider
-              v-model="sliderVolume"
-              :max="100"
-              :step="1"
-              class="w-20"
-            />
+
+            <Popover>
+              <PopoverTrigger as-child>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="gap-1 tabular-nums"
+                >
+                  <ListMusic class="size-3.5" />
+                  <span>{{ musicRequestStore.waitingMusics.length }}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="end"
+                class="w-80 p-3 space-y-2.5"
+              >
+                <div class="flex-between gap-2">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-semibold text-foreground">待播点歌队列</span>
+                    <Badge
+                      variant="secondary"
+                      size="xs"
+                      class="tabular-nums"
+                    >
+                      {{ musicRequestStore.waitingMusics.length }}
+                    </Badge>
+                  </div>
+                  <Button
+                    v-if="musicRequestStore.waitingMusics.length > 0"
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10 gap-1"
+                    @click="musicRequestStore.clearWaitingWithUndo()"
+                  >
+                    <Trash2 class="size-3" />
+                    清空
+                  </Button>
+                </div>
+
+                <ScrollArea
+                  v-if="musicRequestStore.waitingMusics.length > 0"
+                  class="h-56 [&_[data-reka-scroll-area-viewport]>div]:!block"
+                >
+                  <div class="space-y-1">
+                    <div
+                      v-for="(item, idx) in musicRequestStore.waitingMusics"
+                      :key="item.requestId || `${item.music.id}-${idx}`"
+                      class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 text-xs"
+                    >
+                      <div class="min-w-0 flex-1">
+                        <div class="font-medium text-foreground truncate">{{ idx + 1 }}. {{ item.music.name }}</div>
+                        <div class="text-[11px] text-muted-foreground truncate">
+                          {{ item.from?.name || '主播添加' }}
+                          <span v-if="item.music.author?.length"> · {{ item.music.author.join('/') }}</span>
+                        </div>
+                      </div>
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        aria-label="立即切播"
+                        @click="musicRequestStore.playWaitingItemNow(item)"
+                      >
+                        <Play class="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </ScrollArea>
+                <Empty
+                  v-else
+                  size="small"
+                  description="当前暂无待播观众点歌"
+                  class="py-4"
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label="收起播放器"
+                  @click="isPlayerMinimized = true"
+                >
+                  <ChevronDown class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>收起到底部迷你条</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label="关闭播放器"
+                  @click="musicRequestStore.closePlayer()"
+                >
+                  <X class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>关闭播放器</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </div>
-    </div>
+    </TooltipProvider>
   </footer>
 </template>
-
-<style scoped>
-/* 深度暗色模式与风格适配 APlayer */
-:deep(.aplayer) {
-  background: var(--card) !important;
-  color: var(--card-foreground) !important;
-  box-shadow: none !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius) !important;
-  margin: 0 !important;
-}
-
-:deep(.aplayer .aplayer-body) {
-  background: transparent !important;
-}
-
-:deep(.aplayer .aplayer-info) {
-  border-top: none !important;
-  padding: 8px 12px !important;
-}
-
-:deep(.aplayer .aplayer-info .aplayer-music .aplayer-title) {
-  color: var(--foreground) !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-}
-
-:deep(.aplayer .aplayer-info .aplayer-music .aplayer-author) {
-  color: var(--muted-foreground) !important;
-  font-size: 11px !important;
-}
-
-:deep(.aplayer .aplayer-info .aplayer-controller .aplayer-time) {
-  color: var(--muted-foreground) !important;
-  font-size: 11px !important;
-}
-
-:deep(.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon) {
-  color: var(--muted-foreground) !important;
-}
-
-:deep(.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon:hover) {
-  color: var(--foreground) !important;
-}
-
-:deep(.aplayer .aplayer-list) {
-  background: var(--card) !important;
-}
-
-:deep(.aplayer .aplayer-list ol li) {
-  border-top-color: var(--border) !important;
-  color: var(--muted-foreground) !important;
-}
-
-:deep(.aplayer .aplayer-list ol li:hover) {
-  background: color-mix(in srgb, var(--muted) 50%, transparent) !important;
-}
-
-:deep(.aplayer .aplayer-list ol li.aplayer-list-light) {
-  background: var(--muted) !important;
-  color: var(--foreground) !important;
-}
-
-:deep(.aplayer .aplayer-list ol li .aplayer-list-title) {
-  font-size: 12px !important;
-}
-
-:deep(.aplayer .aplayer-list ol li .aplayer-list-author) {
-  font-size: 11px !important;
-  color: var(--muted-foreground) !important;
-}
-</style>

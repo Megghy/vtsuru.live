@@ -68,6 +68,9 @@ const SAMPLE_SHORT_QUESTION: ResponseQAInfo = {
   sendAt: Date.now(),
   isAnonymous: false,
   isSenderBiliAuthed: true,
+  isPinned: false,
+  likeCount: 0,
+  isLiked: false,
 }
 
 const SAMPLE_LONG_QUESTION: ResponseQAInfo = {
@@ -84,6 +87,9 @@ const SAMPLE_LONG_QUESTION: ResponseQAInfo = {
   isAnonymous: true,
   anonymousName: '匿名棉花糖',
   isSenderBiliAuthed: false,
+  isPinned: false,
+  likeCount: 0,
+  isLiked: false,
 }
 
 const previewWidth = computed(() => Math.max(240, props.layer?.width ?? 680))

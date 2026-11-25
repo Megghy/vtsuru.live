@@ -78,7 +78,7 @@ export const postApiAccountBiliAuthComplete = async (
   return vtsuruMutator<ResponseResultOfTempResponseAloginModel>(getPostApiAccountBiliAuthCompleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(completeAccountBiliAuthRequest),
   })
 }
@@ -108,7 +108,7 @@ export const postApiAccountBiliAuthPrepare = async (
   return vtsuruMutator<ResponseResultOfPrepareAccountBiliAuthResponse>(getPostApiAccountBiliAuthPrepareUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(prepareAccountBiliAuthRequest),
   })
 }
@@ -314,7 +314,7 @@ export const postApiAccountChangePassword = async (
   return vtsuruMutator<ResponseResultOfString>(getPostApiAccountChangePasswordUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(changePasswordRequest),
   })
 }
@@ -344,7 +344,7 @@ export const postApiAccountLogin = async (
   return vtsuruMutator<ResponseResultOfTempResponseAloginModel>(getPostApiAccountLoginUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(loginModel),
   })
 }
@@ -387,7 +387,7 @@ export const postApiAccountRegister = async (
   return vtsuruMutator<ResponseResultOfString>(getPostApiAccountRegisterUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(registerModel),
   })
 }
@@ -584,7 +584,7 @@ export const postApiAccountUpdateConsumptionSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiAccountUpdateConsumptionSettingUrl(params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiAccountUpdateConsumptionSettingBody),
   })
 }
@@ -614,7 +614,7 @@ export const postApiAccountUpdateEnableFunctions = async (
   return vtsuruMutator<ResponseResult>(getPostApiAccountUpdateEnableFunctionsUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(functionTypes),
   })
 }
@@ -644,7 +644,7 @@ export const postApiAccountUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiAccountUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(userSetting),
   })
 }
@@ -687,7 +687,7 @@ export const postApiAccountUpdateSingleSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiAccountUpdateSingleSettingUrl(params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiAccountUpdateSingleSettingBody),
   })
 }

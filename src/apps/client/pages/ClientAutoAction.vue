@@ -404,7 +404,7 @@ async function handleFallbackChange(value: boolean) {
 </script>
 
 <template>
-  <div class="auto-action-page flex flex-col gap-3 h-[calc(100vh-88px)] min-h-[540px]">
+  <div class="auto-action-page flex flex-col gap-3 flex-1 min-h-0">
     <!-- 标准管理页标头 -->
     <ClientPageHeader
       title="自动操作"

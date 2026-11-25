@@ -12,6 +12,7 @@ import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
 import {
   mergeCloudAndLocalTemplates,
@@ -114,17 +115,21 @@ async function openManage() {
 <template>
   <PanelShell
     title="投票"
+    panel-id="vote"
     :blurred="blurred"
   >
     <template #actions>
-      <Tag
+      <SimpleTooltip
         v-if="pollError"
-        variant="destructive"
-        class="text-xs"
-        :title="pollError"
+        :content="pollError"
       >
-        同步失败
-      </Tag>
+        <Tag
+          variant="destructive"
+          class="text-xs"
+        >
+          同步失败
+        </Tag>
+      </SimpleTooltip>
       <IconAction
         :icon="ExternalLink"
         tip="打开投票管理（OBS 链接、全局设置、历史）"

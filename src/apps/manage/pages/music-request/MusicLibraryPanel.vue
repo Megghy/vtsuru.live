@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import Add24Regular from '@vicons/fluent/es/Add24Regular'
-import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
-import ArrowUpload24Regular from '@vicons/fluent/es/ArrowUpload24Regular'
-import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
-import Play24Regular from '@vicons/fluent/es/Play24Regular'
-import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import { Check, Download, Play, Plus, RefreshCw, Search, Trash2, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -31,8 +26,10 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { useMessage } from '@/shared/utils'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
@@ -50,26 +47,44 @@ const filteredOriginMusics = computed(() => {
   )
 })
 
-// 搜索单曲加入闲置曲库
+function isSongInLibrary(song: ResponseSongModel): boolean {
+  return originMusics.value.some((exist) => exist.from === song.from && exist.id === song.id && song.id > 0)
+}
+
+// 搜索多候选加入闲置曲库
 const quickLibraryKeyword = ref('')
-const isAddingSingle = ref(false)
-async function quickAddToLibrary() {
+const librarySearchPlatform = ref<'netease' | 'kugou'>(musicRequestStore.settings.platform || 'netease')
+const libraryCandidates = ref<ResponseSongModel[]>([])
+const isSearchingLibrary = ref(false)
+const addingSongKey = ref<string | null>(null)
+
+async function searchForLibrary() {
   const kw = quickLibraryKeyword.value.trim()
   if (!kw) {
     message.warning('请输入要添加的歌曲关键词')
     return
   }
-  isAddingSingle.value = true
+  isSearchingLibrary.value = true
   try {
-    const song = await musicRequestStore.searchOnlineSong(kw)
-    if (!song) {
-      message.warning(`未搜到歌曲「${kw}」`)
+    const list = await musicRequestStore.searchOnlineCandidates(kw, librarySearchPlatform.value, 8)
+    if (list.length === 0) {
+      message.warning(`未搜到可播放歌曲「${kw}」`)
+      libraryCandidates.value = []
       return
     }
+    libraryCandidates.value = list
+  } finally {
+    isSearchingLibrary.value = false
+  }
+}
+
+async function addCandidateToLibrary(song: ResponseSongModel) {
+  const key = `${song.from}-${song.id}-${song.name}`
+  addingSongKey.value = key
+  try {
     const res = await postApiMusicRequestAdd([song as any])
     if (res.code === 200) {
       message.success(`已添加《${song.name}》到闲置曲库`)
-      quickLibraryKeyword.value = ''
       await musicRequestStore.loadLibrary()
     } else {
       message.error(res.message || '添加失败')
@@ -77,7 +92,7 @@ async function quickAddToLibrary() {
   } catch (err) {
     message.error(`添加失败: ${err instanceof Error ? err.message : '网络错误'}`)
   } finally {
-    isAddingSingle.value = false
+    addingSongKey.value = null
   }
 }
 
@@ -222,27 +237,37 @@ async function confirmImportNetease() {
       <CardContent class="p-3.5 space-y-3">
         <div class="flex-between gap-3 flex-wrap">
           <div class="flex items-center gap-2">
-            <Badge variant="brand"> 闲置曲库: {{ originMusics.length }} 首 </Badge>
-            <span class="text-xs text-muted-foreground hidden sm:inline">观众点歌可优先命中此曲库，空闲时自动轮播</span>
+            <Badge variant="brand">闲置曲库: {{ originMusics.length }} 首</Badge>
+            <span class="text-xs text-muted-foreground hidden sm:inline">观众点歌优先命中此曲库，空闲时自动轮播</span>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <div class="relative w-48">
-              <Search24Regular
-                class="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none"
+            <div class="relative w-48 max-w-full">
+              <Search
+                class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
               />
               <Input
                 v-model="songListFilter"
                 placeholder="筛选曲库歌名或歌手"
-                class="pl-8"
+                class="pl-8 pr-7"
               />
+              <Button
+                v-if="songListFilter"
+                size="none"
+                variant="ghost"
+                class="absolute right-1.5 top-1/2 -translate-y-1/2 size-5 rounded-full text-muted-foreground hover:text-foreground"
+                aria-label="清空筛选"
+                @click="songListFilter = ''"
+              >
+                <X class="size-3" />
+              </Button>
             </div>
 
             <Button
               variant="outline"
               @click="showNeteaseModal = true"
             >
-              <ArrowDownload24Regular class="size-4 mr-1" />
+              <Download class="size-3.5 mr-1" />
               网易云导入
             </Button>
 
@@ -251,7 +276,7 @@ async function confirmImportNetease() {
               :loading="isSyncingMySongList"
               @click="syncFromMySongList"
             >
-              <ArrowUpload24Regular class="size-4 mr-1" />
+              <RefreshCw class="size-3.5 mr-1" />
               我的歌单同步
             </Button>
 
@@ -268,7 +293,7 @@ async function confirmImportNetease() {
               <AlertDialogContent class="sm:max-w-md">
                 <AlertDialogHeader>
                   <AlertDialogTitle>清空全部闲置曲库？</AlertDialogTitle>
-                  <AlertDialogDescription> 此操作将从闲置曲库中删除全部已导入歌曲。 </AlertDialogDescription>
+                  <AlertDialogDescription>此操作将从闲置曲库中删除全部已导入歌曲。</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>取消</AlertDialogCancel>
@@ -284,28 +309,109 @@ async function confirmImportNetease() {
           </div>
         </div>
 
-        <div class="flex items-center gap-2 pt-2 border-t border-border/60">
-          <Input
-            v-model="quickLibraryKeyword"
-            placeholder="输入歌名快速搜索并收录到闲置曲库..."
-            class="flex-1"
-            @keyup.enter="quickAddToLibrary"
-          />
-          <Button
-            :loading="isAddingSingle || musicRequestStore.isSearchingSong"
-            @click="quickAddToLibrary"
+        <div class="space-y-2 pt-2 border-t border-border/60">
+          <div class="flex items-center gap-2">
+            <Button
+              variant="outline"
+              class="shrink-0"
+              @click="librarySearchPlatform = librarySearchPlatform === 'netease' ? 'kugou' : 'netease'"
+            >
+              {{ librarySearchPlatform === 'netease' ? '网易云' : '酷狗' }}
+            </Button>
+            <Input
+              v-model="quickLibraryKeyword"
+              placeholder="输入歌名或歌手搜索候选并收录到闲置曲库..."
+              class="flex-1 min-w-0"
+              @keyup.enter="searchForLibrary"
+            />
+            <Button
+              :loading="isSearchingLibrary"
+              @click="searchForLibrary"
+            >
+              <Search class="size-3.5 mr-1" />
+              搜歌选曲
+            </Button>
+          </div>
+
+          <div
+            v-if="libraryCandidates.length > 0"
+            class="rounded-lg border border-border bg-muted/20 p-2.5 space-y-2"
           >
-            <Add24Regular class="size-4 mr-1" />
-            搜歌入库
-          </Button>
+            <div class="flex-between text-[11px] text-muted-foreground">
+              <span>搜索结果（{{ libraryCandidates.length }} 首可播，点击直接收录）</span>
+              <Button
+                size="none"
+                variant="ghost"
+                class="h-5 px-1.5 text-[11px]"
+                @click="libraryCandidates = []"
+              >
+                收起
+              </Button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-56 overflow-y-auto scrollbar-thin">
+              <div
+                v-for="(song, idx) in libraryCandidates"
+                :key="song.key || `${song.from}-${song.id}-${idx}`"
+                class="flex-between gap-2 px-2.5 py-1.5 rounded-md border border-border/70 bg-card text-xs"
+              >
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium text-foreground truncate">{{ song.name }}</div>
+                  <div class="text-[11px] text-muted-foreground truncate">
+                    {{ song.author?.join('/') || '未知歌手' }}
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label="试听"
+                    @click="musicRequestStore.playLibrarySong(song)"
+                  >
+                    <Play class="size-3.5" />
+                  </Button>
+                  <Button
+                    v-if="isSongInLibrary(song)"
+                    size="xs"
+                    variant="secondary"
+                    disabled
+                  >
+                    <Check class="size-3 mr-0.5" />
+                    已有
+                  </Button>
+                  <Button
+                    v-else
+                    size="xs"
+                    variant="outline"
+                    :loading="addingSongKey === `${song.from}-${song.id}-${song.name}`"
+                    @click="addCandidateToLibrary(song)"
+                  >
+                    <Plus class="size-3 mr-0.5" />
+                    收录
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
 
     <Card>
       <CardContent class="p-3">
+        <!-- 骨架屏加载态 -->
+        <div
+          v-if="musicRequestStore.isLoadingLibrary && originMusics.length === 0"
+          class="space-y-2 p-2"
+        >
+          <Skeleton
+            v-for="n in 6"
+            :key="n"
+            class="h-9 w-full"
+          />
+        </div>
+
         <ScrollArea
-          v-if="filteredOriginMusics.length > 0"
+          v-else-if="filteredOriginMusics.length > 0"
           class="h-[520px] [&_[data-reka-scroll-area-viewport]>div]:!block"
         >
           <div
@@ -321,21 +427,28 @@ async function confirmImportNetease() {
             <div
               v-for="(song, idx) in filteredOriginMusics"
               :key="song.key || song.id"
-              class="grid grid-cols-[2.25rem_minmax(0,1.4fr)_minmax(0,1fr)_4.5rem] items-center gap-3 py-2 px-2.5 hover:bg-muted/40 rounded transition-colors text-xs"
+              class="flex items-center justify-between gap-2 sm:grid sm:grid-cols-[2.25rem_minmax(0,1.4fr)_minmax(0,1fr)_4.5rem] sm:gap-3 py-2 px-2.5 hover:bg-muted/40 rounded transition-colors text-xs"
             >
-              <span class="font-mono tabular-nums text-muted-foreground text-right">{{ idx + 1 }}</span>
-              <span class="font-medium text-foreground truncate min-w-0">{{ song.name }}</span>
-              <span class="text-muted-foreground truncate min-w-0">{{ (song.author || []).join('/') || '-' }}</span>
+              <span class="hidden sm:block font-mono tabular-nums text-muted-foreground text-right">
+                {{ idx + 1 }}
+              </span>
 
-              <div class="flex items-center justify-end gap-1.5 shrink-0">
+              <div class="min-w-0 flex-1 sm:contents">
+                <div class="font-medium text-foreground truncate min-w-0">{{ song.name }}</div>
+                <div class="text-[11px] sm:text-xs text-muted-foreground truncate min-w-0">
+                  {{ (song.author || []).join('/') || '-' }}
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-1 shrink-0">
                 <Button
                   size="icon-xs"
                   variant="ghost"
                   class="text-primary hover:bg-primary/10"
                   aria-label="试听/播放"
-                  @click="musicRequestStore.playMusic(song)"
+                  @click="musicRequestStore.playLibrarySong(song)"
                 >
-                  <Play24Regular class="size-3.5" />
+                  <Play class="size-3.5" />
                 </Button>
 
                 <AlertDialog>
@@ -346,13 +459,13 @@ async function confirmImportNetease() {
                       class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       aria-label="删除"
                     >
-                      <Delete24Regular class="size-3.5" />
+                      <Trash2 class="size-3.5" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent class="sm:max-w-md">
                     <AlertDialogHeader>
                       <AlertDialogTitle>删除歌曲？</AlertDialogTitle>
-                      <AlertDialogDescription> 确定从曲库中删除《{{ song.name }}》吗？ </AlertDialogDescription>
+                      <AlertDialogDescription>确定从曲库中删除《{{ song.name }}》吗？</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>取消</AlertDialogCancel>
@@ -369,12 +482,35 @@ async function confirmImportNetease() {
             </div>
           </div>
         </ScrollArea>
-        <div
+
+        <Empty
           v-else
-          class="text-center py-12 text-xs text-muted-foreground"
+          :description="songListFilter ? '没有匹配的曲目' : '闲置曲库暂无歌曲，可先导入歌单或搜歌收录'"
+          class="py-10"
         >
-          {{ songListFilter ? '没有匹配的曲目' : '闲置曲库暂无歌曲，可通过上方搜歌入库、网易云导入或我的歌单同步' }}
-        </div>
+          <template
+            v-if="!songListFilter"
+            #extra
+          >
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+              <Button
+                variant="outline"
+                @click="showNeteaseModal = true"
+              >
+                <Download class="size-3.5 mr-1" />
+                网易云歌单导入
+              </Button>
+              <Button
+                variant="outline"
+                :loading="isSyncingMySongList"
+                @click="syncFromMySongList"
+              >
+                <RefreshCw class="size-3.5 mr-1" />
+                从我的歌单同步
+              </Button>
+            </div>
+          </template>
+        </Empty>
       </CardContent>
     </Card>
 
@@ -384,8 +520,11 @@ async function confirmImportNetease() {
         <DialogHeader>
           <DialogTitle>从网易云歌单导入曲目到闲置歌单</DialogTitle>
           <DialogDescription>
-            粘贴网易云音乐歌单链接（例如 <code>https://music.163.com/playlist?id=123456</code>）或纯歌单
-            ID，点击解析后批量导入。
+            粘贴网易云音乐歌单链接（例如
+            <code class="px-1 py-0.5 rounded bg-muted font-mono text-[11px]">
+              https://music.163.com/playlist?id=123456
+            </code>
+            ）或纯歌单 ID，点击解析后批量导入。
           </DialogDescription>
         </DialogHeader>
 
@@ -410,7 +549,7 @@ async function confirmImportNetease() {
             class="space-y-2 border border-border rounded-lg p-3 bg-muted/20"
           >
             <div class="flex-between">
-              <span class="text-xs text-muted-foreground">
+              <span class="text-xs text-muted-foreground tabular-nums">
                 共解析出 {{ neteaseSongs.length }} 首，已勾选 {{ selectedNeteaseKeys.length }} 首
               </span>
               <div class="flex items-center gap-2">
@@ -434,7 +573,7 @@ async function confirmImportNetease() {
             <ScrollArea
               class="h-64 rounded border border-border p-2 bg-background [&_[data-reka-scroll-area-viewport]>div]:!block"
             >
-              <div class="space-y-1.5">
+              <div class="space-y-1">
                 <label
                   v-for="song in neteaseSongs"
                   :key="song.key"
