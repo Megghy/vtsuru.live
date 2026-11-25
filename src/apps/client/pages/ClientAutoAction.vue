@@ -29,6 +29,8 @@ import {
   Trash2,
   Unplug,
   UserPlus,
+  Users,
+  UserCheck,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
@@ -100,6 +102,8 @@ const menuGroups: MenuGroup[] = [
       { label: '积分兑换', key: TriggerType.POINT_REDEEM, icon: Receipt },
       { label: '收到点歌', key: TriggerType.SONG_REQUEST, icon: Music2 },
       { label: '开始演唱', key: TriggerType.SONG_START, icon: Mic },
+      { label: '观众入队', key: TriggerType.QUEUE_JOIN, icon: UserCheck },
+      { label: '新一队上车', key: TriggerType.QUEUE_NEXT_BATCH, icon: Users },
     ],
   },
   {
@@ -263,6 +267,8 @@ const typeMap: Record<string, string> = {
   [TriggerType.POINT_REDEEM]: '积分兑换',
   [TriggerType.SONG_REQUEST]: '收到点歌',
   [TriggerType.SONG_START]: '开始演唱',
+  [TriggerType.QUEUE_JOIN]: '观众入队',
+  [TriggerType.QUEUE_NEXT_BATCH]: '新一队上车',
   [TriggerType.LIVE_START]: '开播触发',
   [TriggerType.LIVE_END]: '下播触发',
   [TriggerType.DANMAKU_DISCONNECTED]: '弹幕断连',
@@ -379,6 +385,8 @@ const triggerTypeOptions = [
   { label: '积分兑换', value: TriggerType.POINT_REDEEM },
   { label: '收到点歌', value: TriggerType.SONG_REQUEST },
   { label: '开始演唱', value: TriggerType.SONG_START },
+  { label: '观众入队', value: TriggerType.QUEUE_JOIN },
+  { label: '新一队上车', value: TriggerType.QUEUE_NEXT_BATCH },
   { label: '开播触发', value: TriggerType.LIVE_START },
   { label: '下播触发', value: TriggerType.LIVE_END },
   { label: '弹幕断连', value: TriggerType.DANMAKU_DISCONNECTED },

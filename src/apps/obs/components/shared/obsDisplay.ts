@@ -5,6 +5,12 @@ export interface ObsDisplayBadge {
   tone?: ObsDisplayTone
 }
 
+export interface ObsDisplayMember {
+  id: number | string
+  name: string
+  subtitle?: string
+}
+
 export interface ObsDisplayCurrent {
   active: boolean
   title?: string
@@ -13,6 +19,7 @@ export interface ObsDisplayCurrent {
   hideAvatar?: boolean
   emptyText: string
   badges?: ObsDisplayBadge[]
+  members?: ObsDisplayMember[]
 }
 
 export interface ObsDisplayItem {

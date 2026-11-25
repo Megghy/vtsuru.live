@@ -11,9 +11,26 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
   const queue = ref<ResponseQueueModel[]>([])
   const settings = ref<SettingQueue>({} as SettingQueue)
 
-  const progressing = computed(() => {
-    return queue.value.find((item) => item.status === QueueStatus.Progressing)
+  const teamSize = computed(() => {
+    const raw = Number(settings.value.teamSize ?? 1)
+    if (!Number.isFinite(raw)) return 1
+    return Math.max(1, Math.min(20, Math.round(raw)))
   })
+
+  const showContent = computed(() => settings.value.showContent !== false)
+  const hideWhenEmpty = computed(() => settings.value.hideWhenEmpty === true)
+
+  const progressingList = computed(() => {
+    return queue.value
+      .filter((item) => item.status === QueueStatus.Progressing)
+      .toSorted(
+        (a, b) =>
+          (normalizeTimestampMs(a.startAt) || normalizeTimestampMs(a.createAt)) -
+          (normalizeTimestampMs(b.startAt) || normalizeTimestampMs(b.createAt)),
+      )
+  })
+
+  const progressing = computed(() => progressingList.value[0])
 
   const activeItems = computed(() => {
     const waiting = queue.value.filter((item) => item?.status === QueueStatus.Waiting)
@@ -44,12 +61,21 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
   })
 
   const footerTags = computed(() => {
-    return [
+    const tags = [
       {
         type: 'keyword',
         label: '关键词',
         value: settings.value.keyword || '无',
       },
+      ...(teamSize.value > 1
+        ? [
+            {
+              type: 'allow',
+              label: '车队',
+              value: `每车 ${teamSize.value} 人`,
+            },
+          ]
+        : []),
       {
         type: 'allow',
         label: '允许',
@@ -64,6 +90,15 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
         label: '礼物',
         value: settings.value.allowGift ? '允许' : '不允许',
       },
+      ...(settings.value.allowSC
+        ? [
+            {
+              type: 'sc',
+              label: 'SC',
+              value: (settings.value.minSCPrice ?? 0) > 0 ? `≥ ¥${settings.value.minSCPrice}` : '任意',
+            },
+          ]
+        : []),
       {
         type: 'price',
         label: '最低价格',
@@ -85,6 +120,7 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
             : '无需',
       },
     ]
+    return tags
   })
 
   async function get() {
@@ -129,6 +165,10 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
   return {
     queue,
     settings,
+    teamSize,
+    showContent,
+    hideWhenEmpty,
+    progressingList,
     progressing,
     activeItems,
     allowGuardTypes,

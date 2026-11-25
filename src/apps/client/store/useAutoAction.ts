@@ -4,9 +4,10 @@ import { computed, onScopeDispose, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account.js'
-import type { EventModel, SongRequestInfo } from '@/api/client-types'
+import type { EventModel, ResponseQueueModel, SongRequestInfo } from '@/api/client-types'
 import { getApiLiveRequestGetActive } from '@/api/generated/live-request/live-request'
-import { EventDataTypes, SongRequestStatus } from '@/api/generated/model'
+import { getApiQueueGetActiveAndSettings } from '@/api/generated/queue/queue'
+import { EventDataTypes, QueueStatus, SongRequestStatus } from '@/api/generated/model'
 import { canUseVts } from '@/shared/config'
 import { useRealtimeTopic } from '@/shared/realtime'
 import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
@@ -24,6 +25,12 @@ import { matchesGiftTrigger, useGiftThank } from './autoAction/modules/giftThank
 import { matchesGuardTrigger, pickGuardGiftCode, useGuardPm } from './autoAction/modules/guardPm'
 import type { PointOrderRedeemedHubEvent } from './autoAction/modules/pointRedeem'
 import { matchesPointRedeemTrigger, normalizePointRedeemEvent, usePointRedeem } from './autoAction/modules/pointRedeem'
+import {
+  buildMockQueueEvent,
+  normalizeQueueBatchEvent,
+  normalizeQueueJoinEvent,
+  useQueueAutoAction,
+} from './autoAction/modules/queue'
 import {
   buildMockSongRequestEvent,
   normalizeSongRequestEvent,
@@ -64,11 +71,16 @@ export const useAutoAction = defineStore('autoAction', () => {
     account.value.id > 0 ? `obs:display:live-request:${account.value.id}` : '',
   )
   const { on: onLiveRequestEvent } = useRealtimeTopic(liveRequestTopic)
+  const queueTopic = computed(() => (account.value.id > 0 ? `obs:display:queue:${account.value.id}` : ''))
+  const { on: onQueueEvent } = useRealtimeTopic(queueTopic)
   const nowPlayingSettings = useNowPlayingSettings()
   let userEventsRegistered = false
   let hasHydratedSongRequests = false
   let knownSongRequestIds = new Set<number>()
   let lastSingingRequestId: number | null = null
+  let hasHydratedQueue = false
+  let knownQueueIds = new Set<number>()
+  let knownProgressingQueueIds = new Set<number>()
 
   // 共享状态（统一消费 info.ts 全局单一在播真源）
   const isLive = computed(() => isLiveStreaming.value)
@@ -103,6 +115,8 @@ export const useAutoAction = defineStore('autoAction', () => {
     [TriggerType.POINT_REDEEM]: true,
     [TriggerType.SONG_REQUEST]: true,
     [TriggerType.SONG_START]: true,
+    [TriggerType.QUEUE_JOIN]: true,
+    [TriggerType.QUEUE_NEXT_BATCH]: true,
     [TriggerType.LIVE_START]: true,
     [TriggerType.LIVE_END]: true,
     [TriggerType.DANMAKU_DISCONNECTED]: true,
@@ -450,6 +464,8 @@ export const useAutoAction = defineStore('autoAction', () => {
             [TriggerType.POINT_REDEEM]: true,
             [TriggerType.SONG_REQUEST]: true,
             [TriggerType.SONG_START]: true,
+            [TriggerType.QUEUE_JOIN]: true,
+            [TriggerType.QUEUE_NEXT_BATCH]: true,
             [TriggerType.LIVE_START]: true,
             [TriggerType.LIVE_END]: true,
             [TriggerType.DANMAKU_DISCONNECTED]: true,
@@ -650,6 +666,13 @@ export const useAutoAction = defineStore('autoAction', () => {
     biliFunc.sendLiveDanmaku,
     async (userId: number, message: string) => biliFunc.sendPrivateMessage(userId, message),
   )
+  const queueAutoActionModule = useQueueAutoAction(
+    isLive,
+    roomId,
+    isTianXuanActive,
+    biliFunc.sendLiveDanmaku,
+    async (userId: number, message: string) => biliFunc.sendPrivateMessage(userId, message),
+  )
 
   /**
    * 向弹幕客户端注册事件监听器
@@ -740,6 +763,64 @@ export const useAutoAction = defineStore('autoAction', () => {
     }
   }
 
+  async function syncQueueChanges() {
+    const uid = account.value.id
+    if (!uid) return
+    const hasQueueRules = autoActions.value.some(
+      (a) =>
+        a.enabled &&
+        (a.triggerType === TriggerType.QUEUE_JOIN || a.triggerType === TriggerType.QUEUE_NEXT_BATCH),
+    )
+    if (!hasQueueRules) return
+
+    try {
+      const resp = await getApiQueueGetActiveAndSettings({ id: uid })
+      if (resp.code !== 200 || !resp.data) return
+      const activeList = (resp.data.queue ?? []) as unknown as ResponseQueueModel[]
+      const teamSize = Math.max(1, Math.min(20, Math.round(resp.data.setting?.teamSize ?? 1)))
+      const progressing = activeList.filter((q) => q.status === QueueStatus.Progressing)
+      const waiting = activeList.filter((q) => q.status === QueueStatus.Waiting)
+
+      const currentIds = new Set(activeList.map((q) => q.id))
+      const currentProgressingIds = new Set(progressing.map((q) => q.id))
+
+      if (!hasHydratedQueue) {
+        hasHydratedQueue = true
+        knownQueueIds = currentIds
+        knownProgressingQueueIds = currentProgressingIds
+        return
+      }
+
+      if (enabledTriggerTypes.value?.[TriggerType.QUEUE_JOIN]) {
+        for (const item of activeList) {
+          if (!knownQueueIds.has(item.id)) {
+            queueAutoActionModule.processQueueTrigger(
+              TriggerType.QUEUE_JOIN,
+              normalizeQueueJoinEvent(item, waiting.length, teamSize),
+              autoActions.value,
+              runtimeState.value,
+            )
+          }
+        }
+      }
+
+      const newlyStarted = progressing.filter((q) => !knownProgressingQueueIds.has(q.id))
+      if (newlyStarted.length > 0 && enabledTriggerTypes.value?.[TriggerType.QUEUE_NEXT_BATCH]) {
+        queueAutoActionModule.processQueueTrigger(
+          TriggerType.QUEUE_NEXT_BATCH,
+          normalizeQueueBatchEvent(newlyStarted, waiting, teamSize),
+          autoActions.value,
+          runtimeState.value,
+        )
+      }
+
+      knownQueueIds = currentIds
+      knownProgressingQueueIds = currentProgressingIds
+    } catch {
+      // 网络波动时忽略，等待下一次实时事件同步
+    }
+  }
+
   async function registerCheckInResultListener() {
     if (userEventsRegistered) return
     userEventsRegistered = true
@@ -748,7 +829,11 @@ export const useAutoAction = defineStore('autoAction', () => {
     onLiveRequestEvent('Changed', () => {
       void syncSongRequestChanges()
     })
+    onQueueEvent('Changed', () => {
+      void syncQueueChanges()
+    })
     void syncSongRequestChanges()
+    void syncQueueChanges()
     console.log('[AutoAction] Hub 事件监听器已注册.')
   }
 
@@ -1118,6 +1203,18 @@ export const useAutoAction = defineStore('autoAction', () => {
         msg: mockSong.name,
       }
       extraVars = { song: mockSong, live: buildLiveVariables() }
+    } else if (triggerType === TriggerType.QUEUE_JOIN || triggerType === TriggerType.QUEUE_NEXT_BATCH) {
+      const mockQueue = buildMockQueueEvent({
+        userName: options?.mockEvent?.uname || '测试观众A',
+        uid: options?.mockEvent?.uid || 10000,
+      })
+      event = {
+        ...buildDefaultMockEvent(TriggerType.DANMAKU, options?.mockEvent),
+        uname: mockQueue.userName,
+        uid: mockQueue.uid,
+        msg: mockQueue.content,
+      }
+      extraVars = { queue: mockQueue, live: buildLiveVariables() }
     } else if (LIFECYCLE_TRIGGER_TYPES.has(triggerType)) {
       extraVars = {
         live: buildLiveVariables(),
@@ -1323,6 +1420,15 @@ export const useAutoAction = defineStore('autoAction', () => {
       })
       songRequestModule.processSongRequestTrigger(triggerType, mockSong, autoActions.value, runtimeState.value, true)
       toast.success(triggerType === TriggerType.SONG_REQUEST ? '已发送收到点歌测试事件' : '已发送开始演唱测试事件')
+      return
+    }
+
+    if (triggerType === TriggerType.QUEUE_JOIN || triggerType === TriggerType.QUEUE_NEXT_BATCH) {
+      const mockQueue = buildMockQueueEvent({
+        uid: testUid || 10000,
+      })
+      queueAutoActionModule.processQueueTrigger(triggerType, mockQueue, autoActions.value, runtimeState.value, true)
+      toast.success(triggerType === TriggerType.QUEUE_JOIN ? '已发送观众入队测试事件' : '已发送新一队上车测试事件')
       return
     }
 

@@ -15,6 +15,8 @@ export enum TriggerType {
   POINT_REDEEM = 'point_redeem', // 积分商品兑换
   SONG_REQUEST = 'song_request', // 收到点歌
   SONG_START = 'song_start', // 开始演唱
+  QUEUE_JOIN = 'queue_join', // 观众入队
+  QUEUE_NEXT_BATCH = 'queue_next_batch', // 新一队上车
   LIVE_START = 'live_start', // 开播时
   LIVE_END = 'live_end', // 下播时
   DANMAKU_DISCONNECTED = 'danmaku_disconnected', // 弹幕服务断开/异常

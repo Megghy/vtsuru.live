@@ -3,7 +3,8 @@ import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
 import ArrowTrending24Regular from '@vicons/fluent/es/ArrowTrending24Regular'
 import PeopleQueue24Regular from '@vicons/fluent/es/PeopleQueue24Regular'
 import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
-import { computed, onActivated, onMounted, ref, watch } from 'vue'
+import { Undo2 } from 'lucide-vue-next'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import type { ResponseQueueModel, ResponseUserInfo, SettingQueue } from '@/api/generated/model'
@@ -13,6 +14,8 @@ import {
   postApiQueueJoinFromWeb,
   postApiQueuePriorityFromWeb,
 } from '@/api/generated/queue/queue'
+import { postApiQueueCancelFromWeb } from '@/api/queueExtras'
+import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -25,6 +28,8 @@ import { useMessage } from '@/shared/utils'
 import { sortByQueueType } from '@/shared/utils/queue'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+const LAST_NOTE_STORAGE_KEY = 'vtsuru:queue:lastNote'
+
 const props = defineProps<{
   userInfo: ResponseUserInfo | undefined
 }>()
@@ -35,14 +40,21 @@ const biliAuth = useBiliAuth()
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const prioritizingId = ref<number | null>(null)
-const noteContent = ref('')
+const cancellingId = ref<number | null>(null)
+const noteContent = ref(
+  typeof window !== 'undefined' ? window.localStorage.getItem(LAST_NOTE_STORAGE_KEY) ?? '' : '',
+)
 const usePriority = ref(false)
 const userPoints = ref<number | null>(null)
+const isPageActive = ref(true)
 
 const queueList = ref<ResponseQueueModel[]>([])
 const settings = ref<SettingQueue | null>(null)
 
-const progressingItem = computed(() => queueList.value.find((q) => q.status === QueueStatus.Progressing))
+const teamSize = computed(() => Math.max(1, Math.min(20, Math.round(settings.value?.teamSize ?? 1))))
+const isTeamMode = computed(() => teamSize.value > 1)
+
+const progressingItems = computed(() => queueList.value.filter((q) => q.status === QueueStatus.Progressing))
 
 const waitingItems = computed(() => {
   const waiting = queueList.value.filter((q) => q.status === QueueStatus.Waiting)
@@ -64,6 +76,20 @@ const waitingItems = computed(() => {
   )
 })
 
+const waitingCarGroups = computed(() => {
+  if (!isTeamMode.value) return []
+  const size = teamSize.value
+  const groups: Array<{ carNumber: number; startIndex: number; items: ResponseQueueModel[] }> = []
+  for (let i = 0; i < waitingItems.value.length; i += size) {
+    groups.push({
+      carNumber: Math.floor(i / size) + 1,
+      startIndex: i,
+      items: waitingItems.value.slice(i, i + size),
+    })
+  }
+  return groups
+})
+
 function isCurrentViewerEntry(item: ResponseQueueModel) {
   const uid = biliAuth.biliAuth?.userId
   const openId = biliAuth.biliAuth?.openId
@@ -74,7 +100,13 @@ function isCurrentViewerEntry(item: ResponseQueueModel) {
 
 const myWaitingItems = computed(() => {
   if (!biliAuth.isAuthed) return []
-  return waitingItems.value.filter(isCurrentViewerEntry)
+  return waitingItems.value
+    .map((item, idx) => ({
+      item,
+      position: idx + 1,
+      carNumber: Math.floor(idx / teamSize.value) + 1,
+    }))
+    .filter((entry) => isCurrentViewerEntry(entry.item))
 })
 
 const hasJoined = computed(() => {
@@ -94,6 +126,7 @@ const eligibilityHints = computed(() => {
   const s = settings.value
   if (!s) return []
   const list: string[] = []
+  if (isTeamMode.value) list.push(`每车 ${teamSize.value} 人组队`)
   const guards: string[] = []
   if (s.needJianzhang) guards.push('舰长')
   if (s.needTidu) guards.push('提督')
@@ -103,6 +136,9 @@ const eligibilityHints = computed(() => {
   if (basePointCost.value > 0) list.push(`入队消耗 ${basePointCost.value} 积分`)
   if (s.allowPointPriority && priorityPointCost.value > 0) {
     list.push(`积分插队 ${priorityPointCost.value} 积分`)
+  }
+  if (s.leaveKeyword?.trim()) {
+    list.push(`弹幕「${s.leaveKeyword.trim()}」可自助退队`)
   }
   return list
 })
@@ -152,19 +188,23 @@ async function handleJoinQueue() {
     return
   }
 
+  const trimmedNote = noteContent.value.trim()
+  if (trimmedNote && typeof window !== 'undefined') {
+    window.localStorage.setItem(LAST_NOTE_STORAGE_KEY, trimmedNote)
+  }
+
   isSubmitting.value = true
   try {
     const res = await postApiQueueJoinFromWeb(
       {
         target: props.userInfo.id,
         usePriority: usePriority.value,
-        content: noteContent.value.trim() || undefined,
+        content: trimmedNote || undefined,
       },
       { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) },
     )
     if (res.code === 200) {
       message.success(usePriority.value ? '已加入排队并使用积分插队' : '加入排队成功')
-      noteContent.value = ''
       usePriority.value = false
       await Promise.all([fetchQueueState(), refreshUserPoints()])
     } else {
@@ -190,7 +230,7 @@ async function handlePriority(item: ResponseQueueModel) {
       { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) },
     )
     if (res.code === 200) {
-      message.success('积分插队成功，已置顶您的排队顺序')
+      message.success('积分插队成功，已提升您的排队顺位')
       await Promise.all([fetchQueueState(), refreshUserPoints()])
     } else {
       message.error(`插队失败: ${res.message}`)
@@ -202,12 +242,50 @@ async function handlePriority(item: ResponseQueueModel) {
   }
 }
 
+async function handleCancelSelf(item: ResponseQueueModel) {
+  if (!props.userInfo?.id) return
+  cancellingId.value = item.id
+  try {
+    const res = await postApiQueueCancelFromWeb({
+      target: props.userInfo.id,
+      id: item.id,
+    })
+    if (res.code === 200) {
+      message.success(
+        res.data?.pointRefunded && res.data.refundedAmount > 0
+          ? `已撤回排队并退还 ${res.data.refundedAmount} 积分`
+          : '已撤回排队',
+      )
+      await Promise.all([fetchQueueState(), refreshUserPoints()])
+    } else {
+      message.error(`撤回失败: ${res.message}`)
+    }
+  } catch (err) {
+    message.error(`撤回失败: ${err instanceof Error ? err.message : String(err)}`)
+  } finally {
+    cancellingId.value = null
+  }
+}
+
 function formatFromLabel(from: QueueFrom) {
   if (from === QueueFrom.Web) return '网页排队'
-  if (from === QueueFrom.Gift) return '礼物/SC'
+  if (from === QueueFrom.Gift) return '礼物'
+  if (from === QueueFrom.SC) return 'SC'
   if (from === QueueFrom.Manual) return '主播添加'
   return '弹幕'
 }
+
+const { on: onQueueRealtime } = useObsRealtimeSync({
+  topic: () => (props.userInfo?.id ? `obs:display:queue:${props.userInfo.id}` : ''),
+  active: () => isPageActive.value,
+  visible: () => isPageActive.value,
+  onSync: () => {
+    void fetchQueueState()
+  },
+})
+onQueueRealtime('Changed', () => {
+  void fetchQueueState()
+})
 
 watch(
   () => [props.userInfo?.id, biliAuth.isAuthed] as const,
@@ -218,27 +296,43 @@ watch(
 )
 
 onMounted(() => {
+  isPageActive.value = true
   void fetchQueueState()
   void refreshUserPoints()
 })
 
 onActivated(() => {
+  isPageActive.value = true
   void fetchQueueState()
   void refreshUserPoints()
+})
+
+onDeactivated(() => {
+  isPageActive.value = false
+})
+
+onUnmounted(() => {
+  isPageActive.value = false
 })
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-4 py-4">
+  <div class="max-w-4xl mx-auto space-y-4 py-4 px-2 sm:px-0">
     <Card class="shadow-xs">
       <CardHeader class="pb-3 border-b border-border/60">
         <div class="flex-between flex-wrap gap-3">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <PeopleQueue24Regular class="size-5 text-primary" />
             <CardTitle class="text-base">
               {{ userInfo?.name ? `${userInfo.name} 的直播排队` : '直播排队' }}
             </CardTitle>
             <Badge variant="secondary">等待中 {{ waitingItems.length }} 人</Badge>
+            <Badge
+              v-if="isTeamMode"
+              variant="outline"
+            >
+              每车 {{ teamSize }} 人
+            </Badge>
           </div>
 
           <Button
@@ -273,7 +367,7 @@ onActivated(() => {
           class="rounded-lg border border-border bg-muted/20 p-3.5 space-y-3"
         >
           <div class="flex-between flex-wrap gap-2 text-xs">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="font-medium text-foreground">网页自助排队</span>
               <span
                 v-if="biliAuth.isAuthed"
@@ -309,8 +403,8 @@ onActivated(() => {
               <Input
                 v-model="noteContent"
                 maxlength="100"
-                placeholder="可选：填写排队留言或上号备注（最多 100 字）"
-                class="flex-1 min-w-56"
+                placeholder="可选：填写游戏 ID / 大区 / 位置备注（下次自动记住）"
+                class="flex-1 min-w-52"
                 :disabled="!biliAuth.isAuthed"
               />
               <Button
@@ -348,25 +442,58 @@ onActivated(() => {
           </AlertDescription>
         </Alert>
 
-        <!-- 我的待排位置与插队 -->
+        <!-- 我的待排位置、插队与自助撤回 -->
         <div
-          v-if="settings?.allowPointPriority && myWaitingItems.length > 0"
-          class="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 flex-between flex-wrap gap-2 text-xs"
+          v-if="myWaitingItems.length > 0"
+          class="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 space-y-2 text-xs"
         >
-          <span>您当前有 {{ myWaitingItems.length }} 个等待中的排队记录</span>
-          <div class="flex items-center gap-2 flex-wrap">
-            <Button
-              v-for="item in myWaitingItems"
-              :key="item.id"
-              size="xs"
-              variant="outline"
-              :disabled="(item.priorityLevel ?? 0) > 0"
-              :loading="prioritizingId === item.id"
-              @click="handlePriority(item)"
-            >
-              <ArrowTrending24Regular class="size-3.5 mr-1" />
-              {{ (item.priorityLevel ?? 0) > 0 ? '已置顶插队' : `积分插队 (${priorityPointCost} 积分)` }}
-            </Button>
+          <div
+            v-for="entry in myWaitingItems"
+            :key="entry.item.id"
+            class="flex-between flex-wrap gap-2"
+          >
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-medium text-foreground">
+                您当前排在第 <strong class="font-mono text-primary">{{ entry.position }}</strong> 位
+              </span>
+              <Badge
+                v-if="isTeamMode"
+                variant="secondary"
+                size="xs"
+              >
+                第 {{ entry.carNumber }} 车 · 前面还有 {{ entry.carNumber - 1 }} 车
+              </Badge>
+              <span
+                v-if="entry.item.content"
+                class="text-muted-foreground"
+              >
+                （{{ entry.item.content }}）
+              </span>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <Button
+                v-if="settings?.allowPointPriority"
+                size="xs"
+                variant="outline"
+                :disabled="(entry.item.priorityLevel ?? 0) > 0"
+                :loading="prioritizingId === entry.item.id"
+                @click="handlePriority(entry.item)"
+              >
+                <ArrowTrending24Regular class="size-3.5 mr-1" />
+                {{ (entry.item.priorityLevel ?? 0) > 0 ? '已置顶插队' : `积分插队 (${priorityPointCost} 积分)` }}
+              </Button>
+              <Button
+                size="xs"
+                variant="outline"
+                class="border-destructive/40 text-destructive hover:bg-destructive/10"
+                :loading="cancellingId === entry.item.id"
+                @click="handleCancelSelf(entry.item)"
+              >
+                <Undo2 class="size-3.5 mr-1" />
+                撤回排队
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -374,36 +501,56 @@ onActivated(() => {
 
     <Spin :show="isLoading">
       <div class="space-y-4">
-        <!-- 正在进行 -->
-        <Card v-if="progressingItem">
+        <!-- 正在进行 / 本局车队 -->
+        <Card v-if="progressingItems.length > 0">
           <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-sm text-emerald-600">正在进行中</CardTitle>
+            <div class="flex-between gap-2">
+              <CardTitle class="text-sm text-emerald-600">
+                {{ isTeamMode ? `本局车队（${progressingItems.length}/${teamSize}）` : '正在进行中' }}
+              </CardTitle>
+              <Badge
+                v-if="progressingItems[0]?.batchNo"
+                variant="success"
+                size="xs"
+              >
+                第 {{ progressingItems[0].batchNo }} 车
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent class="p-3.5 pt-0">
-            <div class="flex-between gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5">
-              <div class="flex items-center gap-2.5 min-w-0">
+            <div
+              class="grid gap-2"
+              :class="isTeamMode ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'"
+            >
+              <div
+                v-for="item in progressingItems"
+                :key="item.id"
+                class="flex-between flex-wrap gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2.5"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <Badge
+                    variant="success"
+                    class="shrink-0"
+                  >
+                    进行中
+                  </Badge>
+                  <span class="font-semibold text-sm text-foreground truncate">{{
+                    item.user?.name || '未知用户'
+                  }}</span>
+                  <span
+                    v-if="item.content"
+                    class="text-xs text-muted-foreground truncate"
+                  >
+                    {{ item.content }}
+                  </span>
+                </div>
                 <Badge
-                  variant="success"
+                  variant="outline"
                   class="shrink-0"
                 >
-                  进行中
+                  {{ formatFromLabel(item.from) }}
                 </Badge>
-                <span class="font-semibold text-sm text-foreground truncate">{{
-                  progressingItem.user?.name || '未知用户'
-                }}</span>
-                <span
-                  v-if="progressingItem.content"
-                  class="text-xs text-muted-foreground truncate"
-                >
-                  {{ progressingItem.content }}
-                </span>
               </div>
-              <Badge
-                variant="outline"
-                class="shrink-0"
-              >
-                {{ formatFromLabel(progressingItem.from) }}
-              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -411,11 +558,95 @@ onActivated(() => {
         <!-- 等待队列 -->
         <Card>
           <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-sm">等待队列 ({{ waitingItems.length }})</CardTitle>
+            <div class="flex-between gap-2">
+              <CardTitle class="text-sm">等待队列 ({{ waitingItems.length }})</CardTitle>
+              <span
+                v-if="isTeamMode && waitingItems.length > 0"
+                class="text-xs text-muted-foreground"
+              >
+                预计 {{ Math.ceil(waitingItems.length / teamSize) }} 车
+              </span>
+            </div>
           </CardHeader>
           <CardContent class="p-3.5 pt-0">
+            <!-- 组队模式按车展示 -->
             <div
-              v-if="waitingItems.length > 0"
+              v-if="waitingItems.length > 0 && isTeamMode"
+              class="space-y-3"
+            >
+              <div
+                v-for="group in waitingCarGroups"
+                :key="`public-car-${group.carNumber}`"
+                class="space-y-2 rounded-lg border p-2.5"
+                :class="group.carNumber === 1 ? 'border-sky-500/35 bg-sky-500/[0.03]' : 'border-border/70'"
+              >
+                <div class="flex items-center gap-2 text-xs">
+                  <Badge
+                    :variant="group.carNumber === 1 ? 'default' : 'secondary'"
+                    size="xs"
+                  >
+                    {{ group.carNumber === 1 ? '下一车准备中' : `第 ${group.carNumber} 车` }}
+                  </Badge>
+                  <span class="text-muted-foreground font-mono tabular-nums">
+                    {{ group.items.length }} / {{ teamSize }} 人
+                  </span>
+                </div>
+
+                <div class="space-y-1.5">
+                  <div
+                    v-for="(item, localIdx) in group.items"
+                    :key="item.id"
+                    class="grid grid-cols-1 sm:grid-cols-[13rem_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs"
+                  >
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <span
+                        class="inline-flex-center size-6 rounded-full bg-primary/10 text-primary font-mono font-bold shrink-0"
+                      >
+                        {{ group.startIndex + localIdx + 1 }}
+                      </span>
+                      <span class="font-medium text-foreground truncate">{{ item.user?.name || '未知用户' }}</span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 min-w-0 flex-wrap sm:flex-nowrap">
+                      <Badge
+                        v-if="(item.priorityLevel ?? 0) > 0"
+                        variant="warning"
+                        size="xs"
+                        class="shrink-0"
+                      >
+                        插队
+                      </Badge>
+                      <Badge
+                        v-if="(item.pointCost ?? 0) > 0"
+                        variant="secondary"
+                        size="xs"
+                        class="shrink-0"
+                      >
+                        {{ item.pointCost }} 积分
+                      </Badge>
+                      <span
+                        v-if="item.content"
+                        class="text-muted-foreground truncate min-w-0"
+                      >
+                        「{{ item.content }}」
+                      </span>
+                    </div>
+
+                    <Badge
+                      variant="outline"
+                      size="xs"
+                      class="shrink-0 justify-self-start sm:justify-self-end"
+                    >
+                      {{ formatFromLabel(item.from) }}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 单人模式 -->
+            <div
+              v-else-if="waitingItems.length > 0"
               class="space-y-2"
             >
               <div

@@ -77,6 +77,24 @@ const topSubtitle = computed(() => {
       >
         {{ topSubtitle }}
       </div>
+      <div
+        v-if="current.active && current.members && current.members.length > 1"
+        class="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1 text-xs"
+      >
+        <span
+          v-for="member in current.members"
+          :key="member.id"
+          class="inline-flex items-baseline gap-1 min-w-0"
+        >
+          <span class="font-bold text-emerald-300 truncate">{{ member.name }}</span>
+          <span
+            v-if="member.subtitle"
+            class="text-[11px] text-white/80 truncate"
+          >
+            ({{ member.subtitle }})
+          </span>
+        </span>
+      </div>
     </div>
 
     <!-- 列表容器 -->

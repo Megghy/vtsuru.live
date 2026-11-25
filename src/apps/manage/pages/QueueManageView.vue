@@ -14,6 +14,7 @@ import { useAccount } from '@/api/account'
 import type { AppStartData } from '@/api/generated/model'
 import { FunctionTypes, QueueStatus } from '@/api/generated/model'
 import QueueOBS from '@/apps/obs/pages/QueueOBS.vue'
+import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import QueueHistoryPanel from '@/apps/open-live/components/queue/QueueHistoryPanel.vue'
 import QueueListPanel from '@/apps/open-live/components/queue/QueueListPanel.vue'
 import QueueSettingsTab from '@/apps/open-live/components/queue/QueueSettingsTab.vue'
@@ -22,6 +23,7 @@ import LiveConsolePageShell, {
   type LiveConsoleHeaderLink,
   type LiveConsoleTabItem,
 } from '@/apps/open-live/components/shared/LiveConsolePageShell.vue'
+import LiveDashboardEntryCard from '@/apps/open-live/components/shared/LiveDashboardEntryCard.vue'
 import LiveSideCard from '@/apps/open-live/components/shared/LiveSideCard.vue'
 import ObsStagePreview from '@/apps/open-live/components/shared/ObsStagePreview.vue'
 import { useQueue } from '@/composables/useQueue'
@@ -116,31 +118,52 @@ const tabs = computed<LiveConsoleTabItem[]>(() => [
 ])
 
 const sampleNames = ['小鱼干爱好者', '星尘远航者', '魔法少女喵', '橘子汽水', '秋风扫落叶', '可乐要加冰', '月下漫步']
+const sampleNotes = ['艾欧尼亚 #2333', '黑色玫瑰 #1024', '瓦罗兰特 ID: Nova#CN1', '祖安大区', '上单/打野补位']
 async function injectMockUser() {
   const mockName = `${sampleNames[Math.floor(Math.random() * sampleNames.length)]} #${Math.floor(Math.random() * 100)}`
-  const added = await store.addManual(mockName)
+  const mockNote = sampleNotes[Math.floor(Math.random() * sampleNotes.length)]
+  const added = await store.addManual(mockName, mockNote)
   if (added) {
     message.success(`已注入模拟排队观众「${mockName}」`)
   }
 }
 
+const isViewActive = ref(true)
+const { on: onQueueRealtime } = useObsRealtimeSync({
+  topic: () => (accountInfo.value?.id ? `obs:display:queue:${accountInfo.value.id}` : ''),
+  active: () => isViewActive.value,
+  visible: () => isViewActive.value,
+  onSync: () => {
+    void store.updateActive()
+  },
+})
+onQueueRealtime('Changed', () => {
+  void store.updateActive()
+})
+
 onMounted(() => {
+  isViewActive.value = true
   client.onEvent('danmaku', store.onGetDanmaku)
   client.onEvent('gift', store.onGetGift)
+  client.onEvent('sc', store.onGetSC)
   void store.init()
 })
 
 onActivated(() => {
+  isViewActive.value = true
   void store.init()
 })
 
 onDeactivated(() => {
+  isViewActive.value = false
   store.dispose()
 })
 
 onUnmounted(() => {
+  isViewActive.value = false
   client.offEvent('danmaku', store.onGetDanmaku)
   client.offEvent('gift', store.onGetGift)
+  client.offEvent('sc', store.onGetSC)
   store.dispose()
 })
 </script>
@@ -207,6 +230,15 @@ onUnmounted(() => {
           >
             <div class="space-y-2 text-xs">
               <div class="flex-between">
+                <span class="text-muted-foreground">消队模式</span>
+                <Badge
+                  :variant="store.teamSize > 1 ? 'default' : 'secondary'"
+                  size="xs"
+                >
+                  {{ store.teamSize > 1 ? `每车 ${store.teamSize} 人组队` : '单人模式' }}
+                </Badge>
+              </div>
+              <div class="flex-between">
                 <span class="text-muted-foreground">弹幕 / 礼物触发</span>
                 <Badge
                   :variant="store.settings.keyword?.trim() ? 'success' : 'secondary'"
@@ -219,6 +251,18 @@ onUnmounted(() => {
                         ? '仅礼物触发'
                         : '仅手动'
                   }}
+                </Badge>
+              </div>
+              <div
+                v-if="store.settings.allowSC"
+                class="flex-between"
+              >
+                <span class="text-muted-foreground">SC 排队</span>
+                <Badge
+                  variant="warning"
+                  size="xs"
+                >
+                  {{ (store.settings.minSCPrice ?? 0) > 0 ? `≥ ¥${store.settings.minSCPrice}` : '任意 SC' }}
                 </Badge>
               </div>
               <div class="flex-between">
@@ -246,6 +290,13 @@ onUnmounted(() => {
               </div>
             </div>
           </LiveSideCard>
+
+          <LiveDashboardEntryCard
+            panel-id="queue"
+            panel-name="排队"
+            shortcut="Alt + 6"
+            description="在直播中控台可与弹幕、SC、礼物同屏管理本局车队，直接切下一队、补位顺延及单击复制游戏 ID。"
+          />
 
           <LiveSideCard
             title="快捷测试"
@@ -302,13 +353,14 @@ onUnmounted(() => {
               </Button>
 
               <Button
-                v-if="store.queue.length > 0"
+                v-if="store.unfilteredQueue.length > 0"
                 variant="default"
                 class="w-full justify-center"
-                @click="store.updateStatus(store.queue[0], QueueStatus.Finish)"
+                :disabled="store.isBatchLoading"
+                @click="store.finishAndNextBatch()"
               >
                 <Checkmark12Regular class="size-4 mr-1" />
-                完成当前首位观众
+                {{ store.teamSize > 1 ? `完成本局并拉下一队 (${store.teamSize}人)` : '完成并切换下一位' }}
               </Button>
             </CardContent>
           </Card>

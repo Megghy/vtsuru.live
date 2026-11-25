@@ -7,6 +7,7 @@ import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
 import Pin24Filled from '@vicons/fluent/es/Pin24Filled'
 import Pin24Regular from '@vicons/fluent/es/Pin24Regular'
 import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
+import { Copy, Pencil } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ResponseQueueModel } from '@/api/client-types'
@@ -27,7 +28,18 @@ import {
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
+import { Input } from '@/shared/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { copyToClipboard } from '@/shared/utils'
 import { normalizeTimestampMs } from '@/shared/utils/queue'
 
 const props = defineProps<{
@@ -47,14 +59,15 @@ const store = useQueue()
 
 const showCancelDialog = ref(false)
 const showBlockDialog = ref(false)
+const showEditDialog = ref(false)
 const refundPointOnCancel = ref(false)
+const editContent = ref('')
+const editUserName = ref('')
 
 const isProcessing = computed(() => props.queueData.status === QueueStatus.Progressing)
 const isWaiting = computed(() => props.queueData.status === QueueStatus.Waiting)
 const isItemBusy = computed(() => store.isBatchLoading || store.isQueueOperating(props.queueData.id))
-const hasOtherProcessing = computed(() =>
-  store.unfilteredQueue.some((s) => s.id !== props.queueData.id && s.status === QueueStatus.Progressing),
-)
+const isTeamFull = computed(() => !isProcessing.value && store.progressingQueue.length >= store.teamSize)
 const paymentMeta = computed(() => getQueuePaymentMeta(props.queueData))
 const canRefundPoint = computed(() =>
   Boolean(props.queueData.pointCost && props.queueData.pointCost > 0 && !props.queueData.pointRefunded),
@@ -62,7 +75,9 @@ const canRefundPoint = computed(() =>
 const canBlock = computed(
   () =>
     store.configCanEdit &&
-    (props.queueData.from === QueueFrom.Danmaku || props.queueData.from === QueueFrom.Gift) &&
+    (props.queueData.from === QueueFrom.Danmaku ||
+      props.queueData.from === QueueFrom.Gift ||
+      props.queueData.from === QueueFrom.SC) &&
     Boolean(props.queueData.user?.uid || props.queueData.user?.oid),
 )
 
@@ -90,6 +105,28 @@ async function confirmCancel() {
 async function confirmBlock() {
   await store.blockUser(props.queueData)
   showBlockDialog.value = false
+}
+
+function openEditDialog() {
+  editContent.value = props.queueData.content ?? ''
+  editUserName.value = props.queueData.user?.name ?? ''
+  showEditDialog.value = true
+}
+
+async function saveEdit() {
+  const res = await store.updateItem(props.queueData.id, {
+    content: editContent.value.trim() || null,
+    userName: props.queueData.from === QueueFrom.Manual ? editUserName.value.trim() || null : null,
+  })
+  if (res) {
+    showEditDialog.value = false
+  }
+}
+
+async function copyNote() {
+  const content = props.queueData.content?.trim()
+  if (!content) return
+  await copyToClipboard(content, `已复制备注「${content}」`)
 }
 
 function formatRelativeTime(timestamp: number) {
@@ -121,7 +158,7 @@ function formatRelativeTime(timestamp: number) {
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
+            {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid || '手动添加'}` }}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -159,10 +196,10 @@ function formatRelativeTime(timestamp: number) {
 
       <Badge
         v-if="store.settings.showPayment && paymentMeta.giftPriceText"
-        variant="destructive"
+        :variant="queueData.from === QueueFrom.SC ? 'warning' : 'destructive'"
         size="xs"
       >
-        ¥{{ paymentMeta.giftPriceText }}
+        {{ queueData.from === QueueFrom.SC ? `SC ¥${paymentMeta.giftPriceText}` : `¥${paymentMeta.giftPriceText}` }}
       </Badge>
 
       <Badge
@@ -172,6 +209,13 @@ function formatRelativeTime(timestamp: number) {
         class="border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
       >
         网页排队
+      </Badge>
+      <Badge
+        v-else-if="queueData.from === QueueFrom.SC && !paymentMeta.giftPriceText"
+        variant="warning"
+        size="xs"
+      >
+        SC
       </Badge>
       <Badge
         v-else-if="queueData.from === QueueFrom.Manual"
@@ -209,17 +253,18 @@ function formatRelativeTime(timestamp: number) {
       <TooltipProvider v-if="queueData.content">
         <Tooltip>
           <TooltipTrigger as-child>
-            <span class="text-xs text-muted-foreground truncate min-w-0 cursor-help">
-              「{{ queueData.content }}」
-            </span>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 max-w-[220px] rounded border border-border/80 bg-muted/50 px-1.5 py-0.5 text-xs text-foreground hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
+              @click.stop="copyNote"
+            >
+              <span class="truncate">{{ queueData.content }}</span>
+              <Copy class="size-3 shrink-0 text-muted-foreground" />
+            </button>
           </TooltipTrigger>
           <TooltipContent class="max-w-xs">
-            <div class="text-muted-foreground mb-0.5">
-              {{
-                `来自${queueData?.from === QueueFrom.Gift ? '礼物' : queueData?.from === QueueFrom.Web ? '网页留言' : '弹幕'}:`
-              }}
-            </div>
-            <div>{{ queueData?.content }}</div>
+            <div class="text-muted-foreground mb-0.5">单击复制游戏 ID / 备注：</div>
+            <div class="font-medium">{{ queueData.content }}</div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -233,6 +278,21 @@ function formatRelativeTime(timestamp: number) {
 
     <template #actions>
       <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :disabled="isItemBusy"
+              aria-label="编辑备注"
+              @click="openEditDialog"
+            >
+              <Pencil class="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>编辑备注 / 游戏 ID</TooltipContent>
+        </Tooltip>
+
         <template v-if="isWaiting">
           <Tooltip>
             <TooltipTrigger as-child>
@@ -295,7 +355,7 @@ function formatRelativeTime(timestamp: number) {
               size="icon-xs"
               :variant="isProcessing ? 'outline' : 'default'"
               :class="{ 'border-amber-500 text-amber-600 hover:bg-amber-500/10': isProcessing }"
-              :disabled="hasOtherProcessing || isItemBusy"
+              :disabled="isTeamFull || isItemBusy"
               aria-label="开始或暂停处理"
               @click="manage(isProcessing ? QueueStatus.Waiting : QueueStatus.Progressing)"
             >
@@ -303,7 +363,15 @@ function formatRelativeTime(timestamp: number) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {{ hasOtherProcessing ? '已有其他用户正在处理中' : isProcessing ? '暂停处理 (返回等待)' : '开始处理' }}
+            {{
+              isTeamFull
+                ? `当前车队已满（${store.progressingQueue.length}/${store.teamSize}）`
+                : isProcessing
+                  ? '暂停处理 (返回等待)'
+                  : store.teamSize > 1
+                    ? '拉入本局车队'
+                    : '开始处理'
+            }}
           </TooltipContent>
         </Tooltip>
 
@@ -360,6 +428,52 @@ function formatRelativeTime(timestamp: number) {
       </TooltipProvider>
     </template>
   </LiveQueueRowShell>
+
+  <!-- 编辑备注弹窗 -->
+  <Dialog v-model:open="showEditDialog">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>编辑排队备注 / 游戏 ID</DialogTitle>
+        <DialogDescription class="text-xs">
+          为「{{ queueData.user?.name || '该观众' }}」补充或修改游戏 ID、大区、位置等上号信息。
+        </DialogDescription>
+      </DialogHeader>
+      <div class="space-y-3 py-1">
+        <FormField
+          v-if="queueData.from === QueueFrom.Manual"
+          label="观众昵称"
+        >
+          <Input
+            v-model="editUserName"
+            maxlength="30"
+            placeholder="输入观众昵称"
+          />
+        </FormField>
+        <FormField label="游戏 ID / 备注（最多 100 字）">
+          <Input
+            v-model="editContent"
+            maxlength="100"
+            placeholder="例如：艾欧尼亚 #1234 / 补位辅助"
+            @keyup.enter="saveEdit"
+          />
+        </FormField>
+      </div>
+      <DialogFooter>
+        <Button
+          variant="outline"
+          @click="showEditDialog = false"
+        >
+          取消
+        </Button>
+        <Button
+          :loading="isItemBusy"
+          @click="saveEdit"
+        >
+          保存
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 
   <!-- 取消排队确认弹窗 -->
   <AlertDialog v-model:open="showCancelDialog">

@@ -69,9 +69,27 @@ const topSubtitle = computed(() => {
         </div>
         <div
           v-if="topSubtitle && current.active"
-          class="text-[11px] text-slate-300 mt-0.5"
+          class="text-[11px] text-slate-300 mt-0.5 truncate"
         >
           {{ topSubtitle }}
+        </div>
+        <div
+          v-if="current.active && current.members && current.members.length > 1"
+          class="grid grid-cols-2 gap-1 mt-1.5"
+        >
+          <div
+            v-for="member in current.members"
+            :key="member.id"
+            class="px-2 py-1 rounded-md bg-white/8 border border-white/10 min-w-0"
+          >
+            <div class="text-[12px] font-semibold text-slate-50 truncate">{{ member.name }}</div>
+            <div
+              v-if="member.subtitle"
+              class="text-[10px] text-slate-300 truncate"
+            >
+              {{ member.subtitle }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -131,7 +149,7 @@ const topSubtitle = computed(() => {
                   <span
                     v-for="(badge, bIdx) in item.badges ?? []"
                     :key="`${item.id}-${bIdx}-${badge.text}`"
-                    class="text-[10px] px-1.25 py-px rounded bg-white/10 text-slate-300 data-[tone=highlight]:bg-amber-500/20 data-[tone=highlight]:text-amber-400 data-[tone=success]:bg-emerald-500/20 data-[tone=success]:text-emerald-400"
+                    class="text-[10px] px-1.25 py-px rounded bg-white/10 text-slate-300 data-[tone=accent]:bg-sky-500/20 data-[tone=accent]:text-sky-300 data-[tone=warning]:bg-amber-500/20 data-[tone=warning]:text-amber-300 data-[tone=danger]:bg-rose-500/20 data-[tone=danger]:text-rose-300 data-[tone=success]:bg-emerald-500/20 data-[tone=success]:text-emerald-300"
                     :data-tone="badge.tone ?? 'muted'"
                   >
                     {{ badge.text }}
@@ -152,12 +170,12 @@ const topSubtitle = computed(() => {
     <!-- 底部标签 -->
     <div
       v-if="footerTags.length > 0"
-      class="flex gap-2 mt-2 pt-2 border-t border-white/8"
+      class="flex flex-wrap gap-x-2.5 gap-y-1 mt-2 pt-2 border-t border-white/8"
     >
       <div
         v-for="tag in footerTags"
         :key="tag.type"
-        class="text-[11px] flex gap-1"
+        class="text-[11px] flex items-center gap-1 whitespace-nowrap"
       >
         <span class="text-slate-500">{{ tag.label }}</span>
         <span class="text-slate-300 font-semibold">{{ tag.value }}</span>

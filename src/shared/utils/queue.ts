@@ -143,6 +143,8 @@ export function matchKeyword(text: string, keyword: string, matchType: KeywordMa
       return text.trim().toLowerCase() === key.toLowerCase()
     case KeywordMatchType.Contains:
       return text.trim().toLowerCase().includes(key.toLowerCase())
+    case KeywordMatchType.Prefix:
+      return text.trim().toLowerCase().startsWith(key.toLowerCase())
     case KeywordMatchType.Regex:
       try {
         return new RegExp(keyword).test(text)

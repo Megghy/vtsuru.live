@@ -114,6 +114,88 @@ const sortOptions = [
       @save="saveAllSettings"
     />
 
+    <!-- 组队开黑与消队流转 -->
+    <Card>
+      <CardHeader class="p-3.5 pb-2">
+        <CardTitle class="text-sm font-semibold">组队开黑与场次流转</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3.5 pt-2 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <FormField
+            label="每车 / 每队坑位数（1 为单人模式，2~20 为组队模式）"
+            description="例如英雄联盟五排（主播+4名观众）可设为 4，支持一键整队上车与换人补位"
+          >
+            <div class="flex items-center gap-2">
+              <NumberField
+                v-model="draft.teamSize"
+                :min="1"
+                :max="20"
+                :disabled="!canEdit"
+                class="w-28 shrink-0"
+                @update:model-value="(v) => (draft.teamSize = Math.max(1, Math.min(20, v ?? 1)))"
+              />
+              <ToggleGroup
+                type="single"
+                size="xs"
+                :model-value="[1, 2, 3, 4, 5].includes(draft.teamSize ?? 1) ? String(draft.teamSize ?? 1) : ''"
+                :disabled="!canEdit"
+                @update:model-value="(val) => val && (draft.teamSize = Number(val))"
+              >
+                <ToggleGroupItem value="1">1</ToggleGroupItem>
+                <ToggleGroupItem value="2">2</ToggleGroupItem>
+                <ToggleGroupItem value="3">3</ToggleGroupItem>
+                <ToggleGroupItem value="4">4</ToggleGroupItem>
+                <ToggleGroupItem value="5">5</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          </FormField>
+
+          <FormField
+            label="弹幕自助退队关键词（留空禁用）"
+            description="等待中的观众发送该指令可自动撤回排队并退还积分"
+          >
+            <Input
+              v-model="draft.leaveKeyword"
+              placeholder="例如：退队"
+              :disabled="!canEdit"
+            />
+          </FormField>
+
+          <FormField
+            label="单场直播每人最多上车次数（0 为不限）"
+            description="仅统计本场直播中已完成或进行中的记录，取消不计入"
+          >
+            <NumberField
+              v-model="draft.maxJoinPerLive"
+              :min="0"
+              :max="50"
+              :disabled="!canEdit"
+              @update:model-value="(v) => (draft.maxJoinPerLive = Math.max(0, v ?? 0))"
+            />
+          </FormField>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <SettingRow
+            v-model="draft.preventSameLiveRepeat"
+            type="switch"
+            variant="card"
+            title="本场直播内防重复上车"
+            description="开启后，本场直播已完成过一次排队的观众不可再次加入，避免长期霸位"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.autoClearOnLiveStart"
+            type="switch"
+            variant="card"
+            title="开播时自动清空上次遗留队列"
+            description="检测到直播间开播时自动取消上一场未处理的排队记录"
+            :disabled="!canEdit"
+          />
+        </div>
+      </CardContent>
+    </Card>
+
     <!-- 加入规则与权限 -->
     <Card>
       <CardHeader class="p-3.5 pb-2">
@@ -129,7 +211,10 @@ const sortOptions = [
             />
           </FormField>
 
-          <FormField label="匹配方式">
+          <FormField
+            label="匹配方式"
+            description="前缀匹配自动将关键词后的文本存为游戏 ID / 备注（如：排队 艾欧尼亚#1234）"
+          >
             <ToggleGroup
               type="single"
               :model-value="String(draft.matchType)"
@@ -137,6 +222,7 @@ const sortOptions = [
               @update:model-value="(val) => val && (draft.matchType = Number(val) as KeywordMatchType)"
             >
               <ToggleGroupItem :value="String(KeywordMatchType.Full)">完全匹配</ToggleGroupItem>
+              <ToggleGroupItem :value="String(KeywordMatchType.Prefix)">前缀匹配</ToggleGroupItem>
               <ToggleGroupItem :value="String(KeywordMatchType.Contains)">包含</ToggleGroupItem>
               <ToggleGroupItem :value="String(KeywordMatchType.Regex)">正则</ToggleGroupItem>
             </ToggleGroup>
@@ -343,6 +429,39 @@ const sortOptions = [
             :disabled="!canEdit"
           />
         </div>
+
+        <div class="pt-2 border-t border-border/60 space-y-2.5">
+          <SettingRow
+            v-model="draft.allowSC"
+            type="switch"
+            variant="card"
+            title="允许通过醒目留言 (SC) 直接排队"
+            description="发送达到金额门槛的 SC 自动加入队列，并提取 SC 正文作为备注 / 游戏 ID"
+            :disabled="!canEdit"
+          />
+
+          <div
+            v-if="draft.allowSC"
+            class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 items-center"
+          >
+            <FormField label="SC 最低金额 (元，0 为不限)">
+              <NumberField
+                v-model="draft.minSCPrice"
+                :min="0"
+                :step="1"
+                :disabled="!canEdit"
+                @update:model-value="(v) => (draft.minSCPrice = Math.max(0, v ?? 0))"
+              />
+            </FormField>
+            <SettingRow
+              v-model="draft.scIgnoreLimit"
+              type="switch"
+              variant="card"
+              title="SC 排队忽略粉丝牌与大航海门槛"
+              :disabled="!canEdit"
+            />
+          </div>
+        </div>
       </CardContent>
     </Card>
 
@@ -403,7 +522,7 @@ const sortOptions = [
         <CardTitle class="text-sm font-semibold">OBS 展示与积分排队/插队</CardTitle>
       </CardHeader>
       <CardContent class="p-3.5 pt-2 space-y-3">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           <SettingRow
             v-model="draft.showRequireInfo"
             type="switch"
@@ -423,6 +542,21 @@ const sortOptions = [
             type="switch"
             variant="card"
             title="显示观众粉丝牌"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.showContent"
+            type="switch"
+            variant="card"
+            title="OBS 显示观众备注 / 游戏 ID"
+            :disabled="!canEdit"
+          />
+          <SettingRow
+            v-model="draft.hideWhenEmpty"
+            type="switch"
+            variant="card"
+            title="OBS 队列为空时自动隐藏"
+            description="无正在进行且无等待观众时自动隐身，避免遮挡画面"
             :disabled="!canEdit"
           />
         </div>

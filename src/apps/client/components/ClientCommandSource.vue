@@ -44,6 +44,8 @@ const TRIGGER_LABELS: Partial<Record<TriggerType, string>> = {
   [TriggerType.POINT_REDEEM]: '积分兑换',
   [TriggerType.SONG_REQUEST]: '收到点歌',
   [TriggerType.SONG_START]: '开始演唱',
+  [TriggerType.QUEUE_JOIN]: '观众入队',
+  [TriggerType.QUEUE_NEXT_BATCH]: '新一队上车',
   [TriggerType.LIVE_START]: '开播触发',
   [TriggerType.LIVE_END]: '下播触发',
   [TriggerType.DANMAKU_DISCONNECTED]: '弹幕断连',

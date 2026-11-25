@@ -80,6 +80,24 @@ const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateY
                 {{ badge.text }}
               </span>
             </div>
+            <div
+              v-if="current.members && current.members.length > 1"
+              class="grid grid-cols-2 gap-1 mt-1.5"
+            >
+              <div
+                v-for="member in current.members"
+                :key="member.id"
+                class="px-2 py-1 rounded-lg bg-white/80 border border-emerald-500/20 min-w-0"
+              >
+                <div class="text-xs font-semibold text-slate-800 truncate">{{ member.name }}</div>
+                <div
+                  v-if="member.subtitle"
+                  class="text-[10px] text-slate-500 truncate"
+                >
+                  {{ member.subtitle }}
+                </div>
+              </div>
+            </div>
           </div>
         </template>
         <div

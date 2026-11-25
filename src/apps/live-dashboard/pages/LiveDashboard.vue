@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useEventListener, whenever } from '@vueuse/core'
 import { Pane, Splitpanes } from 'splitpanes'
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { isLoadingAccount, isLoggedIn } from '@/api/account'
 
@@ -16,6 +17,7 @@ import FanAlertStrip from '../components/FanAlertStrip.vue'
 import FanTodayReminderDialog from '../components/FanTodayReminderDialog.vue'
 import ItemContextMenu from '../components/ItemContextMenu.vue'
 import PaidPanel from '../components/PaidPanel.vue'
+import QueuePanel from '../components/QueuePanel.vue'
 import SaveImageModal from '../components/SaveImageModal.vue'
 import SettingsDrawer from '../components/SettingsDrawer.vue'
 import ShortcutsModal from '../components/ShortcutsModal.vue'
@@ -28,10 +30,44 @@ import { DEFAULT_LAYOUT } from '../store/settings'
 import { useDashboardUi } from '../store/ui'
 import { useLiveDashboard } from '../store/useLiveDashboard'
 
+const route = useRoute()
+const router = useRouter()
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
 const liveEmoji = useLiveEmoji()
 const layout = computed(() => dashboard.settings.layout)
+
+let pendingOpenPanel: PanelId | null = null
+
+function unhidePanel(id: PanelId) {
+  if (layout.value.hidden.includes(id)) {
+    layout.value.hidden = layout.value.hidden.filter((h) => h !== id)
+  }
+}
+
+watch(
+  () => route.query.panel,
+  (raw) => {
+    const id = (Array.isArray(raw) ? raw[0] : raw) as PanelId | undefined
+    if (!id || !PANEL_IDS.includes(id)) return
+    pendingOpenPanel = id
+    unhidePanel(id)
+    const rest = { ...route.query }
+    delete rest.panel
+    void router.replace({ query: rest })
+  },
+  { immediate: true },
+)
+
+// Tauri 桌面端配置异步水合完成后替换 layout 对象，补一次展开确保不回弹
+watch(
+  () => dashboard.settings.layout,
+  () => {
+    if (!pendingOpenPanel) return
+    unhidePanel(pendingOpenPanel)
+    pendingOpenPanel = null
+  },
+)
 
 /** 专注模式下隐藏面板原地虚化，否则直接移除 */
 const panes = computed(() =>
@@ -165,6 +201,10 @@ onUnmounted(() => void dashboard.stop())
           />
           <SongRequestPanel
             v-else-if="pane.id === 'song_request'"
+            :blurred="pane.blurred"
+          />
+          <QueuePanel
+            v-else-if="pane.id === 'queue'"
             :blurred="pane.blurred"
           />
           <PaidPanel

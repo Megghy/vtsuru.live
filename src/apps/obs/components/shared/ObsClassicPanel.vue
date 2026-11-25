@@ -69,6 +69,24 @@ const {
           >
             {{ current.subtitle }}
           </p>
+          <div
+            v-if="current.members && current.members.length > 1"
+            class="obs-classic-current-members"
+          >
+            <span
+              v-for="member in current.members"
+              :key="member.id"
+              class="obs-classic-current-member"
+            >
+              <span class="obs-classic-current-member-name">{{ member.name }}</span>
+              <span
+                v-if="member.subtitle"
+                class="obs-classic-current-member-sub"
+              >
+                · {{ member.subtitle }}
+              </span>
+            </span>
+          </div>
         </div>
       </template>
       <div
@@ -247,6 +265,37 @@ const {
   font-size: 12px;
   font-style: italic;
   color: rgba(255, 255, 255, 0.82);
+}
+
+.obs-classic-current-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.obs-classic-current-member {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.obs-classic-current-member-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.obs-classic-current-member-sub {
+  color: rgba(255, 255, 255, 0.78);
+  margin-left: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @keyframes obs-classic-rotate {

@@ -73,6 +73,21 @@ export const TRIGGER_PLACEHOLDERS: Partial<Record<TriggerType, Placeholder[]>> =
     { name: '{{song.keyShift}}', description: '升降调备注' },
     { name: '{{song.queueCount}}', description: '剩余待唱曲目数' },
   ],
+  [TriggerType.QUEUE_JOIN]: [
+    { name: '{{queue.userName}}', description: '入队观众昵称' },
+    { name: '{{queue.content}}', description: '观众游戏 ID / 备注' },
+    { name: '{{queue.source}}', description: '入队来源（弹幕/礼物/SC/网页）' },
+    { name: '{{queue.waitingCount}}', description: '当前等待排队人数' },
+    { name: '{{queue.teamSize}}', description: '每车坑位数' },
+  ],
+  [TriggerType.QUEUE_NEXT_BATCH]: [
+    { name: '{{queue.names}}', description: '本车上号成员名单（顿号分隔）' },
+    { name: '{{queue.count}}', description: '本次上车人数' },
+    { name: '{{queue.batchNo}}', description: '当前车次号' },
+    { name: '{{queue.content}}', description: '本车成员游戏 ID / 备注汇总' },
+    { name: '{{queue.nextNames}}', description: '下一车待命观众名单' },
+    { name: '{{queue.waitingCount}}', description: '剩余等待排队人数' },
+  ],
   [TriggerType.LIVE_START]: [
     { name: '{{live.title}}', description: '直播间标题' },
     { name: '{{live.areaName}}', description: '直播分区名称' },

@@ -155,6 +155,28 @@ function buildPreviewPayload(triggerType: TriggerType) {
           },
         },
       }
+    case TriggerType.QUEUE_JOIN:
+    case TriggerType.QUEUE_NEXT_BATCH:
+      return {
+        event: { ...baseEvent, type: EventDataTypes.Message, msg: '艾欧尼亚 #2333' },
+        extra: {
+          queue: {
+            id: 99999,
+            userName: '测试观众A',
+            uid: 12345,
+            openId: '1234567890',
+            content: '艾欧尼亚 #2333',
+            source: '弹幕排队',
+            names: '测试观众A、测试观众B、测试观众C、测试观众D',
+            count: 4,
+            waitingCount: 6,
+            batchNo: 2,
+            teamSize: 4,
+            nextNames: '测试观众E、测试观众F',
+            timestamp: Date.now(),
+          },
+        },
+      }
     default:
       return { event: baseEvent }
   }

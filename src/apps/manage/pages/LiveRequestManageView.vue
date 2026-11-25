@@ -23,6 +23,7 @@ import LiveConsolePageShell, {
   type LiveConsoleHeaderLink,
   type LiveConsoleTabItem,
 } from '@/apps/open-live/components/shared/LiveConsolePageShell.vue'
+import LiveDashboardEntryCard from '@/apps/open-live/components/shared/LiveDashboardEntryCard.vue'
 import LiveSideCard from '@/apps/open-live/components/shared/LiveSideCard.vue'
 import ObsStagePreview from '@/apps/open-live/components/shared/ObsStagePreview.vue'
 import SongPlayer from '@/components/SongPlayer.vue'
@@ -251,6 +252,13 @@ onUnmounted(() => {
               </div>
             </div>
           </LiveSideCard>
+
+          <LiveDashboardEntryCard
+            panel-id="song_request"
+            panel-name="点歌"
+            shortcut="Alt + 5"
+            description="在直播中控台可与弹幕、SC、礼物同屏查看待唱列表，直接切歌、快速加歌，桌面端还可同步写入 now_playing.txt。"
+          />
         </template>
       </LiveConsoleCockpit>
     </template>

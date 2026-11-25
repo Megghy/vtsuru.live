@@ -49,7 +49,15 @@ const query = useUserPageRuntimeQuery<{ list: ResponseQueueModel[]; setting: Set
   },
 })
 
-const progressing = computed(() => query.data.value?.list.find((item) => item.status === QueueStatus.Progressing) ?? null)
+const teamSize = computed(() => Math.max(1, Math.min(20, Math.round(query.data.value?.setting?.teamSize ?? 1))))
+const progressingList = computed(
+  () => query.data.value?.list.filter((item) => item.status === QueueStatus.Progressing) ?? [],
+)
+const progressing = computed(() => progressingList.value[0] ?? null)
+const progressingSummary = computed(() => {
+  if (progressingList.value.length === 0) return ''
+  return progressingList.value.map((item) => item.user?.name || item.requestBy || '观众').join(' / ')
+})
 const waitingList = computed(() => query.data.value?.list.filter((item) => item.status === QueueStatus.Waiting) ?? [])
 const waitingCount = computed(() => waitingList.value.length)
 const allowFromWeb = computed(() => query.data.value?.setting?.allowFromWeb === true)
@@ -158,13 +166,21 @@ useIntervalFn(() => {
         </div>
         <div class="flex-1 min-w-0 grid gap-0.5">
           <span class="text-xs text-muted-foreground">
-            {{ progressing ? '当前正在进行' : '当前空闲，可立即加入' }}
+            <template v-if="progressingList.length > 1">
+              本局车队进行中（{{ progressingList.length }}/{{ teamSize }}）
+            </template>
+            <template v-else-if="progressing">
+              {{ teamSize > 1 ? `本局车队（1/${teamSize}）` : '当前正在进行' }}
+            </template>
+            <template v-else>
+              {{ teamSize > 1 ? `当前空闲 · 每车 ${teamSize} 人` : '当前空闲，可立即加入' }}
+            </template>
           </span>
           <strong class="text-sm font-semibold truncate">
-            {{ progressing ? progressing.user?.name || progressing.requestBy || '处理中' : '等待下一位观众' }}
+            {{ progressingList.length > 0 ? progressingSummary : '等待下一位观众' }}
           </strong>
           <span
-            v-if="!compact && progressing?.content"
+            v-if="!compact && progressingList.length === 1 && progressing?.content"
             class="text-xs text-muted-foreground truncate"
           >
             {{ progressing.content }}
@@ -175,7 +191,9 @@ useIntervalFn(() => {
           class="text-center shrink-0 min-w-[54px]"
         >
           <strong class="text-lg font-bold text-primary block leading-tight tabular-nums">{{ waitingCount }}</strong>
-          <span class="text-xs text-muted-foreground">人等待</span>
+          <span class="text-xs text-muted-foreground">
+            {{ teamSize > 1 && waitingCount > 0 ? `人 / ${Math.ceil(waitingCount / teamSize)}车` : '人等待' }}
+          </span>
         </div>
       </div>
       <Empty

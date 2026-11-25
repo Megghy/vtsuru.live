@@ -75,6 +75,25 @@ const topSubtitle = computed(() => {
     </div>
 
     <div
+      v-if="current.active && current.members && current.members.length > 1"
+      class="flex flex-wrap gap-1.5 pb-2 shrink-0"
+    >
+      <span
+        v-for="member in current.members"
+        :key="member.id"
+        class="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/35 backdrop-blur-xs text-xs text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]"
+      >
+        <span class="font-semibold truncate">{{ member.name }}</span>
+        <span
+          v-if="member.subtitle"
+          class="text-[10px] text-white/80 truncate"
+        >
+          {{ member.subtitle }}
+        </span>
+      </span>
+    </div>
+
+    <div
       v-if="current.active && (current.badges?.length ?? 0) > 0"
       class="flex flex-wrap gap-1.5 pb-2 shrink-0"
     >

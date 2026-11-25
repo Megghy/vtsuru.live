@@ -225,6 +225,12 @@ function getTriggerSummary(action: AutoActionItem): string {
     case TriggerType.SONG_START:
       parts.push('切换为正在演唱时')
       break
+    case TriggerType.QUEUE_JOIN:
+      parts.push('新观众加入排队时')
+      break
+    case TriggerType.QUEUE_NEXT_BATCH:
+      parts.push('拉取新一队上车时')
+      break
     case TriggerType.LIVE_START:
       parts.push('直播间开播瞬间')
       break

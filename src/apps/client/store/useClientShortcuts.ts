@@ -30,6 +30,8 @@ export type ClientShortcutActionType =
   | 'tts_toggle_pause'
   | 'song_request_finish_and_next'
   | 'song_request_start_next'
+  | 'queue_finish_and_next_batch'
+  | 'queue_next_batch'
 
 export interface ClientShortcutItem {
   id: string
@@ -43,7 +45,7 @@ export interface ClientShortcutItem {
 
 export const CLIENT_SHORTCUT_ACTION_META: Record<
   ClientShortcutActionType,
-  { label: string; group: 'OBS' | 'VTS' | '浮窗' | 'TTS' | '点歌'; needsTarget?: string }
+  { label: string; group: 'OBS' | 'VTS' | '浮窗' | 'TTS' | '点歌' | '排队'; needsTarget?: string }
 > = {
   obs_switch_scene: { label: 'OBS：切换本地场景', group: 'OBS', needsTarget: 'OBS 场景名' },
   obs_scene_switch: { label: 'VTsuru 场景：切换子场景', group: 'OBS', needsTarget: 'VTsuru 子场景' },
@@ -61,6 +63,8 @@ export const CLIENT_SHORTCUT_ACTION_META: Record<
   tts_toggle_pause: { label: '读弹幕：暂停/恢复播报', group: 'TTS' },
   song_request_finish_and_next: { label: '点歌：完成当前并切下一首', group: '点歌' },
   song_request_start_next: { label: '点歌：开始演唱队首曲目', group: '点歌' },
+  queue_finish_and_next_batch: { label: '排队：结束本局并拉下一队', group: '排队' },
+  queue_next_batch: { label: '排队：拉下一队上车', group: '排队' },
 }
 
 const STORAGE_KEY = 'client.globalShortcuts'
@@ -208,6 +212,21 @@ export const useClientShortcuts = defineStore('clientShortcuts', () => {
           return
         }
         await liveRequest.updateSongStatus(firstWaiting, SongRequestStatus.Singing)
+        return
+      }
+      case 'queue_finish_and_next_batch': {
+        const { useQueue } = await import('@/composables/useQueue')
+        const queue = useQueue()
+        await queue.updateActive()
+        await queue.finishAndNextBatch()
+        return
+      }
+      case 'queue_next_batch': {
+        const { useQueue } = await import('@/composables/useQueue')
+        const queue = useQueue()
+        await queue.updateActive()
+        await queue.nextBatch()
+        return
       }
     }
   }

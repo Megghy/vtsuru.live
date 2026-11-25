@@ -63,7 +63,8 @@ const panelComponent = computed(() => {
   }
 })
 
-const { title, countText, current, items, footerTags, update } = useQueueObsView(currentId)
+const { title, countText, current, items, footerTags, shouldHide, update } = useQueueObsView(currentId)
+const isHidden = computed(() => props.id === undefined && shouldHide.value)
 
 const obsNotification = useOBSNotification()
 const { on } = useObsRealtimeSync({
@@ -86,6 +87,7 @@ onMounted(() => {
 <template>
   <component
     :is="panelComponent"
+    v-if="!isHidden"
     :title="title"
     :count-text="countText"
     :current="current"

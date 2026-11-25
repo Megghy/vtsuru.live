@@ -17,7 +17,6 @@ import {
   getApiQueueGetActive,
   getApiQueueGetAll,
   getApiQueueStats,
-  postApiQueueAdd,
   postApiQueueBatchStatus,
   postApiQueueDeactivate,
   postApiQueueDelete,
@@ -27,6 +26,13 @@ import {
   postApiQueueSetStatus,
   postApiQueueTryAdd,
 } from '@/api/generated/queue/queue'
+import {
+  postApiQueueAddWithContent,
+  postApiQueueFinishAndNextBatch,
+  postApiQueueNextBatch,
+  postApiQueueReplaceMember,
+  postApiQueueUpdateItem,
+} from '@/api/queueExtras'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
 import { formatDanmakuPrice, getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
@@ -68,6 +74,16 @@ export function createDefaultQueueSetting(): SettingQueue {
     allowPointPriority: false,
     pointPriorityKeyword: '插队',
     pointPriorityCost: 100,
+    teamSize: 1,
+    leaveKeyword: '退队',
+    allowSC: false,
+    minSCPrice: 30,
+    scIgnoreLimit: true,
+    preventSameLiveRepeat: false,
+    maxJoinPerLive: 0,
+    autoClearOnLiveStart: false,
+    hideWhenEmpty: false,
+    showContent: true,
   }
 }
 
@@ -105,6 +121,8 @@ export function getQueueSourceText(data: ResponseQueueModel) {
       return meta.hasPaidGift || meta.hasMysteryBoxPayment ? `弹幕 | ${meta.shortText}` : '弹幕'
     case QueueFrom.Gift:
       return meta.hasPaidGift || meta.hasMysteryBoxPayment ? `礼物 | ${meta.shortText}` : '礼物'
+    case QueueFrom.SC:
+      return meta.hasPaidGift ? `SC | ${meta.shortText}` : 'SC'
     case QueueFrom.Web:
       return '网页排队'
     case QueueFrom.Manual:
@@ -134,6 +152,7 @@ export const useQueue = defineStore('queue', () => {
 
   const originQueue = ref<ResponseQueueModel[]>([])
   const newQueueName = ref('')
+  const newQueueContent = ref('')
   const filterName = ref('')
   const filterNameContains = ref(true)
   const activeFilterName = ref('')
@@ -170,6 +189,12 @@ export const useQueue = defineStore('queue', () => {
 
   const enabled = computed(() => accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.Queue) ?? false)
 
+  const teamSize = computed(() => {
+    const raw = Number(settings.value.teamSize ?? 1)
+    if (!Number.isFinite(raw)) return 1
+    return Math.max(1, Math.min(20, Math.round(raw)))
+  })
+
   const sourceList = computed(() => (isLoggedIn.value ? originQueue.value : localQueues.value))
 
   /** 未过滤的当前活跃队列（正在处理排最前） */
@@ -203,6 +228,14 @@ export const useQueue = defineStore('queue', () => {
     )
   })
 
+  const progressingQueue = computed(() =>
+    unfilteredQueue.value.filter((q) => q.status === QueueStatus.Progressing),
+  )
+
+  const waitingQueue = computed(() =>
+    unfilteredQueue.value.filter((q) => q.status === QueueStatus.Waiting),
+  )
+
   const hasCustomOrder = computed(() =>
     unfilteredQueue.value.some((q) => q.sortOrder !== null && q.sortOrder !== undefined),
   )
@@ -234,35 +267,63 @@ export const useQueue = defineStore('queue', () => {
     }
 
     if (eventData.type === EventDataTypes.Message) {
+      const text = eventData.msg.trim()
+      const leaveKeyword = settings.value.leaveKeyword?.trim()
+      if (
+        isLoggedIn.value &&
+        leaveKeyword &&
+        (text.toLowerCase() === leaveKeyword.toLowerCase() ||
+          text.toLowerCase().startsWith(`${leaveKeyword.toLowerCase()} `))
+      ) {
+        return true
+      }
+
       const priorityKeyword = settings.value.allowPointPriority ? settings.value.pointPriorityKeyword?.trim() : ''
-      if (priorityKeyword && eventData.msg.trim().toLowerCase().startsWith(priorityKeyword.toLowerCase())) {
+      if (priorityKeyword && text.toLowerCase().startsWith(priorityKeyword.toLowerCase())) {
         return true
       }
       if (!settings.value.keyword) return false
       return checkMatch(eventData.msg)
     }
 
+    if (eventData.type === EventDataTypes.SC) {
+      if (!settings.value.allowSC) return false
+      const minSC = settings.value.minSCPrice ?? 0
+      return minSC <= 0 || eventData.price >= minSC
+    }
+
     if (eventData.type === EventDataTypes.Gift) {
       if (!settings.value.allowGift && !settings.value.allowIncreasePaymentBySendGift) {
         return false
       }
-      if (settings.value.allowGift) {
-        const nameMatch =
-          (settings.value.giftNames?.length ?? 0) === 0 ||
-          settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) === true
-        const priceMatch = !settings.value.minGiftPrice || eventData.price >= settings.value.minGiftPrice
+      const giftNames = (settings.value.giftNames ?? []).filter((n) => n.trim().length > 0)
+      const hasNames = giftNames.length > 0
+      const minPrice = settings.value.minGiftPrice ?? 0
+      const hasPrice = minPrice > 0
+      const nameMatch = hasNames && giftNames.some((n) => eventData.msg.toLowerCase() === n.trim().toLowerCase())
+      const priceMatch = hasPrice && eventData.price >= minPrice
 
-        if (settings.value.giftFilterType === QueueGiftFilterType.Or) {
-          if (!nameMatch && !priceMatch) return false
-        } else {
-          if (!nameMatch || !priceMatch) return false
+      if (settings.value.allowGift) {
+        let giftMatched = true
+        if (hasNames && hasPrice) {
+          giftMatched =
+            settings.value.giftFilterType === QueueGiftFilterType.Or
+              ? nameMatch || priceMatch
+              : nameMatch && priceMatch
+        } else if (hasNames) {
+          giftMatched = nameMatch
+        } else if (hasPrice) {
+          giftMatched = priceMatch
         }
-        return settings.value.sendGiftDirectJoin
+        if (giftMatched) {
+          return isLoggedIn.value ? true : settings.value.sendGiftDirectJoin
+        }
       }
-      return (
-        settings.value.allowIncreaseByAnyPayment ||
-        settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) === true
-      )
+
+      if (settings.value.allowIncreasePaymentBySendGift) {
+        return settings.value.allowIncreaseByAnyPayment || nameMatch
+      }
+      return false
     }
 
     return true
@@ -319,6 +380,13 @@ export const useQueue = defineStore('queue', () => {
         const data = await postApiQueueTryAdd(danmaku as any)
         if (data.code === 200) {
           if (data.message === 'EventFetcher') return
+          if (!data.data) {
+            if (data.message && data.message !== 'OK') {
+              window.$message.info(`[${danmaku.uname}] ${data.message}`)
+            }
+            void updateActive()
+            return
+          }
           const existingIndex = originQueue.value.findIndex((q) => q.id === data.data.id)
           if (existingIndex > -1) {
             const prev = originQueue.value[existingIndex]
@@ -358,8 +426,13 @@ export const useQueue = defineStore('queue', () => {
     } else {
       const entry = {
         status: QueueStatus.Waiting,
-        from: danmaku.type === EventDataTypes.Message ? QueueFrom.Danmaku : QueueFrom.Gift,
-        giftPrice: danmaku.type === EventDataTypes.Gift ? danmaku.price : undefined,
+        from:
+          danmaku.type === EventDataTypes.Message
+            ? QueueFrom.Danmaku
+            : danmaku.type === EventDataTypes.SC
+              ? QueueFrom.SC
+              : QueueFrom.Gift,
+        giftPrice: danmaku.type === EventDataTypes.Gift || danmaku.type === EventDataTypes.SC ? danmaku.price : undefined,
         mysteryBoxName: danmaku.type === EventDataTypes.Gift ? danmaku.mystery_box_name : undefined,
         mysteryBoxPrice: danmaku.type === EventDataTypes.Gift ? danmaku.mystery_box_price : undefined,
         content: danmaku.msg,
@@ -383,19 +456,26 @@ export const useQueue = defineStore('queue', () => {
     }
   }
 
-  async function addManual(overrideName?: string) {
+  async function addManual(overrideName?: string, overrideContent?: string) {
     const targetName = (overrideName ?? newQueueName.value).trim()
+    const targetContent = (overrideContent !== undefined ? overrideContent : newQueueContent.value).trim()
     if (!targetName) {
       window.$message.error('请输入用户名')
       return null
     }
     if (isLoggedIn.value) {
       try {
-        const data = await postApiQueueAdd({ name: targetName })
+        const data = await postApiQueueAddWithContent({
+          name: targetName,
+          content: targetContent || undefined,
+        })
         if (data.code === 200) {
           window.$message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
           originQueue.value.unshift(data.data)
-          if (!overrideName) newQueueName.value = ''
+          if (!overrideName) {
+            newQueueName.value = ''
+            newQueueContent.value = ''
+          }
           return data.data
         }
         window.$message.error(`手动添加失败: ${data.message}`)
@@ -408,6 +488,7 @@ export const useQueue = defineStore('queue', () => {
     const entry = {
       status: QueueStatus.Waiting,
       from: QueueFrom.Manual,
+      content: targetContent || undefined,
       user: { name: targetName } as DanmakuUserInfo,
       createAt: Date.now(),
       priorityLevel: 0,
@@ -417,12 +498,18 @@ export const useQueue = defineStore('queue', () => {
     } as ResponseQueueModel
     localQueues.value.unshift(entry)
     window.$message.success(`已手动添加用户至队列: ${targetName}`)
-    if (!overrideName) newQueueName.value = ''
+    if (!overrideName) {
+      newQueueName.value = ''
+      newQueueContent.value = ''
+    }
     return entry
   }
 
   function applyQueueStatusUpdate(item: ResponseQueueModel, status: QueueStatus, refundPoint: boolean, now: number) {
     item.status = status
+    if (status === QueueStatus.Progressing && !item.startAt) {
+      item.startAt = now
+    }
     if (status > QueueStatus.Progressing) {
       item.finishAt = now
       item.isPinned = false
@@ -430,6 +517,287 @@ export const useQueue = defineStore('queue', () => {
     if (status === QueueStatus.Cancel && refundPoint && item.pointCost && item.pointCost > 0) {
       item.pointRefunded = true
     }
+  }
+
+  function upsertOriginItems(items: ResponseQueueModel[]) {
+    for (const item of items) {
+      const idx = originQueue.value.findIndex((q) => q.id === item.id)
+      if (idx > -1) {
+        originQueue.value.splice(idx, 1, item)
+      } else {
+        originQueue.value.unshift(item)
+      }
+    }
+  }
+
+  async function setTeamSize(size: number) {
+    const clamped = Math.max(1, Math.min(20, Math.round(size)))
+    const prev = settings.value.teamSize ?? 1
+    if (prev === clamped) return true
+    settings.value.teamSize = clamped
+    if (!configCanEdit.value) {
+      window.$message.success(clamped > 1 ? `已切换为每车 ${clamped} 人组队模式` : '已切换为单人排队模式')
+      return true
+    }
+    const ok = await saveSettings()
+    if (!ok) {
+      settings.value.teamSize = prev
+      return false
+    }
+    return true
+  }
+
+  async function nextBatch(count?: number) {
+    const targetTeamSize = count && count > 0 ? Math.min(20, Math.round(count)) : teamSize.value
+    const slotsAvailable = Math.max(0, targetTeamSize - progressingQueue.value.length)
+    if (slotsAvailable <= 0) {
+      window.$message.info(`当前车队已满（${progressingQueue.value.length}/${targetTeamSize}），请先完成本局或空出位置`)
+      return null
+    }
+    if (waitingQueue.value.length === 0) {
+      window.$message.info('当前等待队列为空')
+      return null
+    }
+
+    if (!isLoggedIn.value) {
+      const now = Date.now()
+      const maxBatch = localQueues.value.reduce((max, q) => Math.max(max, q.batchNo ?? 0), 0)
+      const batchNo = progressingQueue.value[0]?.batchNo ?? maxBatch + 1
+      const toStart = waitingQueue.value.slice(0, slotsAvailable)
+      for (const item of toStart) {
+        applyQueueStatusUpdate(item, QueueStatus.Progressing, false, now)
+        item.batchNo = batchNo
+      }
+      window.$message.success(
+        targetTeamSize > 1
+          ? `已拉取第 ${batchNo} 车上车（${toStart.length} 人）`
+          : `已开始处理「${toStart[0]?.user?.name || '观众'}」`,
+      )
+      return { batchNo, finishedIds: [] as number[], started: toStart }
+    }
+
+    isBatchLoading.value = true
+    try {
+      const res = await postApiQueueNextBatch({ count: targetTeamSize })
+      if (res.code === 200 && res.data) {
+        upsertOriginItems(res.data.started ?? [])
+        const started = res.data.started ?? []
+        if (started.length > 0) {
+          window.$message.success(
+            targetTeamSize > 1
+              ? `已拉取第 ${res.data.batchNo} 车上车（${started.length} 人）`
+              : `已开始处理「${started[0]?.user?.name || '观众'}」`,
+          )
+        } else {
+          window.$message.info('当前没有可拉取的等待观众')
+        }
+        return res.data
+      }
+      window.$message.error(`拉取下一队失败: ${res.message}`)
+    } catch {
+      // 兼容旧版后端：降级到单条状态更新
+      const fallbackIds = waitingQueue.value.slice(0, slotsAvailable).map((q) => q.id)
+      const ok = await batchUpdateStatus(fallbackIds, QueueStatus.Progressing)
+      if (ok) {
+        return { batchNo: 1, finishedIds: [] as number[], started: [] as ResponseQueueModel[] }
+      }
+    } finally {
+      isBatchLoading.value = false
+    }
+    return null
+  }
+
+  async function finishAndNextBatch(count?: number) {
+    const targetTeamSize = count && count > 0 ? Math.min(20, Math.round(count)) : teamSize.value
+    const currentProgressing = [...progressingQueue.value]
+    if (currentProgressing.length === 0 && waitingQueue.value.length === 0) {
+      window.$message.info('当前队列为空')
+      return null
+    }
+
+    if (!isLoggedIn.value) {
+      const now = Date.now()
+      const finishedIds = currentProgressing.map((q) => q.id)
+      for (const item of currentProgressing) {
+        applyQueueStatusUpdate(item, QueueStatus.Finish, false, now)
+      }
+      const maxBatch = localQueues.value.reduce((max, q) => Math.max(max, q.batchNo ?? 0), 0)
+      const nextBatchNo = maxBatch + 1
+      const toStart = waitingQueue.value.slice(0, targetTeamSize)
+      for (const item of toStart) {
+        applyQueueStatusUpdate(item, QueueStatus.Progressing, false, now)
+        item.batchNo = nextBatchNo
+      }
+      if (finishedIds.length > 0 && toStart.length > 0) {
+        window.$message.success(
+          targetTeamSize > 1
+            ? `本局 ${finishedIds.length} 人已完成，已拉取第 ${nextBatchNo} 车（${toStart.length} 人）`
+            : `已完成当前观众，下一位：${toStart[0]?.user?.name || '观众'}`,
+        )
+      } else if (finishedIds.length > 0) {
+        window.$message.success(`本局 ${finishedIds.length} 人已完成，等待队列已清空`)
+      } else if (toStart.length > 0) {
+        window.$message.success(`已拉取第 ${nextBatchNo} 车上车（${toStart.length} 人）`)
+      }
+      return { batchNo: nextBatchNo, finishedIds, started: toStart }
+    }
+
+    isBatchLoading.value = true
+    try {
+      const res = await postApiQueueFinishAndNextBatch({ count: targetTeamSize })
+      if (res.code === 200 && res.data) {
+        const now = Date.now()
+        const finishedSet = new Set(res.data.finishedIds ?? [])
+        for (const item of originQueue.value) {
+          if (finishedSet.has(item.id)) {
+            applyQueueStatusUpdate(item, QueueStatus.Finish, false, now)
+          }
+        }
+        const started = res.data.started ?? []
+        upsertOriginItems(started)
+
+        if (finishedSet.size > 0 && started.length > 0) {
+          window.$message.success(
+            targetTeamSize > 1
+              ? `本局 ${finishedSet.size} 人已完成，已拉取第 ${res.data.batchNo} 车（${started.length} 人）`
+              : `已完成当前观众，下一位：${started[0]?.user?.name || '观众'}`,
+          )
+        } else if (finishedSet.size > 0) {
+          window.$message.success(`本局 ${finishedSet.size} 人已完成，暂无下一位等待观众`)
+        } else if (started.length > 0) {
+          window.$message.success(
+            targetTeamSize > 1
+              ? `已拉取第 ${res.data.batchNo} 车上车（${started.length} 人）`
+              : `已开始处理「${started[0]?.user?.name || '观众'}」`,
+          )
+        }
+        return res.data
+      }
+      window.$message.error(`切下一队失败: ${res.message}`)
+    } catch {
+      const progressingIds = currentProgressing.map((q) => q.id)
+      const nextIds = waitingQueue.value.slice(0, targetTeamSize).map((q) => q.id)
+      if (progressingIds.length > 0) {
+        await batchUpdateStatus(progressingIds, QueueStatus.Finish)
+      }
+      if (nextIds.length > 0) {
+        await batchUpdateStatus(nextIds, QueueStatus.Progressing)
+      }
+    } finally {
+      isBatchLoading.value = false
+    }
+    return null
+  }
+
+  async function replaceMember(
+    queueData: ResponseQueueModel,
+    action: 'cancel' | 'defer' = 'cancel',
+    refundPoint = false,
+    pullNext = true,
+  ) {
+    const name = queueData.user?.name || '该观众'
+    if (!isLoggedIn.value) {
+      const now = Date.now()
+      const target = localQueues.value.find((q) => q.id === queueData.id)
+      if (!target) return null
+      const batchNo = target.batchNo
+      if (action === 'defer') {
+        target.status = QueueStatus.Waiting
+        target.isPinned = false
+        target.batchNo = null
+        target.sortOrder = Math.min(waitingQueue.value.length, teamSize.value) + 1
+      } else {
+        applyQueueStatusUpdate(target, QueueStatus.Cancel, false, now)
+      }
+
+      let replacement: ResponseQueueModel | null = null
+      if (pullNext) {
+        const candidate = waitingQueue.value.find((q) => q.id !== target.id)
+        if (candidate) {
+          applyQueueStatusUpdate(candidate, QueueStatus.Progressing, false, now)
+          candidate.batchNo = batchNo ?? 1
+          replacement = candidate
+        }
+      }
+      window.$message.success(
+        replacement
+          ? `已${action === 'defer' ? '顺延' : '取消'}「${name}」，自动补位「${replacement.user?.name}」`
+          : `已${action === 'defer' ? '顺延' : '取消'}「${name}」`,
+      )
+      return { replacedId: queueData.id, action, replacement }
+    }
+
+    markOperating(queueData.id, true)
+    try {
+      const res = await postApiQueueReplaceMember({
+        id: queueData.id,
+        action,
+        refundPoint,
+        pullNext,
+      })
+      if (res.code === 200 && res.data) {
+        const now = Date.now()
+        const target = originQueue.value.find((q) => q.id === queueData.id)
+        if (target) {
+          if (action === 'defer') {
+            target.status = QueueStatus.Waiting
+            target.isPinned = false
+            target.batchNo = null
+          } else {
+            applyQueueStatusUpdate(target, QueueStatus.Cancel, refundPoint, now)
+          }
+        }
+        if (res.data.replacement) {
+          upsertOriginItems([res.data.replacement])
+        }
+        void updateActive()
+        window.$message.success(
+          res.data.replacement
+            ? `已${action === 'defer' ? '顺延' : '移除'}「${name}」，自动补位「${res.data.replacement.user?.name || '观众'}」`
+            : `已${action === 'defer' ? '顺延' : '移除'}「${name}」`,
+        )
+        return res.data
+      }
+      window.$message.error(`换人补位失败: ${res.message}`)
+    } catch (err: any) {
+      window.$message.error(`换人补位出错: ${err.message || err}`)
+    } finally {
+      markOperating(queueData.id, false)
+    }
+    return null
+  }
+
+  async function updateItem(id: number, payload: { content?: string | null; userName?: string | null }) {
+    if (!isLoggedIn.value) {
+      const target = localQueues.value.find((q) => q.id === id)
+      if (!target) return null
+      target.content = payload.content?.trim() || null
+      if (payload.userName?.trim() && target.user) {
+        target.user.name = payload.userName.trim()
+      }
+      window.$message.success('已更新排队备注')
+      return target
+    }
+
+    markOperating(id, true)
+    try {
+      const res = await postApiQueueUpdateItem({
+        id,
+        content: payload.content ?? null,
+        userName: payload.userName ?? null,
+      })
+      if (res.code === 200 && res.data) {
+        upsertOriginItems([res.data])
+        window.$message.success('已更新排队信息')
+        return res.data
+      }
+      window.$message.error(`更新失败: ${res.message}`)
+    } catch (err: any) {
+      window.$message.error(`更新排队信息出错: ${err.message || err}`)
+    } finally {
+      markOperating(id, false)
+    }
+    return null
   }
 
   async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus, refundPoint = false) {
@@ -703,6 +1071,7 @@ export const useQueue = defineStore('queue', () => {
       const data = await getApiQueueGetActive({ id: accountInfo.value?.id })
       if (gen !== lifecycleGen || data.code !== 200) return
 
+      const hadExisting = originQueue.value.length > 0
       const activeList = data.data ?? []
       const activeIdSet = new Set(activeList.map((item) => item.id))
       needsFullRefresh = originQueue.value.some(
@@ -719,6 +1088,12 @@ export const useQueue = defineStore('queue', () => {
           if (existing.pointRefunded !== item.pointRefunded) existing.pointRefunded = item.pointRefunded
           if (existing.sortOrder !== item.sortOrder) existing.sortOrder = item.sortOrder
           if (Boolean(existing.isPinned) !== Boolean(item.isPinned)) existing.isPinned = Boolean(item.isPinned)
+          if (existing.content !== item.content) existing.content = item.content
+          if (existing.startAt !== item.startAt) existing.startAt = item.startAt
+          if (existing.batchNo !== item.batchNo) existing.batchNo = item.batchNo
+          if (item.user?.name && existing.user && existing.user.name !== item.user.name) {
+            existing.user.name = item.user.name
+          }
           const paymentChanged =
             existing.giftPrice !== item.giftPrice ||
             existing.mysteryBoxName !== item.mysteryBoxName ||
@@ -745,10 +1120,14 @@ export const useQueue = defineStore('queue', () => {
           }
         } else {
           originQueue.value.unshift(item)
-          if (item.from === QueueFrom.Web) {
-            window.$message.success(`[${item.user?.name}] 通过网页加入队列`)
-          } else if (item.from === QueueFrom.Gift && settings.value.sendGiftDirectJoin) {
-            window.$message.success(`[${item.user?.name}] 通过礼物加入队列`)
+          if (hadExisting) {
+            if (item.from === QueueFrom.Web) {
+              window.$message.success(`[${item.user?.name}] 通过网页加入队列`)
+            } else if (item.from === QueueFrom.Gift && settings.value.sendGiftDirectJoin) {
+              window.$message.success(`[${item.user?.name}] 通过礼物加入队列`)
+            } else if (item.from === QueueFrom.SC) {
+              window.$message.success(`[${item.user?.name}] 通过 SC 加入队列`)
+            }
           }
         }
       }
@@ -856,6 +1235,9 @@ export const useQueue = defineStore('queue', () => {
   function onGetGift(danmaku: EventModel) {
     void add(danmaku)
   }
+  function onGetSC(danmaku: EventModel) {
+    void add(danmaku)
+  }
 
   function startUpdateTimer(gen = lifecycleGen) {
     if (gen !== lifecycleGen) return
@@ -865,7 +1247,7 @@ export const useQueue = defineStore('queue', () => {
     }
     updateActiveTimer = setInterval(() => {
       void updateActive()
-    }, 4000)
+    }, 15000)
   }
 
   async function init() {
@@ -910,6 +1292,7 @@ export const useQueue = defineStore('queue', () => {
     originQueue,
     localQueues,
     newQueueName,
+    newQueueContent,
     filterName,
     filterNameContains,
     activeFilterName,
@@ -923,9 +1306,12 @@ export const useQueue = defineStore('queue', () => {
     isLoggedIn,
     configCanEdit,
     enabled,
+    teamSize,
     settings,
     queue,
     unfilteredQueue,
+    progressingQueue,
+    waitingQueue,
     hasCustomOrder,
     historySongs,
     isQueueOperating,
@@ -935,6 +1321,11 @@ export const useQueue = defineStore('queue', () => {
     fetchStats,
     add,
     addManual,
+    setTeamSize,
+    nextBatch,
+    finishAndNextBatch,
+    replaceMember,
+    updateItem,
     updateStatus,
     batchUpdateStatus,
     reorderQueue,
@@ -950,5 +1341,6 @@ export const useQueue = defineStore('queue', () => {
     saveSettings,
     onGetDanmaku,
     onGetGift,
+    onGetSC,
   }
 })

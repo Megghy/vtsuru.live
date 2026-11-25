@@ -33,7 +33,7 @@ export interface DashboardEvent {
 }
 
 /** 顺序即快捷键 Alt+1..n */
-export const PANEL_IDS = ['danmaku', 'sc', 'gift', 'vote', 'song_request'] as const
+export const PANEL_IDS = ['danmaku', 'sc', 'gift', 'vote', 'song_request', 'queue'] as const
 export type PanelId = (typeof PANEL_IDS)[number]
 
 export const PANEL_TITLES: Record<PanelId, string> = {
@@ -42,6 +42,7 @@ export const PANEL_TITLES: Record<PanelId, string> = {
   gift: '礼物',
   vote: '投票',
   song_request: '点歌',
+  queue: '排队',
 }
 
 /** 付费事件（参与已读、按价格排序） */
