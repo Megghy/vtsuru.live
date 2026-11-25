@@ -9,6 +9,7 @@ import { vtsuruMutator } from '../../orval-mutator'
 import type {
   GetApiObsScenePublicShareKeyParams,
   PostApiObsSceneAssetsUploadBody,
+  PostApiObsSceneAssetsUploadVfxBody,
   RequestCreateSceneProject,
   RequestPublishScene,
   RequestSaveDraft,
@@ -20,6 +21,7 @@ import type {
   ResponseResultOfResponseSceneProjectSummary,
   ResponseResultOfResponseSwitchSceneResult,
   ResponseResultOfResponseUploadedSceneAsset,
+  ResponseResultOfResponseUploadedSceneVfxAsset,
 } from '../model'
 
 export const getDeleteApiObsSceneIdUrl = (id: number) => {
@@ -185,6 +187,26 @@ export const postApiObsSceneIdSwitchScene = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestSwitchScene),
+  })
+}
+
+export const getPostApiObsSceneAssetsUploadVfxUrl = () => {
+  return `/api/obs-scene/assets/upload-vfx`
+}
+
+export const postApiObsSceneAssetsUploadVfx = async (
+  postApiObsSceneAssetsUploadVfxBody?: PostApiObsSceneAssetsUploadVfxBody,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseUploadedSceneVfxAsset> => {
+  const formData = new FormData()
+  if (postApiObsSceneAssetsUploadVfxBody?.file !== undefined) {
+    formData.append(`file`, postApiObsSceneAssetsUploadVfxBody.file)
+  }
+
+  return vtsuruMutator<ResponseResultOfResponseUploadedSceneVfxAsset>(getPostApiObsSceneAssetsUploadVfxUrl(), {
+    ...options,
+    method: 'POST',
+    body: formData,
   })
 }
 

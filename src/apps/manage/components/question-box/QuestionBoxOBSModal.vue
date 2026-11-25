@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
-import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import { Copy, ExternalLink } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -52,7 +51,7 @@ function openWorkbench() {
 
 <template>
   <Dialog v-model:open="show">
-    <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin">
       <DialogHeader>
         <DialogTitle class="text-sm">OBS 提问展示</DialogTitle>
       </DialogHeader>
@@ -60,7 +59,7 @@ function openWorkbench() {
       <div class="grid grid-cols-1 sm:grid-cols-5 gap-5 items-center py-2">
         <div class="sm:col-span-3 flex flex-col items-center gap-2 text-xs text-muted-foreground">
           <div
-            class="w-full overflow-hidden bg-[#34383c] border border-border rounded-md"
+            class="w-full overflow-hidden bg-inset border border-border rounded-md"
             :style="previewStyle"
           >
             <QuestionDisplayCard
@@ -69,7 +68,7 @@ function openWorkbench() {
               :status="questionBox.displayQuestion ? 'ready' : 'empty'"
             />
           </div>
-          <span class="text-[11px]">{{ savedCardSize.width }} × {{ savedCardSize.height }}</span>
+          <span class="text-[11px] tabular-nums">{{ savedCardSize.width }} × {{ savedCardSize.height }}</span>
         </div>
 
         <div class="sm:col-span-2 space-y-3">
@@ -85,7 +84,7 @@ function openWorkbench() {
             class="w-full gap-1.5"
             @click="copyUrl"
           >
-            <Copy24Regular class="size-4" />
+            <Copy class="size-3.5" />
             复制链接
           </Button>
           <Button
@@ -93,8 +92,8 @@ function openWorkbench() {
             class="w-full gap-1.5"
             @click="openWorkbench"
           >
-            <Open24Regular class="size-4" />
-            打开展示页
+            <ExternalLink class="size-3.5" />
+            打开展示展板
           </Button>
         </div>
       </div>

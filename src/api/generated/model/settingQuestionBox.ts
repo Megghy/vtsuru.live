@@ -22,4 +22,23 @@ export interface SettingQuestionBox {
   readonly publishByDefault: boolean
   allowFollowUp: boolean
   maxFollowUps: number
+  pauseAccepting: boolean
+  /** @nullable */
+  pauseMessage?: string | null
+  /** @nullable */
+  notice?: string | null
+  /** @nullable */
+  blockedKeywords?: string[] | null
+  cooldownSeconds: number
+  maxMessageLength: number
+  /**
+   * 按匿名来源 IP 哈希拉黑的列表
+   * @nullable
+   */
+  blockedSenderHashes?: string[] | null
+  /**
+   * 按 B 站 UID 拉黑的提问者列表
+   * @nullable
+   */
+  blockedBiliUids?: number[] | null
 }

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import ChevronDown12Regular from '@vicons/fluent/es/ChevronDown12Regular'
-import ChevronUp12Regular from '@vicons/fluent/es/ChevronUp12Regular'
-import Tv20Regular from '@vicons/fluent/es/Tv20Regular'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { BadgeCheck, ChevronDown, ChevronUp, Heart, Pin, Tv } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { ResponseQAInfoToTarget } from '@/api/generated/model'
+import QuestionThreadContext from '@/components/QuestionThreadContext.vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
@@ -16,44 +15,57 @@ import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
-import QuestionThreadContext from './QuestionThreadContext.vue'
-
-const props = defineProps<{
-  item: ResponseQAInfoToTarget
-  selectable?: boolean
-  selected?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    item: ResponseQAInfoToTarget
+    selectable?: boolean
+    selected?: boolean
+  }>(),
+  {
+    selectable: false,
+    selected: false,
+  },
+)
 
 const emit = defineEmits<{ (e: 'select', id: number): void }>()
-const useQA = useQuestionBox()
 
-const isViolation = computed(() => props.item.reviewResult?.isApproved === false)
-const isDisplaying = computed(() => useQA.displayQuestion?.id === props.item.id)
-const showContent = ref(!isViolation.value)
+const useQA = useQuestionBox()
+const showContent = ref(false)
 const showFullMessage = ref(false)
-const message = computed(() => props.item.question?.message ?? '')
-const shouldClampMessage = computed(() => message.value.length > 240)
-const threadContext = computed(() => useQA.threadContext(props.item))
 const showThreadContext = ref(false)
 
-function getScoreColor(score: number | undefined): string {
-  if (score === undefined) return 'grey'
-  const clamped = Math.max(0, Math.min(100, score))
-  const hue = 120 * (clamped / 100)
-  return `hsl(${hue}, 50%, 45%)`
+const threadContext = computed(() => useQA.threadContext(props.item))
+const isViolation = computed(() => Boolean(props.item.reviewResult && props.item.reviewResult.isApproved === false))
+const isDisplaying = computed(() => useQA.displayQuestion?.id === props.item.id)
+const message = computed(() => props.item.question?.message || '')
+const shouldClampMessage = computed(() => message.value.length > 220 || message.value.split('\n').length > 4)
+
+function normalizeTime(time: number): number {
+  return time < 1e12 ? time * 1000 : time
+}
+
+function getScoreVariant(score?: number | null): 'success' | 'warning' | 'destructive' | 'secondary' {
+  if (score === undefined || score === null) return 'secondary'
+  if (score >= 70) return 'success'
+  if (score >= 40) return 'warning'
+  return 'destructive'
 }
 
 function formatRelative(time: number) {
-  return formatDistanceToNow(time, { addSuffix: true, locale: zhCN })
+  return formatDistanceToNow(normalizeTime(time), { addSuffix: true, locale: zhCN })
+}
+
+function formatExact(time: number) {
+  return format(normalizeTime(time), 'yyyy-MM-dd HH:mm:ss')
 }
 </script>
 
 <template>
   <Card
     v-if="item"
-    class="question-item transition-all text-xs /80"
+    class="question-item transition-colors text-xs"
     :class="{
-      'is-unread': !item.isReaded,
+      'is-unread border-l-2 border-l-brand': !item.isReaded,
       'is-displaying ring-1 ring-primary border-primary': isDisplaying,
     }"
   >
@@ -61,7 +73,7 @@ function formatRelative(time: number) {
       <CardHeader
         class="p-3 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2 flex-wrap"
       >
-        <div class="flex items-center gap-1.5 flex-wrap">
+        <div class="flex items-center gap-1.5 flex-wrap min-w-0">
           <Checkbox
             v-if="selectable"
             :checked="selected"
@@ -76,11 +88,18 @@ function formatRelative(time: number) {
             size="xs"
             class="flex items-center gap-1 displaying-tag"
           >
-            <component
-              :is="Tv20Regular"
-              class="size-3"
-            />
+            <Tv class="size-3" />
             OBS 展示中
+          </Badge>
+
+          <Badge
+            v-if="item.isPinned"
+            variant="secondary"
+            size="xs"
+            class="flex items-center gap-1 text-brand bg-brand-soft"
+          >
+            <Pin class="size-3" />
+            置顶
           </Badge>
 
           <Badge
@@ -92,14 +111,14 @@ function formatRelative(time: number) {
           </Badge>
 
           <span
-            v-if="!item.isReaded || isDisplaying"
+            v-if="!item.isReaded || isDisplaying || item.isPinned"
             class="text-border"
           >
             |
           </span>
 
           <strong
-            class="font-semibold text-xs"
+            class="font-semibold text-xs truncate max-w-[180px]"
             :class="item.isAnonymous ? 'text-muted-foreground' : 'text-foreground'"
           >
             {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name || '观众' }}
@@ -113,6 +132,20 @@ function formatRelative(time: number) {
           >
             已注册
           </Badge>
+
+          <Tooltip v-if="item.isSenderBiliAuthed">
+            <TooltipTrigger as-child>
+              <Badge
+                variant="secondary"
+                size="xs"
+                class="flex items-center gap-0.5 text-pink-600 dark:text-pink-400 bg-pink-500/10"
+              >
+                <BadgeCheck class="size-3" />
+                {{ item.senderBiliAuthInfo?.name || 'B站认证' }}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>已完成 B 站身份认证</TooltipContent>
+          </Tooltip>
 
           <Badge
             v-if="item.threadRootId"
@@ -146,21 +179,29 @@ function formatRelative(time: number) {
                 variant="outline"
                 size="xs"
               >
-                {{ item.tag }}
+                #{{ item.tag }}
               </Badge>
             </TooltipTrigger>
             <TooltipContent>标签/话题</TooltipContent>
           </Tooltip>
 
+          <span
+            v-if="(item.likeCount ?? 0) > 0"
+            class="inline-flex items-center gap-0.5 text-[11px] text-rose-500 tabular-nums"
+          >
+            <Heart class="size-3 fill-current" />
+            {{ item.likeCount }}
+          </span>
+
           <span class="text-border">|</span>
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <span class="text-muted-foreground text-[11px] cursor-default">
+              <span class="text-muted-foreground text-[11px] cursor-default tabular-nums">
                 {{ formatRelative(item.sendAt) }}
               </span>
             </TooltipTrigger>
-            <TooltipContent>{{ format(item.sendAt, 'yyyy-MM-dd HH:mm:ss') }}</TooltipContent>
+            <TooltipContent>{{ formatExact(item.sendAt) }}</TooltipContent>
           </Tooltip>
 
           <template v-if="item.reviewResult && item.reviewResult.violationType?.length">
@@ -177,18 +218,19 @@ function formatRelative(time: number) {
             </div>
           </template>
 
-          <template v-if="item.reviewResult && item.reviewResult.saftyScore !== undefined">
+          <template v-if="item.reviewResult && item.reviewResult.saftyScore !== undefined && item.reviewResult.saftyScore !== null">
             <span class="text-border">|</span>
             <Tooltip>
               <TooltipTrigger as-child>
-                <span
-                  class="text-[10px] px-1.5 py-0.2 rounded font-medium text-white cursor-default"
-                  :style="{ backgroundColor: getScoreColor(item.reviewResult.saftyScore) }"
+                <Badge
+                  :variant="getScoreVariant(item.reviewResult.saftyScore)"
+                  size="xs"
+                  class="tabular-nums cursor-default"
                 >
-                  得分: {{ item.reviewResult.saftyScore }}
-                </span>
+                  安全分 {{ item.reviewResult.saftyScore }}
+                </Badge>
               </TooltipTrigger>
-              <TooltipContent>审查得分, 满分100, 越高越安全</TooltipContent>
+              <TooltipContent>审查得分，满分 100，越高越安全</TooltipContent>
             </Tooltip>
           </template>
         </div>
@@ -207,8 +249,12 @@ function formatRelative(time: number) {
             class="h-auto p-0 text-[11px] gap-1 text-muted-foreground"
             @click="showThreadContext = !showThreadContext"
           >
-            <component
-              :is="showThreadContext ? ChevronUp12Regular : ChevronDown12Regular"
+            <ChevronUp
+              v-if="showThreadContext"
+              class="size-3"
+            />
+            <ChevronDown
+              v-else
               class="size-3"
             />
             {{ showThreadContext ? '收起上文' : `查看上文 (${threadContext.length})` }}
@@ -254,8 +300,12 @@ function formatRelative(time: number) {
           class="h-auto p-0 text-[11px] gap-1"
           @click="showFullMessage = !showFullMessage"
         >
-          <component
-            :is="showFullMessage ? ChevronUp12Regular : ChevronDown12Regular"
+          <ChevronUp
+            v-if="showFullMessage"
+            class="size-3"
+          />
+          <ChevronDown
+            v-else
             class="size-3"
           />
           {{ showFullMessage ? '收起内容' : '展开全部' }}
@@ -263,16 +313,40 @@ function formatRelative(time: number) {
 
         <template v-if="item.answer">
           <Separator class="my-2" />
-          <div class="question-item__answer-box p-2.5 rounded-lg bg-muted/40 border border-border/60 space-y-1">
-            <span class="font-medium text-[11px] text-muted-foreground block">我的回复：</span>
-            <p class="m-0 text-xs text-foreground leading-relaxed">{{ item.answer.message }}</p>
+          <div class="question-item__answer-box p-2.5 rounded-lg bg-muted/40 border border-border/60 space-y-1.5">
+            <div class="flex-between text-[11px] text-muted-foreground">
+              <span class="font-medium">我的回复</span>
+              <span
+                v-if="item.isEdited"
+                class="text-muted-foreground/80"
+              >
+                已编辑
+              </span>
+            </div>
+            <p class="m-0 text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words">
+              {{ item.answer.message }}
+            </p>
+            <div
+              v-if="item.answerImages && item.answerImages.length > 0"
+              class="flex items-center gap-2 flex-wrap pt-1"
+            >
+              <ImagePreview
+                v-for="(img, index) in item.answerImages"
+                :key="img.id || index"
+                :src="img.path || ''"
+                :alt="img.name || '回复附图'"
+                :gallery="item.answerImages"
+                :index="index"
+                class="h-16 w-20"
+              />
+            </div>
           </div>
         </template>
       </CardContent>
 
       <CardFooter
         v-if="$slots.footer"
-        class="p-3 border-t border-border/40 mt-1 pt-2"
+        class="p-3 border-t border-border/40 pt-2"
       >
         <slot
           name="footer"

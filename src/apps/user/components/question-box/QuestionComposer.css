@@ -225,27 +225,14 @@
 .topic-banner-enter-active,
 .topic-banner-leave-active {
   transition:
-    opacity 0.24s ease,
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    max-height 0.32s ease,
-    margin 0.32s ease,
-    padding 0.32s ease;
+    opacity 0.18s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .topic-banner-enter-from,
 .topic-banner-leave-to {
   opacity: 0;
-  max-height: 0;
-  margin-top: -4px;
-  margin-bottom: -4px;
-  padding-top: 0;
-  padding-bottom: 0;
-  transform: translateY(-10px) scale(0.98);
-}
-
-.topic-banner-enter-to,
-.topic-banner-leave-from {
-  max-height: 72px;
+  transform: translateY(-6px) scale(0.98);
 }
 
 .message-editor {

@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
-import History24Regular from '@vicons/fluent/es/History24Regular'
-import Image24Regular from '@vicons/fluent/es/Image24Regular'
-import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { History, Image as ImageIcon, Lock, Trash2 } from 'lucide-vue-next'
 
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -44,10 +41,7 @@ function formatRelativeTime(time: number) {
       <SheetHeader class="px-5 py-4 border-b border-border/80">
         <div class="drawer-heading flex items-center gap-3">
           <span class="drawer-icon size-9 rounded-full bg-primary/10 text-primary flex-center shrink-0">
-            <component
-              :is="History24Regular"
-              class="size-5"
-            />
+            <History class="size-5" />
           </span>
           <div>
             <SheetTitle class="text-base">本地提问记录</SheetTitle>
@@ -56,7 +50,7 @@ function formatRelativeTime(time: number) {
         </div>
       </SheetHeader>
 
-      <div class="flex-1 min-h-0 overflow-y-auto p-5">
+      <div class="flex-1 min-h-0 overflow-y-auto scrollbar-thin p-5">
         <div
           v-if="questions.length"
           class="history-list space-y-3"
@@ -68,9 +62,9 @@ function formatRelativeTime(time: number) {
           >
             <div class="history-meta flex-between text-xs text-muted-foreground">
               <span>提给 {{ item.targetUserName }}</span>
-              <span class="text-[11px]">{{ formatRelativeTime(item.sendAt) }}</span>
+              <span class="text-[11px] tabular-nums">{{ formatRelativeTime(item.sendAt) }}</span>
             </div>
-            <p class="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words pr-6">
+            <p class="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words pr-6 m-0">
               {{ item.message }}
             </p>
             <div class="history-tags flex items-center gap-2 text-xs flex-wrap">
@@ -79,26 +73,20 @@ function formatRelativeTime(time: number) {
                 variant="secondary"
                 size="xs"
               >
-                {{ item.tag }}
+                #{{ item.tag }}
               </Badge>
               <span
                 v-if="item.hasImage"
                 class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"
               >
-                <component
-                  :is="Image24Regular"
-                  class="size-3"
-                />
+                <ImageIcon class="size-3" />
                 包含图片
               </span>
               <span
                 v-if="item.anonymousName"
                 class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"
               >
-                <component
-                  :is="LockClosed24Regular"
-                  class="size-3"
-                />
+                <Lock class="size-3" />
                 {{ item.anonymousName }}
               </span>
             </div>
@@ -109,10 +97,7 @@ function formatRelativeTime(time: number) {
               aria-label="删除这条本地记录"
               @click="emit('remove', item.id)"
             >
-              <component
-                :is="Delete24Regular"
-                class="size-3.5"
-              />
+              <Trash2 class="size-3.5" />
             </Button>
           </article>
         </div>
@@ -129,24 +114,17 @@ function formatRelativeTime(time: number) {
         class="px-5 py-3 border-t border-border/80 flex items-center justify-end"
       >
         <Popconfirm
-          title="清空后无法恢复，确定要清空全部记录吗？"
-          positive-text="确认清空"
-          negative-text="取消"
-          @positive-click="emit('clear')"
+          title="清空全部本地记录？"
+          description="清空后无法恢复，确定要清空全部本地提问记录吗？"
+          @confirm="emit('clear')"
         >
-          <template #trigger>
-            <Button
-              variant="destructive"
-              class="flex items-center gap-1.5"
-            >
-              <component
-                :is="Delete24Regular"
-                class="size-3.5"
-              />
-              清空本地记录
-            </Button>
-          </template>
-          清空后无法恢复
+          <Button
+            variant="destructive"
+            class="gap-1.5"
+          >
+            <Trash2 class="size-3.5" />
+            清空本地记录
+          </Button>
         </Popconfirm>
       </SheetFooter>
     </SheetContent>

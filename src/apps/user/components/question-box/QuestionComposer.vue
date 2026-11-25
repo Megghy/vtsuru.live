@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
-import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
-import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
-import History24Regular from '@vicons/fluent/es/History24Regular'
-import Image24Regular from '@vicons/fluent/es/Image24Regular'
-import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
-import Mail24Regular from '@vicons/fluent/es/Mail24Regular'
-import Send24Regular from '@vicons/fluent/es/Send24Regular'
-import { onBeforeUnmount, toRef, watch } from 'vue'
+import {
+  ArrowRight,
+  CheckCircle2,
+  History,
+  ImagePlus,
+  Lock,
+  Mail,
+  Megaphone,
+  PauseCircle,
+  Send,
+  X,
+} from 'lucide-vue-next'
+import { computed, onBeforeUnmount, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
@@ -56,12 +60,17 @@ const {
   imagePreviewUrls,
   isDragging,
   isIdentified,
+  isMessageTooLong,
+  isPaused,
   isSelf,
   isSending,
   isSent,
   isUserLoggedIn,
   isValidEmail,
   maxImages,
+  maxMessageLength,
+  notice,
+  pauseMessage,
   removeImage,
   selectedFiles,
   sendQuestion,
@@ -69,6 +78,12 @@ const {
   token,
   turnstile,
 } = composer
+
+const headerKicker = computed(() => {
+  if (isPaused.value) return '暂停收件'
+  if (allowDefaultPublic.value && draft.value.allowPublic !== false) return '提问箱 · 公开问答'
+  return '私密留言'
+})
 
 watch(
   [() => route.query.tag, () => props.tags],
@@ -152,51 +167,83 @@ async function submit() {
         <AvatarFallback>{{ (userInfo?.name || '主')[0] }}</AvatarFallback>
       </Avatar>
       <div class="header-copy">
-        <span class="header-kicker">私密留言</span>
+        <span class="header-kicker">{{ headerKicker }}</span>
         <h1>给 {{ userInfo?.name || '主播' }} 留句话</h1>
-        <p>说说你正在想的事。</p>
+        <p>{{ isPaused ? '暂不接受新提问，你可以继续浏览已公开的问答。' : '说说你正在想的事。' }}</p>
       </div>
       <Button
-        v-if="!isIdentified"
+        v-if="!isUserLoggedIn"
         variant="secondary"
-        class="history-action"
+        class="history-action gap-1.5"
         @click="emit('openHistory')"
       >
-        <History24Regular class="size-4 mr-1 inline-block" />
+        <History class="size-3.5" />
         本地记录
       </Button>
       <Button
-        v-else-if="isUserLoggedIn"
+        v-else
         variant="secondary"
-        class="history-action"
+        class="history-action gap-1.5"
         :disabled="isSelf"
         @click="router.push({ name: 'manage-questionBox', query: { send: '1' } })"
       >
-        <History24Regular class="size-4 mr-1 inline-block" />
+        <History class="size-3.5" />
         已发送
       </Button>
     </header>
+
+    <!-- 主播自定义提问箱公告 -->
+    <div
+      v-if="notice"
+      class="mt-4 flex items-start gap-2.5 p-3 rounded-[var(--radius)] border border-primary/25 bg-primary/8 text-xs text-foreground leading-relaxed"
+    >
+      <Megaphone class="size-4 text-primary shrink-0 mt-0.5" />
+      <div class="min-w-0 whitespace-pre-wrap break-words">{{ notice }}</div>
+    </div>
 
     <Transition
       name="composer-state"
       mode="out-in"
     >
       <div
-        v-if="isSent"
+        v-if="isPaused && !isSelf"
+        key="paused"
+        class="sent-state"
+      >
+        <span class="sent-icon"><PauseCircle class="size-8 text-muted-foreground inline-block" /></span>
+        <span class="sent-kicker">TEMPORARILY PAUSED</span>
+        <h2>提问箱已暂停收件</h2>
+        <p class="whitespace-pre-wrap break-words">{{ pauseMessage }}</p>
+      </div>
+
+      <div
+        v-else-if="isSent"
         key="sent"
         class="sent-state"
       >
-        <span class="sent-icon"><CheckmarkCircle24Regular class="size-8 text-green-500 inline-block" /></span>
+        <span class="sent-icon"><CheckCircle2 class="size-8 text-emerald-500 inline-block" /></span>
         <span class="sent-kicker">MESSAGE DELIVERED</span>
         <h2>已经送达</h2>
         <p>这条留言已进入 {{ userInfo?.name || '主播' }} 的提问箱。</p>
-        <Button
-          variant="secondary"
-          @click="composeAgain"
-        >
-          再写一条
-          <ArrowRight24Regular class="size-4 ml-1 inline-block" />
-        </Button>
+        <div class="flex items-center gap-2 flex-wrap justify-center">
+          <Button
+            variant="secondary"
+            class="gap-1.5"
+            @click="composeAgain"
+          >
+            再写一条
+            <ArrowRight class="size-3.5" />
+          </Button>
+          <Button
+            v-if="!isUserLoggedIn"
+            variant="outline"
+            class="gap-1.5"
+            @click="emit('openHistory')"
+          >
+            <History class="size-3.5" />
+            查看本地记录
+          </Button>
+        </div>
       </div>
 
       <div
@@ -258,17 +305,20 @@ async function submit() {
             v-model="draft.message"
             class="message-input min-h-[140px] resize-y border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
             :disabled="isSelf"
-            maxlength="10000"
+            :maxlength="maxMessageLength"
             placeholder="写下你想说的话..."
             @paste="handlePaste"
           />
           <div class="editor-footer">
             <span class="identity-state">
-              <LockClosed24Regular class="size-4 inline-block mr-1" />
+              <Lock class="size-3.5 inline-block mr-1" />
               {{ identityName }}
             </span>
-            <span :class="{ 'is-invalid': characterCount > 0 && !hasValidMessageLength }">
-              {{ characterCount > 0 && !hasValidMessageLength ? '至少 3 个字 · ' : '' }}{{ characterCount }} / 10000
+            <span
+              class="tabular-nums"
+              :class="{ 'is-invalid': (characterCount > 0 && !hasValidMessageLength) || isMessageTooLong }"
+            >
+              {{ isMessageTooLong ? '已超出字数限制 · ' : characterCount > 0 && !hasValidMessageLength ? '至少 3 个字 · ' : '' }}{{ characterCount }} / {{ maxMessageLength }}
             </span>
           </div>
         </div>
@@ -285,10 +335,10 @@ async function submit() {
                 accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon"
                 @change="handleFileSelect"
               />
-              <Image24Regular class="size-4 inline-block mr-1" />
+              <ImagePlus class="size-3.5 inline-block mr-1" />
               <span>添加图片</span>
             </label>
-            <span>{{ selectedFiles.length }} / {{ maxImages }}</span>
+            <span class="tabular-nums">{{ selectedFiles.length }} / {{ maxImages }}</span>
           </div>
           <TransitionGroup
             v-if="imagePreviewUrls.length"
@@ -332,7 +382,7 @@ async function submit() {
                 :aria-label="`移除第 ${index + 1} 张图片`"
                 @click.stop="removeImage(index)"
               >
-                <Dismiss24Regular class="size-3.5" />
+                <X class="size-3.5" />
               </Button>
             </figure>
           </TransitionGroup>
@@ -343,10 +393,10 @@ async function submit() {
           class="identity-panel"
         >
           <div class="identity-copy">
-            <LockClosed24Regular class="size-4 inline-block mr-1 text-muted-foreground" />
+            <Lock class="size-4 inline-block mr-1 text-muted-foreground" />
             <div>
               <strong>{{ isIdentified ? '提交身份' : '匿名留言' }}</strong>
-              <span>{{ isIdentified ? identityName : '邮箱仅用于接收回复通知' }}</span>
+              <span>{{ isIdentified ? identityName : '邮箱仅用于接收回复通知，不会对外公开' }}</span>
             </div>
           </div>
           <div
@@ -360,8 +410,9 @@ async function submit() {
             <label
               for="hide-identity"
               class="text-sm cursor-pointer select-none"
-              >隐藏我的身份</label
             >
+              隐藏我的身份
+            </label>
           </div>
           <div
             v-else-if="isIdentified && !allowAnonymous"
@@ -385,7 +436,7 @@ async function submit() {
               placeholder="昵称（可选）"
             />
             <div class="relative flex items-center">
-              <Mail24Regular class="size-4 absolute left-3 text-muted-foreground pointer-events-none" />
+              <Mail class="size-4 absolute left-3 text-muted-foreground pointer-events-none" />
               <Input
                 v-model="draft.anonymousEmail"
                 maxlength="100"
@@ -409,8 +460,9 @@ async function submit() {
             <label
               for="allow-public"
               class="text-sm font-medium cursor-pointer select-none"
-              >公开展示这条</label
             >
+              公开展示这条
+            </label>
           </div>
           <span class="text-xs text-muted-foreground ml-6">取消后只有主播能看到，不会出现在提问页公开列表</span>
         </div>
@@ -419,7 +471,7 @@ async function submit() {
           v-if="isSelf"
           class="self-state"
         >
-          <LockClosed24Regular class="size-4 inline-block mr-1" />
+          <Lock class="size-4 inline-block mr-1" />
           <span>当前是你自己的提问箱</span>
         </div>
         <footer
@@ -447,12 +499,13 @@ async function submit() {
             </Tag>
             <Button
               size="lg"
+              class="gap-1.5"
               :disabled="!canSubmit"
               :loading="isSending"
               @click="submit"
             >
               {{ selectedFiles.length && isSending ? '正在上传' : '送出留言' }}
-              <Send24Regular class="size-4 ml-1 inline-block" />
+              <Send class="size-4" />
             </Button>
           </div>
         </footer>

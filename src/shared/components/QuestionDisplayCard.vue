@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
 
@@ -49,15 +50,22 @@ const props = withDefaults(
     setting: SettingQuestionDisplay
     status?: DisplayStatus
     showScrollbar?: boolean
+    /** 网页展板控制台模式：允许点击图片打开/切换/关闭大图预览 */
+    interactiveImages?: boolean
+    /** 当前同步打开的大图索引（null 或 undefined 表示关闭） */
+    activeImageIndex?: number | null
   }>(),
   {
     status: undefined,
     showScrollbar: false,
+    interactiveImages: false,
+    activeImageIndex: null,
   },
 )
 
 const emit = defineEmits<{
   scroll: [progress: number]
+  imagePreviewChange: [index: number | null]
 }>()
 
 const contentRef = ref<HTMLElement>()
@@ -149,6 +157,28 @@ const displayedImages = computed(() => (props.setting.showImage ? visibleImages.
 const senderLabel = computed(() => questionSenderLabel(props.question))
 const showBrand = computed(() => props.setting.showBrand !== false)
 
+const activeImage = computed(() => {
+  if (props.activeImageIndex === null || props.activeImageIndex === undefined) return null
+  if (props.activeImageIndex < 0 || props.activeImageIndex >= visibleImages.value.length) return null
+  return visibleImages.value[props.activeImageIndex] ?? null
+})
+
+function openImage(index: number) {
+  if (!props.interactiveImages) return
+  emit('imagePreviewChange', index)
+}
+
+function closeImage() {
+  if (!props.interactiveImages) return
+  emit('imagePreviewChange', null)
+}
+
+function stepImage(delta: -1 | 1) {
+  if (!props.interactiveImages || visibleImages.value.length <= 1 || props.activeImageIndex === null || props.activeImageIndex === undefined) return
+  const next = (props.activeImageIndex + delta + visibleImages.value.length) % visibleImages.value.length
+  emit('imagePreviewChange', next)
+}
+
 function onImageError(event: Event, path: string) {
   if (fallbackImageOnError(event, path)) return
   failedImages.value = new Set(failedImages.value).add(path)
@@ -227,10 +257,8 @@ defineExpose({ setScrollProgress })
     :style="rootStyle"
     :aria-busy="status === 'loading'"
   >
-    <!-- 卡片外框/背景/边框/阴影固定在最外层，切题时卡片外壳常驻稳定 -->
     <div class="question-display-frame">
       <div class="question-display-body">
-        <!-- 内部内容区使用 Transition 平滑切换，只过渡文字/昵称/图片/空状态 -->
         <Transition
           :name="transitionName"
           mode="out-in"
@@ -268,15 +296,31 @@ defineExpose({ setScrollProgress })
                     class="question-display-images"
                     :class="imageLayout"
                   >
-                    <img
-                      v-for="image in displayedImages"
+                    <div
+                      v-for="(image, imgIdx) in displayedImages"
                       :key="image.path"
-                      class="question-display-image"
-                      :src="transformImageUrl(image.path, 'card')"
-                      alt=""
-                      loading="lazy"
-                      @error="onImageError($event, image.path)"
-                    />
+                      class="question-display-image-wrap"
+                      :class="{
+                        'is-interactive': interactiveImages,
+                        'is-active-preview': activeImageIndex === imgIdx,
+                      }"
+                      @click="openImage(imgIdx)"
+                    >
+                      <img
+                        class="question-display-image"
+                        :src="transformImageUrl(image.path, 'card')"
+                        alt=""
+                        loading="lazy"
+                        @error="onImageError($event, image.path)"
+                      />
+                      <span
+                        v-if="interactiveImages"
+                        class="question-display-image-hint"
+                      >
+                        <ZoomIn class="size-3.5" />
+                        放大同步到 OBS
+                      </span>
+                    </div>
                   </div>
                 </template>
                 <span
@@ -297,7 +341,6 @@ defineExpose({ setScrollProgress })
                 </span>
               </div>
 
-              <!-- 超长文本底部溢出遮罩指示 -->
               <div
                 v-if="hasQuestion && isOverflowing && !isScrolledToBottom"
                 class="overflow-indicator"
@@ -314,6 +357,60 @@ defineExpose({ setScrollProgress })
       >
         vtsuru.live
       </div>
+
+      <!-- 同步放大图片覆层（展板与 OBS 浏览器源共用） -->
+      <Transition name="question-display-lightbox">
+        <div
+          v-if="hasQuestion && activeImage"
+          class="question-display-lightbox"
+          :class="{ 'is-interactive': interactiveImages }"
+          @click.self="closeImage"
+        >
+          <img
+            :key="activeImage.path"
+            class="question-display-lightbox-img"
+            :src="activeImage.path"
+            alt=""
+            @error="onImageError($event, activeImage.path)"
+          />
+
+          <div
+            v-if="visibleImages.length > 1"
+            class="question-display-lightbox-counter"
+          >
+            {{ (activeImageIndex ?? 0) + 1 }} / {{ visibleImages.length }}
+          </div>
+
+          <template v-if="interactiveImages">
+            <button
+              type="button"
+              class="question-display-lightbox-btn is-close"
+              aria-label="关闭同步大图"
+              @click="closeImage"
+            >
+              <X class="size-4" />
+            </button>
+            <button
+              v-if="visibleImages.length > 1"
+              type="button"
+              class="question-display-lightbox-btn is-prev"
+              aria-label="上一张图片"
+              @click="stepImage(-1)"
+            >
+              <ChevronLeft class="size-5" />
+            </button>
+            <button
+              v-if="visibleImages.length > 1"
+              type="button"
+              class="question-display-lightbox-btn is-next"
+              aria-label="下一张图片"
+              @click="stepImage(1)"
+            >
+              <ChevronRight class="size-5" />
+            </button>
+          </template>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -331,6 +428,7 @@ defineExpose({ setScrollProgress })
 }
 
 .question-display-frame {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex: 1 1 100%;
@@ -443,6 +541,47 @@ defineExpose({ setScrollProgress })
   grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
 }
 
+.question-display-image-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.question-display-images.is-grid .question-display-image-wrap {
+  width: 100%;
+}
+
+.question-display-image-wrap.is-interactive {
+  cursor: zoom-in;
+}
+
+.question-display-image-hint {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 76%);
+  color: #fff;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease;
+}
+
+.question-display-image-wrap.is-interactive:hover .question-display-image-hint {
+  opacity: 1;
+}
+
 .question-display-image {
   box-sizing: border-box;
   display: block;
@@ -476,6 +615,7 @@ defineExpose({ setScrollProgress })
   }
 
   .question-display-content.has-single-image .question-display-images,
+  .question-display-content.has-single-image .question-display-image-wrap,
   .question-display-content.has-single-image .question-display-image {
     min-height: 0;
   }
@@ -483,6 +623,102 @@ defineExpose({ setScrollProgress })
   .question-display-content.has-single-image .question-display-images {
     height: 100%;
   }
+}
+
+.question-display-lightbox {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 3cqh, 24px);
+  background: rgb(10 14 23 / 86%);
+  backdrop-filter: blur(6px);
+  border-radius: inherit;
+}
+
+.question-display-lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: min(10px, calc(var(--card-radius) * 0.55));
+  box-shadow: 0 12px 36px rgb(0 0 0 / 45%);
+}
+
+.question-display-lightbox-counter {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 72%);
+  color: rgb(255 255 255 / 92%);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  line-height: 1;
+  user-select: none;
+}
+
+.question-display-lightbox-btn {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  background: rgb(15 23 42 / 75%);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.question-display-lightbox-btn:hover {
+  background: rgb(30 41 59 / 92%);
+  transform: scale(1.06);
+}
+
+.question-display-lightbox-btn.is-close {
+  top: 12px;
+  right: 12px;
+}
+
+.question-display-lightbox-btn.is-prev {
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+}
+
+.question-display-lightbox-btn.is-prev:hover {
+  transform: translateY(-50%) scale(1.06);
+}
+
+.question-display-lightbox-btn.is-next {
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+}
+
+.question-display-lightbox-btn.is-next:hover {
+  transform: translateY(-50%) scale(1.06);
+}
+
+.question-display-lightbox-enter-active,
+.question-display-lightbox-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.question-display-lightbox-enter-from,
+.question-display-lightbox-leave-to {
+  opacity: 0;
+  transform: scale(0.97);
 }
 
 .question-display-empty {
@@ -589,7 +825,9 @@ defineExpose({ setScrollProgress })
   .question-display-slide-enter-active,
   .question-display-slide-leave-active,
   .question-display-scale-enter-active,
-  .question-display-scale-leave-active {
+  .question-display-scale-leave-active,
+  .question-display-lightbox-enter-active,
+  .question-display-lightbox-leave-active {
     transition: none;
   }
 }

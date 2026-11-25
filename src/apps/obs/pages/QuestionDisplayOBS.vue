@@ -8,6 +8,11 @@ import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 import { getRealtimeBus, useRealtimeTopic } from '@/shared/realtime'
 
+interface ImagePreviewPayload {
+  questionId?: number | null
+  index?: number | null
+}
+
 const props = withDefaults(
   defineProps<{
     id?: number
@@ -41,6 +46,9 @@ const effectiveSetting = computed(() => {
 
 const cardRef = ref<{ setScrollProgress: (progress: number) => void }>()
 const mounted = ref(false)
+const activeImageIndex = ref<number | null>(null)
+const pendingImagePreview = ref<{ questionId: number; index: number | null } | null>(null)
+
 const effectiveUserId = computed(() => userId.value || (account.value.id > 0 ? String(account.value.id) : ''))
 const qaTopic = computed(() =>
   mounted.value && props.active && props.visible && effectiveUserId.value
@@ -48,13 +56,47 @@ const qaTopic = computed(() =>
     : '',
 )
 const { on: onQaEvent } = useRealtimeTopic(qaTopic)
+
 onQaEvent<number>('Scroll', (progress) => {
   cardRef.value?.setScrollProgress(Math.min(1, Math.max(0, Number(progress) || 0)))
 })
+
+onQaEvent<ImagePreviewPayload>('ImagePreview', (payload) => {
+  const index = typeof payload?.index === 'number' && Number.isInteger(payload.index) && payload.index >= 0 ? payload.index : null
+  const qid = typeof payload?.questionId === 'number' ? payload.questionId : null
+  if (index === null) {
+    activeImageIndex.value = null
+    pendingImagePreview.value = null
+    return
+  }
+  if (qid !== null && question.value?.id === qid) {
+    activeImageIndex.value = index
+    pendingImagePreview.value = null
+  } else if (qid !== null) {
+    pendingImagePreview.value = { questionId: qid, index }
+    void refresh(true)
+  } else if (question.value) {
+    activeImageIndex.value = index
+  }
+})
+
 onQaEvent<{ hash?: string }>('Changed', (payload) => {
   if (payload?.hash && payload.hash === version.value) return
   void refresh(true, payload?.hash)
 })
+
+watch(
+  () => question.value?.id,
+  (newId) => {
+    if (newId && pendingImagePreview.value?.questionId === newId) {
+      activeImageIndex.value = pendingImagePreview.value.index
+      pendingImagePreview.value = null
+    } else {
+      activeImageIndex.value = null
+    }
+  },
+)
+
 watch(getRealtimeBus().getReconnectedCount(), () => {
   if (mounted.value && props.active && props.visible) {
     void refresh(true)
@@ -81,5 +123,6 @@ onUnmounted(() => {
     :question="question"
     :setting="effectiveSetting"
     :status="cardState"
+    :active-image-index="activeImageIndex"
   />
 </template>

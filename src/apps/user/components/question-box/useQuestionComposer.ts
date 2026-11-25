@@ -28,7 +28,8 @@ const ALLOWED_IMAGE_TYPES = new Set([
   'image/x-icon',
 ])
 const MAX_FILE_SIZE = 10 * 1024 * 1024
-const SEND_COOLDOWN = 30_000
+const DEFAULT_SEND_COOLDOWN_SEC = 30
+const DEFAULT_MAX_MESSAGE_LENGTH = 10000
 const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 
 function emptyDraft(isAnonymous = true): QuestionDraft {
@@ -79,6 +80,35 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
       },
     },
   )
+  function cooldownStorageKey(targetId?: number) {
+    return `QuestionBox.Cooldown.${targetId ?? 'pending'}`
+  }
+
+  function readSavedCooldown(targetId?: number): number {
+    try {
+      const raw = window.localStorage.getItem(cooldownStorageKey(targetId))
+      const parsed = raw ? Number(raw) : 0
+      return Number.isFinite(parsed) ? parsed : 0
+    } catch {
+      return 0
+    }
+  }
+
+  function writeSavedCooldown(targetId: number | undefined, value: number) {
+    try {
+      window.localStorage.setItem(cooldownStorageKey(targetId), String(value))
+    } catch {
+      // ignore storage quota errors
+    }
+  }
+
+  const nextSendAt = ref(readSavedCooldown(target.value?.id))
+  watch(
+    () => target.value?.id,
+    (id) => {
+      nextSendAt.value = readSavedCooldown(id)
+    },
+  )
   const selectedFiles = ref<File[]>([])
   const imagePreviewUrls = ref<string[]>([])
   const turnstile = ref<CaptchaHandle>()
@@ -86,7 +116,6 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
   const isSending = ref(false)
   const isDragging = ref(false)
   const isSent = ref(false)
-  const nextSendAt = ref(0)
   const nowMs = ref(Date.now())
   const { pause, resume } = useIntervalFn(
     () => {
@@ -114,19 +143,38 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
   const allowAnonymous = computed(() => target.value?.extra?.allowQuestionBoxAnonymous !== false)
   const allowUnregistedUser = computed(() => target.value?.extra?.allowQuestionBoxUnregistedUser !== false)
   const allowDefaultPublic = computed(() => target.value?.extra?.questionBoxDefaultPublic !== false)
+  const isPaused = computed(() => Boolean(target.value?.extra?.questionBoxPaused))
+  const pauseMessage = computed(
+    () => target.value?.extra?.questionBoxPauseMessage?.trim() || '主播当前暂停接收新提问，欢迎浏览下方公开问答。',
+  )
+  const notice = computed(() => target.value?.extra?.questionBoxNotice?.trim() || '')
+  const configuredCooldownSeconds = computed(() => {
+    const val = target.value?.extra?.questionBoxCooldownSeconds
+    return typeof val === 'number' && val >= 5 ? val : DEFAULT_SEND_COOLDOWN_SEC
+  })
+  const maxMessageLength = computed(() => {
+    const val = target.value?.extra?.questionBoxMaxMessageLength
+    return typeof val === 'number' && val >= 50 ? Math.min(10000, val) : DEFAULT_MAX_MESSAGE_LENGTH
+  })
   const mustUseRealName = computed(() => !allowAnonymous.value && isIdentified.value)
-  const canUploadImages = computed(() => !isSelf.value && (isIdentified.value || allowUploadImage.value))
+  const canUploadImages = computed(() => !isSelf.value && !isPaused.value && allowUploadImage.value)
   const maxImages = computed(() => (isIdentified.value ? 9 : 3))
   const characterCount = computed(() => [...segmenter.segment(draft.value.message)].length)
-  const hasValidMessageLength = computed(() => draft.value.message.trim().length > 0 && characterCount.value >= 3)
+  const isMessageTooLong = computed(() => characterCount.value > maxMessageLength.value)
+  const hasValidMessageLength = computed(
+    () => draft.value.message.trim().length > 0 && characterCount.value >= 3 && !isMessageTooLong.value,
+  )
   const cooldownSeconds = computed(() => Math.max(0, Math.ceil((nextSendAt.value - nowMs.value) / 1000)))
 
-  watch(cooldownSeconds, (val) => {
-    if (val > 0) resume()
-    else pause()
-  })
+  watch(
+    cooldownSeconds,
+    (val) => {
+      if (val > 0) resume()
+      else pause()
+    },
+    { immediate: true },
+  )
 
-  // 当主播关闭匿名提问且用户已登录/已认证时，强制实名（含异步草稿回写与状态切换）
   watch(
     [mustUseRealName, () => draft.value.isAnonymous],
     ([forceRealName, isAnonymous]) => {
@@ -140,6 +188,7 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
   const canSubmit = computed(
     () =>
       !isSelf.value &&
+      !isPaused.value &&
       !isSending.value &&
       Boolean(token.value) &&
       hasValidMessageLength.value &&
@@ -155,9 +204,11 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
 
   const submitDisabledReason = computed(() => {
     if (isSelf.value || isSending.value || cooldownSeconds.value > 0) return ''
+    if (isPaused.value) return '当前暂停接收新提问'
     if (!allowUnregistedUser.value && !isIdentified.value) return '需先登录或完成 B 站认证'
     if (mustUseRealName.value && draft.value.isAnonymous) return '需以当前身份实名提交'
     if (!isIdentified.value && !isValidEmail(draft.value.anonymousEmail)) return '邮箱格式不正确'
+    if (isMessageTooLong.value) return `内容不能超过 ${maxMessageLength.value} 个字`
     if (!hasValidMessageLength.value) return characterCount.value === 0 ? '请先输入留言内容' : '内容最少需要 3 个字'
     if (!token.value) return '请先完成人机验证'
     return ''
@@ -213,6 +264,8 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
 
   async function sendQuestion() {
     if (!target.value?.id) throw new Error('未加载到提问对象')
+    if (isPaused.value) throw new Error(pauseMessage.value)
+    if (isMessageTooLong.value) throw new Error(`内容不能超过 ${maxMessageLength.value} 个字`)
     if (!hasValidMessageLength.value) throw new Error('内容最少需要 3 个字')
     if (cooldownSeconds.value > 0) throw new Error(`请等待 ${cooldownSeconds.value} 秒后再提交`)
     const trimmedEmail = draft.value.anonymousEmail.trim()
@@ -252,14 +305,15 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
       })
       if (response.code !== 200) throw new Error(response.message)
 
-      if (!isIdentified.value) {
+      // 未登录站内账号（含纯 B 站认证访客）写入本地提问历史
+      if (!isUserLoggedIn.value) {
         history.add({
           id: `local-${Date.now()}-${crypto.randomUUID()}`,
           targetUserId: targetId,
           targetUserName: targetName,
           message: submittedDraft.message,
           tag: submittedDraft.tag,
-          anonymousName: trimmedName,
+          anonymousName: trimmedName || (isBiliAuthed.value && !submittedDraft.isAnonymous ? biliAuth.biliAuth?.name || '' : ''),
           anonymousEmail: trimmedEmail,
           hasImage,
           sendAt: Date.now(),
@@ -272,7 +326,8 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
       isSent.value = true
       const currentNow = Date.now()
       nowMs.value = currentNow
-      nextSendAt.value = currentNow + SEND_COOLDOWN
+      nextSendAt.value = currentNow + configuredCooldownSeconds.value * 1000
+      writeSavedCooldown(targetId, nextSendAt.value)
       onSubmitted()
     } finally {
       isSending.value = false
@@ -306,12 +361,17 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
     imagePreviewUrls,
     isDragging,
     isIdentified,
+    isMessageTooLong,
+    isPaused,
     isSelf,
     isSending,
     isSent,
     isUserLoggedIn,
     isValidEmail,
     maxImages,
+    maxMessageLength,
+    notice,
+    pauseMessage,
     removeImage,
     selectedFiles,
     sendQuestion,

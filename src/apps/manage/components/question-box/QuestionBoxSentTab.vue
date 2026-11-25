@@ -5,7 +5,9 @@ import router from '@/app/router'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
 import { ImagePreview } from '@/shared/ui/image-preview'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 import QuestionBoxFollowUpComposer from './QuestionBoxFollowUpComposer.vue'
@@ -31,11 +33,21 @@ function formatRelativeTime(timestamp?: number) {
 
 <template>
   <div
-    v-if="useQB.sendThreads.length === 0"
-    class="text-center py-16 text-xs text-muted-foreground border border-dashed rounded-lg"
+    v-if="useQB.isLoadingSend && useQB.sendThreads.length === 0"
+    class="space-y-3"
   >
-    暂无发送的提问
+    <Skeleton
+      v-for="n in 3"
+      :key="n"
+      class="h-28 w-full rounded-lg"
+    />
   </div>
+
+  <Empty
+    v-else-if="useQB.sendThreads.length === 0"
+    description="暂无发送的提问"
+    class="py-14 border border-dashed rounded-lg"
+  />
 
   <div
     v-else
@@ -49,7 +61,10 @@ function formatRelativeTime(timestamp?: number) {
       <CardHeader class="p-3.5">
         <div class="flex-between text-xs">
           <div class="flex items-center gap-1.5">
-            <Badge variant="outline" size="xs">
+            <Badge
+              variant="outline"
+              size="xs"
+            >
               发给
             </Badge>
             <Button
@@ -59,9 +74,16 @@ function formatRelativeTime(timestamp?: number) {
             >
               {{ thread.root.target.name }}
             </Button>
+            <Badge
+              v-if="thread.root.tag"
+              variant="secondary"
+              size="xs"
+            >
+              #{{ thread.root.tag }}
+            </Badge>
           </div>
 
-          <span class="text-muted-foreground font-mono">
+          <span class="text-muted-foreground font-mono tabular-nums">
             {{ formatRelativeTime(thread.root.sendAt) }}
           </span>
         </div>
@@ -79,7 +101,7 @@ function formatRelativeTime(timestamp?: number) {
             class="flex-between text-[11px] text-muted-foreground"
           >
             <span class="font-medium">追问 {{ index }}</span>
-            <span class="font-mono">{{ formatRelativeTime(entry.sendAt) }}</span>
+            <span class="font-mono tabular-nums">{{ formatRelativeTime(entry.sendAt) }}</span>
           </div>
 
           <p class="text-sm text-foreground leading-relaxed m-0 whitespace-pre-wrap break-words">
@@ -106,10 +128,18 @@ function formatRelativeTime(timestamp?: number) {
             class="p-3 rounded-md bg-muted/40 border border-border/60 space-y-1.5"
           >
             <div class="flex-between text-xs text-muted-foreground">
-              <span class="font-medium">对方的回复</span>
+              <span class="font-medium">
+                对方的回复
+                <span
+                  v-if="entry.isEdited"
+                  class="text-[11px] text-muted-foreground/80 font-normal ml-1"
+                >
+                  (已编辑)
+                </span>
+              </span>
               <span
                 v-if="entry.answer.createdAt"
-                class="font-mono text-[11px]"
+                class="font-mono text-[11px] tabular-nums"
               >
                 {{ formatRelativeTime(entry.answer.createdAt) }}
               </span>
@@ -117,6 +147,20 @@ function formatRelativeTime(timestamp?: number) {
             <p class="text-xs text-foreground leading-relaxed m-0 whitespace-pre-wrap break-words">
               {{ entry.answer.message }}
             </p>
+            <div
+              v-if="entry.answerImages && entry.answerImages.length > 0"
+              class="flex items-center gap-2 flex-wrap pt-1"
+            >
+              <ImagePreview
+                v-for="(img, imgIdx) in entry.answerImages"
+                :key="img.id || imgIdx"
+                :src="img.path || ''"
+                :alt="img.name || '回复附图'"
+                :gallery="entry.answerImages"
+                :index="imgIdx"
+                class="h-16 w-20"
+              />
+            </div>
           </div>
         </div>
 

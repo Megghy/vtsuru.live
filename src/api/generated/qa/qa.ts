@@ -13,22 +13,29 @@ import type {
   GetApiQaGetTagsParams,
   PostApiQaAddTagParams,
   PostApiQaApproveParams,
+  PostApiQaBlacklistSenderParams,
   PostApiQaDeleteParams,
   PostApiQaDeleteTagParams,
   PostApiQaFavoriteParams,
+  PostApiQaLikeParams,
   PostApiQaMarkAsNormalParams,
+  PostApiQaPinParams,
   PostApiQaPublicParams,
   PostApiQaReadParams,
   PostApiQaReplyBody,
   PostApiQaSendBody,
   PostApiQaSetCurrentParams,
+  PostApiQaUpdateTagParams,
   PostApiQaUpdateTagVisibleParams,
+  RequestBatchQAOperation,
   ResponseResult,
   ResponseResultOfListOfQATagInfo,
   ResponseResultOfListOfResponseQAInfo,
+  ResponseResultOfResponseBatchQAOperationResult,
   ResponseResultOfResponseCurrentQuestionAndSettingModel,
   ResponseResultOfResponseQAInfo,
   ResponseResultOfResponseQAInfoToTarget,
+  ResponseResultOfResponseQALikeResult,
   ResponseResultOfString,
   ResponseResultOfTempResponseRecievedQuestions,
   SettingQuestionDisplay,
@@ -77,6 +84,60 @@ export const postApiQaApprove = async (
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   return vtsuruMutator<ResponseResult>(getPostApiQaApproveUrl(params), {
+    ...options,
+    method: 'POST',
+  })
+}
+
+export const getPostApiQaBatchUrl = () => {
+  return `/api/qa/batch`
+}
+
+export const postApiQaBatch = async (
+  requestBatchQAOperation?: RequestBatchQAOperation,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseBatchQAOperationResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseBatchQAOperationResult>(getPostApiQaBatchUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestBatchQAOperation),
+  })
+}
+
+export const getPostApiQaBlacklistSenderUrl = (params?: PostApiQaBlacklistSenderParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/qa/blacklist-sender?${stringifiedParams}` : `/api/qa/blacklist-sender`
+}
+
+export const postApiQaBlacklistSender = async (
+  params?: PostApiQaBlacklistSenderParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  return vtsuruMutator<ResponseResult>(getPostApiQaBlacklistSenderUrl(params), {
     ...options,
     method: 'POST',
   })
@@ -284,6 +345,30 @@ export const getApiQaGetTags = async (
   })
 }
 
+export const getPostApiQaLikeUrl = (params?: PostApiQaLikeParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/qa/like?${stringifiedParams}` : `/api/qa/like`
+}
+
+export const postApiQaLike = async (
+  params?: PostApiQaLikeParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseQALikeResult> => {
+  return vtsuruMutator<ResponseResultOfResponseQALikeResult>(getPostApiQaLikeUrl(params), {
+    ...options,
+    method: 'POST',
+  })
+}
+
 export const getPostApiQaMarkAsNormalUrl = (params?: PostApiQaMarkAsNormalParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -303,6 +388,30 @@ export const postApiQaMarkAsNormal = async (
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   return vtsuruMutator<ResponseResult>(getPostApiQaMarkAsNormalUrl(params), {
+    ...options,
+    method: 'POST',
+  })
+}
+
+export const getPostApiQaPinUrl = (params?: PostApiQaPinParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/qa/pin?${stringifiedParams}` : `/api/qa/pin`
+}
+
+export const postApiQaPin = async (
+  params?: PostApiQaPinParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  return vtsuruMutator<ResponseResult>(getPostApiQaPinUrl(params), {
     ...options,
     method: 'POST',
   })
@@ -478,6 +587,30 @@ export const postApiQaUpdateTagVisible = async (
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   return vtsuruMutator<ResponseResult>(getPostApiQaUpdateTagVisibleUrl(params), {
+    ...options,
+    method: 'POST',
+  })
+}
+
+export const getPostApiQaUpdateTagUrl = (params?: PostApiQaUpdateTagParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/qa/update-tag?${stringifiedParams}` : `/api/qa/update-tag`
+}
+
+export const postApiQaUpdateTag = async (
+  params?: PostApiQaUpdateTagParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  return vtsuruMutator<ResponseResult>(getPostApiQaUpdateTagUrl(params), {
     ...options,
     method: 'POST',
   })

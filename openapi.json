@@ -8237,6 +8237,59 @@
         ]
       }
     },
+    "/api/obs-scene/assets/upload-vfx": {
+      "post": {
+        "tags": [
+          "ObsScene"
+        ],
+        "operationId": "postApiObsSceneAssetsUploadVfx",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseUploadedSceneVfxAsset"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseUploadedSceneVfxAsset"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseUploadedSceneVfxAsset"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/obs-scene/assets/upload": {
       "post": {
         "tags": [
@@ -13507,6 +13560,109 @@
         ]
       }
     },
+    "/api/qa/batch": {
+      "post": {
+        "tags": [
+          "QA"
+        ],
+        "operationId": "postApiQaBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchQAOperation"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchQAOperation"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchQAOperation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchQAOperationResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchQAOperationResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchQAOperationResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/qa/blacklist-sender": {
+      "post": {
+        "tags": [
+          "QA"
+        ],
+        "operationId": "postApiQaBlacklistSender",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "deleteQuestion",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/qa/delete-tag": {
       "post": {
         "tags": [
@@ -13869,6 +14025,46 @@
         }
       }
     },
+    "/api/qa/like": {
+      "post": {
+        "tags": [
+          "QA"
+        ],
+        "operationId": "postApiQaLike",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQALikeResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQALikeResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseQALikeResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/qa/mark-as-normal": {
       "post": {
         "tags": [
@@ -13882,6 +14078,56 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/qa/pin": {
+      "post": {
+        "tags": [
+          "QA"
+        ],
+        "operationId": "postApiQaPin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pin",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -14265,6 +14511,57 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/qa/update-tag": {
+      "post": {
+        "tags": [
+          "QA"
+        ],
+        "operationId": "postApiQaUpdateTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "schema": {
+              "maxLength": 20,
+              "type": "string"
             }
           }
         ],
@@ -26538,6 +26835,30 @@
         },
         "additionalProperties": false
       },
+      "RequestBatchQAOperation": {
+        "required": [
+          "ids",
+          "action"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "action": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "RequestBatchUpdateExpressModel": {
         "required": [
           "items",
@@ -28058,6 +28379,24 @@
         },
         "additionalProperties": false,
         "description": "基础礼物模型, 发送给用户"
+      },
+      "ResponseBatchQAOperationResult": {
+        "required": [
+          "affected",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "affected": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
       },
       "ResponseBatchUpdateExpressResult": {
         "required": [
@@ -30356,7 +30695,10 @@
           "isEdited",
           "sendAt",
           "isAnonymous",
-          "isSenderBiliAuthed"
+          "isSenderBiliAuthed",
+          "isPinned",
+          "likeCount",
+          "isLiked"
         ],
         "type": "object",
         "properties": {
@@ -30426,9 +30768,15 @@
             "type": "string",
             "nullable": true
           },
-          "anonymousEmail": {
-            "type": "string",
-            "nullable": true
+          "isPinned": {
+            "type": "boolean"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isLiked": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -30438,6 +30786,7 @@
           "isPublic",
           "isSenderRegisted",
           "isFavorite",
+          "canBlacklistAnonymous",
           "id",
           "canFollowUp",
           "sender",
@@ -30446,7 +30795,10 @@
           "isEdited",
           "sendAt",
           "isAnonymous",
-          "isSenderBiliAuthed"
+          "isSenderBiliAuthed",
+          "isPinned",
+          "likeCount",
+          "isLiked"
         ],
         "type": "object",
         "properties": {
@@ -30467,6 +30819,13 @@
             "type": "boolean",
             "nullable": true
           },
+          "anonymousEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "canBlacklistAnonymous": {
+            "type": "boolean"
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -30533,9 +30892,32 @@
             "type": "string",
             "nullable": true
           },
-          "anonymousEmail": {
-            "type": "string",
-            "nullable": true
+          "isPinned": {
+            "type": "boolean"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isLiked": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseQALikeResult": {
+        "required": [
+          "liked",
+          "likeCount"
+        ],
+        "type": "object",
+        "properties": {
+          "liked": {
+            "type": "boolean"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -32865,6 +33247,28 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfResponseBatchQAOperationResult": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseBatchQAOperationResult"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfResponseBatchUpdateExpressResult": {
         "required": [
           "code",
@@ -33691,6 +34095,28 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfResponseQALikeResult": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseQALikeResult"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfResponseQueueModel": {
         "required": [
           "code",
@@ -34020,6 +34446,28 @@
           },
           "data": {
             "$ref": "#/components/schemas/ResponseUploadedSceneAsset"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfResponseUploadedSceneVfxAsset": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseUploadedSceneVfxAsset"
           }
         },
         "additionalProperties": false,
@@ -35122,6 +35570,31 @@
         },
         "additionalProperties": false
       },
+      "ResponseUploadedSceneVfxAsset": {
+        "required": [
+          "url",
+          "fileName",
+          "ext",
+          "size"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "ext": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "ResponseUpstatModel": {
         "required": [
           "time",
@@ -35339,7 +35812,11 @@
           "allowQuestionBoxAnonymous",
           "allowQuestionBoxUnregistedUser",
           "showQuestionBoxPublicReplies",
-          "questionBoxDefaultPublic"
+          "questionBoxDefaultPublic",
+          "questionBoxPaused",
+          "questionBoxCooldownSeconds",
+          "questionBoxMaxMessageLength",
+          "questionBoxAllowFollowUp"
         ],
         "type": "object",
         "properties": {
@@ -35372,6 +35849,28 @@
             "type": "boolean"
           },
           "questionBoxDefaultPublic": {
+            "type": "boolean"
+          },
+          "questionBoxPaused": {
+            "type": "boolean"
+          },
+          "questionBoxPauseMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "questionBoxNotice": {
+            "type": "string",
+            "nullable": true
+          },
+          "questionBoxCooldownSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questionBoxMaxMessageLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questionBoxAllowFollowUp": {
             "type": "boolean"
           }
         },
@@ -36209,7 +36708,10 @@
           "showPublicReplies",
           "publishByDefault",
           "allowFollowUp",
-          "maxFollowUps"
+          "maxFollowUps",
+          "pauseAccepting",
+          "cooldownSeconds",
+          "maxMessageLength"
         ],
         "type": "object",
         "properties": {
@@ -36252,6 +36754,49 @@
           "maxFollowUps": {
             "type": "integer",
             "format": "int32"
+          },
+          "pauseAccepting": {
+            "type": "boolean"
+          },
+          "pauseMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "notice": {
+            "type": "string",
+            "nullable": true
+          },
+          "blockedKeywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "cooldownSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxMessageLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blockedSenderHashes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "按匿名来源 IP 哈希拉黑的列表",
+            "nullable": true
+          },
+          "blockedBiliUids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "按 B 站 UID 拉黑的提问者列表",
+            "nullable": true
           }
         },
         "additionalProperties": false

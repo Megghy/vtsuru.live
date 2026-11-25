@@ -35,6 +35,7 @@ export interface ResponseQAInfo {
   answerImages?: APIFileModel[] | null
   /** @nullable */
   anonymousName?: string | null
-  /** @nullable */
-  anonymousEmail?: string | null
+  isPinned: boolean
+  likeCount: number
+  isLiked: boolean
 }

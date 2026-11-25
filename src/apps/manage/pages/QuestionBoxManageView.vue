@@ -1,41 +1,28 @@
 <script setup lang="ts">
-import ArrowSync24Filled from '@vicons/fluent/es/ArrowSync24Filled'
-import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
-import Link24Filled from '@vicons/fluent/es/Link24Filled'
-import Share24Filled from '@vicons/fluent/es/Share24Filled'
-import TrashBin from '@vicons/ionicons5/es/TrashBin'
+import { Ban, CheckCircle2, ExternalLink, RefreshCw, Share2, Trash2 } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import { FunctionTypes } from '@/api/generated/model'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import router from '@/app/router'
-import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionBoxOBSModal from '@/apps/manage/components/question-box/QuestionBoxOBSModal.vue'
 import QuestionBoxReceivedTab from '@/apps/manage/components/question-box/QuestionBoxReceivedTab.vue'
 import QuestionBoxReplyModal from '@/apps/manage/components/question-box/QuestionBoxReplyModal.vue'
 import QuestionBoxSentTab from '@/apps/manage/components/question-box/QuestionBoxSentTab.vue'
 import QuestionBoxSettings from '@/apps/manage/components/question-box/QuestionBoxSettings.vue'
 import QuestionBoxShareModal from '@/apps/manage/components/question-box/QuestionBoxShareModal.vue'
+import QuestionExportCardModal from '@/apps/manage/components/question-box/QuestionExportCardModal.vue'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionItem from '@/components/QuestionItem.vue'
 import { CURRENT_HOST } from '@/shared/config'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/shared/ui/alert-dialog'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
@@ -50,16 +37,32 @@ const selectedTabItem = ref(route.query.send ? '1' : '0')
 const replyModalVisible = ref(false)
 const shareModalVisible = ref(false)
 const showOBSModal = ref(false)
+const exportCardVisible = ref(false)
+const exportCardQuestion = ref<ResponseQAInfoToTarget>()
 
-const selectedDirectShareTag = ref<string | null>(null)
+const selectedDirectShareTag = ref<string>('__none__')
 const directShareUrl = computed(() => {
-  const base = `${CURRENT_HOST}@${accountInfo.value?.name}/question-box`
-  return selectedDirectShareTag.value ? `${base}?tag=${selectedDirectShareTag.value}` : base
+  const name = accountInfo.value?.name
+  if (!name) return ''
+  const host = CURRENT_HOST.endsWith('/') ? CURRENT_HOST : `${CURRENT_HOST}/`
+  const base = `${host}@${encodeURIComponent(name)}/question-box`
+  return selectedDirectShareTag.value && selectedDirectShareTag.value !== '__none__'
+    ? `${base}?tag=${encodeURIComponent(selectedDirectShareTag.value)}`
+    : base
 })
 
 function onOpenReply(question: ResponseQAInfoToTarget) {
   useQB.currentQuestion = question
   replyModalVisible.value = true
+}
+
+function onOpenExportCard(question: ResponseQAInfoToTarget) {
+  exportCardQuestion.value = question
+  exportCardVisible.value = true
+}
+
+function canBlacklistQuestion(item: ResponseQAInfoToTarget) {
+  return (!item.isAnonymous && Boolean(item.sender?.id)) || Boolean(item.canBlacklistAnonymous)
 }
 
 async function refresh() {
@@ -69,12 +72,15 @@ async function refresh() {
 }
 
 watch(selectedTabItem, (tab) => {
-  if (tab === '1' && useQB.sendQuestions.length === 0) useQB.GetSendQAInfo()
+  if (tab === '1' && useQB.sendQuestions.length === 0) void useQB.GetSendQAInfo()
 })
 
 onMounted(async () => {
   await useQB.GetTags()
   await useQB.GetRecieveQAInfo()
+  if (selectedTabItem.value === '1') {
+    await useQB.GetSendQAInfo()
+  }
 })
 </script>
 
@@ -86,9 +92,9 @@ onMounted(async () => {
     >
       <ManagePageHeader
         title="提问箱管理"
-        subtitle="收集观众的匿名提问并互动回复，支持话题标签分类、公开展示与 OBS 弹幕投屏"
+        subtitle="收集观众提问并互动回复，支持话题标签分类、公开展示与 OBS 弹幕投屏"
         :function-type="FunctionTypes.QuestionBox"
-        :loading="useQB.isLoading"
+        :loading="useQB.isLoading || useQB.isLoadingSend"
         :links="[{ label: '我的提问链接', value: directShareUrl }]"
       >
         <template #action>
@@ -96,14 +102,11 @@ onMounted(async () => {
             <Button
               size="icon-sm"
               variant="outline"
-              :loading="useQB.isLoading"
+              :loading="useQB.isLoading || useQB.isLoadingSend"
               aria-label="刷新"
               @click="refresh"
             >
-              <component
-                :is="ArrowSync24Filled"
-                class="h-3.5 w-3.5"
-              />
+              <RefreshCw class="size-3.5" />
             </Button>
 
             <TooltipProvider>
@@ -112,15 +115,13 @@ onMounted(async () => {
                   <Button
                     size="icon-sm"
                     variant="outline"
+                    aria-label="分享提问箱"
                     @click="shareModalVisible = true"
                   >
-                    <component
-                      :is="Share24Filled"
-                      class="h-3.5 w-3.5"
-                    />
+                    <Share2 class="size-3.5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent> 分享提问箱 </TooltipContent>
+                <TooltipContent>分享提问箱</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -133,12 +134,10 @@ onMounted(async () => {
 
             <Button
               variant="default"
+              class="gap-1.5"
               @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
             >
-              <component
-                :is="Link24Filled"
-                class="h-3.5 w-3.5 mr-1"
-              />
+              <ExternalLink class="size-3.5" />
               前往提问页
             </Button>
           </div>
@@ -150,19 +149,19 @@ onMounted(async () => {
               <SelectValue placeholder="附加话题 (可选)" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="__none__">不附加话题</SelectItem>
               <SelectItem
                 v-for="tag in useQB.tags.filter((t) => t.visiable)"
                 :key="tag.name"
                 :value="tag.name"
               >
-                {{ tag.name }}
+                #{{ tag.name }}
               </SelectItem>
             </SelectContent>
           </Select>
         </template>
       </ManagePageHeader>
 
-      <!-- 主要内容 Tabs -->
       <Tabs
         v-model="selectedTabItem"
         class="w-full"
@@ -186,11 +185,11 @@ onMounted(async () => {
               {{ useQB.sendThreads.length }}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="2">
-            <component
-              :is="TrashBin"
-              class="h-3.5 w-3.5"
-            />
+          <TabsTrigger
+            value="2"
+            class="gap-1"
+          >
+            <Trash2 class="size-3.5" />
             垃圾站
             <Badge
               v-if="useQB.trashQuestions.length > 0"
@@ -200,18 +199,19 @@ onMounted(async () => {
               {{ useQB.trashQuestions.length }}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="3"> 设置 </TabsTrigger>
+          <TabsTrigger value="3">设置</TabsTrigger>
         </TabsList>
 
-        <!-- 我收到的 Tab -->
         <TabsContent
           value="0"
           class="mt-3"
         >
-          <QuestionBoxReceivedTab @reply="onOpenReply" />
+          <QuestionBoxReceivedTab
+            @reply="onOpenReply"
+            @export-card="onOpenExportCard"
+          />
         </TabsContent>
 
-        <!-- 我发送的 Tab -->
         <TabsContent
           value="1"
           class="mt-3"
@@ -219,13 +219,23 @@ onMounted(async () => {
           <QuestionBoxSentTab />
         </TabsContent>
 
-        <!-- 垃圾站 Tab -->
         <TabsContent
           value="2"
           class="mt-3 space-y-3"
         >
+          <div
+            v-if="useQB.isLoading && useQB.recieveQuestions.length === 0"
+            class="space-y-3"
+          >
+            <Skeleton
+              v-for="n in 3"
+              :key="n"
+              class="h-24 w-full rounded-lg"
+            />
+          </div>
+
           <Empty
-            v-if="useQB.trashQuestions.length === 0"
+            v-else-if="useQB.trashQuestions.length === 0"
             description="暂无被过滤的提问"
             class="py-12 border border-dashed rounded-lg"
           />
@@ -240,84 +250,53 @@ onMounted(async () => {
               :item="question"
             >
               <template #footer="{ item }">
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                <div class="flex items-center gap-2 flex-wrap">
                   <Button
                     size="xs"
                     variant="outline"
-                    class="text-primary"
+                    class="gap-1 text-emerald-600 dark:text-emerald-400"
                     @click="useQB.markAsNormal(item)"
                   >
+                    <CheckCircle2 class="size-3.5" />
                     标记为正常
                   </Button>
+
                   <Popconfirm
-                    v-if="!item.isAnonymous && item.sender?.id"
+                    v-if="canBlacklistQuestion(item)"
                     title="确认拉黑？"
-                    :description="`确认拉黑 ${item.sender.name} 吗？该用户的所有提问将被清理。`"
+                    :description="item.isAnonymous ? '确认拉黑该匿名提问来源并删除本条？' : `确认拉黑 ${item.sender?.name} 并删除本条？`"
                     @confirm="useQB.blacklist(item)"
                   >
                     <Button
                       size="xs"
                       variant="outline"
-                      class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
+                      class="gap-1 text-amber-600 dark:text-amber-400"
                     >
-                      拉黑提问者
+                      <Ban class="size-3.5" />
+                      {{ item.isAnonymous ? '拉黑来源' : '拉黑提问者' }}
                     </Button>
                   </Popconfirm>
 
-                  <TooltipProvider v-else>
-                    <Tooltip>
-                      <TooltipTrigger as-child>
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          disabled
-                        >
-                          拉黑
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p class="text-xs">匿名提问无法拉黑账号</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger as-child>
-                      <Button
-                        size="xs"
-                        variant="destructive"
-                      >
-                        <component
-                          :is="Delete24Filled"
-                          class="h-3.5 w-3.5 mr-1"
-                        />
-                        彻底删除
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent class="sm:max-w-md">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>彻底删除此提问？</AlertDialogTitle>
-                        <AlertDialogDescription class="text-xs"> 删除后将无法恢复该提问内容。 </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction
-                          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          @click="useQB.DelQA(item.id)"
-                        >
-                          确认彻底删除
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Popconfirm
+                    title="确认彻底删除？"
+                    description="删除后不可恢复，确定继续？"
+                    @confirm="useQB.DelQA(item.id)"
+                  >
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      class="gap-1 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 class="size-3.5" />
+                      彻底删除
+                    </Button>
+                  </Popconfirm>
                 </div>
               </template>
-              <template #header-extra />
             </QuestionItem>
           </div>
         </TabsContent>
 
-        <!-- 设置 Tab -->
         <TabsContent
           value="3"
           class="mt-3"
@@ -326,16 +305,13 @@ onMounted(async () => {
         </TabsContent>
       </Tabs>
     </div>
-    <div
-      v-else
-      class="text-center py-20 text-xs text-muted-foreground"
-    >
-      正在加载账户信息...
-    </div>
 
-    <!-- 模态框 -->
     <QuestionBoxReplyModal v-model:show="replyModalVisible" />
     <QuestionBoxShareModal v-model:show="shareModalVisible" />
     <QuestionBoxOBSModal v-model:show="showOBSModal" />
+    <QuestionExportCardModal
+      v-model:show="exportCardVisible"
+      :question="exportCardQuestion"
+    />
   </div>
 </template>

@@ -163,7 +163,7 @@ describe('useQuestionBox store', () => {
     it('批量公开跳过提问者未同意的条目', async () => {
       const postSpy = vi
         .spyOn(queryApi, 'QueryPostAPIWithParams')
-        .mockResolvedValue({ code: 200, message: 'ok', data: [] })
+        .mockResolvedValue({ code: 200, message: 'ok', data: { affected: 2, skipped: 0 } })
       store.recieveQuestions = [
         createMockQuestion({ id: 1, isPublic: false, senderAllowsPublic: true }),
         createMockQuestion({ id: 2, isPublic: false, senderAllowsPublic: false }),
@@ -173,21 +173,13 @@ describe('useQuestionBox store', () => {
 
       await store.batchSetPublic(true)
 
-      expect(postSpy).toHaveBeenCalledTimes(2)
+      expect(postSpy).toHaveBeenCalledTimes(1)
       expect(postSpy).toHaveBeenCalledWith(
-        expect.stringContaining('public'),
-        expect.objectContaining({ id: '1', public: 'true' }),
-        undefined,
-        'application/json',
-        undefined,
+        expect.stringContaining('batch'),
         expect.anything(),
-      )
-      expect(postSpy).toHaveBeenCalledWith(
-        expect.stringContaining('public'),
-        expect.objectContaining({ id: '3', public: 'true' }),
-        undefined,
+        expect.objectContaining({ ids: [1, 3], action: 'public' }),
         'application/json',
-        undefined,
+        expect.anything(),
         expect.anything(),
       )
       expect(store.recieveQuestions.find((q) => q.id === 1)?.isPublic).toBe(true)

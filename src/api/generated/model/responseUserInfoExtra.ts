@@ -18,4 +18,12 @@ export interface ResponseUserInfoExtra {
   allowQuestionBoxUnregistedUser: boolean
   showQuestionBoxPublicReplies: boolean
   questionBoxDefaultPublic: boolean
+  questionBoxPaused: boolean
+  /** @nullable */
+  questionBoxPauseMessage?: string | null
+  /** @nullable */
+  questionBoxNotice?: string | null
+  questionBoxCooldownSeconds: number
+  questionBoxMaxMessageLength: number
+  questionBoxAllowFollowUp: boolean
 }

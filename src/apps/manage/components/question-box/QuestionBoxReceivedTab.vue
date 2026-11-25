@@ -1,31 +1,58 @@
 <script setup lang="ts">
-import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
-import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
-import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
-import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
-import EyeOff24Regular from '@vicons/fluent/es/EyeOff24Regular'
-import MailUnread24Regular from '@vicons/fluent/es/MailUnread24Regular'
-import Tv20Regular from '@vicons/fluent/es/Tv20Regular'
-import Heart from '@vicons/ionicons5/es/Heart'
-import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
+import {
+  Ban,
+  Check,
+  Download,
+  Eye,
+  EyeOff,
+  Heart,
+  Image as ImageIcon,
+  MailOpen,
+  MailWarning,
+  MoreHorizontal,
+  Pin,
+  PinOff,
+  ShieldAlert,
+  Tag,
+  Trash2,
+  Tv,
+  X,
+} from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import QuestionItems from '@/components/QuestionItems.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { Skeleton } from '@/shared/ui/skeleton'
 import type { SortMode } from '@/store/useQuestionBox'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
-const emit = defineEmits<{ (e: 'reply', item: ResponseQAInfoToTarget): void }>()
+const emit = defineEmits<{
+  (e: 'reply', item: ResponseQAInfoToTarget): void
+  (e: 'exportCard', item: ResponseQAInfoToTarget): void
+}>()
+
 const useQB = useQuestionBox()
 const router = useRouter()
 
@@ -44,7 +71,8 @@ const hasActiveFilters = computed(
     useQB.onlyFavorite ||
     useQB.onlyPublic ||
     useQB.onlyUnread ||
-    useQB.onlyUnreplied,
+    useQB.onlyUnreplied ||
+    useQB.onlyPinned,
 )
 
 const isAllSelected = computed(
@@ -64,6 +92,11 @@ function clearFilters() {
   useQB.onlyPublic = false
   useQB.onlyUnread = false
   useQB.onlyUnreplied = false
+  useQB.onlyPinned = false
+}
+
+function canBlacklistQuestion(item: ResponseQAInfoToTarget) {
+  return (!item.isAnonymous && Boolean(item.sender?.id)) || Boolean(item.canBlacklistAnonymous)
 }
 
 watch(
@@ -75,6 +108,7 @@ watch(
     useQB.onlyPublic,
     useQB.onlyUnread,
     useQB.onlyUnreplied,
+    useQB.onlyPinned,
   ],
   () => {
     pn.value = 1
@@ -82,7 +116,7 @@ watch(
 )
 
 const sortOptions = [
-  { label: '默认排序', value: 'default' },
+  { label: '默认（置顶/未读）', value: 'default' },
   { label: '最新优先', value: 'newest' },
   { label: '最早优先', value: 'oldest' },
   { label: '未读优先', value: 'unreadFirst' },
@@ -92,30 +126,168 @@ const sortOptions = [
 </script>
 
 <template>
-  <div class="relative min-h-[200px]">
-    <!-- 筛选工具栏 -->
-    <div class="flex-between gap-3 flex-wrap mb-3 text-xs">
-      <div class="flex items-center gap-3">
+  <div class="relative min-h-[240px] space-y-3">
+    <!-- AI 审核队列状态提示 -->
+    <Alert
+      v-if="useQB.stats.reviewing > 0"
+      variant="default"
+      class="py-2 px-3"
+    >
+      <ShieldAlert class="size-4 text-amber-500" />
+      <AlertDescription class="text-xs flex-between gap-2">
+        <span>当前有 <strong class="tabular-nums">{{ useQB.stats.reviewing }}</strong> 条新提问正在进行 AI 内容安全审核，通过后将自动进入收件箱。</span>
+        <Button
+          size="xs"
+          variant="outline"
+          @click="useQB.GetRecieveQAInfo()"
+        >
+          刷新状态
+        </Button>
+      </AlertDescription>
+    </Alert>
+
+    <!-- 顶部快捷统计筛选胶囊 -->
+    <div class="flex items-center gap-1.5 flex-wrap">
+      <Button
+        size="xs"
+        :variant="!hasActiveFilters ? 'secondary' : 'outline'"
+        class="gap-1.5 tabular-nums"
+        @click="clearFilters"
+      >
+        全部
+        <Badge
+          variant="secondary"
+          size="xs"
+        >
+          {{ useQB.stats.total }}
+        </Badge>
+      </Button>
+      <Button
+        size="xs"
+        :variant="useQB.onlyUnread ? 'default' : 'outline'"
+        class="gap-1.5 tabular-nums"
+        @click="useQB.onlyUnread = !useQB.onlyUnread"
+      >
+        未读
+        <Badge
+          :variant="useQB.stats.unread > 0 ? 'warning' : 'secondary'"
+          size="xs"
+        >
+          {{ useQB.stats.unread }}
+        </Badge>
+      </Button>
+      <Button
+        size="xs"
+        :variant="useQB.onlyUnreplied ? 'default' : 'outline'"
+        class="gap-1.5 tabular-nums"
+        @click="useQB.onlyUnreplied = !useQB.onlyUnreplied"
+      >
+        未回复
+        <Badge
+          variant="secondary"
+          size="xs"
+        >
+          {{ useQB.stats.unreplied }}
+        </Badge>
+      </Button>
+      <Button
+        size="xs"
+        :variant="useQB.onlyPublic ? 'default' : 'outline'"
+        class="gap-1.5 tabular-nums"
+        @click="useQB.onlyPublic = !useQB.onlyPublic"
+      >
+        已公开
+        <Badge
+          variant="secondary"
+          size="xs"
+        >
+          {{ useQB.stats.publicCount }}
+        </Badge>
+      </Button>
+      <Button
+        size="xs"
+        :variant="useQB.onlyFavorite ? 'default' : 'outline'"
+        class="gap-1.5 tabular-nums"
+        @click="useQB.onlyFavorite = !useQB.onlyFavorite"
+      >
+        收藏
+        <Badge
+          variant="secondary"
+          size="xs"
+        >
+          {{ useQB.stats.favoriteCount }}
+        </Badge>
+      </Button>
+      <Button
+        size="xs"
+        :variant="useQB.onlyPinned ? 'default' : 'outline'"
+        class="gap-1.5 tabular-nums"
+        @click="useQB.onlyPinned = !useQB.onlyPinned"
+      >
+        置顶
+        <Badge
+          variant="secondary"
+          size="xs"
+        >
+          {{ useQB.stats.pinnedCount }}
+        </Badge>
+      </Button>
+    </div>
+
+    <!-- 搜索、筛选与操作工具栏 -->
+    <div class="flex-between gap-2 flex-wrap text-xs">
+      <div class="flex items-center gap-2 flex-wrap">
         <Button
           variant="outline"
+          class="gap-1.5"
           @click="router.push({ name: 'question-display' })"
         >
+          <Tv class="size-3.5" />
           打开展示展板
         </Button>
-        <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
+
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              variant="outline"
+              class="gap-1.5"
+              :disabled="useQB.recieveQuestionsFiltered.length === 0"
+            >
+              <Download class="size-3.5" />
+              导出{{ useQB.selectedIds.length ? ` (${useQB.selectedIds.length})` : '' }}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel class="text-[11px]">
+              {{ useQB.selectedIds.length ? `导出已选 ${useQB.selectedIds.length} 条` : `导出当前筛选 ${useQB.recieveQuestionsFiltered.length} 条` }}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem @click="useQB.exportQuestions('markdown')">Markdown (.md)</DropdownMenuItem>
+            <DropdownMenuItem @click="useQB.exportQuestions('csv')">表格文件 (.csv)</DropdownMenuItem>
+            <DropdownMenuItem @click="useQB.exportQuestions('json')">原始数据 (.json)</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div class="flex items-center gap-1.5 pl-1">
           <Checkbox
+            id="qa-select-all"
             :checked="isAllSelected"
             @update:checked="toggleSelectAll"
           />
-          <span>本页全选</span>
-        </label>
+          <label
+            for="qa-select-all"
+            class="cursor-pointer text-xs select-none text-muted-foreground"
+          >
+            本页全选
+          </label>
+        </div>
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
         <Input
           v-model="useQB.searchKeyword"
-          placeholder="搜索内容..."
-          class="w-36"
+          placeholder="搜索提问、回复或昵称..."
+          class="w-44"
         />
 
         <Select
@@ -141,7 +313,7 @@ const sortOptions = [
           :model-value="useQB.sortMode"
           @update:model-value="useQB.sortMode = $event as SortMode"
         >
-          <SelectTrigger class="w-28">
+          <SelectTrigger class="w-36">
             <SelectValue placeholder="排序方式" />
           </SelectTrigger>
           <SelectContent>
@@ -155,40 +327,42 @@ const sortOptions = [
           </SelectContent>
         </Select>
 
-        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
-          <Checkbox v-model:checked="useQB.onlyUnreplied" />
-          <span>未回复</span>
-        </label>
-        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
-          <Checkbox v-model:checked="useQB.onlyUnread" />
-          <span>未读</span>
-        </label>
-        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
-          <Checkbox v-model:checked="useQB.onlyFavorite" />
-          <span>收藏</span>
-        </label>
-        <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
-          <Checkbox v-model:checked="useQB.onlyPublic" />
-          <span>公开</span>
-        </label>
-
         <Button
           v-if="hasActiveFilters"
           variant="ghost"
           class="text-primary"
           @click="clearFilters"
         >
-          清除筛选
+          重置
         </Button>
       </div>
     </div>
 
-    <Separator class="my-3" />
+    <Separator />
+
+    <!-- 加载骨架屏 -->
+    <div
+      v-if="useQB.isLoading && useQB.recieveQuestions.length === 0"
+      class="space-y-3"
+    >
+      <div
+        v-for="n in 4"
+        :key="n"
+        class="p-4 rounded-lg border border-border bg-card space-y-2.5"
+      >
+        <div class="flex-between">
+          <Skeleton class="h-4 w-40" />
+          <Skeleton class="h-6 w-24" />
+        </div>
+        <Skeleton class="h-4 w-full" />
+        <Skeleton class="h-4 w-3/4" />
+      </div>
+    </div>
 
     <Empty
-      v-if="useQB.recieveQuestionsFiltered.length === 0"
+      v-else-if="useQB.recieveQuestionsFiltered.length === 0"
       description="暂无符合条件的提问"
-      class="py-12"
+      class="py-12 border border-dashed rounded-lg"
     />
 
     <div
@@ -202,7 +376,6 @@ const sortOptions = [
         :total="useQB.recieveQuestionsFiltered.length"
         :show-size-picker="true"
         :page-sizes="[20, 50, 100]"
-        class="mb-3"
       />
 
       <QuestionItems
@@ -211,106 +384,6 @@ const sortOptions = [
         :selected-ids="useQB.selectedIds"
         @select="useQB.toggleSelect"
       >
-        <template #footer="{ item }">
-          <div class="flex items-center gap-2 flex-wrap text-xs pt-1">
-            <!-- OBS 投屏快捷切换 -->
-            <Button
-              v-if="useQB.displayQuestion?.id === item.id"
-              size="xs"
-              variant="outline"
-              class="text-emerald-600 dark:text-emerald-400 gap-1 border-emerald-500/30"
-              @click="useQB.clearCurrentQuestion"
-            >
-              <Tv20Regular class="size-3.5" />
-              取消展示
-            </Button>
-            <Button
-              v-else
-              size="xs"
-              variant="outline"
-              class="gap-1"
-              @click="useQB.setCurrentQuestion(item)"
-            >
-              <Tv20Regular class="size-3.5" />
-              投到 OBS
-            </Button>
-
-            <Button
-              size="xs"
-              variant="outline"
-              :class="item.isReaded ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'"
-              @click="useQB.read(item, !item.isReaded)"
-            >
-              {{ item.isReaded ? '设为未读' : '设为已读' }}
-            </Button>
-
-            <Button
-              size="xs"
-              variant="outline"
-              class="gap-1"
-              @click="useQB.favorite(item, !item.isFavorite)"
-            >
-              <Heart
-                v-if="item.isFavorite"
-                class="size-3.5 text-rose-500"
-              />
-              <HeartOutline
-                v-else
-                class="size-3.5"
-              />
-              {{ item.isFavorite ? '取消收藏' : '收藏' }}
-            </Button>
-
-            <!-- 拉黑提问者（仅非匿名且有 ID 时可用，带二次确认） -->
-            <Popconfirm
-              v-if="!item.isAnonymous && item.sender?.id"
-              title="确认拉黑？"
-              :description="`确认拉黑 ${item.sender.name} 吗？该用户的所有提问将被清理。`"
-              @confirm="useQB.blacklist(item)"
-            >
-              <Button
-                size="xs"
-                variant="outline"
-                class="text-amber-600 dark:text-amber-400"
-              >
-                拉黑提问者
-              </Button>
-            </Popconfirm>
-
-            <TooltipProvider v-else>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    disabled
-                  >
-                    拉黑
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p class="text-xs">匿名提问无法拉黑账号</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <Popconfirm
-              title="确认删除？"
-              description="确认删除这条提问？"
-              @confirm="useQB.DelQA(item.id)"
-            >
-              <Button
-                size="xs"
-                variant="outline"
-                class="text-destructive gap-1 hover:text-destructive"
-              >
-                <Delete24Filled class="size-3.5" />
-                删除
-              </Button>
-            </Popconfirm>
-          </div>
-        </template>
-
         <template #header-extra="{ item }">
           <div class="flex items-center gap-1.5">
             <Popconfirm
@@ -324,7 +397,7 @@ const sortOptions = [
                 variant="outline"
                 class="gap-1"
               >
-                <Eye24Regular class="size-3.5" />
+                <Eye class="size-3.5" />
                 公开
               </Button>
             </Popconfirm>
@@ -335,16 +408,17 @@ const sortOptions = [
               class="gap-1"
               @click="useQB.setPublic(item, !item.isPublic)"
             >
-              <EyeOff24Regular
+              <EyeOff
                 v-if="item.isPublic"
                 class="size-3.5"
               />
-              <Eye24Regular
+              <Eye
                 v-else
                 class="size-3.5"
               />
               {{ item.isPublic ? '取消公开' : '公开' }}
             </Button>
+
             <Button
               size="xs"
               :variant="item.answer ? 'default' : 'secondary'"
@@ -354,12 +428,163 @@ const sortOptions = [
             </Button>
           </div>
         </template>
-      </QuestionItems>
 
-      <Separator
-        v-if="useQB.recieveQuestionsFiltered.length > ps"
-        class="my-3"
-      />
+        <template #footer="{ item }">
+          <div class="flex-between gap-2 flex-wrap w-full text-xs">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <Button
+                v-if="useQB.displayQuestion?.id === item.id"
+                size="xs"
+                variant="outline"
+                class="text-emerald-600 dark:text-emerald-400 gap-1 border-emerald-500/30"
+                @click="useQB.clearCurrentQuestion"
+              >
+                <Tv class="size-3.5" />
+                取消展示
+              </Button>
+              <Button
+                v-else
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                @click="useQB.setCurrentQuestion(item)"
+              >
+                <Tv class="size-3.5" />
+                投到 OBS
+              </Button>
+
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                :class="item.isReaded ? 'text-muted-foreground' : 'text-brand'"
+                @click="useQB.read(item, !item.isReaded)"
+              >
+                <MailOpen
+                  v-if="!item.isReaded"
+                  class="size-3.5"
+                />
+                <MailWarning
+                  v-else
+                  class="size-3.5"
+                />
+                {{ item.isReaded ? '设为未读' : '设为已读' }}
+              </Button>
+
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                @click="useQB.favorite(item, !item.isFavorite)"
+              >
+                <Heart
+                  class="size-3.5"
+                  :class="item.isFavorite ? 'text-rose-500 fill-rose-500' : ''"
+                />
+                {{ item.isFavorite ? '已收藏' : '收藏' }}
+              </Button>
+
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                :class="item.isPinned ? 'text-brand border-brand/40' : ''"
+                @click="useQB.pin(item, !item.isPinned)"
+              >
+                <PinOff
+                  v-if="item.isPinned"
+                  class="size-3.5"
+                />
+                <Pin
+                  v-else
+                  class="size-3.5"
+                />
+                {{ item.isPinned ? '取消置顶' : '置顶' }}
+              </Button>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label="更多操作"
+                  >
+                    <MoreHorizontal class="size-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  class="w-44"
+                >
+                  <DropdownMenuItem
+                    class="gap-2"
+                    @click="emit('exportCard', item)"
+                  >
+                    <ImageIcon class="size-3.5" />
+                    生成问答分享图
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSub v-if="useQB.tags.length > 0">
+                    <DropdownMenuSubTrigger class="gap-2">
+                      <Tag class="size-3.5" />
+                      修改话题标签
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent class="max-h-60 overflow-y-auto scrollbar-thin">
+                      <DropdownMenuItem
+                        :disabled="!item.tag"
+                        @click="useQB.updateQuestionTag(item, null)"
+                      >
+                        无话题
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        v-for="t in useQB.tags"
+                        :key="t.name"
+                        @click="useQB.updateQuestionTag(item, t.name)"
+                      >
+                        <Check
+                          class="size-3.5 mr-1.5"
+                          :class="item.tag === t.name ? 'opacity-100' : 'opacity-0'"
+                        />
+                        #{{ t.name }}
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuItem
+                    class="gap-2"
+                    @click="useQB.approve(item, false)"
+                  >
+                    <ShieldAlert class="size-3.5" />
+                    移入垃圾站
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
+                    v-if="canBlacklistQuestion(item)"
+                    class="gap-2 text-amber-600 dark:text-amber-400 focus:text-amber-600"
+                    @click="useQB.blacklist(item)"
+                  >
+                    <Ban class="size-3.5" />
+                    {{ item.isAnonymous ? '拉黑匿名来源并删除' : '拉黑提问者并删除' }}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    class="gap-2 text-destructive focus:text-destructive"
+                    @click="useQB.DelQA(item.id)"
+                  >
+                    <Trash2 class="size-3.5" />
+                    彻底删除
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </template>
+      </QuestionItems>
 
       <Pagination
         v-if="useQB.recieveQuestionsFiltered.length > ps"
@@ -368,20 +593,22 @@ const sortOptions = [
         :total="useQB.recieveQuestionsFiltered.length"
         :show-size-picker="true"
         :page-sizes="[20, 50, 100]"
-        class="mb-6"
+        class="pb-4"
       />
     </div>
 
-    <!-- 底部浮动批量操作栏 -->
+    <!-- 容器内 Sticky 响应式批量操作栏 -->
     <Transition name="fade">
       <div
         v-if="useQB.selectedIds.length > 0"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center bg-card border border-border rounded-full shadow-lg px-4 py-2 gap-2 text-xs"
+        class="sticky bottom-3 z-30 mx-auto w-fit max-w-full flex items-center flex-wrap justify-center bg-card/95 backdrop-blur border border-border rounded-xl shadow-lg px-3 py-2 gap-1.5 text-xs"
       >
-        <span class="font-medium text-foreground whitespace-nowrap">已选 {{ useQB.selectedIds.length }} 项</span>
+        <span class="font-medium text-foreground whitespace-nowrap tabular-nums px-1">
+          已选 {{ useQB.selectedIds.length }} 项
+        </span>
         <Separator
           orientation="vertical"
-          class="h-4 mx-1"
+          class="h-4 mx-0.5 hidden sm:block"
         />
 
         <Button
@@ -390,8 +617,8 @@ const sortOptions = [
           class="gap-1"
           @click="useQB.batchRead(true)"
         >
-          <Checkmark24Regular class="size-3.5" />
-          批量已读
+          <Check class="size-3.5" />
+          已读
         </Button>
         <Button
           size="xs"
@@ -399,8 +626,8 @@ const sortOptions = [
           class="gap-1"
           @click="useQB.batchRead(false)"
         >
-          <MailUnread24Regular class="size-3.5" />
-          批量未读
+          <MailWarning class="size-3.5" />
+          未读
         </Button>
         <Button
           size="xs"
@@ -408,8 +635,8 @@ const sortOptions = [
           class="gap-1"
           @click="useQB.batchSetPublic(true)"
         >
-          <Eye24Regular class="size-3.5" />
-          批量公开
+          <Eye class="size-3.5" />
+          公开
         </Button>
         <Button
           size="xs"
@@ -417,8 +644,8 @@ const sortOptions = [
           class="gap-1"
           @click="useQB.batchSetPublic(false)"
         >
-          <EyeOff24Regular class="size-3.5" />
-          批量私密
+          <EyeOff class="size-3.5" />
+          私密
         </Button>
         <Button
           size="xs"
@@ -427,8 +654,39 @@ const sortOptions = [
           @click="useQB.batchFavorite(true)"
         >
           <Heart class="size-3.5 text-rose-500" />
-          批量收藏
+          收藏
         </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              size="xs"
+              variant="outline"
+              class="gap-1"
+            >
+              更多
+              <MoreHorizontal class="size-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem @click="useQB.batchFavorite(false)">批量取消收藏</DropdownMenuItem>
+            <DropdownMenuItem @click="useQB.batchReject()">批量移入垃圾站</DropdownMenuItem>
+            <DropdownMenuSub v-if="useQB.tags.length > 0">
+              <DropdownMenuSubTrigger>批量修改话题</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent class="max-h-60 overflow-y-auto scrollbar-thin">
+                <DropdownMenuItem @click="useQB.batchSetTag(null)">清除话题</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  v-for="t in useQB.tags"
+                  :key="t.name"
+                  @click="useQB.batchSetTag(t.name)"
+                >
+                  #{{ t.name }}
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Popconfirm
           title="确认批量删除？"
@@ -440,24 +698,18 @@ const sortOptions = [
             variant="destructive"
             class="gap-1"
           >
-            <Delete24Filled class="size-3.5" />
-            批量删除
+            <Trash2 class="size-3.5" />
+            删除
           </Button>
         </Popconfirm>
 
-        <Separator
-          orientation="vertical"
-          class="h-4 mx-1"
-        />
-
         <Button
-          size="xs"
+          size="icon-xs"
           variant="ghost"
-          class="size-6 rounded-full"
           aria-label="取消选择"
           @click="useQB.clearSelection"
         >
-          <Dismiss24Regular class="size-3.5" />
+          <X class="size-3.5" />
         </Button>
       </div>
     </Transition>

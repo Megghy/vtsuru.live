@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import { MessageSquare, Search, X } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { ResponseQAInfo, ResponseUserInfo } from '@/api/generated/model'
@@ -7,8 +7,12 @@ import PublicQuestionEntry from '@/apps/user/components/question-box/PublicQuest
 import { groupQuestionThreads } from '@/shared/questionThread'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
+
+type PublicSortMode = 'default' | 'newest' | 'hottest'
 
 const props = defineProps<{
   questions: ResponseQAInfo[]
@@ -20,20 +24,49 @@ const props = defineProps<{
 const page = ref(1)
 const pageSize = 8
 const selectedTag = ref<string | null>(null)
+const searchKeyword = ref('')
+const sortMode = ref<PublicSortMode>('default')
 const filterPulse = ref(0)
 const listPhase = ref(0)
 const filterRail = ref<HTMLElement | null>(null)
-const indicatorStyle = ref({ width: '0px', transform: 'translateX(0px)', opacity: '0' })
+const indicatorStyle = ref({ top: '0px', height: '0px', width: '0px', transform: 'translateX(0px)', opacity: '0' })
 let indicatorFrame = 0
 
 const threads = computed(() => groupQuestionThreads(props.questions))
 const availableTags = computed(() => [...new Set(threads.value.map((t) => t.root.tag).filter(Boolean) as string[])])
-const filteredThreads = computed(() =>
-  selectedTag.value ? threads.value.filter((t) => t.root.tag === selectedTag.value) : threads.value,
-)
+
+const filteredThreads = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase()
+  const list = threads.value.filter((t) => {
+    if (selectedTag.value && t.root.tag !== selectedTag.value) return false
+    if (!keyword) return true
+    const entries = [t.root, ...t.followUps]
+    return entries.some(
+      (e) =>
+        e.question?.message?.toLowerCase().includes(keyword) ||
+        e.answer?.message?.toLowerCase().includes(keyword) ||
+        e.tag?.toLowerCase().includes(keyword),
+    )
+  })
+
+  if (sortMode.value === 'newest') {
+    return list.toSorted((a, b) => b.root.sendAt - a.root.sendAt)
+  }
+  if (sortMode.value === 'hottest') {
+    return list.toSorted((a, b) => {
+      const diff = (b.root.likeCount ?? 0) - (a.root.likeCount ?? 0)
+      return diff !== 0 ? diff : b.root.sendAt - a.root.sendAt
+    })
+  }
+  return list.toSorted((a, b) => {
+    if (Boolean(a.root.isPinned) !== Boolean(b.root.isPinned)) return a.root.isPinned ? -1 : 1
+    return b.root.sendAt - a.root.sendAt
+  })
+})
+
 const pagedThreads = computed(() => filteredThreads.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 const displayCount = computed(() => filteredThreads.value.length)
-const listKey = computed(() => `${selectedTag.value ?? 'all'}:${page.value}:${listPhase.value}`)
+const listKey = computed(() => `${selectedTag.value ?? 'all'}:${sortMode.value}:${page.value}:${listPhase.value}`)
 
 function selectTag(tag: string | null) {
   if (selectedTag.value === tag) return
@@ -45,7 +78,7 @@ function selectTag(tag: string | null) {
 function updateIndicator() {
   const rail = filterRail.value
   if (!rail) {
-    indicatorStyle.value = { width: '0px', transform: 'translateX(0px)', opacity: '0' }
+    indicatorStyle.value = { top: '0px', height: '0px', width: '0px', transform: 'translateX(0px)', opacity: '0' }
     return
   }
   const active = rail.querySelector<HTMLElement>('.is-active')
@@ -54,6 +87,8 @@ function updateIndicator() {
     return
   }
   indicatorStyle.value = {
+    top: `${active.offsetTop}px`,
+    height: `${active.offsetHeight}px`,
     width: `${active.offsetWidth}px`,
     transform: `translateX(${active.offsetLeft - rail.scrollLeft}px)`,
     opacity: '1',
@@ -67,7 +102,7 @@ function scheduleIndicator() {
   })
 }
 
-watch(selectedTag, () => {
+watch([selectedTag, searchKeyword, sortMode], () => {
   page.value = 1
   scheduleIndicator()
 })
@@ -95,8 +130,8 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
       :class="{ '!p-0 !bg-transparent !border-0 !shadow-none !backdrop-blur-none': embedded }"
       :data-site-surface="embedded ? undefined : 'card'"
     >
-      <header class="flex items-end justify-between gap-5 m-0">
-        <div>
+      <header class="flex items-end justify-between gap-4 m-0">
+        <div class="min-w-0">
           <span class="block mb-0.5 text-[10px] font-bold text-primary tracking-normal">PUBLIC REPLIES</span>
           <h2 class="m-0 text-lg font-semibold leading-snug">公开问答</h2>
           <p class="m-0 mt-0.5 text-xs text-muted-foreground">
@@ -107,15 +142,54 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
         </div>
         <span
           :key="filterPulse"
-          class="reply-count text-2xl tabular-nums leading-none text-muted-foreground/60"
+          class="reply-count text-2xl tabular-nums leading-none text-muted-foreground/60 shrink-0"
           :class="{ 'is-pulsing': filterPulse > 0 }"
         >
           {{ displayCount }}
         </span>
       </header>
 
+      <!-- 搜索与排序栏 -->
       <div
-        v-if="availableTags.length > 1"
+        v-if="questions.length > 0"
+        class="flex items-center gap-2 mt-3 flex-wrap"
+      >
+        <div class="relative flex-1 min-w-[160px]">
+          <Search class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            v-model="searchKeyword"
+            placeholder="搜索公开问答..."
+            class="pl-8 pr-7"
+          />
+          <button
+            v-if="searchKeyword"
+            type="button"
+            aria-label="清除搜索"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            @click="searchKeyword = ''"
+          >
+            <X class="size-3.5" />
+          </button>
+        </div>
+
+        <Select
+          :model-value="sortMode"
+          @update:model-value="sortMode = $event as PublicSortMode"
+        >
+          <SelectTrigger class="w-28 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">置顶优先</SelectItem>
+            <SelectItem value="newest">最新发布</SelectItem>
+            <SelectItem value="hottest">最多同问</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <!-- 话题筛选条 -->
+      <div
+        v-if="availableTags.length > 0"
         ref="filterRail"
         class="feed-filters relative flex gap-1.5 pt-3 overflow-x-auto no-scrollbar"
         aria-label="按话题筛选"
@@ -177,7 +251,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
               <div
                 class="size-8 shrink-0 rounded-full bg-primary/10 border border-primary/20 text-primary flex-center @[max-width:480px]:size-7"
               >
-                <Chat24Regular class="size-4" />
+                <MessageSquare class="size-4" />
               </div>
               <div class="min-w-0">
                 <PublicQuestionEntry
@@ -208,7 +282,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
           v-else-if="!isLoading"
           :key="`empty-${listKey}`"
           class="p-10 bg-card border border-border rounded-lg"
-          :description="selectedTag ? '该话题暂无公开回复' : '暂无公开回复'"
+          :description="searchKeyword ? '未找到匹配的公开问答' : selectedTag ? '该话题暂无公开回复' : '暂无公开回复'"
         />
       </Transition>
     </Spin>
@@ -230,37 +304,27 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
 
 .filter-indicator {
   position: absolute;
-  top: 13px;
   left: 0;
   z-index: 0;
-  height: 29px;
   background: color-mix(in srgb, var(--primary) 18%, transparent);
   border: 1px solid var(--primary);
   border-radius: 999px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
   pointer-events: none;
   transition:
-    width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.2s ease;
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.18s ease;
 }
 
 .feed-filters button {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  min-height: 29px;
-  padding: 3px 10px;
   color: var(--muted-foreground);
-  font: inherit;
-  font-size: 12px;
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  cursor: pointer;
+  border-color: var(--border);
   transition:
     color 0.18s ease,
-    background-color 0.18s ease,
     border-color 0.18s ease,
     transform 0.18s ease;
 }
@@ -278,60 +342,57 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
 }
 
 .question-thread {
-  animation: thread-enter 0.48s calc(var(--thread-index) * 55ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: thread-enter 0.32s calc(var(--thread-index) * 35ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .feed-swap-enter-active,
 .feed-swap-leave-active {
   transition:
-    opacity 0.28s ease,
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.28s ease;
+    opacity 0.2s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .feed-swap-enter-from {
   opacity: 0;
-  filter: blur(4px);
-  transform: translateY(18px) scale(0.985);
+  transform: translateY(10px);
 }
 
 .feed-swap-leave-to {
   opacity: 0;
-  filter: blur(3px);
-  transform: translateY(-12px) scale(0.98);
+  transform: translateY(-8px);
 }
 
 .question-thread-enter-active,
 .question-thread-leave-active {
   transition:
-    opacity 0.28s ease,
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.2s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .question-thread-enter-from,
 .question-thread-leave-to {
   opacity: 0;
-  transform: translateY(14px) scale(0.98);
+  transform: translateY(10px);
 }
 
 .question-thread-move {
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes thread-enter {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.97);
+    transform: translateY(10px);
   }
 }
 
 @keyframes count-pop {
   0% {
-    transform: scale(0.86);
+    transform: scale(0.88);
     color: var(--primary);
   }
   55% {
-    transform: scale(1.12);
+    transform: scale(1.1);
   }
   100% {
     transform: scale(1);
@@ -352,14 +413,6 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
   .question-thread-leave-active,
   .question-thread-move {
     transition: none;
-  }
-
-  .feed-swap-enter-from,
-  .feed-swap-leave-to,
-  .question-thread-enter-from,
-  .question-thread-leave-to {
-    filter: none;
-    transform: none;
   }
 }
 </style>

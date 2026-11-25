@@ -181,45 +181,6 @@ async function SaveComboSetting() {
               />
             </div>
           </div>
-
-          <Separator />
-
-          <!-- 提问箱设置 -->
-          <div class="space-y-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">提问箱</span>
-            <div
-              v-if="accountInfo"
-              class="flex flex-col gap-2"
-            >
-              <SettingRow
-                type="switch"
-                title="允许未注册/未登录用户提问"
-                variant="compact"
-                :disabled="isSaving"
-                :model-value="accountInfo.settings.questionBox.allowUnregistedUser"
-                @change="
-                  (val) => {
-                    accountInfo.settings.questionBox.allowUnregistedUser = val
-                    SaveComboSetting()
-                  }
-                "
-              />
-
-              <SettingRow
-                type="switch"
-                title="允许已登录用户隐藏身份"
-                variant="compact"
-                :disabled="isSaving"
-                :model-value="accountInfo.settings.questionBox.allowAnonymous"
-                @change="
-                  (val) => {
-                    accountInfo.settings.questionBox.allowAnonymous = val
-                    SaveComboSetting()
-                  }
-                "
-              />
-            </div>
-          </div>
         </TabsContent>
 
         <!-- 黑名单设置 -->

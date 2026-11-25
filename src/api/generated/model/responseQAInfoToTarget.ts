@@ -19,6 +19,9 @@ export interface ResponseQAInfoToTarget {
   isFavorite: boolean
   /** @nullable */
   isReaded?: boolean | null
+  /** @nullable */
+  anonymousEmail?: string | null
+  canBlacklistAnonymous: boolean
   id: number
   /** @nullable */
   threadRootId?: number | null
@@ -42,6 +45,7 @@ export interface ResponseQAInfoToTarget {
   answerImages?: APIFileModel[] | null
   /** @nullable */
   anonymousName?: string | null
-  /** @nullable */
-  anonymousEmail?: string | null
+  isPinned: boolean
+  likeCount: number
+  isLiked: boolean
 }

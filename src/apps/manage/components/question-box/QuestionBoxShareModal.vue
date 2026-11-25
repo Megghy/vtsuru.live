@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { snapdom } from '@zumer/snapdom'
-// @ts-ignore
 import { saveAs } from 'file-saver'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref, useTemplateRef } from 'vue'
@@ -12,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/di
 import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Separator } from '@/shared/ui/separator'
-import { copyToClipboard, downloadImage, useMessage } from '@/shared/utils'
+import { copyToClipboard, useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const show = defineModel<boolean>('show', { required: true })
@@ -21,6 +20,7 @@ const useQB = useQuestionBox()
 const message = useMessage()
 
 const shareCardRef = useTemplateRef<HTMLElement>('shareCardRef')
+const qrWrapRef = useTemplateRef<HTMLElement>('qrWrapRef')
 const selectedShareTag = ref<string>('')
 
 const modalShareUrl = computed(() => {
@@ -48,24 +48,31 @@ function saveShareImage() {
 }
 
 function saveQRCode() {
-  if (!modalShareUrl.value || !accountInfo.value?.name) return
-  downloadImage(
-    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(modalShareUrl.value)}`,
-    `vtsuru-提问箱二维码-${accountInfo.value.name}.png`,
-  )
-  message.success('二维码已开始下载')
+  if (!qrWrapRef.value || !accountInfo.value?.name) return
+  snapdom
+    .toBlob(qrWrapRef.value, {
+      backgroundColor: '#FFFFFF',
+      scale: 4,
+      type: 'png',
+    })
+    .then((blob) => {
+      saveAs(blob, `vtsuru-提问箱二维码-${accountInfo.value?.name}.png`)
+      message.success('二维码已保存')
+    })
+    .catch((err) => {
+      message.error(`导出二维码失败: ${err}`)
+    })
 }
 </script>
 
 <template>
   <Dialog v-model:open="show">
-    <DialogContent class="max-w-xl max-h-[90vh] overflow-y-auto">
+    <DialogContent class="max-w-xl max-h-[90vh] overflow-y-auto scrollbar-thin">
       <DialogHeader>
         <DialogTitle class="text-sm">分享我的提问箱</DialogTitle>
       </DialogHeader>
 
       <div class="space-y-4 py-1">
-        <!-- 分享卡片预览 -->
         <div
           ref="shareCardRef"
           class="relative h-48 w-full rounded-xl overflow-hidden shadow-sm"
@@ -89,6 +96,7 @@ function saveQRCode() {
             </div>
 
             <div
+              ref="qrWrapRef"
               class="flex-center shrink-0 bg-white/95 p-2 rounded-lg size-24 self-center shadow"
             >
               <QrcodeVue
@@ -104,7 +112,6 @@ function saveQRCode() {
           </div>
         </div>
 
-        <!-- 选项设置 -->
         <FormField
           type="select"
           label="附加话题 (可选)"
@@ -116,7 +123,6 @@ function saveQRCode() {
           @change="selectedShareTag = $event === '__none__' ? '' : String($event)"
         />
 
-        <!-- 分享链接 -->
         <FormField label="分享链接">
           <div class="flex items-center gap-2">
             <Input
@@ -137,7 +143,7 @@ function saveQRCode() {
         <Separator />
 
         <div class="flex-center gap-3">
-          <Button @click="saveShareImage"> 保存分享图 </Button>
+          <Button @click="saveShareImage">保存分享图</Button>
           <Button
             variant="outline"
             @click="saveQRCode"
