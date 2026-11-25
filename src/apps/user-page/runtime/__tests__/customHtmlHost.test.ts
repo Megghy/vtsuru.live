@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   post: vi.fn(),
   findSong: vi.fn(),
   requestState: vi.fn(),
+  resetStorage: [] as Array<() => void>,
 }))
 
 vi.mock('@/api/account', () => ({ useAccount: () => ({ value: { id: 1 } }) }))
@@ -15,7 +16,15 @@ vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock('@/shared/utils', () => ({
   useMessage: () => ({ info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn() }),
 }))
-vi.mock('@/shared/storage/persist', () => ({ usePersistedStorage: () => ref(new Date(0)) }))
+vi.mock('@/shared/storage/persist', () => ({
+  usePersistedStorage: (_key: string, initial: unknown) => {
+    const state = ref(structuredClone(initial))
+    mocks.resetStorage.push(() => {
+      state.value = structuredClone(initial)
+    })
+    return state
+  },
+}))
 vi.mock('@/api/generated/live-request/live-request', () => ({ postApiLiveRequestAddFromWeb: mocks.post }))
 vi.mock('@/api/query', () => ({ unwrapOk: (value: unknown) => value }))
 vi.mock('@/apps/user-page/api', () => ({ fetchPublicSongRequestState: mocks.requestState }))
@@ -38,6 +47,7 @@ async function waitForConfirmation(host: ReturnType<typeof mountHost>) {
 }
 
 beforeEach(() => {
+  mocks.resetStorage.forEach((reset) => reset())
   mocks.post.mockReset().mockResolvedValue({ code: 200 })
   mocks.findSong.mockReset().mockResolvedValue({ key: 'song-key', name: 'Song' })
   mocks.requestState.mockReset().mockResolvedValue({ setting: { allowFromWeb: true } })
