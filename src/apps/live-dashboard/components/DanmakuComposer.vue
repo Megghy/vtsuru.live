@@ -132,18 +132,20 @@ function removePreset(index: number) {
 
     <div class="flex items-center gap-1.5 px-2 py-1.5">
       <Popover>
-        <SimpleTooltip content="管理与发送快捷短语">
-          <PopoverTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              class="text-muted-foreground hover:text-foreground shrink-0"
-              aria-label="管理与发送快捷短语"
-            >
-              <Sparkles class="size-3.5" />
-            </Button>
-          </PopoverTrigger>
-        </SimpleTooltip>
+        <PopoverTrigger as-child>
+          <span class="inline-flex shrink-0">
+            <SimpleTooltip content="管理与发送快捷短语">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="text-muted-foreground hover:text-foreground shrink-0"
+                aria-label="管理与发送快捷短语"
+              >
+                <Sparkles class="size-3.5" />
+              </Button>
+            </SimpleTooltip>
+          </span>
+        </PopoverTrigger>
         <PopoverContent
           align="start"
           class="w-76 p-2.5 space-y-2 text-xs"

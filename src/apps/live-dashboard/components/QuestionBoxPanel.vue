@@ -261,16 +261,18 @@ onMounted(() => {
               </SimpleTooltip>
               <Popconfirm @positive-click="qb.approve(item, false)">
                 <template #trigger>
-                  <SimpleTooltip content="移入垃圾站隐藏">
-                    <Button
-                      size="icon-xs"
-                      variant="ghost"
-                      class="text-muted-foreground hover:text-destructive"
-                      aria-label="移入垃圾站隐藏"
-                    >
-                      <EyeOff class="size-3" />
-                    </Button>
-                  </SimpleTooltip>
+                  <span class="inline-flex">
+                    <SimpleTooltip content="移入垃圾站隐藏">
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        class="text-muted-foreground hover:text-destructive"
+                        aria-label="移入垃圾站隐藏"
+                      >
+                        <EyeOff class="size-3" />
+                      </Button>
+                    </SimpleTooltip>
+                  </span>
                 </template>
                 确定将此条提问移入垃圾站？
               </Popconfirm>

@@ -133,18 +133,20 @@ function markAllDone() {
   >
     <template #actions>
       <Popover>
-        <SimpleTooltip content="待处理聚合规则">
-          <PopoverTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              class="text-muted-foreground hover:text-foreground"
-              aria-label="待处理聚合规则"
-            >
-              <Settings2 class="size-3.5" />
-            </Button>
-          </PopoverTrigger>
-        </SimpleTooltip>
+        <PopoverTrigger as-child>
+          <span class="inline-flex">
+            <SimpleTooltip content="待处理聚合规则">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="text-muted-foreground hover:text-foreground"
+                aria-label="待处理聚合规则"
+              >
+                <Settings2 class="size-3.5" />
+              </Button>
+            </SimpleTooltip>
+          </span>
+        </PopoverTrigger>
         <PopoverContent
           align="end"
           class="w-64 p-3 space-y-2.5 text-xs"

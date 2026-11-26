@@ -100,34 +100,36 @@ function markAllRead() {
         </PopoverContent>
       </Popover>
       <DropdownMenu>
-        <SimpleTooltip
-          :content="
-            readFilter === 'unread'
-              ? '仅显示未读'
-              : readFilter === 'read'
-                ? '仅显示已读'
-                : '已读筛选（当前显示全部，受全局隐藏已读影响）'
-          "
-        >
-          <DropdownMenuTrigger as-child>
-            <Button
-              variant="ghost"
-              :size="readFilterLabel ? 'xs' : 'icon-xs'"
-              :class="[readFilter !== 'all' ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground']"
-              aria-label="筛选已读状态"
+        <DropdownMenuTrigger as-child>
+          <span class="inline-flex">
+            <SimpleTooltip
+              :content="
+                readFilter === 'unread'
+                  ? '仅显示未读'
+                  : readFilter === 'read'
+                    ? '仅显示已读'
+                    : '已读筛选（当前显示全部，受全局隐藏已读影响）'
+              "
             >
-              <component
-                :is="readFilter === 'unread' ? EyeOff : Eye"
-                class="size-3.5 shrink-0"
-              />
-              <span
-                v-if="readFilterLabel"
-                class="leading-none"
-                >{{ readFilterLabel }}</span
+              <Button
+                variant="ghost"
+                :size="readFilterLabel ? 'xs' : 'icon-xs'"
+                :class="[readFilter !== 'all' ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground']"
+                aria-label="筛选已读状态"
               >
-            </Button>
-          </DropdownMenuTrigger>
-        </SimpleTooltip>
+                <component
+                  :is="readFilter === 'unread' ? EyeOff : Eye"
+                  class="size-3.5 shrink-0"
+                />
+                <span
+                  v-if="readFilterLabel"
+                  class="leading-none"
+                  >{{ readFilterLabel }}</span
+                >
+              </Button>
+            </SimpleTooltip>
+          </span>
+        </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuRadioGroup v-model="readFilter">
             <DropdownMenuRadioItem value="all"> 全部 </DropdownMenuRadioItem>

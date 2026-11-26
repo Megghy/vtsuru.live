@@ -76,39 +76,41 @@ function goAutoAction() {
 
 <template>
   <Popover v-model:open="open">
-    <SimpleTooltip content="自动操作总闸与发送队列监控">
-      <PopoverTrigger as-child>
-        <Button
-          variant="ghost"
-          :size="isAllPaused || totalQueued > 0 ? 'xs' : 'icon-xs'"
-          class="gap-1 shrink-0"
-          :class="
-            isAllPaused
-              ? 'px-1.5 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/15'
-              : totalQueued > 0
-                ? 'px-1.5 text-primary'
-                : 'text-muted-foreground hover:text-foreground'
-          "
-          aria-label="自动操作总闸与发送队列监控"
-        >
-          <Bot class="size-3.5" />
-          <span
-            v-if="isAllPaused"
-            class="hidden xl:inline"
+    <PopoverTrigger as-child>
+      <span class="inline-flex shrink-0">
+        <SimpleTooltip content="自动操作总闸与发送队列监控">
+          <Button
+            variant="ghost"
+            :size="isAllPaused || totalQueued > 0 ? 'xs' : 'icon-xs'"
+            class="gap-1 shrink-0"
+            :class="
+              isAllPaused
+                ? 'px-1.5 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/15'
+                : totalQueued > 0
+                  ? 'px-1.5 text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+            "
+            aria-label="自动操作总闸与发送队列监控"
           >
-            已暂停
-          </span>
-          <Badge
-            v-if="totalQueued > 0"
-            size="xs"
-            variant="secondary"
-            class="px-1 tabular-nums"
-          >
-            {{ totalQueued }}
-          </Badge>
-        </Button>
-      </PopoverTrigger>
-    </SimpleTooltip>
+            <Bot class="size-3.5" />
+            <span
+              v-if="isAllPaused"
+              class="hidden xl:inline"
+            >
+              已暂停
+            </span>
+            <Badge
+              v-if="totalQueued > 0"
+              size="xs"
+              variant="secondary"
+              class="px-1 tabular-nums"
+            >
+              {{ totalQueued }}
+            </Badge>
+          </Button>
+        </SimpleTooltip>
+      </span>
+    </PopoverTrigger>
 
     <PopoverContent
       align="end"

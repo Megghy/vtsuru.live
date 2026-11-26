@@ -73,41 +73,43 @@ function goLiveManage() {
 
 <template>
   <Popover v-model:open="open">
-    <SimpleTooltip :content="`直播与 OBS 快速控制（${isLiving ? '直播中' : '未开播'}）`">
-      <PopoverTrigger as-child>
-        <Button
-          variant="outline"
-          size="xs"
-          class="gap-1.5 px-1.5 xl:px-2 shrink-0"
-          :aria-label="`直播与 OBS 快速控制（${isLiving ? '直播中' : '未开播'}）`"
+    <PopoverTrigger as-child>
+      <span class="inline-flex shrink-0">
+        <SimpleTooltip
+          :content="`直播与 OBS 快速控制（${isLiving ? '直播中' : '未开播'}${obs.obsStreamActive && dropRatio >= 1 ? ` · 丢帧率 ${dropRatio}%` : ''}）`"
         >
-          <span
-            class="size-2 rounded-full shrink-0"
-            :class="isLiving ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'"
-          />
-          <span class="hidden xl:inline">{{ isLiving ? '直播中' : '未开播' }}</span>
-          <template v-if="obs.obsConnected">
-            <span class="hidden xl:inline text-muted-foreground/50">|</span>
-            <Video
-              class="size-3.5 shrink-0"
-              :class="obs.obsStreamActive ? 'text-emerald-500' : 'text-muted-foreground'"
-            />
+          <Button
+            variant="outline"
+            size="xs"
+            class="gap-1.5 px-1.5 xl:px-2 shrink-0"
+            :aria-label="`直播与 OBS 快速控制（${isLiving ? '直播中' : '未开播'}）`"
+          >
             <span
-              v-if="obs.obsStreamActive"
-              class="hidden 2xl:inline text-[11px] tabular-nums text-muted-foreground"
-            >
-              {{ Math.round(obs.obsStats.fps) }}fps · {{ obs.obsStats.bitrateKbps }}k
-            </span>
-            <SimpleTooltip
-              v-if="obs.obsStreamActive && dropRatio >= 1"
-              :content="`丢帧率 ${dropRatio}%`"
-            >
-              <AlertTriangle class="size-3.5 text-destructive shrink-0" />
-            </SimpleTooltip>
-          </template>
-        </Button>
-      </PopoverTrigger>
-    </SimpleTooltip>
+              class="size-2 rounded-full shrink-0"
+              :class="isLiving ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'"
+            />
+            <span class="hidden xl:inline">{{ isLiving ? '直播中' : '未开播' }}</span>
+            <template v-if="obs.obsConnected">
+              <span class="hidden xl:inline text-muted-foreground/50">|</span>
+              <Video
+                class="size-3.5 shrink-0"
+                :class="obs.obsStreamActive ? 'text-emerald-500' : 'text-muted-foreground'"
+              />
+              <span
+                v-if="obs.obsStreamActive"
+                class="hidden 2xl:inline text-[11px] tabular-nums text-muted-foreground"
+              >
+                {{ Math.round(obs.obsStats.fps) }}fps · {{ obs.obsStats.bitrateKbps }}k
+              </span>
+              <AlertTriangle
+                v-if="obs.obsStreamActive && dropRatio >= 1"
+                class="size-3.5 text-destructive shrink-0"
+              />
+            </template>
+          </Button>
+        </SimpleTooltip>
+      </span>
+    </PopoverTrigger>
 
     <PopoverContent
       align="end"

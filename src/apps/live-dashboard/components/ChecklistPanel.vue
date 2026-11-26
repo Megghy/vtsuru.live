@@ -128,16 +128,18 @@ async function importTodaySchedule() {
         @positive-click="clearDone"
       >
         <template #trigger>
-          <SimpleTooltip content="清除已完成条目">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              class="text-muted-foreground hover:text-destructive"
-              aria-label="清除已完成条目"
-            >
-              <Trash2 class="size-3.5" />
-            </Button>
-          </SimpleTooltip>
+          <span class="inline-flex">
+            <SimpleTooltip content="清除已完成条目">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="text-muted-foreground hover:text-destructive"
+                aria-label="清除已完成条目"
+              >
+                <Trash2 class="size-3.5" />
+              </Button>
+            </SimpleTooltip>
+          </span>
         </template>
         确定清除已勾选的 {{ doneCount }} 条提纲？
       </Popconfirm>

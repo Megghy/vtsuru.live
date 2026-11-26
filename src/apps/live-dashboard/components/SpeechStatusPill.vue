@@ -21,44 +21,46 @@ const queueCount = computed(() => speakQueue.value.length)
       class="flex items-center gap-0.5 h-7 pl-1.5 pr-0.5 rounded-md border border-border bg-muted/60 shrink-0"
     >
       <Popover>
-        <SimpleTooltip
-          :content="
-            speechState.isSpeaking
-              ? `正在朗读：${speechState.speakingText}`
-              : isPaused
-                ? '语音播报已暂停（点击展开控制）'
-                : '语音播报待机中（点击展开控制）'
-          "
-        >
-          <PopoverTrigger as-child>
-            <button
-              type="button"
-              class="flex items-center gap-1.5 px-1 h-6 rounded hover:bg-accent/60 transition-colors cursor-pointer border-0 bg-transparent text-foreground"
-              aria-label="展开语音播报详情"
+        <PopoverTrigger as-child>
+          <span class="inline-flex">
+            <SimpleTooltip
+              :content="
+                speechState.isSpeaking
+                  ? `正在朗读：${speechState.speakingText}`
+                  : isPaused
+                    ? '语音播报已暂停（点击展开控制）'
+                    : '语音播报待机中（点击展开控制）'
+              "
             >
-              <span
-                class="size-2 rounded-full shrink-0"
-                :class="{
-                  'bg-emerald-500 animate-pulse': speechState.isSpeaking && !isPaused,
-                  'bg-amber-500': isPaused,
-                  'bg-muted-foreground/40': !speechState.isSpeaking && !isPaused,
-                }"
-              />
-              <Mic class="size-3.5 shrink-0 text-muted-foreground 2xl:hidden" />
-              <span class="hidden 2xl:inline text-xs truncate max-w-[120px]">
-                {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '朗读暂停' : '语音待机' }}
-              </span>
-              <Badge
-                v-if="queueCount > 0"
-                size="xs"
-                variant="secondary"
-                class="px-1 tabular-nums"
+              <button
+                type="button"
+                class="flex items-center gap-1.5 px-1 h-6 rounded hover:bg-accent/60 transition-colors cursor-pointer border-0 bg-transparent text-foreground"
+                aria-label="展开语音播报详情"
               >
-                {{ queueCount }}
-              </Badge>
-            </button>
-          </PopoverTrigger>
-        </SimpleTooltip>
+                <span
+                  class="size-2 rounded-full shrink-0"
+                  :class="{
+                    'bg-emerald-500 animate-pulse': speechState.isSpeaking && !isPaused,
+                    'bg-amber-500': isPaused,
+                    'bg-muted-foreground/40': !speechState.isSpeaking && !isPaused,
+                  }"
+                />
+                <Mic class="size-3.5 shrink-0 text-muted-foreground 2xl:hidden" />
+                <span class="hidden 2xl:inline text-xs truncate max-w-[120px]">
+                  {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '朗读暂停' : '语音待机' }}
+                </span>
+                <Badge
+                  v-if="queueCount > 0"
+                  size="xs"
+                  variant="secondary"
+                  class="px-1 tabular-nums"
+                >
+                  {{ queueCount }}
+                </Badge>
+              </button>
+            </SimpleTooltip>
+          </span>
+        </PopoverTrigger>
 
         <PopoverContent
           align="end"

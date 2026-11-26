@@ -276,26 +276,28 @@ const SEARCH_HELP = [
 
       <!-- 历史筛选：Popover 按钮 -->
       <Popover>
-        <SimpleTooltip content="历史事件回溯筛选">
-          <PopoverTrigger as-child>
-            <Button
-              size="xs"
-              :variant="range ? 'default' : 'ghost'"
-              :class="range ? 'gap-1 px-2' : 'gap-1 px-1.5 text-muted-foreground hover:text-foreground'"
-              aria-label="历史事件回溯筛选"
-            >
-              <History class="size-3.5" />
-              <span :class="range ? 'hidden sm:inline' : 'hidden 2xl:inline'">
-                {{ range ? '已选历史' : '历史回溯' }}
-              </span>
-              <X
-                v-if="range"
-                class="size-3 ml-0.5 hover:text-destructive"
-                @click.stop="range = null"
-              />
-            </Button>
-          </PopoverTrigger>
-        </SimpleTooltip>
+        <PopoverTrigger as-child>
+          <span class="inline-flex">
+            <SimpleTooltip content="历史事件回溯筛选">
+              <Button
+                size="xs"
+                :variant="range ? 'default' : 'ghost'"
+                :class="range ? 'gap-1 px-2' : 'gap-1 px-1.5 text-muted-foreground hover:text-foreground'"
+                aria-label="历史事件回溯筛选"
+              >
+                <History class="size-3.5" />
+                <span :class="range ? 'hidden sm:inline' : 'hidden 2xl:inline'">
+                  {{ range ? '已选历史' : '历史回溯' }}
+                </span>
+                <X
+                  v-if="range"
+                  class="size-3 ml-0.5 hover:text-destructive"
+                  @click.stop="range = null"
+                />
+              </Button>
+            </SimpleTooltip>
+          </span>
+        </PopoverTrigger>
 
         <PopoverContent
           align="start"
@@ -671,28 +673,30 @@ const SEARCH_HELP = [
       </TooltipProvider>
 
       <Popover>
-        <SimpleTooltip content="高光打点 (Alt+M)">
-          <PopoverTrigger as-child>
-            <Button
-              variant="ghost"
-              :size="dashboard.markers.length > 0 ? 'xs' : 'icon-xs'"
-              :class="dashboard.markers.length > 0 ? 'gap-1 px-1.5' : '2xl:w-auto 2xl:px-2 2xl:gap-1'"
-              class="text-muted-foreground hover:text-foreground"
-              aria-label="高光打点"
-            >
-              <BookmarkPlus class="size-3.5" />
-              <span class="hidden 2xl:inline">打点</span>
-              <Badge
-                v-if="dashboard.markers.length > 0"
-                size="xs"
-                variant="secondary"
-                class="px-1 tabular-nums"
+        <PopoverTrigger as-child>
+          <span class="inline-flex">
+            <SimpleTooltip content="高光打点 (Alt+M)">
+              <Button
+                variant="ghost"
+                :size="dashboard.markers.length > 0 ? 'xs' : 'icon-xs'"
+                :class="dashboard.markers.length > 0 ? 'gap-1 px-1.5' : '2xl:w-auto 2xl:px-2 2xl:gap-1'"
+                class="text-muted-foreground hover:text-foreground"
+                aria-label="高光打点"
               >
-                {{ dashboard.markers.length }}
-              </Badge>
-            </Button>
-          </PopoverTrigger>
-        </SimpleTooltip>
+                <BookmarkPlus class="size-3.5" />
+                <span class="hidden 2xl:inline">打点</span>
+                <Badge
+                  v-if="dashboard.markers.length > 0"
+                  size="xs"
+                  variant="secondary"
+                  class="px-1 tabular-nums"
+                >
+                  {{ dashboard.markers.length }}
+                </Badge>
+              </Button>
+            </SimpleTooltip>
+          </span>
+        </PopoverTrigger>
         <PopoverContent
           align="end"
           class="w-72 p-3 space-y-2.5 text-xs"
@@ -835,26 +839,28 @@ const SEARCH_HELP = [
       />
 
       <Popover>
-        <SimpleTooltip content="切换显示栏位、场景预设与排列顺序">
-          <PopoverTrigger as-child>
-            <Button
-              variant="outline"
-              size="xs"
-              class="gap-1.5 px-2 shrink-0"
-              aria-label="调整栏位与场景预设"
-            >
-              <LayoutGrid class="size-3.5 text-primary" />
-              <span>栏位</span>
-              <Badge
-                variant="secondary"
+        <PopoverTrigger as-child>
+          <span class="inline-flex shrink-0">
+            <SimpleTooltip content="切换显示栏位、场景预设与排列顺序">
+              <Button
+                variant="outline"
                 size="xs"
-                class="px-1 tabular-nums"
+                class="gap-1.5 px-2 shrink-0"
+                aria-label="调整栏位与场景预设"
               >
-                {{ visiblePanelCount }}
-              </Badge>
-            </Button>
-          </PopoverTrigger>
-        </SimpleTooltip>
+                <LayoutGrid class="size-3.5 text-primary" />
+                <span>栏位</span>
+                <Badge
+                  variant="secondary"
+                  size="xs"
+                  class="px-1 tabular-nums"
+                >
+                  {{ visiblePanelCount }}
+                </Badge>
+              </Button>
+            </SimpleTooltip>
+          </span>
+        </PopoverTrigger>
         <PopoverContent
           align="end"
           class="p-2 w-auto"
@@ -870,22 +876,24 @@ const SEARCH_HELP = [
       />
 
       <DropdownMenu>
-        <SimpleTooltip content="更多操作">
-          <DropdownMenuTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              class="relative text-muted-foreground hover:text-foreground"
-              aria-label="更多操作"
-            >
-              <Ellipsis class="size-3.5" />
-              <span
-                v-if="hasMoreMenuActiveState"
-                class="absolute top-1 right-1 size-1.5 rounded-full bg-primary"
-              />
-            </Button>
-          </DropdownMenuTrigger>
-        </SimpleTooltip>
+        <DropdownMenuTrigger as-child>
+          <span class="inline-flex">
+            <SimpleTooltip content="更多操作">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="relative text-muted-foreground hover:text-foreground"
+                aria-label="更多操作"
+              >
+                <Ellipsis class="size-3.5" />
+                <span
+                  v-if="hasMoreMenuActiveState"
+                  class="absolute top-1 right-1 size-1.5 rounded-full bg-primary"
+                />
+              </Button>
+            </SimpleTooltip>
+          </span>
+        </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
           class="w-52"
