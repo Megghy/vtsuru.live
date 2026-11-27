@@ -8,7 +8,7 @@ import type { BiliUserProfile } from '../data/models'
 import { QueryBiliAPI } from '../data/utils'
 import { refreshBiliCookieAsync } from '../data/cookieRefresh'
 import type { CookieCloudConfig } from '../utils/cookieCloud'
-import { DEFAULT_COOKIE_CLOUD_HOST, fetchBiliCookieFromCloud } from '../utils/cookieCloud'
+import { DEFAULT_COOKIE_CLOUD_HOST, fetchBiliCookieFromCloud, normalizeBiliCookie } from '../utils/cookieCloud'
 import { useTauriStore } from './useTauriStore'
 
 // --- 类型定义 ---
@@ -91,7 +91,7 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
   })
 
   // 当前实际用于发弹幕的有效凭证
-  const activeDanmakuCookie = computed(() => danmakuAccount.value?.cookie || '')
+  const activeDanmakuCookie = computed(() => normalizeBiliCookie(danmakuAccount.value?.cookie))
   const activeDanmakuUid = computed(() => danmakuAccount.value?.mid || 0)
   const activeDanmakuCsrf = computed(() => {
     const c = activeDanmakuCookie.value
@@ -103,8 +103,9 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
   // 4. 工具方法与 API 校验
 
   const checkCookieValidity = async (
-    cookie: string,
+    rawCookie: string,
   ): Promise<{ valid: boolean | null; data?: BiliUserProfile }> => {
+    const cookie = normalizeBiliCookie(rawCookie)
     if (!cookie) return { valid: false }
     try {
       const resp = await QueryBiliAPI('https://api.bilibili.com/x/space/myinfo', 'GET', cookie)
@@ -132,10 +133,11 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
    * 添加或更新账号
    */
   const addOrUpdateAccount = async (
-    cookie: string,
+    rawCookie: string,
     refreshToken?: string,
     alias?: string,
   ): Promise<BiliAccountItem> => {
+    const cookie = normalizeBiliCookie(rawCookie)
     info('[AccountManager] 正在验证并添加新账号...')
     const { valid, data } = await checkCookieValidity(cookie)
     if (valid !== true || !data) {
@@ -330,8 +332,11 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
     // 严禁在存储就绪前读取默认空值，必须等待持久化加载完毕以防覆盖清空已有账号
     await Promise.all([whenPersistedReady(accountsStore), whenPersistedReady(routingStore)])
 
-    // 从存储加载账号列表与路由规则
-    accounts.value = [...(accountsStore.value || [])]
+    // 从存储加载账号列表与路由规则，顺带归一化历史残留尾分号的 Cookie
+    accounts.value = (accountsStore.value || []).map((acc) => ({
+      ...acc,
+      cookie: normalizeBiliCookie(acc.cookie),
+    }))
     routing.value = {
       mainAccountId: routingStore.value?.mainAccountId || '',
       danmakuAccountId: routingStore.value?.danmakuAccountId || 'main',

@@ -8,7 +8,7 @@ import type { BiliUserProfile } from '../data/models'
 import { refreshBiliCookieAsync } from '../data/cookieRefresh'
 import { QueryBiliAPI } from '../data/utils'
 import type { CookieCloudConfig, CookieCloudCookie, CookieCloudExportData } from '../utils/cookieCloud'
-import { fetchBiliCookieFromCloud } from '../utils/cookieCloud'
+import { fetchBiliCookieFromCloud, normalizeBiliCookie } from '../utils/cookieCloud'
 import { useBiliAccountManager } from './useBiliAccountManager'
 import { useTauriStore } from './useTauriStore'
 
@@ -60,7 +60,9 @@ export const useBiliCookie = defineStore('biliCookie', () => {
 
   const activeMainAccount = computed(() => accountManager.mainAccount)
 
-  const cookie = computed(() => activeMainAccount.value?.cookie || biliCookieStore.value?.cookie || undefined)
+  const cookie = computed(
+    () => normalizeBiliCookie(activeMainAccount.value?.cookie || biliCookieStore.value?.cookie) || undefined,
+  )
   const hasBiliCookie = computed(() => Boolean(activeMainAccount.value?.cookie || _fallbackHasCookie.value))
   const isCookieValid = computed(() => {
     if (activeMainAccount.value) {
@@ -242,8 +244,9 @@ export const useBiliCookie = defineStore('biliCookie', () => {
   }
 
   const setBiliCookie = async (rawCookie: string, refreshToken?: string): Promise<void> => {
+    const normalizedCookie = normalizeBiliCookie(rawCookie)
     info('[BiliCookie] 正在设置新的 Bilibili Cookie...')
-    const { valid } = await _checkCookieValidity(rawCookie)
+    const { valid } = await _checkCookieValidity(normalizedCookie)
     if (!valid) {
       _fallbackValid.value = false
       warn('[BiliCookie] 尝试设置的 Bilibili Cookie 无效，未保存')
@@ -251,14 +254,14 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     }
 
     biliCookieStore.value = {
-      cookie: rawCookie,
+      cookie: normalizedCookie,
       ...(refreshToken ? { refreshToken } : {}),
       lastRefresh: new Date(),
     }
     _fallbackHasCookie.value = true
     _fallbackValid.value = true
 
-    const added = await accountManager.addOrUpdateAccount(rawCookie, refreshToken, '主播大号')
+    const added = await accountManager.addOrUpdateAccount(normalizedCookie, refreshToken, '主播大号')
     await accountManager.setMainAccount(added.id)
     info('[BiliCookie] 新 Bilibili Cookie 已验证并同步到主账号')
   }

@@ -4,6 +4,7 @@ import CryptoJS from 'crypto-js'
 import { QueryBiliAPI } from '../data/utils'
 import { useBiliAccountManager } from '../store/useBiliAccountManager'
 import { useBiliCookie } from '../store/useBiliCookie'
+import { normalizeBiliCookie } from '../utils/cookieCloud'
 
 /**
  * 统一获取直播管理（主播主账号）凭证：优先使用多账号池中指定的主账号，兼容回退旧主 Cookie
@@ -478,10 +479,11 @@ export async function uploadCover(file: File): Promise<UploadCoverResponse> {
   body.set(tailBytes, headBytes.length + fileBytes.length)
 
   const headers: Record<string, string> = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0',
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     Origin: 'https://www.bilibili.com',
     Referer: 'https://live.bilibili.com/',
-    Cookie: cookie,
+    Cookie: normalizeBiliCookie(cookie),
     'Content-Type': `multipart/form-data; boundary=${boundary}`,
   }
 

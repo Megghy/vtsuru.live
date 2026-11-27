@@ -30,12 +30,35 @@ export interface CookieCloudExportData {
 
 export const DEFAULT_COOKIE_CLOUD_HOST = 'https://cookie.vtsuru.live'
 
+/**
+ * 规范化 HTTP Cookie 请求头：清除首尾空白、尾部分号与空段，
+ * 避免违反 RFC 6265 触发 B 站边缘 WAF `-412`。
+ */
+export function normalizeBiliCookie(rawCookie?: string | null): string {
+  if (!rawCookie) return ''
+  return rawCookie
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join('; ')
+}
+
 function extractBiliCookieString(exportData: CookieCloudExportData): string {
   const biliCookies = exportData.cookie_data?.['bilibili.com']
   if (!biliCookies || biliCookies.length === 0) {
     throw new Error("在 CookieCloud 数据中未找到 'bilibili.com' 的 Cookie")
   }
-  return biliCookies.map((c) => `${c.name}=${c.value}`).join('; ')
+  const pairs = new Map<string, { value: string; isRoot: boolean }>()
+  for (const c of biliCookies) {
+    const name = c.name?.trim()
+    if (!name || c.value == null) continue
+    const isRoot = c.domain?.toLowerCase() === '.bilibili.com'
+    const existing = pairs.get(name)
+    if (!existing || isRoot || !existing.isRoot) {
+      pairs.set(name, { value: c.value, isRoot })
+    }
+  }
+  return Array.from(pairs, ([k, v]) => `${k}=${v.value}`).join('; ')
 }
 
 /**

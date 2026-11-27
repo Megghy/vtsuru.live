@@ -3,6 +3,7 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { useBiliAccountManager } from '../store/useBiliAccountManager'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
+import { normalizeBiliCookie } from '../utils/cookieCloud'
 
 const DEFAULT_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
@@ -34,6 +35,7 @@ export async function getMainBiliAuth(): Promise<BiliAuthCredential> {
   if (!cookie) {
     cookie = (await useBiliCookie().getBiliCookie()) || ''
   }
+  cookie = normalizeBiliCookie(cookie)
   if (!cookie) {
     throw new Error('未登录 B 站主播账号，请先在「账号与凭据」扫码登录')
   }
