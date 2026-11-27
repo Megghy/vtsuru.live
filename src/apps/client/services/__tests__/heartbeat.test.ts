@@ -4,6 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), isTauri: vi.fn(), getCurrentWindow: vi.fn() }))
 vi.mock('@tauri-apps/api/core', () => ({ invoke: mocks.invoke, isTauri: mocks.isTauri }))
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: mocks.getCurrentWindow }))
+vi.mock('worker-timers', () => ({
+  setInterval: (fn: () => void, ms: number) => globalThis.setInterval(fn, ms),
+  clearInterval: (id: number) => globalThis.clearInterval(id),
+}))
 
 import { startHeartbeat, stopHeartbeat } from '../heartbeat'
 

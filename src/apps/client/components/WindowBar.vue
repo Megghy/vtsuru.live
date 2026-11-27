@@ -4,6 +4,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { isLiveStreaming, roomInfo } from '@/apps/client/data/info'
+import { gracefulExitClient } from '@/apps/client/data/initialize'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { useSettings } from '@/apps/client/store/useSettings'
 import { isTauri } from '@/shared/config'
@@ -56,14 +57,7 @@ async function toggleMaximizeWindow() {
 
 async function closeWindow() {
   if (settingsStore.settings.closeWindowAction === 'exit' && isTauri()) {
-    try {
-      const { useWebFetcher } = await import('@/store/useWebFetcher')
-      await Promise.race([useWebFetcher().Stop(), new Promise((resolve) => setTimeout(resolve, 1500))])
-    } catch {
-      // 忽略清理异常，确保正常退出
-    }
-    const { exit } = await import('@tauri-apps/plugin-process')
-    await exit(0)
+    await gracefulExitClient()
     return
   }
   const appWindow = await getTauriWindow()

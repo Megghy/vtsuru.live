@@ -1,7 +1,8 @@
 import { invoke, isTauri } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { clearInterval, setInterval } from 'worker-timers'
 
-let timer: ReturnType<typeof setInterval> | undefined
+let timer: number | undefined
 let failed = false
 
 async function sendHeartbeat() {
@@ -30,8 +31,10 @@ export function startHeartbeat() {
 }
 
 export function stopHeartbeat() {
-  clearInterval(timer)
-  timer = undefined
+  if (timer !== undefined) {
+    clearInterval(timer)
+    timer = undefined
+  }
   window.removeEventListener('pageshow', resumeHeartbeat)
   window.removeEventListener('focus', resumeHeartbeat)
   document.removeEventListener('visibilitychange', resumeHeartbeat)

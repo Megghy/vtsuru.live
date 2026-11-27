@@ -142,6 +142,16 @@ async function handleWatchdogAutoReloadChange(val: boolean) {
   }
 }
 
+async function handleCloseWindowActionChange(val: CloseWindowAction) {
+  setting.settings.closeWindowAction = val
+  await setting.save()
+  if (isTauri()) {
+    invoke('set_close_window_action', { action: val }).catch((err) => {
+      console.warn('[Settings] 同步关窗行为配置失败:', err)
+    })
+  }
+}
+
 const closeWindowOptions: Array<{ label: string; value: CloseWindowAction }> = [
   { label: '最小化到系统托盘', value: 'minimize-to-tray' },
   { label: '直接退出客户端', value: 'exit' },
@@ -385,12 +395,7 @@ function handleTitleClick() {
                         <div class="w-[180px]">
                           <Select
                             :model-value="setting.settings.closeWindowAction || 'minimize-to-tray'"
-                            @update:model-value="
-                              (val) => {
-                                setting.settings.closeWindowAction = val as CloseWindowAction
-                                setting.save()
-                              }
-                            "
+                            @update:model-value="(val) => void handleCloseWindowActionChange(val as CloseWindowAction)"
                           >
                             <SelectTrigger class="w-full">
                               <SelectValue />

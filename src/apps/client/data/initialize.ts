@@ -14,9 +14,8 @@ import { check } from '@tauri-apps/plugin-updater'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
-import router from '@/app/router'
-
 import { isLoggedIn, useAccount } from '@/api/account'
+import router from '@/app/router'
 import {
   clientSupportsRpc,
   clientVersion,
@@ -45,12 +44,7 @@ import { useSettings } from '../store/useSettings'
 import { useTranscription } from '../store/useTranscription'
 import { useVtsStore } from '../store/useVtsStore'
 import { initInfo, isLiveStreaming, roomInfo } from './info'
-import {
-  notifyBootMinimized,
-  notifyClientUpdate,
-  onBiliCookieInvalid,
-  onLiveStatusChanged,
-} from './notification'
+import { notifyBootMinimized, notifyClientUpdate, onBiliCookieInvalid, onLiveStatusChanged } from './notification'
 import { getBuvid, getRoomKey } from './utils'
 
 const accountInfo = useAccount()
@@ -66,9 +60,23 @@ export const isClientVersionOutdated = computed(() => {
 let tray: TrayIcon | undefined
 let updateCheckTimer: number | null = null
 let trayEventUnlisten: (() => void) | null = null
+let mainCloseUnlisten: (() => void) | null = null
+let closeExitEventUnlisten: (() => void) | null = null
+let isExitingClient = false
 const UPDATE_TOAST_ID = 'client-update-available'
 const UPDATE_PROGRESS_ID = 'client-update-progress'
 const NATIVE_TRAY_ID = 'main-tray'
+
+export async function gracefulExitClient() {
+  if (isExitingClient || !isTauri()) return
+  isExitingClient = true
+  try {
+    await Promise.race([useWebFetcher().Stop(), new Promise((resolve) => setTimeout(resolve, 1500))])
+  } catch {
+    // 忽略清理异常，确保正常退出
+  }
+  await invoke('quit_app')
+}
 
 function setInitStageSafely(stage: string) {
   if (clientInitStage.value !== '启动完成') {
@@ -407,9 +415,29 @@ export async function initAll(_isOnBoot?: boolean) {
     notifyBootMinimized()
   }
 
-  // 同步看门狗自动重载开关到 Rust 宿主（兼容老壳忽略异常）
+  // 同步看门狗自动重载与关窗行为到 Rust 宿主（兼容老壳忽略异常）
   if (settings.settings.watchdogAutoReload !== undefined) {
     void invoke('set_heartbeat_auto_reload', { enabled: Boolean(settings.settings.watchdogAutoReload) }).catch(() => {})
+  }
+  void invoke('set_close_window_action', {
+    action: settings.settings.closeWindowAction || 'minimize-to-tray',
+  }).catch(() => {})
+
+  // 兜底拦截主窗口系统级关闭（Alt+F4 / 任务栏关闭），同时兼容未更新原生壳的旧客户端
+  if (!mainCloseUnlisten) {
+    mainCloseUnlisten = await appWindow.onCloseRequested((event) => {
+      event.preventDefault()
+      if (settings.settings.closeWindowAction === 'exit') {
+        void gracefulExitClient()
+      } else {
+        void appWindow.hide()
+      }
+    })
+  }
+  if (!closeExitEventUnlisten) {
+    closeExitEventUnlisten = await listen('window://close-exit-requested', () => {
+      void gracefulExitClient()
+    })
   }
 
   const biliCookie = useBiliCookie()
@@ -564,6 +592,10 @@ export function OnClientUnmounted() {
   stopUpdateCheck()
   trayEventUnlisten?.()
   trayEventUnlisten = null
+  mainCloseUnlisten?.()
+  mainCloseUnlisten = null
+  closeExitEventUnlisten?.()
+  closeExitEventUnlisten = null
   void useClientBackup().dispose()
   void useTranscription().dispose()
   useFetcherRpcServer().dispose()
