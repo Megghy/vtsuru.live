@@ -273,8 +273,17 @@ export function transformImageUrl(
   return url
 }
 
+/** 富文本 HTML 图片默认转换规格：仅限最大宽度、不限高度，避免长图被等比压成细条。 */
+export const DEFAULT_HTML_IMAGE_TRANSFORM: ImageTransformOptions = {
+  width: 1280,
+  quality: 85,
+}
+
 /** 批量改写富文本 HTML 中指向站内文件网关的 <img src>，点击放大时由 useHtmlImagePreview 还原原图。 */
-export function transformHtmlImages(html: string, options: ImageTransformInput = 'card'): string {
+export function transformHtmlImages(
+  html: string,
+  options: ImageTransformInput = DEFAULT_HTML_IMAGE_TRANSFORM,
+): string {
   if (!html || !html.includes('<img')) return html
   return html.replace(/(<img\b[^>]*?\bsrc=["'])([^"']+)(["'])/gi, (_m, prefix: string, src: string, suffix: string) => {
     const normalized = src.replaceAll('&amp;', '&')

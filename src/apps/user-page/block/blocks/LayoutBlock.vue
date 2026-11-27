@@ -6,6 +6,7 @@ import type { ResponseUserInfo } from '@/api/generated/model'
 import type { BiliProfileStatus } from '../../types'
 import BlockCard from '../BlockCard.vue'
 import { BLOCK_COMPONENTS } from '../blockComponents'
+import { isBlockEmptyInPublicView } from '../emptyBlock'
 import type { BlockNode, BlockVisibilityContext } from '../schema'
 import { isBlockVisible } from '../visibility'
 
@@ -126,7 +127,12 @@ const children = computed(() => asBlocks(propsObj.value.children))
 const renderedChildren = computed(() =>
   props.editorMode
     ? children.value
-    : children.value.filter((child) => !child.hidden && isBlockVisible(child, props.visibilityContext)),
+    : children.value.filter(
+        (child) =>
+          !child.hidden &&
+          isBlockVisible(child, props.visibilityContext) &&
+          !isBlockEmptyInPublicView(child, props.visibilityContext),
+      ),
 )
 const selectedBlockIdSet = computed(() => new Set(props.selectedBlockIds ?? []))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : false))

@@ -86,7 +86,7 @@ const canOprate = computed(() => {
   return !topic.value.isLocked && accountInfo.value.id > 0
 })
 
-const safeTopicHtml = computed(() => transformHtmlImages(sanitizeForumHtml(topic.value?.content), 'card'))
+const safeTopicHtml = computed(() => transformHtmlImages(sanitizeForumHtml(topic.value?.content)))
 const topicImagePreview = useHtmlImagePreview()
 
 async function refreshComments() {

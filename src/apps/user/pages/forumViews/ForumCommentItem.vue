@@ -38,7 +38,7 @@ const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
 })
 
-const safeCommentHtml = computed(() => transformHtmlImages(sanitizeForumHtml(props.item.content), 'card'))
+const safeCommentHtml = computed(() => transformHtmlImages(sanitizeForumHtml(props.item.content)))
 const commentImagePreview = useHtmlImagePreview()
 
 function delComment(id: number) {

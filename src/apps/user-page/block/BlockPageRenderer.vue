@@ -8,6 +8,7 @@ import { provideThemeScope } from '@/shared/config/theme/scope'
 
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './blockComponents'
+import { isBlockEmptyInPublicView } from './emptyBlock'
 import type { BlockPageProject, BlockVisibilityContext } from './schema'
 import { collectPageSections, PageSectionsKey } from './sectionNavigation'
 import { isBlockVisible } from './visibility'
@@ -47,7 +48,12 @@ const activeVisibilityContext = computed<BlockVisibilityContext>(
 const renderedBlocks = computed(() =>
   props.editorMode
     ? props.project.blocks
-    : props.project.blocks.filter((block) => !block.hidden && isBlockVisible(block, activeVisibilityContext.value)),
+    : props.project.blocks.filter(
+        (block) =>
+          !block.hidden &&
+          isBlockVisible(block, activeVisibilityContext.value) &&
+          !isBlockEmptyInPublicView(block, activeVisibilityContext.value),
+      ),
 )
 const selectedBlockIdSet = computed(() => new Set(props.selectedBlockIds ?? []))
 const pageSections = computed(() => collectPageSections(props.project.blocks, activeVisibilityContext.value))

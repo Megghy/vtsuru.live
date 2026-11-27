@@ -22,6 +22,7 @@ import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import CustomPageRenderer from '@/apps/user-page/components/CustomPageRenderer.vue'
 import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITIONS } from '@/apps/user-page/featureNavigation'
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
+import { resolveUserPageNavLabel } from '@/apps/user-page/pageTitle'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import '@/apps/user-page/site-templates/surfaces.css'
 import SiteTemplateEffects from '@/apps/user-page/site-templates/SiteTemplateEffects.vue'
@@ -178,7 +179,7 @@ const previewNavGroups = computed<ShellNavGroup[]>(() => {
     .slice(0, 4)
     .map(([slug, cfg]) => ({
       key: slug,
-      label: cfg?.title?.trim() || `/${slug}`,
+      label: resolveUserPageNavLabel(slug, cfg),
       icon: resolveUserPageNavIcon(cfg?.navIcon),
     }))
   const groups: ShellNavGroup[] = [{ key: 'user-core', label: '导航', items: coreItems }]

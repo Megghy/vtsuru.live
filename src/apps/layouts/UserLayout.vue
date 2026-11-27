@@ -33,6 +33,7 @@ import {
 } from '@/apps/user-page/featureNavigation'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
+import { resolveUserPageNavLabel, resolveUserPageTitle } from '@/apps/user-page/pageTitle'
 import { providePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
@@ -182,7 +183,11 @@ const activeMenuKey = computed(() => {
   return name
 })
 
-const headerSubtitle = computed(() => (isLoading.value ? '加载中...' : ((route.meta.title as string) ?? '')))
+const headerSubtitle = computed(() => {
+  if (isLoading.value) return '加载中...'
+  if (route.name === 'user-page') return pageSlugTitle.value || ((route.meta.title as string) ?? '')
+  return (route.meta.title as string) ?? ''
+})
 
 const userPageSlug = computed(() => {
   const v = route.params.pageSlug
@@ -225,8 +230,7 @@ const pageSlugTitle = computed(() => {
   const name = route.name?.toString()
   if (name === 'user-index') return currentUserPageConfig.value?.title?.trim() || '主页'
   if (name !== 'user-page') return ''
-  const title = currentUserPageConfig.value?.title?.trim()
-  return title || '页面'
+  return resolveUserPageTitle(currentUserPageConfig.value) || '页面'
 })
 
 const seoDescription = computed(() => {
@@ -423,10 +427,7 @@ function updateMenuOptions() {
     .filter(([, cfg]) => (cfg as any)?.navVisible !== false)
     .map(([slug, cfg]) => ({
       slug,
-      title:
-        (cfg as any)?.title && String((cfg as any).title).trim().length
-          ? String((cfg as any).title).trim()
-          : `/${slug}`,
+      title: resolveUserPageNavLabel(slug, cfg),
       order: typeof (cfg as any)?.navOrder === 'number' ? (cfg as any).navOrder : 0,
       icon: resolveUserPageNavIcon((cfg as any)?.navIcon),
     }))
@@ -1121,7 +1122,7 @@ function scrollToTop() {
 .page-root.bg-host::before {
   content: "";
   position: fixed;
-  inset: calc(-24px - var(--user-page-bg-blur, 0px));
+  inset: 0;
   background-color: var(--user-page-bg-color, transparent);
   background-image: var(--user-page-bg-image, none);
   background-repeat: no-repeat;
@@ -1142,6 +1143,7 @@ function scrollToTop() {
 }
 
 .page-root.bg-host.bg-blur::before {
+  inset: calc(-2 * var(--user-page-bg-blur, 0px));
   filter: blur(var(--user-page-bg-blur, 0px));
 }
 
@@ -1178,7 +1180,7 @@ function scrollToTop() {
 .content-bg-host::before {
   content: "";
   position: absolute;
-  inset: calc(-24px - var(--user-page-bg-blur, 0px));
+  inset: 0;
   background-color: var(--user-page-bg-color, transparent);
   background-image: var(--user-page-bg-image, none);
   background-repeat: no-repeat;
@@ -1198,6 +1200,7 @@ function scrollToTop() {
 }
 
 .content-bg-host.content-bg-blur::before {
+  inset: calc(-2 * var(--user-page-bg-blur, 0px));
   filter: blur(var(--user-page-bg-blur, 0px));
 }
 

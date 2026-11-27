@@ -98,7 +98,7 @@ watch(
         :src="model.url"
         :file-id="model.fileId"
         :is-public="true"
-        fallback-transform="preview"
+        fallback-transform="1280w_85q"
         :crop="false"
         :alt="model.alt || '图片预览'"
         :disabled="!loaded || failed"

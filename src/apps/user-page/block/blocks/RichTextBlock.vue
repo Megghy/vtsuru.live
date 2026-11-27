@@ -21,7 +21,7 @@ const config = computed(() => {
   }
 })
 
-const safeHtml = computed(() => transformHtmlImages(sanitizeRichText(config.value.html), 'card'))
+const safeHtml = computed(() => transformHtmlImages(sanitizeRichText(config.value.html)))
 const richTextImagePreview = useHtmlImagePreview()
 </script>
 

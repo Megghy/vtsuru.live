@@ -1161,6 +1161,16 @@ function openBiliSpace() {
   pointer-events: none;
 }
 
+/* 宽屏下两侧留白充足，顶部左右胶囊脱离文档流悬浮，避免把正文整段往下推 */
+@media (min-width: 1280px) {
+  .site-shell-prism-top:not(.is-preview) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+}
+
 .site-shell-prism-top.is-preview {
   z-index: 25;
 }

@@ -210,6 +210,7 @@ const contentClass = computed(() => ({
 }
 
 .bg-host.bg-blur::before {
+  inset: calc(-2 * var(--user-page-bg-blur, 0px));
   filter: blur(var(--user-page-bg-blur, 0px));
 }
 
@@ -218,15 +219,25 @@ const contentClass = computed(() => ({
   z-index: 1;
 }
 
+.bg-host.glass-surface::after {
+  background: var(--glass-surface-bg, color-mix(in srgb, var(--popover) 70%, transparent));
+  backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+}
+
 .glass-surface {
   padding: 12px 0;
+}
+
+.glass-surface:not(.bg-host) {
   background: var(--glass-surface-bg, color-mix(in srgb, var(--popover) 70%, transparent));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .glass-surface {
+  .bg-host.glass-surface::after,
+  .glass-surface:not(.bg-host) {
     background: var(--popover);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;

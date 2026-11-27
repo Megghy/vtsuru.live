@@ -231,7 +231,8 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
 
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {
   const rawImg = bg.type === 'image' ? bg.imagePath.trim() : ''
-  const img = rawImg ? transformImageUrl(rawImg, '1920w_90q') : ''
+  // 原始大小模式下保留原图分辨率（仅转码压缩），避免 2K/4K 背景被 1920w 裁小后在大屏露边
+  const img = rawImg ? transformImageUrl(rawImg, bg.fit === 'none' ? '90q.webp' : '1920w_90q') : ''
   const safeUrl = img ? img.replaceAll('"', '\\"') : ''
 
   const blurPx = bg.blurMode === 'none' ? 0 : bg.blurPx

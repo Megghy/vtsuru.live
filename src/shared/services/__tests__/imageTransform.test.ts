@@ -129,6 +129,9 @@ describe('transformHtmlImages', () => {
   it('rewrites gateway img src inside rich text HTML while leaving external URLs intact', () => {
     const input =
       '<p><img src="https://files.vtsuru.suki.club/vtsuru/objects/019abc?fid=1&amp;sig=abc" alt="a"><img src="https://example.com/ext.png"></p>'
+    expect(transformHtmlImages(input)).toBe(
+      '<p><img src="https://files.vtsuru.suki.club/vtsuru/objects/019abc?fid=1&amp;sig=abc&amp;1280w_85q" alt="a"><img src="https://example.com/ext.png"></p>',
+    )
     expect(transformHtmlImages(input, 'card')).toBe(
       '<p><img src="https://files.vtsuru.suki.club/vtsuru/objects/019abc?fid=1&amp;sig=abc&amp;p_card" alt="a"><img src="https://example.com/ext.png"></p>',
     )
