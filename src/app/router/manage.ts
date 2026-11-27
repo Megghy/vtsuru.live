@@ -29,6 +29,12 @@ const manageRoute: RouteRecordRaw = {
           meta: { title: '我的积分与签到', workspace: 'user', pageWidth: 'lg' },
         },
         {
+          path: 'grants',
+          name: 'bili-user-grants',
+          component: async () => import('@/apps/account/pages/point/PointGrantsView.vue'),
+          meta: { title: '待领取礼物', workspace: 'user', pageWidth: 'lg' },
+        },
+        {
           path: 'orders',
           name: 'bili-user-orders',
           component: async () => import('@/apps/account/pages/point/PointOrderView.vue'),

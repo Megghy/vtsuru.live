@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
 import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import { Gift } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import type { ResponsePointOrder2UserModel } from '@/api/generated/model'
 import { PointOrderStatus } from '@/api/generated/model'
 import { getApiPointUserGetOrders } from '@/api/generated/point/point'
+import { fetchUserUnclaimedGrantCount, userUnclaimedGrantCount } from '@/api/point-grants'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import UserPointOrderList from '@/apps/account/components/UserPointOrderList.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -18,6 +22,7 @@ import { useBiliAuth } from '@/store/useBiliAuth'
 
 const emit = defineEmits<{ dataLoaded: [] }>()
 const auth = useBiliAuth()
+const router = useRouter()
 const orders = ref<ResponsePointOrder2UserModel[]>([])
 const loading = ref(false)
 const loaded = ref(false)
@@ -114,7 +119,13 @@ function reset() {
 
 defineExpose({ getOrders: loadOrders, reset })
 
-onMounted(() => void loadOrders())
+onMounted(() => {
+  void loadOrders()
+  void auth
+    .getBiliAuthHeaders()
+    .then((h) => fetchUserUnclaimedGrantCount(Object.fromEntries(h)))
+    .catch(() => {})
+})
 </script>
 
 <template>
@@ -139,6 +150,25 @@ onMounted(() => void loadOrders())
         </Button>
       </template>
     </AccountPageHeader>
+
+    <Alert
+      v-if="userUnclaimedGrantCount > 0"
+      class="flex-between gap-3 py-2.5 px-3.5 border-brand/40 bg-brand-soft/40"
+    >
+      <div class="flex items-center gap-2 min-w-0">
+        <Gift class="size-4 text-brand shrink-0" />
+        <AlertDescription class="text-xs text-foreground">
+          你有 <strong class="tabular-nums">{{ userUnclaimedGrantCount }}</strong> 份来自主播的待领取礼物，无需消耗积分即可直接领取。
+        </AlertDescription>
+      </div>
+      <Button
+        size="xs"
+        class="shrink-0"
+        @click="router.push({ name: 'bili-user-grants' })"
+      >
+        前往领取
+      </Button>
+    </Alert>
 
     <div
       v-if="loading"

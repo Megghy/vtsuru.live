@@ -12,6 +12,7 @@ import { computed, toRef, watch, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import type { ResponseAccountInfo } from '@/api/generated/model'
+import { fetchUserUnclaimedGrantCount, userUnclaimedGrantCount } from '@/api/point-grants'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
 import {
   type ManageNavGroupKey,
@@ -98,6 +99,20 @@ watch(
     if (currentWorkspace !== 'streamer') return
     if (key && streamerItemMap.value.has(key)) {
       recordRecent(key)
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  [workspace, () => biliAuth.biliAuth.id],
+  async ([currentWorkspace, authId]) => {
+    if (currentWorkspace !== 'user' || !authId) return
+    try {
+      const headers = Object.fromEntries(await biliAuth.getBiliAuthHeaders())
+      await fetchUserUnclaimedGrantCount(headers)
+    } catch {
+      // 忽略静默徽章轮询错误
     }
   },
   { immediate: true },
@@ -451,15 +466,27 @@ async function go(name: string, query?: Record<string, string>) {
                       :aria-current="activeKey === item.key ? 'page' : undefined"
                       @click="(ev: any) => onClickNavItem(ev, item)"
                     >
-                      <component
-                        :is="item.icon"
-                        class="size-[18px] shrink-0"
-                      />
+                      <span class="relative inline-flex shrink-0">
+                        <component
+                          :is="item.icon"
+                          class="size-[18px] shrink-0"
+                        />
+                        <span
+                          v-if="collapsed && item.key === 'bili-user-grants' && userUnclaimedGrantCount > 0"
+                          class="absolute -top-1 -right-1 size-2 rounded-full bg-destructive"
+                        />
+                      </span>
                       <span
                         v-if="!collapsed"
                         class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
                         >{{ item.label }}</span
                       >
+                      <span
+                        v-if="!collapsed && item.key === 'bili-user-grants' && userUnclaimedGrantCount > 0"
+                        class="px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px] leading-none font-mono tabular-nums shrink-0"
+                      >
+                        {{ userUnclaimedGrantCount > 99 ? '99+' : userUnclaimedGrantCount }}
+                      </span>
 
                       <Button
                         v-if="!collapsed"
@@ -490,15 +517,27 @@ async function go(name: string, query?: Record<string, string>) {
                       role="button"
                       @click="onClickDisabledItem(item)"
                     >
-                      <component
-                        :is="item.icon"
-                        class="size-[18px] shrink-0"
-                      />
+                      <span class="relative inline-flex shrink-0">
+                        <component
+                          :is="item.icon"
+                          class="size-[18px] shrink-0"
+                        />
+                        <span
+                          v-if="collapsed && item.key === 'bili-user-grants' && userUnclaimedGrantCount > 0"
+                          class="absolute -top-1 -right-1 size-2 rounded-full bg-destructive"
+                        />
+                      </span>
                       <span
                         v-if="!collapsed"
                         class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
                         >{{ item.label }}</span
                       >
+                      <span
+                        v-if="!collapsed && item.key === 'bili-user-grants' && userUnclaimedGrantCount > 0"
+                        class="px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px] leading-none font-mono tabular-nums shrink-0"
+                      >
+                        {{ userUnclaimedGrantCount > 99 ? '99+' : userUnclaimedGrantCount }}
+                      </span>
                       <Button
                         v-if="!collapsed"
                         variant="ghost"

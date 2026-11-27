@@ -13,6 +13,7 @@ import type { ResponseSongRequestModel } from './generated/model/responseSongReq
 import type { ResponseUserBasicInfo } from './generated/model/responseUserBasicInfo'
 import type { SupportTicketMessageModel } from './generated/model/supportTicketMessageModel'
 import type { SupportTicketModel } from './generated/model/supportTicketModel'
+import type { TempRequestGoodsSetting } from './generated/model/tempRequestGoodsSetting'
 
 export interface APIRoot<T> {
   code: number
@@ -59,16 +60,24 @@ export type ResponsePointHisrotyModel = Omit<ResponsePointHistoryModel, 'extra'>
   extra?: PointHistoryExtraBase
 }
 
-export type ResponsePointGoodModel = ResponseBasePointGoodsModel &
-  Partial<
+export type ExtendedGoodsSetting = TempRequestGoodsSetting & {
+  grantOnly?: boolean
+}
+
+export type ResponsePointGoodModel = ResponseBasePointGoodsModel & {
+  grantOnly?: boolean
+} & Partial<
     Pick<
       ResponsePointGoodsModel,
-      'content' | 'collectUrl' | 'embedCollectUrl' | 'setting' | 'serviceConfig' | 'virtualKeys' | 'keySelectionMode' | 'privateAttachments'
+      'content' | 'collectUrl' | 'embedCollectUrl' | 'serviceConfig' | 'virtualKeys' | 'keySelectionMode' | 'privateAttachments'
     >
-  >
+  > & {
+    setting?: ExtendedGoodsSetting
+  }
 
-export type UploadPointGoodsModel = RequestPointGoodsModel & {
+export type UploadPointGoodsModel = Omit<RequestPointGoodsModel, 'setting'> & {
   maxSubItemSelections?: number | null
+  setting: ExtendedGoodsSetting
 }
 
 export enum ThemeType {

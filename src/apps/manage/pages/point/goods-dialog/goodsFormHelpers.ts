@@ -70,6 +70,7 @@ export function createDefaultGoodsModel(): GoodsModel {
       setting: {
         allowGuardLevel: GuardLevel.None,
         allowGuardFreeMinLevel: GuardLevel.None,
+        grantOnly: false,
       },
     },
     cover: [],
@@ -172,7 +173,8 @@ export function initGoodsDraft(item?: ResponsePointGoodModel, duplicateMode = fa
     !copied.isAllowRebuy ||
     (copied.maxBuyCount ?? 1) > 1 ||
     (copied.setting.allowGuardLevel ?? GuardLevel.None) !== GuardLevel.None ||
-    copied.setting.guardFreeMonths != null
+    copied.setting.guardFreeMonths != null ||
+    Boolean(copied.setting.grantOnly)
   if (hasCustomRules) {
     defaultAccordionValues.push('rules')
   }
@@ -455,6 +457,7 @@ export function buildPreviewGoods(model: GoodsModel): ResponsePointGoodModel {
     canFreeBuy: hasGuardFree,
     hasGuardFreePrivilege: hasGuardFree,
     allowGuardLevel: g.setting?.allowGuardLevel ?? GuardLevel.None,
+    grantOnly: Boolean(g.setting?.grantOnly),
     cover: coverUrl
       ? { id: g.cover?.id ?? 0, name: g.name || 'cover', path: coverUrl, size: 0, store: 'preview' }
       : undefined,

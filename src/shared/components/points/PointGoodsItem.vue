@@ -255,6 +255,13 @@ const scheduleBadgeText = computed(() => {
         </span>
 
         <span
+          v-if="isManage && (goods.grantOnly || goods.setting?.grantOnly)"
+          class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-brand text-primary-foreground text-[10px] font-medium shadow-2xs"
+        >
+          仅限发放
+        </span>
+
+        <span
           v-if="isOnDiscount"
           class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-600/95 text-white text-[10px] font-semibold shadow-2xs"
         >

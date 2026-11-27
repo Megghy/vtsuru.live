@@ -7,6 +7,7 @@ import { GuardLevel } from '@/api/generated/model'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -33,6 +34,14 @@ const currentSetting = computed(() => goods.value.setting!)
 
 <template>
   <div class="space-y-4">
+    <SettingRow
+      v-model="currentSetting.grantOnly"
+      type="switch"
+      variant="compact"
+      title="仅限定向发放"
+      description="开启后不在公开积分商城展示，也不支持观众自助兑换，仅用于上舰自动发放或主播手动定向发放"
+    />
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField label="重复兑换">
         <div class="flex items-center gap-2 min-h-8">

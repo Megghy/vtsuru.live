@@ -24,6 +24,7 @@ import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
 import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
 import {
   Clapperboard,
+  Gift,
   History,
   ListMusic,
   MessageSquareHeart,
@@ -135,6 +136,14 @@ const USER_WORKSPACE_ITEMS: ManageNavItem[] = [
     description: '各频道积分余额与打卡连签',
     icon: Wallet,
     to: { name: 'bili-user-points' },
+    group: 'user-assets',
+  },
+  {
+    key: 'bili-user-grants',
+    label: '待领取礼物',
+    description: '上舰自动发放与主播定向赠礼',
+    icon: Gift,
+    to: { name: 'bili-user-grants' },
     group: 'user-assets',
   },
   {

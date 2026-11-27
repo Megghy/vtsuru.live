@@ -28,6 +28,7 @@ import {
   postApiPointToggleGoodsPin,
   postApiPointUpdateGoodsStatus,
 } from '@/api/generated/point/point'
+import { fetchOwnerGrants } from '@/api/point-grants'
 import { fetchOwnerOrders } from '@/api/point-orders'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -64,11 +65,12 @@ import { formatGoodsPriceText } from './goods-dialog/goodsFormHelpers'
 import PointCheckInOverview from './PointCheckInOverview.vue'
 import PointGlobalHistoryView from './PointGlobalHistoryView.vue'
 import PointGoodsEditDialog from './PointGoodsEditDialog.vue'
+import PointGrantManage from './PointGrantManage.vue'
 import PointGuardDuplicateManage from './PointGuardDuplicateManage.vue'
 import PointTestPanel from './PointTestPanel.vue'
 import PointUserManage from './PointUserManage.vue'
 
-type MainTab = 'goods' | 'orders' | 'users' | 'settings' | 'test' | 'guard-duplicates'
+type MainTab = 'goods' | 'grants' | 'orders' | 'users' | 'settings' | 'test' | 'guard-duplicates'
 type UsersSubTab = 'list' | 'histories' | 'checkin'
 type GoodsStatusFilter = 'all' | 'onShelf' | 'offShelf' | 'soldOut' | 'lowKey'
 type GoodsViewMode = 'grid' | 'table'
@@ -87,7 +89,7 @@ const usersSubTab = ref<UsersSubTab>('list')
 const realHash = useRouteHash('goods', { mode: 'replace' })
 const rawHash = computed(() => (realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value || 'goods'))
 
-const MAIN_TABS = new Set<MainTab>(['goods', 'orders', 'users', 'settings', 'test', 'guard-duplicates'])
+const MAIN_TABS = new Set<MainTab>(['goods', 'grants', 'orders', 'users', 'settings', 'test', 'guard-duplicates'])
 
 const activeTab = computed<MainTab>({
   get() {
@@ -111,6 +113,9 @@ function openPointSourceSettings() {
 // 订单统计角标
 const orderStatsBadge = ref({ total: 0, pending: 0, inProgress: 0, needTracking: 0 })
 const pendingOrderBadgeCount = computed(() => orderStatsBadge.value.pending + orderStatsBadge.value.inProgress)
+
+// 定向发放角标
+const grantStatsBadge = ref({ unclaimed: 0, failed: 0 })
 
 // 商品数据与筛选
 const goods = ref<ResponsePointGoodModel[]>([])
@@ -150,9 +155,19 @@ async function refreshOrderStatsBadge() {
   }
 }
 
+async function refreshGrantStatsBadge() {
+  try {
+    const res = await fetchOwnerGrants({ page: 1, pageSize: 1 })
+    grantStatsBadge.value = { unclaimed: res.unclaimedCount, failed: res.failedCount }
+  } catch (err) {
+    console.warn('[PointManage] 获取定向发放统计失败', err)
+  }
+}
+
 onMounted(() => {
   void refreshGoods()
   void refreshOrderStatsBadge()
+  void refreshGrantStatsBadge()
 })
 
 function isGoodsSoldOut(item: ResponsePointGoodModel) {
@@ -473,6 +488,28 @@ async function batchDeleteGoods() {
             class="font-mono"
           >
             {{ totalOnShelfCount }}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger
+          value="grants"
+          class="gap-1.5"
+        >
+          <span>定向发放</span>
+          <Badge
+            v-if="grantStatsBadge.failed > 0"
+            variant="destructive"
+            size="xs"
+            class="font-mono"
+          >
+            {{ grantStatsBadge.failed }}
+          </Badge>
+          <Badge
+            v-else-if="grantStatsBadge.unclaimed > 0"
+            variant="secondary"
+            size="xs"
+            class="font-mono"
+          >
+            {{ grantStatsBadge.unclaimed }}
           </Badge>
         </TabsTrigger>
         <TabsTrigger
@@ -950,6 +987,19 @@ async function batchDeleteGoods() {
             </div>
           </div>
         </Spin>
+      </TabsContent>
+
+      <!-- 定向发放 -->
+      <TabsContent
+        value="grants"
+        class="pt-4"
+      >
+        <PointGrantManage
+          v-if="activeTab === 'grants'"
+          :goods-list="goods"
+          @stats-change="grantStatsBadge = $event"
+          @goods-stock-changed="refreshGoods"
+        />
       </TabsContent>
 
       <!-- 订单履约 -->
