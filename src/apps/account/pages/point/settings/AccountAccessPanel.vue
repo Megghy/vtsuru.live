@@ -159,13 +159,37 @@ defineExpose({ reset })
     <template v-else>
       <div
         v-if="usesAccountIdentity"
-        class="point-settings__identity p-3.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 text-xs space-y-1"
+        class="point-settings__identity p-3.5 rounded-lg border text-xs space-y-2"
+        :class="
+          account.biliUserAuthInfo
+            ? 'border-emerald-500/30 bg-emerald-500/5'
+            : 'border-amber-500/30 bg-amber-500/5'
+        "
       >
-        <div class="font-semibold text-emerald-600 dark:text-emerald-400">已绑定 Bilibili 用户身份</div>
-        <div class="text-foreground">
-          {{ account.biliUserAuthInfo?.name }} · UID {{ account.biliUserAuthInfo?.userId }}
-        </div>
-        <div class="text-muted-foreground text-[11px]">可使用 B 站 UID 与本站密码登录。</div>
+        <template v-if="account.biliUserAuthInfo">
+          <div class="font-semibold text-emerald-600 dark:text-emerald-400">已绑定 Bilibili 用户身份</div>
+          <div class="text-foreground">
+            {{ account.biliUserAuthInfo.name }} · UID {{ account.biliUserAuthInfo.userId }}
+          </div>
+          <div class="text-muted-foreground text-[11px]">
+            支持 B 站弹幕一键登录；设置密码后也可使用 B 站 UID 加密码登录。
+          </div>
+        </template>
+        <template v-else>
+          <div class="font-semibold text-amber-600 dark:text-amber-400">尚未绑定 Bilibili 观众身份</div>
+          <div class="text-muted-foreground text-[11px]">
+            绑定后可在用户中心查看各频道积分、订单、视频投稿与点播排队记录。
+          </div>
+          <div>
+            <Button
+              size="xs"
+              variant="outline"
+              @click="$router.push({ name: 'bili-auth', query: { redirect: '/manage/user/settings' } })"
+            >
+              立即绑定 Bilibili
+            </Button>
+          </div>
+        </template>
       </div>
 
       <Empty

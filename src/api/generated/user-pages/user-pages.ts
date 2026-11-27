@@ -89,7 +89,7 @@ export const postApiUserPagesPublish = async (
   return vtsuruMutator<ResponseResultOfString>(getPostApiUserPagesPublishUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateUserPagesModel),
   })
 }
@@ -132,7 +132,7 @@ export const postApiUserPagesSaveDraft = async (
   return vtsuruMutator<ResponseResultOfString>(getPostApiUserPagesSaveDraftUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateUserPagesModel),
   })
 }

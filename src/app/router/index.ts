@@ -150,7 +150,6 @@ const routes: Array<RouteRecordRaw> = [
     component: async () => import('@/apps/web/pages/auth/BiliAuthView.vue'),
     meta: {
       title: 'Bilibili 账户认证',
-      keepAlive: true,
     },
   },
   {
@@ -169,6 +168,22 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'history',
         redirect: (to) => ({ name: 'bili-user-history', query: to.query, hash: to.hash }),
+      },
+      {
+        path: 'qa',
+        redirect: (to) => ({ name: 'bili-user-qa', query: to.query, hash: to.hash }),
+      },
+      {
+        path: 'video-collect',
+        redirect: (to) => ({ name: 'bili-user-video-collect', query: to.query, hash: to.hash }),
+      },
+      {
+        path: 'requests',
+        redirect: (to) => ({ name: 'bili-user-requests', query: to.query, hash: to.hash }),
+      },
+      {
+        path: 'forum',
+        redirect: (to) => ({ name: 'bili-user-forum', query: to.query, hash: to.hash }),
       },
       {
         path: 'settings',

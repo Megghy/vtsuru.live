@@ -265,7 +265,7 @@ onMounted(async () => {
       <p class="text-foreground">你尚未进行 Bilibili 账号认证, 可先浏览礼物，认证后可查看积分并兑换礼物。</p>
       <Button
         size="xs"
-        @click="$router.push({ name: 'bili-auth' })"
+        @click="$router.push({ name: 'bili-auth', query: { redirect: $route.fullPath } })"
       >
         立即认证
       </Button>

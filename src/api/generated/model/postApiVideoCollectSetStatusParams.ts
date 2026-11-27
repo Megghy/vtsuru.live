@@ -11,4 +11,5 @@ export type PostApiVideoCollectSetStatusParams = {
   id?: string
   bvid?: string
   status?: VideoStatus
+  reason?: string
 }

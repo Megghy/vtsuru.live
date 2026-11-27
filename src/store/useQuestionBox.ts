@@ -26,6 +26,7 @@ import {
   postApiQaUpdateTagVisible,
 } from '@/api/generated/qa/qa'
 import { groupQuestionThreads, threadContextOf } from '@/shared/questionThread'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 export type SortMode = 'default' | 'newest' | 'oldest' | 'unreadFirst' | 'repliedFirst' | 'unrepliedFirst'
 
@@ -183,7 +184,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function GetSendQAInfo() {
     isLoadingSend.value = true
     try {
-      const resp = await getApiQaGetSend()
+      const headers = Object.fromEntries(await useBiliAuth().getBiliAuthHeaders())
+      const resp = await getApiQaGetSend(Object.keys(headers).length > 0 ? { headers } : undefined)
       if (resp.code === 200) {
         sendQuestions.value = resp.data
       } else {

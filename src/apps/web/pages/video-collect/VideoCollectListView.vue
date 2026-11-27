@@ -1,28 +1,37 @@
 <script setup lang="ts">
-import Apps24Regular from '@vicons/fluent/es/Apps24Regular'
-import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
-import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
-import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
-import ArrowSwap24Regular from '@vicons/fluent/es/ArrowSwap24Regular'
-import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
-import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
-import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
-import EyeOff24Regular from '@vicons/fluent/es/EyeOff24Regular'
-import Grid24Regular from '@vicons/fluent/es/Grid24Regular'
-import History24Regular from '@vicons/fluent/es/History24Regular'
-import Person24Regular from '@vicons/fluent/es/Person24Regular'
-import PlayCircle24Regular from '@vicons/fluent/es/PlayCircle24Regular'
-import Search24Regular from '@vicons/fluent/es/Search24Regular'
-import Sparkle24Regular from '@vicons/fluent/es/Sparkle24Regular'
-import Trophy24Regular from '@vicons/fluent/es/Trophy24Regular'
-import Video24Regular from '@vicons/fluent/es/Video24Regular'
+import { refDebounced } from '@vueuse/core'
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Eye,
+  EyeOff,
+  LayoutGrid,
+  PlayCircle,
+  Radio,
+  RotateCcw,
+  Search,
+  Shuffle,
+  Sparkles,
+  Trophy,
+  User,
+  Video,
+} from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { ResponseVideoCollectDetail, VideoCollectInfo, VideoData } from '@/api/generated/model'
+import { useAccount } from '@/api/account'
+import type { ReponseVideoCollectVideo, ResponseVideoCollectDetail } from '@/api/generated/model'
 import { VideoStatus } from '@/api/generated/model'
 import { getApiVideoCollectGet } from '@/api/generated/video-collect/video-collect'
-import { formatDuration } from '@/apps/manage/composables/formatters'
+import { setVideoCollectWatched } from '@/api/video-collect-extra'
+import {
+  DEFAULT_VIDEO_COLLECT_STATE,
+  type VideoCollectAction,
+  type VideoCollectState,
+} from '@/apps/obs-store/components/video-collect/types'
+import { useObsBridge } from '@/apps/obs-store/sync'
+import BiliVideoPreviewDialog from '@/shared/components/BiliVideoPreviewDialog.vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -31,18 +40,27 @@ import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
 import { toast } from '@/shared/utils'
+import {
+  buildBiliVideoUrl,
+  formatVideoDuration,
+  getVideoCollectLifecycleLabel,
+  getVideoCollectLifecycleState,
+} from '@/shared/utils/videoCollect'
 
+import VideoCollectDrawStage from './VideoCollectDrawStage.vue'
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
 import VideoCollectResultCard from './VideoCollectResultCard.vue'
+import VideoCollectSequenceStage from './VideoCollectSequenceStage.vue'
 
-type ResultVideo = { info: VideoCollectInfo; video: VideoData }
 type ViewMode = 'list' | 'draw' | 'sequence' | 'flip'
 type WatchFilter = 'all' | 'unwatched' | 'watched'
 type SortOption = 'default' | 'duration-asc' | 'duration-desc' | 'senders-desc'
 
 const route = useRoute()
 const router = useRouter()
+const account = useAccount()
 
 const videoDetail = ref<ResponseVideoCollectDetail | null | undefined>()
 const isLoading = ref(false)
@@ -51,6 +69,7 @@ const mode = ref<ViewMode>('list')
 
 // 过滤与排序状态
 const searchQuery = ref('')
+const debouncedSearch = refDebounced(searchQuery, 180)
 const watchFilter = ref<WatchFilter>('all')
 const sortBy = ref<SortOption>('default')
 
@@ -58,23 +77,43 @@ const sortBy = ref<SortOption>('default')
 const watchedIds = ref<string[]>([])
 const revealedIds = ref<string[]>([])
 const sequenceIndex = ref(0)
-const shuffledVideos = ref<ResultVideo[]>([])
+const shuffledVideos = ref<ReponseVideoCollectVideo[]>([])
 
 // 随机抽取状态
 const drawnIds = ref<string[]>([])
-const drawnHistory = ref<ResultVideo[]>([])
-const drawnVideo = ref<ResultVideo>()
-const drawPreview = ref<ResultVideo>()
+const drawnHistory = ref<ReponseVideoCollectVideo[]>([])
+const drawnVideo = ref<ReponseVideoCollectVideo>()
+const drawPreview = ref<ReponseVideoCollectVideo>()
 const isDrawing = ref(false)
 let drawRunId = 0
+let loadSeq = 0
+
+// 站内播放器弹窗状态
+const playerOpen = ref(false)
+const playerItem = ref<ReponseVideoCollectVideo | null>(null)
+
+// 主播 OBS 联动
+const autoSyncObs = ref(false)
+const obsBridge = useObsBridge<VideoCollectState, VideoCollectAction>({
+  componentId: 'video-collect',
+  channelId: ref('default'),
+  defaultState: DEFAULT_VIDEO_COLLECT_STATE,
+  role: 'controller',
+})
 
 const table = computed(() => videoDetail.value?.table)
+const isOwner = computed(() => Boolean(account.value?.id && table.value && account.value.id === table.value.owner.id))
+const lifecycle = computed(() => (table.value ? getVideoCollectLifecycleState(table.value) : 'finished'))
+const isCollecting = computed(() => lifecycle.value === 'active')
+const lifecycleLabel = computed(() => getVideoCollectLifecycleLabel(lifecycle.value))
 
 const acceptedVideos = computed(() =>
   (videoDetail.value?.videos ?? []).filter((item) => item.info.status === VideoStatus.Accepted),
 )
 const totalDuration = computed(() => acceptedVideos.value.reduce((sum, item) => sum + item.video.length, 0))
-const watchedVideos = computed(() => acceptedVideos.value.filter((item) => watchedIds.value.includes(item.info.bvid)))
+const watchedVideos = computed(() =>
+  acceptedVideos.value.filter((item) => watchedIds.value.includes(item.info.bvid ?? '')),
+)
 const watchedDuration = computed(() => watchedVideos.value.reduce((sum, item) => sum + item.video.length, 0))
 const progressPercentage = computed(() =>
   totalDuration.value === 0 ? 0 : Math.round((watchedDuration.value / totalDuration.value) * 100),
@@ -83,34 +122,31 @@ const isAllWatched = computed(
   () => acceptedVideos.value.length > 0 && watchedVideos.value.length === acceptedVideos.value.length,
 )
 
-// 列表模式下的筛选与排序
 const filteredVideos = computed(() => {
   let list = [...acceptedVideos.value]
 
-  // 搜索关键字（标题、UP主、推荐人、推荐理由、BV号）
-  const query = searchQuery.value.trim().toLowerCase()
+  const query = debouncedSearch.value.trim().toLowerCase()
   if (query) {
     list = list.filter((item) => {
       const titleMatch = item.video.title.toLowerCase().includes(query)
       const ownerMatch = item.video.ownerName.toLowerCase().includes(query)
-      const bvidMatch = item.info.bvid.toLowerCase().includes(query)
+      const bvidMatch = (item.info.bvid ?? '').toLowerCase().includes(query)
+      const partitionMatch = (item.video.partitionName ?? '').toLowerCase().includes(query)
       const senderMatch = item.info.senders.some(
         (s) =>
           (s.sender && s.sender.toLowerCase().includes(query)) ||
           (s.description && s.description.toLowerCase().includes(query)),
       )
-      return titleMatch || ownerMatch || bvidMatch || senderMatch
+      return titleMatch || ownerMatch || bvidMatch || partitionMatch || senderMatch
     })
   }
 
-  // 观看状态过滤
   if (watchFilter.value === 'unwatched') {
-    list = list.filter((item) => !watchedIds.value.includes(item.info.bvid))
+    list = list.filter((item) => !watchedIds.value.includes(item.info.bvid ?? ''))
   } else if (watchFilter.value === 'watched') {
-    list = list.filter((item) => watchedIds.value.includes(item.info.bvid))
+    list = list.filter((item) => watchedIds.value.includes(item.info.bvid ?? ''))
   }
 
-  // 排序
   if (sortBy.value === 'duration-asc') {
     list.sort((a, b) => a.video.length - b.video.length)
   } else if (sortBy.value === 'duration-desc') {
@@ -124,7 +160,6 @@ const filteredVideos = computed(() => {
 
 const sequenceVideo = computed(() => acceptedVideos.value[sequenceIndex.value])
 const drawDisplayVideo = computed(() => drawnVideo.value ?? drawPreview.value)
-const isCollecting = computed(() => Boolean(table.value && !table.value.isFinish && table.value.endAt > Date.now()))
 
 const sortOptions = [
   { label: '默认投稿顺序', value: 'default' },
@@ -133,8 +168,86 @@ const sortOptions = [
   { label: '推荐人数：由多到少', value: 'senders-desc' },
 ]
 
-await loadData()
-watch(() => route.params.id, loadData)
+function currentId() {
+  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  if (!id) throw new Error('缺少征集 ID')
+  return id
+}
+
+function progressStorageKey() {
+  return `video-collect-result:${table.value?.id ?? currentId()}`
+}
+
+function loadLocalProgress(): string[] {
+  try {
+    const value = JSON.parse(localStorage.getItem(progressStorageKey()) ?? '[]')
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    localStorage.removeItem(progressStorageKey())
+    return []
+  }
+}
+
+function saveLocalProgress() {
+  localStorage.setItem(progressStorageKey(), JSON.stringify(watchedIds.value))
+}
+
+function syncInitialWatched() {
+  const serverWatched = acceptedVideos.value
+    .filter((item) => item.info.watched && item.info.bvid)
+    .map((item) => item.info.bvid as string)
+  const localWatched = loadLocalProgress()
+
+  if (isOwner.value) {
+    watchedIds.value = serverWatched
+    saveLocalProgress()
+  } else {
+    watchedIds.value = [...new Set([...serverWatched, ...localWatched])]
+  }
+}
+
+async function persistWatchedChange(bvids: string[], watched: boolean) {
+  saveLocalProgress()
+  if (!isOwner.value || !table.value || bvids.length === 0) return
+  try {
+    await setVideoCollectWatched({ id: table.value.id, bvids, watched })
+    for (const item of acceptedVideos.value) {
+      if (item.info.bvid && bvids.includes(item.info.bvid)) {
+        item.info.watched = watched
+      }
+    }
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : '同步已看状态到服务端失败')
+  }
+}
+
+async function loadData() {
+  const seq = ++loadSeq
+  isLoading.value = true
+  loadError.value = null
+  try {
+    const response = await getApiVideoCollectGet({ id: currentId() })
+    if (seq !== loadSeq) return
+    if (response.code === 200) {
+      videoDetail.value = response.data
+      syncInitialWatched()
+    } else if (response.code === 404) {
+      videoDetail.value = null
+    } else {
+      throw new Error(response.message || '加载征集数据失败')
+    }
+  } catch (error) {
+    if (seq !== loadSeq) return
+    console.error('获取视频征集结果失败', error)
+    loadError.value = error instanceof Error ? error.message : '网络异常，加载失败'
+    toast.error(loadError.value)
+  } finally {
+    if (seq === loadSeq) isLoading.value = false
+  }
+}
+
+void loadData()
+watch(() => route.params.id, () => void loadData())
 watch(
   () => acceptedVideos.value.map((item) => item.info.bvid).join(','),
   () => shuffleDeck(),
@@ -149,76 +262,58 @@ watch(mode, (newMode) => {
   }
 })
 
-function currentId() {
-  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-  if (!id) throw new Error('缺少征集 ID')
-  return id
-}
-
-function progressStorageKey() {
-  return `video-collect-result:${currentId()}`
-}
-
-function loadProgress() {
-  try {
-    const value = JSON.parse(localStorage.getItem(progressStorageKey()) ?? '[]')
-    watchedIds.value = Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
-  } catch {
-    watchedIds.value = []
-    localStorage.removeItem(progressStorageKey())
-  }
-}
-
-function saveProgress() {
-  localStorage.setItem(progressStorageKey(), JSON.stringify(watchedIds.value))
-}
-
-async function loadData() {
-  isLoading.value = true
-  loadError.value = null
-  try {
-    const response = await getApiVideoCollectGet({
-      id: currentId(),
-    })
-    if (response.code === 200) {
-      videoDetail.value = response.data
-      loadProgress()
-    } else if (response.code === 404) {
-      videoDetail.value = null
-    } else {
-      throw new Error(response.message || '加载征集数据失败')
-    }
-  } catch (error) {
-    console.error('获取视频征集结果失败', error)
-    loadError.value = error instanceof Error ? error.message : '网络异常，加载失败'
-    toast.error(loadError.value)
-  } finally {
-    isLoading.value = false
+function pushToObs(item: ReponseVideoCollectVideo, silent = false) {
+  if (!isOwner.value || !table.value || !item.info.bvid) return
+  const index = Math.max(
+    0,
+    acceptedVideos.value.findIndex((v) => v.info.bvid === item.info.bvid),
+  )
+  obsBridge.updateState({
+    mode: 'watch',
+    selectedTableId: table.value.id,
+    currentIndex: index,
+    currentBvid: item.info.bvid,
+    useSampleData: false,
+  })
+  if (!silent) {
+    toast.success(`已推送至 OBS 角标：${item.video.title}`)
   }
 }
 
 function toggleWatched(bvid: string) {
-  if (watchedIds.value.includes(bvid)) {
-    watchedIds.value = watchedIds.value.filter((id) => id !== bvid)
-  } else {
+  if (!bvid) return
+  const nextWatched = !watchedIds.value.includes(bvid)
+  if (nextWatched) {
     watchedIds.value = [...watchedIds.value, bvid]
+  } else {
+    watchedIds.value = watchedIds.value.filter((id) => id !== bvid)
   }
-  saveProgress()
+  void persistWatchedChange([bvid], nextWatched)
 }
 
-function markWatched(item: ResultVideo) {
-  if (watchedIds.value.includes(item.info.bvid)) return
-  watchedIds.value = [...watchedIds.value, item.info.bvid]
-  saveProgress()
+function markWatched(item: ReponseVideoCollectVideo) {
+  const bvid = item.info.bvid
+  if (!bvid || watchedIds.value.includes(bvid)) return
+  watchedIds.value = [...watchedIds.value, bvid]
+  void persistWatchedChange([bvid], true)
 }
 
-function openVideo(item: ResultVideo) {
+function openVideo(item: ReponseVideoCollectVideo) {
   markWatched(item)
-  window.open(`https://www.bilibili.com/video/${item.info.bvid}`, '_blank', 'noopener,noreferrer')
+  if (autoSyncObs.value) pushToObs(item, true)
+  window.open(buildBiliVideoUrl(item.info.bvid, item.info.page), '_blank', 'noopener,noreferrer')
 }
 
-// 翻牌相关
+function playVideoInline(item: ReponseVideoCollectVideo) {
+  markWatched(item)
+  if (autoSyncObs.value) pushToObs(item, true)
+  playerItem.value = item
+  playerOpen.value = true
+}
+
+// 翻牌
 function toggleReveal(bvid: string) {
+  if (!bvid) return
   if (revealedIds.value.includes(bvid)) {
     revealedIds.value = revealedIds.value.filter((id) => id !== bvid)
   } else {
@@ -227,7 +322,7 @@ function toggleReveal(bvid: string) {
 }
 
 function revealAll() {
-  revealedIds.value = shuffledVideos.value.map((v) => v.info.bvid)
+  revealedIds.value = shuffledVideos.value.map((v) => v.info.bvid).filter((b): b is string => Boolean(b))
 }
 
 function hideAll() {
@@ -244,8 +339,8 @@ function shuffleDeck() {
   revealedIds.value = []
 }
 
-// 随机抽取算法
-function randomVideo(videos: ResultVideo[]) {
+// 随机抽取
+function randomVideo(videos: ReponseVideoCollectVideo[]) {
   return videos[Math.floor(Math.random() * videos.length)]
 }
 
@@ -253,7 +348,7 @@ async function drawRandomVideo() {
   if (isDrawing.value || acceptedVideos.value.length === 0) return
 
   const runId = ++drawRunId
-  let pool = acceptedVideos.value.filter((item) => !drawnIds.value.includes(item.info.bvid))
+  let pool = acceptedVideos.value.filter((item) => !drawnIds.value.includes(item.info.bvid ?? ''))
   if (pool.length === 0) {
     drawnIds.value = []
     pool = acceptedVideos.value
@@ -274,12 +369,15 @@ async function drawRandomVideo() {
   const selected = randomVideo(pool)
   drawnVideo.value = selected
   drawPreview.value = undefined
-  drawnIds.value = [...drawnIds.value, selected.info.bvid]
+  if (selected.info.bvid) {
+    drawnIds.value = [...drawnIds.value, selected.info.bvid]
+  }
   drawnHistory.value = [selected, ...drawnHistory.value.filter((v) => v.info.bvid !== selected.info.bvid)]
   isDrawing.value = false
+  if (autoSyncObs.value) pushToObs(selected, true)
 }
 
-// 逐个观看相关
+// 逐个观看
 function openSequenceVideo() {
   if (!sequenceVideo.value) return
   openVideo(sequenceVideo.value)
@@ -288,21 +386,35 @@ function openSequenceVideo() {
   }
 }
 
+function playSequenceVideo() {
+  if (!sequenceVideo.value) return
+  playVideoInline(sequenceVideo.value)
+}
+
 function skipSequenceVideo() {
   if (sequenceIndex.value < acceptedVideos.value.length) {
     sequenceIndex.value++
+    if (autoSyncObs.value && sequenceVideo.value) {
+      pushToObs(sequenceVideo.value, true)
+    }
   }
 }
 
 function prevSequenceVideo() {
   if (sequenceIndex.value > 0) {
     sequenceIndex.value--
+    if (autoSyncObs.value && sequenceVideo.value) {
+      pushToObs(sequenceVideo.value, true)
+    }
   }
 }
 
 function setSequenceIndex(idx: number) {
   if (idx >= 0 && idx < acceptedVideos.value.length) {
     sequenceIndex.value = idx
+    if (autoSyncObs.value && sequenceVideo.value) {
+      pushToObs(sequenceVideo.value, true)
+    }
   }
 }
 
@@ -311,6 +423,7 @@ function restartSequence() {
 }
 
 function resetProgress() {
+  const prevWatched = [...watchedIds.value]
   watchedIds.value = []
   revealedIds.value = []
   sequenceIndex.value = 0
@@ -318,7 +431,7 @@ function resetProgress() {
   drawnHistory.value = []
   drawnVideo.value = undefined
   drawPreview.value = undefined
-  saveProgress()
+  void persistWatchedChange(prevWatched, false)
   toast.success('已重置所有进度')
 }
 
@@ -328,12 +441,12 @@ function resetFilter() {
 }
 
 function handleKeydown(e: KeyboardEvent) {
-  const target = e.target as HTMLElement
-  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
+  const target = e.target as HTMLElement | null
+  if (playerOpen.value || (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'))) return
 
   if (mode.value === 'draw' && e.code === 'Space') {
     e.preventDefault()
-    drawRandomVideo()
+    void drawRandomVideo()
   } else if (mode.value === 'sequence') {
     if (e.code === 'ArrowRight' || e.code === 'Space') {
       e.preventDefault()
@@ -352,10 +465,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 <template>
   <VideoCollectPageShell :table="table">
     <main
-      class="w-[min(calc(100%-32px),1200px)] max-w-[var(--vtsuru-page-max-width,1200px)] min-w-0 min-h-screen min-h-[100svh] mx-auto pt-9 pb-16 box-border"
+      class="w-[min(calc(100%-32px),1200px)] max-w-[var(--vtsuru-page-max-width,1200px)] min-w-0 min-h-screen min-h-[100svh] mx-auto pt-8 pb-16 box-border"
     >
       <div
-        v-if="isLoading && !videoDetail"
+        v-if="isLoading && videoDetail === undefined"
         class="py-24 flex justify-center"
       >
         <Spin />
@@ -371,7 +484,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
         <Button
           variant="outline"
           class="mt-2"
-          @click="router.push({ name: 'home' })"
+          @click="router.push({ name: 'index' })"
         >
           返回首页
         </Button>
@@ -385,13 +498,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
         <h2 class="text-2xl font-bold text-destructive">加载结果失败</h2>
         <p class="text-sm text-muted-foreground">{{ loadError }}</p>
         <Button
-          class="mt-2 flex items-center gap-1.5 mx-auto"
+          class="mt-2 gap-1.5 mx-auto"
           @click="loadData"
         >
-          <component
-            :is="ArrowClockwise24Regular"
-            class="size-4"
-          />
+          <RotateCcw class="size-3.5" />
           重新加载
         </Button>
       </div>
@@ -399,53 +509,55 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
       <!-- 正常内容展示 -->
       <template v-else-if="videoDetail && table">
         <!-- 头部信息 -->
-        <header class="result-header flex items-start justify-between gap-4">
-          <div
-            class="result-heading space-y-1.5"
-            :style="{
-              color: 'var(--vtsuru-page-text)',
-              '--foreground': 'var(--vtsuru-page-text)',
-              '--muted-foreground': 'var(--vtsuru-page-text-muted)',
-            }"
-          >
+        <header class="result-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div class="result-heading space-y-1.5 min-w-0 flex-1">
             <Button
               variant="link"
               size="xs"
               class="owner-link h-auto p-0 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-normal"
               @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
             >
-              <component
-                :is="Person24Regular"
-                class="size-3.5"
-              />
+              <User class="size-3.5" />
               <span>{{ table.owner.name }}</span>
               <span class="owner-suffix opacity-75">的视频征集</span>
             </Button>
-            <div class="title-row flex items-center gap-2.5">
-              <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
+            <div class="title-row flex items-center flex-wrap gap-2.5">
+              <h1 class="text-2xl font-bold tracking-tight min-w-0 break-words">{{ table.name }}</h1>
               <Badge :variant="isCollecting ? 'default' : 'secondary'">
-                {{ isCollecting ? '征集中' : '已结束' }}
+                {{ lifecycleLabel }}
               </Badge>
             </div>
             <p
               v-if="table.description"
-              class="table-description text-xs text-muted-foreground leading-relaxed max-w-2xl"
+              class="table-description text-xs text-muted-foreground leading-relaxed max-w-2xl break-words"
             >
               {{ table.description }}
             </p>
           </div>
-          <div class="header-actions">
+
+          <div class="header-actions flex items-center flex-wrap gap-2 shrink-0">
+            <SimpleTooltip
+              v-if="isOwner"
+              content="开启后，切播、播放或抽中视频时自动同步到 OBS 视频征集角标"
+            >
+              <Button
+                :variant="autoSyncObs ? 'default' : 'outline'"
+                class="gap-1.5"
+                @click="autoSyncObs = !autoSyncObs"
+              >
+                <Radio class="size-3.5" />
+                {{ autoSyncObs ? 'OBS 联动已开启' : 'OBS 角标联动' }}
+              </Button>
+            </SimpleTooltip>
+
             <Button
               v-if="isCollecting"
               variant="default"
-              class="flex items-center gap-1.5"
+              class="gap-1.5"
               @click="router.push({ name: 'video-collect', params: { id: table.shortId } })"
             >
               推荐视频
-              <component
-                :is="ArrowRight24Regular"
-                class="size-4"
-              />
+              <ArrowRight class="size-3.5" />
             </Button>
           </div>
         </header>
@@ -455,66 +567,57 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
           class="result-summary-grid my-6 grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs"
           aria-label="征集统计与观看进度"
         >
-          <div
-            class="summary-card stat-videos p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
-          >
-            <div class="stat-icon-wrapper size-9 rounded-lg bg-primary/10 text-primary flex-center shrink-0">
-              <component
-                :is="Video24Regular"
-                class="size-5"
-              />
+          <div class="summary-card p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3 min-w-0">
+            <div class="size-9 rounded-lg bg-primary/10 text-primary flex-center shrink-0">
+              <Video class="size-4" />
             </div>
-            <div class="stat-content flex flex-col">
-              <span class="stat-label text-muted-foreground">通过视频</span>
-              <strong class="stat-value text-base font-bold">{{ acceptedVideos.length }}</strong>
+            <div class="flex flex-col min-w-0">
+              <span class="text-muted-foreground">通过视频</span>
+              <strong class="text-base font-bold font-mono tabular-nums">{{ acceptedVideos.length }}</strong>
+            </div>
+          </div>
+
+          <div class="summary-card p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3 min-w-0">
+            <div class="size-9 rounded-lg bg-sky-500/10 text-sky-500 flex-center shrink-0">
+              <Clock class="size-4" />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-muted-foreground">总时长</span>
+              <strong class="text-base font-bold font-mono tabular-nums truncate">
+                {{ formatVideoDuration(totalDuration) }}
+              </strong>
+            </div>
+          </div>
+
+          <div class="summary-card p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3 min-w-0">
+            <div class="size-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex-center shrink-0">
+              <CheckCircle2 class="size-4" />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-muted-foreground">已观看</span>
+              <strong class="text-base font-bold font-mono tabular-nums">
+                {{ watchedVideos.length }} / {{ acceptedVideos.length }}
+              </strong>
             </div>
           </div>
 
           <div
-            class="summary-card stat-duration p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
-          >
-            <div class="stat-icon-wrapper size-9 rounded-lg bg-blue-500/10 text-blue-500 flex-center shrink-0">
-              <component
-                :is="Clock24Regular"
-                class="size-5"
-              />
-            </div>
-            <div class="stat-content flex flex-col">
-              <span class="stat-label text-muted-foreground">总时长</span>
-              <strong class="stat-value text-base font-bold font-mono">{{ formatDuration(totalDuration) }}</strong>
-            </div>
-          </div>
-
-          <div
-            class="summary-card stat-watched p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
-          >
-            <div class="stat-icon-wrapper size-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex-center shrink-0">
-              <component
-                :is="CheckmarkCircle24Regular"
-                class="size-5"
-              />
-            </div>
-            <div class="stat-content flex flex-col">
-              <span class="stat-label text-muted-foreground">已观看</span>
-              <strong class="stat-value text-base font-bold"
-                >{{ watchedVideos.length }} / {{ acceptedVideos.length }}</strong
-              >
-            </div>
-          </div>
-
-          <div
-            class="summary-card progress-card p-3.5 rounded-xl border border-border/80 bg-card flex flex-col justify-between"
+            class="summary-card p-3.5 rounded-xl border border-border/80 bg-card flex flex-col justify-between min-w-0"
             :class="{ 'border-emerald-500/50 bg-emerald-500/5': isAllWatched }"
           >
-            <div class="progress-info flex-between">
-              <div class="progress-title flex items-center gap-1.5 font-medium">
-                <component
-                  :is="isAllWatched ? Trophy24Regular : Sparkle24Regular"
-                  class="size-4 text-primary"
+            <div class="flex-between gap-2">
+              <div class="flex items-center gap-1.5 font-medium min-w-0">
+                <Trophy
+                  v-if="isAllWatched"
+                  class="size-4 text-primary shrink-0"
                 />
-                <span>观看进度</span>
+                <Sparkles
+                  v-else
+                  class="size-4 text-primary shrink-0"
+                />
+                <span class="truncate">观看进度</span>
               </div>
-              <strong class="progress-value font-mono font-bold">{{ progressPercentage }}%</strong>
+              <strong class="font-mono tabular-nums font-bold">{{ progressPercentage }}%</strong>
             </div>
             <Progress
               :model-value="progressPercentage"
@@ -526,16 +629,14 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
         <!-- 工作台区域 -->
         <section class="result-workspace space-y-4">
           <!-- 模式切换与工具栏 -->
-          <div
-            class="workspace-toolbar flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-xl border border-border/80 bg-muted/20"
-          >
-            <!-- 模式 Segmented 选择器 -->
+          <div class="workspace-toolbar flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-xl border border-border/80 bg-muted/20">
             <ToggleGroup
               type="single"
+              class="w-full sm:w-auto grid grid-cols-2 sm:inline-flex !h-auto"
               :model-value="mode"
               @update:model-value="
                 (val) => {
-                  if (val) mode = val as any
+                  if (val) mode = val as ViewMode
                 }
               "
             >
@@ -543,56 +644,40 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 value="list"
                 class="gap-1.5"
               >
-                <component
-                  :is="Grid24Regular"
-                  class="size-3.5"
-                />
+                <LayoutGrid class="size-3.5" />
                 全部视频
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="draw"
                 class="gap-1.5"
               >
-                <component
-                  :is="ArrowSwap24Regular"
-                  class="size-3.5"
-                />
+                <Shuffle class="size-3.5" />
                 随机抽取
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="sequence"
                 class="gap-1.5"
               >
-                <component
-                  :is="PlayCircle24Regular"
-                  class="size-3.5"
-                />
+                <PlayCircle class="size-3.5" />
                 逐个观看
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="flip"
                 class="gap-1.5"
               >
-                <component
-                  :is="Apps24Regular"
-                  class="size-3.5"
-                />
+                <Sparkles class="size-3.5" />
                 随机翻牌
               </ToggleGroupItem>
             </ToggleGroup>
 
-            <!-- 各模式对应的快捷操作区 -->
-            <div class="toolbar-actions flex items-center gap-2 flex-wrap text-xs">
-              <!-- 列表模式：搜索、筛选、排序 -->
+            <!-- 各模式快捷操作区 -->
+            <div class="toolbar-actions flex items-center gap-2 flex-wrap text-xs w-full sm:w-auto">
               <template v-if="mode === 'list'">
-                <div class="relative w-44">
-                  <component
-                    :is="Search24Regular"
-                    class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  />
+                <div class="relative flex-1 sm:flex-none sm:w-48">
+                  <Search class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     v-model="searchQuery"
-                    placeholder="搜索标题、UP 主..."
+                    placeholder="搜索标题、UP 主、分区..."
                     class="pl-8"
                   />
                 </div>
@@ -603,7 +688,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                   :model-value="watchFilter"
                   @update:model-value="
                     (val) => {
-                      if (val) watchFilter = val as any
+                      if (val) watchFilter = val as WatchFilter
                     }
                   "
                 >
@@ -614,7 +699,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
                 <div class="w-36">
                   <Select v-model="sortBy">
-                    <SelectTrigger>
+                    <SelectTrigger class="w-full">
                       <SelectValue placeholder="排序方式" />
                     </SelectTrigger>
                     <SelectContent>
@@ -630,47 +715,36 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 </div>
               </template>
 
-              <!-- 翻牌模式快捷动作 -->
               <template v-if="mode === 'flip'">
-                <span class="text-muted-foreground text-xs font-mono">
+                <span class="text-muted-foreground text-xs font-mono tabular-nums">
                   已揭晓 {{ revealedIds.length }} / {{ shuffledVideos.length }}
                 </span>
                 <Button
                   variant="outline"
-                  class="flex items-center gap-1"
+                  class="gap-1"
                   @click="shuffleDeck"
                 >
-                  <component
-                    :is="ArrowSwap24Regular"
-                    class="size-3.5"
-                  />
+                  <Shuffle class="size-3.5" />
                   重新洗牌
                 </Button>
                 <Button
                   variant="outline"
-                  class="flex items-center gap-1"
+                  class="gap-1"
                   @click="revealAll"
                 >
-                  <component
-                    :is="Eye24Regular"
-                    class="size-3.5"
-                  />
+                  <Eye class="size-3.5" />
                   全部翻开
                 </Button>
                 <Button
                   variant="outline"
-                  class="flex items-center gap-1"
+                  class="gap-1"
                   @click="hideAll"
                 >
-                  <component
-                    :is="EyeOff24Regular"
-                    class="size-3.5"
-                  />
+                  <EyeOff class="size-3.5" />
                   全部盖上
                 </Button>
               </template>
 
-              <!-- 重置观看进度 -->
               <Popconfirm
                 v-if="watchedIds.length > 0 || drawnIds.length > 0"
                 title="确定重置进度？"
@@ -681,12 +755,9 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 <template #trigger>
                   <Button
                     variant="ghost"
-                    class="text-muted-foreground hover:text-destructive flex items-center gap-1"
+                    class="text-muted-foreground hover:text-destructive gap-1"
                   >
-                    <component
-                      :is="ArrowClockwise24Regular"
-                      class="size-3.5"
-                    />
+                    <RotateCcw class="size-3.5" />
                     重置进度
                   </Button>
                 </template>
@@ -695,9 +766,8 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             </div>
           </div>
 
-          <!-- 模式内容切换区 -->
+          <!-- 模式内容区 -->
           <div class="mode-stage-wrapper">
-            <!-- 空数据状态 -->
             <div
               v-if="acceptedVideos.length === 0"
               class="text-center py-16 space-y-2"
@@ -735,262 +805,101 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                   :index="index"
                   presentation="plain"
                   :revealed="true"
-                  :watched="watchedIds.includes(item.info.bvid)"
+                  :watched="watchedIds.includes(item.info.bvid ?? '')"
+                  :can-push-obs="isOwner"
                   @select="openVideo(item)"
-                  @toggle-watched="toggleWatched(item.info.bvid)"
+                  @play="playVideoInline(item)"
+                  @push-to-obs="pushToObs(item)"
+                  @toggle-watched="item.info.bvid && toggleWatched(item.info.bvid)"
                 />
               </div>
             </template>
 
             <!-- 模式 2：随机抽取 -->
-            <template v-else-if="mode === 'draw'">
-              <div class="draw-stage max-w-xl mx-auto space-y-4">
-                <div class="draw-stage-header flex-between text-xs text-muted-foreground">
-                  <div class="draw-round-info flex items-center gap-1.5 font-mono">
-                    <component
-                      :is="ArrowSwap24Regular"
-                      class="size-3.5"
-                    />
-                    <span>本轮已抽取</span>
-                    <strong class="text-foreground">{{ drawnIds.length }} / {{ acceptedVideos.length }}</strong>
-                  </div>
-                  <span class="draw-shortcut-tip text-[11px]">提示：可按空格键快捷抽取</span>
-                </div>
-
-                <div
-                  class="draw-display-box"
-                  :class="{ 'opacity-80 scale-[0.99]': isDrawing }"
-                >
-                  <VideoCollectResultCard
-                    v-if="drawDisplayVideo"
-                    :key="`draw-${drawDisplayVideo.info.bvid}`"
-                    :item="drawDisplayVideo"
-                    :index="acceptedVideos.indexOf(drawDisplayVideo)"
-                    presentation="plain"
-                    :featured="true"
-                    :revealed="true"
-                    :watched="watchedIds.includes(drawDisplayVideo.info.bvid)"
-                    @select="drawnVideo && openVideo(drawnVideo)"
-                    @toggle-watched="drawnVideo && toggleWatched(drawnVideo.info.bvid)"
-                  />
-                  <Button
-                    v-else
-                    variant="outline"
-                    class="draw-trigger-placeholder w-full aspect-video rounded-xl border-2 border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-muted/40 transition flex-col-center gap-2 text-muted-foreground hover:text-foreground h-auto p-4"
-                    @click="drawRandomVideo"
-                  >
-                    <div class="placeholder-icon size-12 rounded-full bg-primary/10 text-primary flex-center">
-                      <component
-                        :is="Sparkle24Regular"
-                        class="size-6"
-                      />
-                    </div>
-                    <strong class="text-sm">点击开始随机抽取</strong>
-                    <span class="text-xs text-muted-foreground">或按键盘空格键</span>
-                  </Button>
-                </div>
-
-                <div class="draw-actions-row flex-center gap-3 pt-2">
-                  <Button
-                    v-if="drawnVideo"
-                    variant="outline"
-                    size="lg"
-                    class="flex items-center gap-1.5"
-                    @click="openVideo(drawnVideo)"
-                  >
-                    在哔哩哔哩打开
-                    <component
-                      :is="ArrowRight24Regular"
-                      class="size-4"
-                    />
-                  </Button>
-                  <Button
-                    size="lg"
-                    :disabled="isDrawing"
-                    class="main-draw-btn flex items-center gap-1.5 px-8"
-                    @click="drawRandomVideo"
-                  >
-                    <component
-                      :is="Sparkle24Regular"
-                      class="size-4"
-                    />
-                    {{ drawnVideo ? '继续抽取下一个' : '开始抽取' }}
-                  </Button>
-                </div>
-
-                <!-- 历史抽取记录流 -->
-                <div
-                  v-if="drawnHistory.length > 0"
-                  class="drawn-history-stream space-y-2 pt-4 border-t border-border/60"
-                >
-                  <div class="history-title flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                    <component
-                      :is="History24Regular"
-                      class="size-3.5"
-                    />
-                    <span>抽取历史 ({{ drawnHistory.length }})</span>
-                  </div>
-                  <div class="history-scroll-track flex gap-2.5 overflow-x-auto pb-2">
-                    <div
-                      v-for="histItem in drawnHistory"
-                      :key="`hist-${histItem.info.bvid}`"
-                      class="history-item-pill flex items-center gap-2 p-1.5 pr-3 rounded-lg border border-border/80 bg-card hover:border-primary/50 cursor-pointer shrink-0 transition"
-                      :class="{ 'border-primary bg-primary/5': drawnVideo?.info.bvid === histItem.info.bvid }"
-                      @click="drawnVideo = histItem"
-                    >
-                      <img
-                        :src="histItem.video.cover.replace('http://', 'https://')"
-                        :alt="histItem.video.title"
-                        class="hist-thumb size-9 rounded object-cover"
-                      />
-                      <div class="hist-info flex flex-col text-xs max-w-36">
-                        <span class="hist-name font-medium truncate">{{ histItem.video.title }}</span>
-                        <span class="hist-sender text-[11px] text-muted-foreground truncate">{{
-                          histItem.info.senders[0]?.sender || histItem.video.ownerName
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
+            <VideoCollectDrawStage
+              v-else-if="mode === 'draw'"
+              :accepted-videos="acceptedVideos"
+              :drawn-ids="drawnIds"
+              :drawn-history="drawnHistory"
+              :drawn-video="drawnVideo"
+              :draw-display-video="drawDisplayVideo"
+              :is-drawing="isDrawing"
+              :watched-ids="watchedIds"
+              :can-push-obs="isOwner"
+              @draw="drawRandomVideo"
+              @select-video="openVideo"
+              @play-video="playVideoInline"
+              @push-to-obs="pushToObs"
+              @toggle-watched="toggleWatched"
+              @select-history="(item) => (drawnVideo = item)"
+            />
 
             <!-- 模式 3：逐个观看 -->
-            <template v-else-if="mode === 'sequence'">
-              <div
-                v-if="sequenceVideo"
-                class="sequence-stage max-w-2xl mx-auto space-y-4"
-              >
-                <div class="sequence-header flex-between text-xs text-muted-foreground">
-                  <div class="sequence-nav-info flex items-center gap-1.5 font-mono">
-                    <component
-                      :is="PlayCircle24Regular"
-                      class="size-3.5 text-primary"
-                    />
-                    <span>当前视频</span>
-                    <strong class="text-foreground">{{ sequenceIndex + 1 }} / {{ acceptedVideos.length }}</strong>
-                  </div>
-                  <span class="sequence-tip text-[11px]">左右方向键快速切歌 / 空格键播放</span>
-                </div>
-
-                <VideoCollectResultCard
-                  :key="`seq-${sequenceVideo.info.bvid}`"
-                  :item="sequenceVideo"
-                  :index="sequenceIndex"
-                  presentation="plain"
-                  :featured="true"
-                  :revealed="true"
-                  :watched="watchedIds.includes(sequenceVideo.info.bvid)"
-                  @select="openSequenceVideo"
-                  @toggle-watched="toggleWatched(sequenceVideo.info.bvid)"
-                />
-
-                <div class="sequence-controls flex-center gap-3">
-                  <Button
-                    variant="outline"
-                    :disabled="sequenceIndex === 0"
-                    class="flex items-center gap-1.5"
-                    @click="prevSequenceVideo"
-                  >
-                    <component
-                      :is="ArrowLeft24Regular"
-                      class="size-4"
-                    />
-                    上一个
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    @click="skipSequenceVideo"
-                  >
-                    跳过此视频
-                  </Button>
-                  <Button
-                    class="flex items-center gap-1.5"
-                    @click="openSequenceVideo"
-                  >
-                    打开并在 B 站播放
-                    <component
-                      :is="ArrowRight24Regular"
-                      class="size-4"
-                    />
-                  </Button>
-                </div>
-
-                <!-- 底部播放列表 -->
-                <div class="sequence-filmstrip space-y-2 pt-4 border-t border-border/60">
-                  <div class="filmstrip-label text-xs font-semibold text-muted-foreground">播放列表</div>
-                  <div class="filmstrip-track flex gap-2 overflow-x-auto pb-2">
-                    <Button
-                      v-for="(item, idx) in acceptedVideos"
-                      :key="`strip-${item.info.bvid}`"
-                      variant="outline"
-                      class="filmstrip-item h-auto flex items-center gap-2 p-1.5 pr-2.5 rounded-lg border border-border/80 bg-card hover:border-primary/50 text-left shrink-0 transition font-normal"
-                      :class="{
-                        'border-primary bg-primary/5': idx === sequenceIndex,
-                        'opacity-60': watchedIds.includes(item.info.bvid),
-                      }"
-                      @click="setSequenceIndex(idx)"
-                    >
-                      <span class="strip-index font-mono text-[11px] text-muted-foreground w-4 text-center">{{
-                        idx + 1
-                      }}</span>
-                      <img
-                        :src="item.video.cover.replace('http://', 'https://')"
-                        :alt="item.video.title"
-                        class="strip-thumb size-8 rounded object-cover"
-                      />
-                      <div class="strip-details flex flex-col text-xs max-w-32">
-                        <span class="strip-title truncate font-medium">{{ item.video.title }}</span>
-                        <span class="strip-duration font-mono text-[10px] text-muted-foreground">{{
-                          formatDuration(item.video.length)
-                        }}</span>
-                      </div>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                v-else
-                class="text-center py-16 space-y-3"
-              >
-                <h3 class="text-lg font-bold">本轮征集视频已全部浏览完毕</h3>
-                <p class="text-xs text-muted-foreground">
-                  已累计观看 {{ watchedVideos.length }} 个视频，总观看时长 {{ formatDuration(watchedDuration) }}
-                </p>
-                <Button
-                  class="mt-2 flex items-center gap-1.5 mx-auto"
-                  @click="restartSequence"
-                >
-                  <component
-                    :is="ArrowClockwise24Regular"
-                    class="size-4"
-                  />
-                  从头再看一轮
-                </Button>
-              </div>
-            </template>
+            <VideoCollectSequenceStage
+              v-else-if="mode === 'sequence'"
+              :accepted-videos="acceptedVideos"
+              :sequence-video="sequenceVideo"
+              :sequence-index="sequenceIndex"
+              :watched-ids="watchedIds"
+              :watched-count="watchedVideos.length"
+              :watched-duration="watchedDuration"
+              :can-push-obs="isOwner"
+              @prev="prevSequenceVideo"
+              @skip="skipSequenceVideo"
+              @open-current="openSequenceVideo"
+              @play-current="playSequenceVideo"
+              @push-to-obs="pushToObs"
+              @toggle-watched="toggleWatched"
+              @set-index="setSequenceIndex"
+              @restart="restartSequence"
+            />
 
             <!-- 模式 4：随机翻牌盲盒 -->
-            <template v-else-if="mode === 'flip'">
-              <div class="result-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <VideoCollectResultCard
-                  v-for="(item, index) in shuffledVideos"
-                  :key="`flip-${item.info.bvid}`"
-                  :item="item"
-                  :index="index"
-                  presentation="flip"
-                  :revealed="revealedIds.includes(item.info.bvid)"
-                  :watched="watchedIds.includes(item.info.bvid)"
-                  @select="openVideo(item)"
-                  @toggle-reveal="toggleReveal(item.info.bvid)"
-                  @toggle-watched="toggleWatched(item.info.bvid)"
-                />
-              </div>
-            </template>
+            <div
+              v-else-if="mode === 'flip'"
+              class="result-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            >
+              <VideoCollectResultCard
+                v-for="(item, index) in shuffledVideos"
+                :key="`flip-${item.info.bvid}`"
+                :item="item"
+                :index="index"
+                presentation="flip"
+                :revealed="revealedIds.includes(item.info.bvid ?? '')"
+                :watched="watchedIds.includes(item.info.bvid ?? '')"
+                :can-push-obs="isOwner"
+                @select="openVideo(item)"
+                @play="playVideoInline(item)"
+                @push-to-obs="pushToObs(item)"
+                @toggle-reveal="item.info.bvid && toggleReveal(item.info.bvid)"
+                @toggle-watched="item.info.bvid && toggleWatched(item.info.bvid)"
+              />
+            </div>
           </div>
         </section>
       </template>
+
+      <!-- 站内播放弹窗 -->
+      <BiliVideoPreviewDialog
+        v-model:open="playerOpen"
+        :bvid="playerItem?.info.bvid ?? ''"
+        :title="playerItem?.video.title ?? ''"
+        :page="playerItem?.info.page ?? 1"
+        :subtitle="playerItem?.info.senders[0]?.sender ? `推荐人：${playerItem.info.senders[0].sender}` : ''"
+      >
+        <template
+          v-if="isOwner && playerItem"
+          #footer-extra
+        >
+          <Button
+            variant="outline"
+            @click="pushToObs(playerItem)"
+          >
+            <Radio class="size-3.5 mr-1" />
+            同步到 OBS 角标
+          </Button>
+        </template>
+      </BiliVideoPreviewDialog>
     </main>
   </VideoCollectPageShell>
 </template>

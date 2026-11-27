@@ -89,15 +89,19 @@ export interface CancelQueueFromWebResult {
   refundedAmount: number
 }
 
-export async function postApiQueueCancelFromWeb(params: {
-  target: number
-  id: number
-}): Promise<ApiResult<CancelQueueFromWebResult>> {
+export async function postApiQueueCancelFromWeb(
+  params: {
+    target: number
+    id: number
+  },
+  options?: RequestInit,
+): Promise<ApiResult<CancelQueueFromWebResult>> {
   const query = new URLSearchParams({
     target: String(params.target),
     id: String(params.id),
   }).toString()
   return vtsuruMutator<ApiResult<CancelQueueFromWebResult>>(`/api/queue/cancel-from-web?${query}`, {
+    ...options,
     method: 'POST',
   })
 }

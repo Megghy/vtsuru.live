@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { CheckCircle2, Circle, Copy, ExternalLink, Film, Play, RefreshCw, RotateCcw } from 'lucide-vue-next'
+import { CheckCircle2, Circle, Copy, ExternalLink, Film, Play, Radio, RefreshCw, RotateCcw } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
-import {
-  type ReponseVideoCollectVideo,
-  type ResponseVideoCollectModel,
-  VideoStatus,
-} from '@/api/generated/model'
+import { type ReponseVideoCollectVideo, type ResponseVideoCollectModel, VideoStatus } from '@/api/generated/model'
 import { getApiVideoCollectGet, getApiVideoCollectGetAll } from '@/api/generated/video-collect/video-collect'
+import { setVideoCollectWatched } from '@/api/video-collect-extra'
+import {
+  DEFAULT_VIDEO_COLLECT_STATE,
+  type VideoCollectAction,
+  type VideoCollectState,
+} from '@/apps/obs-store/components/video-collect/types'
+import { useObsBridge } from '@/apps/obs-store/sync'
 import { CURRENT_HOST, isTauri } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
@@ -16,6 +19,7 @@ import { Button } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { SimpleTooltip } from '@/shared/ui/tooltip'
+import { buildBiliVideoUrl, normalizeBiliCoverUrl } from '@/shared/utils/videoCollect'
 
 import IconAction from './IconAction.vue'
 import PanelShell from './PanelShell.vue'
@@ -28,23 +32,26 @@ const loading = ref(false)
 const filterMode = ref<'unwatched' | 'accepted' | 'all'>('unwatched')
 
 const selectedTableId = usePersistedStorage<string>('vtsuru:settings:live-dashboard:vc-table-id', '')
-const watchedByTable = usePersistedStorage<Record<string, string[]>>('vtsuru:settings:live-dashboard:vc-watched', {})
 
-const watchedSet = computed(() => new Set(watchedByTable.value[selectedTableId.value] ?? []))
+let videosReqSeq = 0
+let suppressWatchLoad = false
 
-const acceptedVideos = computed(() =>
-  videos.value.filter((item) => item.info.status === VideoStatus.Accepted),
-)
+const obsBridge = useObsBridge<VideoCollectState, VideoCollectAction>({
+  componentId: 'video-collect',
+  channelId: ref('default'),
+  defaultState: DEFAULT_VIDEO_COLLECT_STATE,
+  role: 'controller',
+})
+
+const acceptedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Accepted))
 
 const displayVideos = computed(() => {
   if (filterMode.value === 'all') return videos.value
   if (filterMode.value === 'accepted') return acceptedVideos.value
-  return acceptedVideos.value.filter((item) => !watchedSet.value.has(item.info.bvid || ''))
+  return acceptedVideos.value.filter((item) => !item.info.watched)
 })
 
-const watchedCount = computed(() =>
-  acceptedVideos.value.filter((item) => watchedSet.value.has(item.info.bvid || '')).length,
-)
+const watchedCount = computed(() => acceptedVideos.value.filter((item) => item.info.watched).length)
 
 async function loadTables() {
   loading.value = true
@@ -53,10 +60,14 @@ async function loadTables() {
     const list = res.data ?? []
     tables.value = [...list].sort((a, b) => Number(a.isFinish) - Number(b.isFinish) || b.createAt - a.createAt)
     if (tables.value.length > 0 && !tables.value.some((t) => t.id === selectedTableId.value)) {
+      suppressWatchLoad = true
       selectedTableId.value = tables.value[0].id
+      suppressWatchLoad = false
     }
     if (selectedTableId.value) {
       await loadVideos(selectedTableId.value)
+    } else {
+      videos.value = []
     }
   } catch (err) {
     toast.error(err instanceof Error ? err.message : '获取视频征集列表失败')
@@ -66,6 +77,7 @@ async function loadTables() {
 }
 
 async function loadVideos(tableId: string) {
+  const seq = ++videosReqSeq
   if (!tableId) {
     videos.value = []
     return
@@ -73,35 +85,70 @@ async function loadVideos(tableId: string) {
   loading.value = true
   try {
     const res = await getApiVideoCollectGet({ id: tableId })
+    if (seq !== videosReqSeq) return
     videos.value = res.data?.videos ?? []
   } catch (err) {
+    if (seq !== videosReqSeq) return
     toast.error(err instanceof Error ? err.message : '获取征集投稿失败')
   } finally {
-    loading.value = false
+    if (seq === videosReqSeq) loading.value = false
   }
 }
 
 watch(selectedTableId, (id) => {
-  if (id) void loadVideos(id)
+  if (suppressWatchLoad || !id) return
+  void loadVideos(id)
 })
 
-function toggleWatched(bvid?: string | null) {
+async function toggleWatched(item: ReponseVideoCollectVideo) {
+  const bvid = item.info.bvid
   if (!bvid || !selectedTableId.value) return
-  const cur = new Set(watchedByTable.value[selectedTableId.value] ?? [])
-  if (cur.has(bvid)) cur.delete(bvid)
-  else cur.add(bvid)
-  watchedByTable.value = { ...watchedByTable.value, [selectedTableId.value]: [...cur] }
+  const next = !item.info.watched
+  item.info.watched = next
+  try {
+    await setVideoCollectWatched({ id: selectedTableId.value, bvids: [bvid], watched: next })
+  } catch (err) {
+    item.info.watched = !next
+    toast.error(err instanceof Error ? err.message : '同步已看状态失败')
+  }
 }
 
-function resetWatched() {
+async function resetWatched() {
   if (!selectedTableId.value) return
-  watchedByTable.value = { ...watchedByTable.value, [selectedTableId.value]: [] }
-  toast.success('已重置本表观看进度')
+  const watchedItems = acceptedVideos.value.filter((v) => v.info.watched && v.info.bvid)
+  if (watchedItems.length === 0) return
+  const bvids = watchedItems.map((v) => v.info.bvid as string)
+  for (const item of watchedItems) item.info.watched = false
+  try {
+    await setVideoCollectWatched({ id: selectedTableId.value, bvids, watched: false })
+    toast.success('已重置本表观看进度')
+  } catch (err) {
+    for (const item of watchedItems) item.info.watched = true
+    toast.error(err instanceof Error ? err.message : '重置失败')
+  }
 }
 
-async function openVideo(bvid?: string | null) {
+function pushToObs(item: ReponseVideoCollectVideo) {
+  const bvid = item.info.bvid
+  if (!bvid || !selectedTableId.value) return
+  const index = Math.max(
+    0,
+    acceptedVideos.value.findIndex((v) => v.info.bvid === bvid),
+  )
+  obsBridge.updateState({
+    mode: 'watch',
+    selectedTableId: selectedTableId.value,
+    currentIndex: index,
+    currentBvid: bvid,
+    useSampleData: false,
+  })
+  toast.success(`已同步到 OBS 角标：${item.video.title}`)
+}
+
+async function openVideo(item: ReponseVideoCollectVideo) {
+  const bvid = item.info.bvid
   if (!bvid) return
-  const url = `https://www.bilibili.com/video/${bvid}`
+  const url = buildBiliVideoUrl(bvid, item.info.page)
   if (isTauri()) {
     const { openUrl } = await import('@tauri-apps/plugin-opener')
     await openUrl(url)
@@ -124,7 +171,7 @@ async function openManage() {
     const { openUrl } = await import('@tauri-apps/plugin-opener')
     await openUrl(url)
   } else {
-    window.open(url, '_blank')
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 }
 
@@ -209,25 +256,26 @@ onMounted(() => {
           v-for="(item, idx) in displayVideos"
           :key="item.info.bvid || idx"
           class="flex gap-2 rounded-md border border-border bg-card/70 p-1.5 transition-opacity"
-          :class="{ 'opacity-55': watchedSet.has(item.info.bvid || '') }"
+          :class="{ 'opacity-55': item.info.watched }"
         >
           <SimpleTooltip content="在 B 站打开观看">
-            <button
-              type="button"
-              class="relative w-20 h-12 rounded overflow-hidden bg-muted shrink-0 border-0 p-0 cursor-pointer group"
+            <Button
+              variant="ghost"
+              size="none"
+              class="relative w-20 h-12 rounded overflow-hidden bg-muted shrink-0 group"
               aria-label="在 B 站打开观看"
-              @click="openVideo(item.info.bvid)"
+              @click="openVideo(item)"
             >
               <img
                 v-if="item.video.cover"
-                :src="item.video.cover"
+                :src="normalizeBiliCoverUrl(item.video.cover)"
                 referrerpolicy="no-referrer"
                 class="w-full h-full object-cover"
               />
               <span class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex-center transition-opacity">
                 <Play class="size-4 text-white fill-white" />
               </span>
-            </button>
+            </Button>
           </SimpleTooltip>
 
           <div class="min-w-0 flex-1 flex flex-col justify-between">
@@ -248,22 +296,35 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="flex flex-col items-center justify-between shrink-0">
-            <SimpleTooltip :content="watchedSet.has(item.info.bvid || '') ? '标为未观看' : '标为已观看'">
+          <div class="flex flex-col items-center justify-between shrink-0 gap-0.5">
+            <SimpleTooltip :content="item.info.watched ? '标为未观看' : '标为已观看'">
               <Button
                 size="icon-xs"
                 variant="ghost"
-                :aria-label="watchedSet.has(item.info.bvid || '') ? '标为未观看' : '标为已观看'"
-                @click="toggleWatched(item.info.bvid)"
+                :aria-label="item.info.watched ? '标为未观看' : '标为已观看'"
+                @click="toggleWatched(item)"
               >
                 <CheckCircle2
-                  v-if="watchedSet.has(item.info.bvid || '')"
+                  v-if="item.info.watched"
                   class="size-3.5 text-emerald-500"
                 />
                 <Circle
                   v-else
                   class="size-3.5 text-muted-foreground"
                 />
+              </Button>
+            </SimpleTooltip>
+            <SimpleTooltip
+              v-if="item.info.status === VideoStatus.Accepted"
+              content="同步到 OBS 鉴赏角标"
+            >
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                aria-label="同步到 OBS 鉴赏角标"
+                @click="pushToObs(item)"
+              >
+                <Radio class="size-3 text-primary" />
               </Button>
             </SimpleTooltip>
             <SimpleTooltip content="复制 BV 号">

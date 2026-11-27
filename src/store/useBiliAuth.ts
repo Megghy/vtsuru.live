@@ -40,8 +40,10 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   })
 
   const isLoading = ref(false)
-  const isAuthed = computed(() => biliAuth.value.id > 0 || (!usesAccountIdentity.value && Boolean(currentToken.value)))
   const isInvalid = ref(false)
+  const isAuthed = computed(
+    () => biliAuth.value.id > 0 || (!usesAccountIdentity.value && Boolean(currentToken.value) && !isInvalid.value),
+  )
   const legacyToken = ref<string | null>(null)
   const replacementToken = ref<string | null>(null)
   const requiresLegacyMigration = computed(() => Boolean(legacyToken.value || replacementToken.value))

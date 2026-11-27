@@ -57,7 +57,7 @@ export const postApiSongListAdd = async (
   return vtsuruMutator<ResponseResultOfListOfResponseSongModel>(getPostApiSongListAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(addSongModel),
   })
 }
@@ -87,7 +87,7 @@ export const postApiSongListDeleteBatch = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListDeleteBatchUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiSongListDeleteBatchBody),
   })
 }
@@ -241,7 +241,7 @@ export const postApiSongListMergeDuplicates = async (
   return vtsuruMutator<ResponseResultOfResponseSongModel>(getPostApiSongListMergeDuplicatesUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(mergeDuplicateSongsModel),
   })
 }
@@ -271,7 +271,7 @@ export const postApiSongListReorder = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListReorderUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiSongListReorderBody),
   })
 }
@@ -353,7 +353,7 @@ export const postApiSongListUpdateBatchAuthor = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchAuthorUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdate),
   })
 }
@@ -383,7 +383,7 @@ export const postApiSongListUpdateBatchDisabled = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchDisabledUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdateBool),
   })
 }
@@ -413,7 +413,7 @@ export const postApiSongListUpdateBatchLanguage = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchLanguageUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdateLanguage),
   })
 }
@@ -443,7 +443,7 @@ export const postApiSongListUpdateBatchOption = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchOptionUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdateOption),
   })
 }
@@ -473,7 +473,7 @@ export const postApiSongListUpdateBatchPin = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchPinUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdateBool),
   })
 }
@@ -503,7 +503,7 @@ export const postApiSongListUpdateBatchTag = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchTagUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchUpdate),
   })
 }
@@ -533,7 +533,7 @@ export const postApiSongListUpdateBatch = async (
   return vtsuruMutator<ResponseResultOfResponseSongModelArray>(getPostApiSongListUpdateBatchUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateSongModel),
   })
 }
@@ -563,7 +563,7 @@ export const postApiSongListUpdate = async (
   return vtsuruMutator<ResponseResultOfResponseSongModel>(getPostApiSongListUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateSongModel),
   })
 }
@@ -606,7 +606,7 @@ export const postApiSongListUpsertBatch = async (
   return vtsuruMutator<ResponseResultOfUpsertSongsBatchResult>(getPostApiSongListUpsertBatchUrl(params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(addSongModel),
   })
 }

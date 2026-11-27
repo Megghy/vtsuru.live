@@ -9,6 +9,7 @@ import { currentAPIKey, setSelectedAPIKey } from '@/shared/config'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
+import { buildBiliAuthRoute } from '@/shared/utils/authRedirect'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import VtsuruLogo from '@/svgs/ic_vtuber.svg?component'
 
@@ -68,11 +69,13 @@ async function switchToBackupAPI() {
           id="auth-title"
           class="m-0 text-foreground text-[28px] font-bold leading-tight tracking-tight"
         >
-          {{ isUserWorkspace ? '查看积分和订单' : '登录或创建账号' }}
+          {{ isUserWorkspace ? '观众个人中心' : '登录或创建账号' }}
         </h1>
         <p class="mt-2 mb-0 text-muted-foreground text-sm leading-relaxed text-center">
           {{
-            isUserWorkspace ? '用 Bilibili 发一条弹幕完成认证。不用注册本站账号。' : '主播使用本站账号管理直播工具。'
+            isUserWorkspace
+              ? '用 Bilibili 发一条弹幕即可一键登录，查看积分、订单、棉花糖、投稿与点播记录。'
+              : '主播使用本站账号管理直播工具，观众可直接用 B 站弹幕一键登录。'
           }}
         </p>
       </header>
@@ -85,9 +88,9 @@ async function switchToBackupAPI() {
           variant="brand"
           size="default"
           class="font-semibold"
-          @click="router.push({ name: 'bili-auth' })"
+          @click="router.push(buildBiliAuthRoute(route.fullPath))"
         >
-          开始认证
+          B 站弹幕一键登录
         </Button>
         <Button
           v-if="!showSiteLogin"
@@ -95,7 +98,7 @@ async function switchToBackupAPI() {
           size="default"
           @click="showSiteLogin = true"
         >
-          已有本站账号，登录
+          使用账号密码登录
         </Button>
       </div>
 
@@ -112,14 +115,14 @@ async function switchToBackupAPI() {
       >
         <AlertTitle>不是主播？</AlertTitle>
         <AlertDescription class="text-muted-foreground mt-1 space-y-2">
-          <p>看积分和订单不用注册。用 Bilibili 发一条弹幕完成认证即可。</p>
+          <p>查积分、订单、棉花糖和投稿记录，用 Bilibili 发一条弹幕即可一键登录。</p>
           <div>
             <Button
               size="xs"
               variant="outline"
-              @click="router.push({ name: 'bili-auth' })"
+              @click="router.push(buildBiliAuthRoute('/manage/user/points'))"
             >
-              前往观众认证
+              B 站弹幕一键登录
             </Button>
           </div>
         </AlertDescription>

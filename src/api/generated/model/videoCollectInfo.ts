@@ -12,4 +12,13 @@ export interface VideoCollectInfo {
   bvid?: string
   senders: VideoSender[]
   status: VideoStatus
+  /**
+   * 拒绝理由（仅在拒绝时可选填写）。
+   * @nullable
+   */
+  rejectReason?: string | null
+  /** 主播是否已观看（服务端持久化，多端同步）。 */
+  watched: boolean
+  /** 多 P 视频推荐分 P（默认第 1 P）。 */
+  page: number
 }

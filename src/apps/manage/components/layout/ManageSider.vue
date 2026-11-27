@@ -117,7 +117,14 @@ type ManageNavGroup = {
 
 const groups = computed<ManageNavGroup[]>(() => {
   const items = baseItems.value
-  if (workspace.value === 'user') return [{ key: 'group-user', label: '账户', items }]
+  if (workspace.value === 'user') {
+    const userGroups: ManageNavGroup[] = [
+      { key: 'group-user-assets', label: '资产与订单', items: items.filter((i) => i.group === 'user-assets') },
+      { key: 'group-user-activity', label: '我的互动', items: items.filter((i) => i.group === 'user-activity') },
+      { key: 'group-user-account', label: '账号', items: items.filter((i) => i.group === 'user-account') },
+    ]
+    return userGroups.filter((g) => g.items.length > 0)
+  }
   const map = new Map(items.map((i) => [i.key, i]))
 
   const favorites = (favoriteMenuItems.value ?? []).map((k) => map.get(k)).filter(Boolean) as ManageNavItem[]
@@ -149,8 +156,12 @@ const groups = computed<ManageNavGroup[]>(() => {
   return next
 })
 
+function isUserGroupKey(key: ManageNavGroupKey) {
+  return key === 'group-user' || key.startsWith('group-user-')
+}
+
 function isGroupExpanded(key: ManageNavGroupKey) {
-  return (expandedGroups.value ?? []).includes(key)
+  return isUserGroupKey(key) || (expandedGroups.value ?? []).includes(key)
 }
 
 function toggleGroup(key: ManageNavGroupKey) {
@@ -376,12 +387,12 @@ async function go(name: string, query?: Record<string, string>) {
                 variant="ghost"
                 size="xs"
                 class="h-auto p-0 text-muted-foreground text-[11px] tracking-wider uppercase"
-                :disabled="g.key === 'group-user'"
+                :disabled="isUserGroupKey(g.key)"
                 @click="toggleGroup(g.key)"
               >
                 <span class="nav-group__label">{{ g.label }}</span>
                 <span
-                  v-if="g.key !== 'group-user'"
+                  v-if="!isUserGroupKey(g.key)"
                   class="inline-block opacity-80 transition-transform duration-150"
                   :class="isGroupExpanded(g.key) ? '-rotate-90' : 'rotate-90'"
                   >›</span
@@ -417,7 +428,7 @@ async function go(name: string, query?: Record<string, string>) {
             </div>
 
             <div
-              v-show="collapsed || g.key === 'group-user' || isGroupExpanded(g.key)"
+              v-show="collapsed || isUserGroupKey(g.key) || isGroupExpanded(g.key)"
               class="flex flex-col gap-0.5"
             >
               <div

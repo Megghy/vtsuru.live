@@ -114,7 +114,7 @@ export const postApiQaBatch = async (
   return vtsuruMutator<ResponseResultOfResponseBatchQAOperationResult>(getPostApiQaBatchUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestBatchQAOperation),
   })
 }
@@ -563,7 +563,7 @@ export const postApiQaUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiQaUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(settingQuestionDisplay),
   })
 }

@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import Add20Regular from '@vicons/fluent/es/Add20Regular'
-import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
-import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
-import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
-import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
-import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
-import Folder24Regular from '@vicons/fluent/es/Folder24Regular'
-import MoreVertical24Regular from '@vicons/fluent/es/MoreVertical24Regular'
-import Open24Regular from '@vicons/fluent/es/Open24Regular'
-import Search24Regular from '@vicons/fluent/es/Search24Regular'
-import TableDismiss24Regular from '@vicons/fluent/es/TableDismiss24Regular'
-import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
-import Video24Regular from '@vicons/fluent/es/Video24Regular'
+import { refDebounced } from '@vueuse/core'
 import { format } from 'date-fns'
-import { computed, ref } from 'vue'
+import {
+  ChevronRight,
+  Clock,
+  Copy,
+  Edit3,
+  ExternalLink,
+  FolderOpen,
+  MoreVertical,
+  Plus,
+  Power,
+  RefreshCw,
+  Search,
+  Trash2,
+  Video,
+} from 'lucide-vue-next'
+import { computed, onActivated, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
@@ -48,12 +51,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
+import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { useMessage } from '@/shared/utils'
-import { copyToClipboard } from '@/shared/utils'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
+import { copyToClipboard, useMessage } from '@/shared/utils'
+import {
+  getVideoCollectLifecycleLabel,
+  getVideoCollectLifecycleState,
+  normalizeTimestamp,
+} from '@/shared/utils/videoCollect'
 
 import VideoCollectFormModal from './VideoCollectFormModal.vue'
 
@@ -70,10 +79,12 @@ const createModalVisible = ref(false)
 const editModalVisible = ref(false)
 const currentEditingTable = ref<ResponseVideoCollectModel>()
 const keyword = ref('')
+const debouncedKeyword = refDebounced(keyword, 180)
 const statusFilter = ref<StatusFilter>('all')
 
 const deleteModalVisible = ref(false)
 const tableToDelete = ref<ResponseVideoCollectModel | null>(null)
+let loadSeq = 0
 
 const videoCollectUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '',
@@ -81,14 +92,14 @@ const videoCollectUrl = computed(() =>
 const activeTables = computed(() => videoTables.value.filter(isActive))
 const totalVideoCount = computed(() => videoTables.value.reduce((sum, table) => sum + table.videoCount, 0))
 const filteredTables = computed(() => {
-  const search = keyword.value.trim().toLocaleLowerCase()
+  const search = debouncedKeyword.value.trim().toLocaleLowerCase()
 
   return videoTables.value
     .filter((table) => {
       if (statusFilter.value === 'active' && !isActive(table)) return false
       if (statusFilter.value === 'finished' && isActive(table)) return false
       if (!search) return true
-      return `${table.name} ${table.description}`.toLocaleLowerCase().includes(search)
+      return `${table.name} ${table.description} ${table.shortId}`.toLocaleLowerCase().includes(search)
     })
     .toSorted((a, b) => Number(isActive(b)) - Number(isActive(a)) || b.createAt - a.createAt)
 })
@@ -114,39 +125,51 @@ const editInitialValue = computed<RequestVideoTable | undefined>(() => {
 })
 
 void loadTables()
+onActivated(() => {
+  void loadTables()
+})
 
 function isActive(table: ResponseVideoCollectModel) {
-  return !table.isFinish && table.endAt > Date.now()
+  return getVideoCollectLifecycleState(table) !== 'finished'
 }
 
-function tableStatus(table: ResponseVideoCollectModel) {
-  if (!isActive(table)) return '已结束'
-  if (table.startAt > Date.now()) return '未开始'
-  return '进行中'
+function tableStatusLabel(table: ResponseVideoCollectModel) {
+  return getVideoCollectLifecycleLabel(getVideoCollectLifecycleState(table))
+}
+
+function tableStatusVariant(table: ResponseVideoCollectModel) {
+  const state = getVideoCollectLifecycleState(table)
+  if (state === 'active') return 'secondary' as const
+  if (state === 'upcoming' || state === 'full') return 'outline' as const
+  return 'default' as const
 }
 
 function capacityPercentage(table: ResponseVideoCollectModel) {
+  if (!table.maxVideoCount) return 0
   return Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))
 }
 
 async function loadTables() {
+  const seq = ++loadSeq
   isLoading.value = true
   try {
     const response = await getApiVideoCollectGetAll()
+    if (seq !== loadSeq) return
     if (response.code !== 200) throw new Error(response.message)
-    videoTables.value = response.data
+    videoTables.value = response.data ?? []
   } catch (error) {
+    if (seq !== loadSeq) return
     console.error(error)
     message.error('视频征集列表加载失败')
   } finally {
-    isLoading.value = false
+    if (seq === loadSeq) isLoading.value = false
   }
 }
 
 async function createTable(model: RequestVideoTable) {
   isCreating.value = true
   try {
-    const response = await postApiVideoCollectCreate(model as any)
+    const response = await postApiVideoCollectCreate(model)
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value.unshift(response.data)
     createModalVisible.value = false
@@ -166,7 +189,7 @@ async function updateTable(model: RequestVideoTable) {
     const response = await postApiVideoCollectUpdate({
       ...model,
       id: currentEditingTable.value.id,
-    } as any)
+    })
     if (response.code !== 200) throw new Error(response.message)
     const idx = videoTables.value.findIndex((t) => t.id === currentEditingTable.value?.id)
     if (idx !== -1) videoTables.value[idx] = response.data
@@ -198,7 +221,7 @@ function openEditModal(table: ResponseVideoCollectModel) {
 async function toggleFinish(table: ResponseVideoCollectModel) {
   const finish = !table.isFinish
   try {
-    const response = await postApiVideoCollectFinish({ id: table.id, finish: finish as any })
+    const response = await postApiVideoCollectFinish({ id: table.id, finish })
     if (response.code !== 200) throw new Error(response.message)
     table.isFinish = finish
     message.success(finish ? '征集已结束' : '征集已重新开启')
@@ -240,26 +263,20 @@ async function confirmDelete() {
       :links="[{ label: '公开展示页', value: videoCollectUrl }]"
     >
       <template #action>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             :loading="isLoading"
             @click="loadTables"
           >
-            <component
-              :is="ArrowSync24Regular"
-              class="h-3.5 w-3.5 mr-1"
-            />
+            <RefreshCw class="size-3.5 mr-1" />
             刷新
           </Button>
           <Button
             variant="brand"
             @click="createModalVisible = true"
           >
-            <component
-              :is="Add20Regular"
-              class="h-3.5 w-3.5 mr-1"
-            />
+            <Plus class="size-3.5 mr-1" />
             新建征集
           </Button>
         </div>
@@ -269,35 +286,29 @@ async function confirmDelete() {
     <!-- Bento 概览看板 -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <Card
-        class="p-3 cursor-pointer transition-all hover:border-brand/40"
+        class="p-3 cursor-pointer transition-colors hover:border-brand/40"
         :class="{ 'border-brand bg-brand-soft/20': statusFilter === 'all' }"
         @click="statusFilter = 'all'"
       >
         <div class="flex-between text-xs text-muted-foreground">
           <span>全部征集</span>
-          <component
-            :is="Folder24Regular"
-            class="h-4 w-4"
-          />
+          <FolderOpen class="size-4" />
         </div>
-        <div class="text-2xl font-bold font-mono text-foreground mt-1">
+        <div class="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">
           {{ videoTables.length }}
         </div>
       </Card>
 
       <Card
-        class="p-3 cursor-pointer transition-all hover:border-brand/40"
+        class="p-3 cursor-pointer transition-colors hover:border-brand/40"
         :class="{ 'border-brand bg-brand-soft/20': statusFilter === 'active' }"
         @click="statusFilter = 'active'"
       >
         <div class="flex-between text-xs text-muted-foreground">
           <span>进行中 / 开放中</span>
-          <component
-            :is="Timer24Regular"
-            class="h-4 w-4 text-emerald-500"
-          />
+          <Clock class="size-4 text-emerald-500" />
         </div>
-        <div class="text-2xl font-bold font-mono text-emerald-500 mt-1">
+        <div class="text-2xl font-bold font-mono tabular-nums text-emerald-500 mt-1">
           {{ activeTables.length }}
         </div>
       </Card>
@@ -305,12 +316,9 @@ async function confirmDelete() {
       <Card class="p-3">
         <div class="flex-between text-xs text-muted-foreground">
           <span>累计征集视频</span>
-          <component
-            :is="Video24Regular"
-            class="h-4 w-4 text-brand"
-          />
+          <Video class="size-4 text-brand" />
         </div>
-        <div class="text-2xl font-bold font-mono text-foreground mt-1">
+        <div class="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">
           {{ totalVideoCount }}
         </div>
       </Card>
@@ -318,30 +326,24 @@ async function confirmDelete() {
 
     <!-- 工具栏 -->
     <Card class="p-3 flex-between flex-wrap gap-2.5">
-      <div class="relative w-72">
-        <component
-          :is="Search24Regular"
-          class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
-        />
+      <div class="relative w-full sm:w-72">
+        <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
         <Input
           v-model="keyword"
-          placeholder="搜索征集名称或说明..."
+          placeholder="搜索征集名称、说明或短码..."
           class="pl-8"
         />
       </div>
 
-      <div class="w-40">
-        <Select
-          v-model="statusFilter"
-          default-value="all"
-        >
-          <SelectTrigger>
+      <div class="w-full sm:w-44">
+        <Select v-model="statusFilter">
+          <SelectTrigger class="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all"> 全部状态 </SelectItem>
-            <SelectItem value="active"> 仅进行中 / 开放中 </SelectItem>
-            <SelectItem value="finished"> 仅已结束 </SelectItem>
+            <SelectItem value="all">全部状态</SelectItem>
+            <SelectItem value="active">仅进行中 / 开放中</SelectItem>
+            <SelectItem value="finished">仅已结束</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -361,23 +363,18 @@ async function confirmDelete() {
 
     <Card
       v-else-if="!filteredTables.length"
-      class="p-12 text-center"
+      class="p-10"
     >
-      <div class="text-muted-foreground text-sm">
-        {{ videoTables.length === 0 ? '暂无视频征集活动' : '没有符合条件的征集' }}
-      </div>
-      <div
-        v-if="videoTables.length === 0"
-        class="mt-3"
-      >
+      <Empty :description="videoTables.length === 0 ? '暂无视频征集活动' : '没有符合条件的征集'">
         <Button
-          size="xs"
+          v-if="videoTables.length === 0"
           variant="brand"
+          class="mt-2"
           @click="createModalVisible = true"
         >
           立即创建第一个征集
         </Button>
-      </div>
+      </Empty>
     </Card>
 
     <div
@@ -392,45 +389,49 @@ async function confirmDelete() {
       >
         <!-- 主体信息 -->
         <div class="min-w-0 flex-1 space-y-1">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 min-w-0">
             <Badge
-              :variant="
-                tableStatus(table) === '进行中' ? 'secondary' : tableStatus(table) === '未开始' ? 'outline' : 'default'
-              "
+              :variant="tableStatusVariant(table)"
               size="xs"
+              class="shrink-0"
             >
-              {{ tableStatus(table) }}
+              {{ tableStatusLabel(table) }}
             </Badge>
-            <strong
-              class="text-sm font-semibold truncate text-foreground hover:text-brand transition-colors"
-              :title="table.name"
-            >
-              {{ table.name }}
-            </strong>
+            <SimpleTooltip :content="table.name">
+              <strong class="text-sm font-semibold truncate text-foreground hover:text-brand transition-colors">
+                {{ table.name }}
+              </strong>
+            </SimpleTooltip>
           </div>
-          <p
-            class="text-xs text-muted-foreground line-clamp-1"
-            :title="table.description"
-          >
-            {{ table.description || '未填写征集说明' }}
-          </p>
+          <SimpleTooltip :content="table.description || ''">
+            <p class="text-xs text-muted-foreground line-clamp-1">
+              {{ table.description || '未填写征集说明' }}
+            </p>
+          </SimpleTooltip>
         </div>
 
         <!-- 时间与进度 -->
-        <div class="flex items-center gap-4 sm:gap-6 text-xs text-muted-foreground shrink-0">
-          <div>
-            <div class="text-[10px]">
-              {{ tableStatus(table) === '未开始' ? '开放时间' : '截止时间' }}
+        <div class="flex items-center justify-between sm:justify-end flex-wrap gap-3 sm:gap-6 text-xs text-muted-foreground min-w-0 w-full sm:w-auto sm:shrink-0">
+          <div class="min-w-0">
+            <div class="text-[11px]">
+              {{ tableStatusLabel(table) === '未开始' ? '开放时间' : '截止时间' }}
             </div>
-            <div class="font-mono text-xs text-foreground mt-0.5">
-              {{ format(tableStatus(table) === '未开始' ? table.startAt : table.endAt, 'yyyy-MM-dd HH:mm') }}
+            <div class="font-mono tabular-nums text-xs text-foreground mt-0.5">
+              {{
+                format(
+                  normalizeTimestamp(tableStatusLabel(table) === '未开始' ? table.startAt : table.endAt),
+                  'yyyy-MM-dd HH:mm',
+                )
+              }}
             </div>
           </div>
 
-          <div class="w-28 space-y-1">
-            <div class="flex-between text-[10px]">
+          <div class="w-24 sm:w-28 space-y-1 shrink-0">
+            <div class="flex-between text-[11px]">
               <span>名额占用</span>
-              <strong class="font-mono text-foreground">{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
+              <strong class="font-mono tabular-nums text-foreground">
+                {{ table.videoCount }} / {{ table.maxVideoCount }}
+              </strong>
             </div>
             <Progress
               :model-value="capacityPercentage(table)"
@@ -440,59 +441,49 @@ async function confirmDelete() {
 
           <!-- 行内操作 -->
           <div
-            class="flex items-center gap-1"
+            class="flex items-center gap-1 ml-auto sm:ml-0"
             @click.stop
           >
-            <Button
-              size="xs"
-              variant="outline"
-              aria-label="复制投稿页面链接"
-              @click.stop="copyShareLink(table)"
-            >
-              <component
-                :is="Copy24Regular"
-                class="h-3.5 w-3.5 mr-1"
-              />
-              链接
-            </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              aria-label="查看展示结果页"
-              @click.stop="openResultPage(table)"
-            >
-              <component
-                :is="Open24Regular"
-                class="h-3.5 w-3.5 mr-1"
-              />
-              结果
-            </Button>
+            <SimpleTooltip content="复制观众投稿链接">
+              <Button
+                size="xs"
+                variant="outline"
+                aria-label="复制投稿页面链接"
+                @click.stop="copyShareLink(table)"
+              >
+                <Copy class="size-3.5 mr-1" />
+                链接
+              </Button>
+            </SimpleTooltip>
+            <SimpleTooltip content="打开结果展示与鉴赏工作台">
+              <Button
+                size="xs"
+                variant="outline"
+                aria-label="查看展示结果页"
+                @click.stop="openResultPage(table)"
+              >
+                <ExternalLink class="size-3.5 mr-1" />
+                结果
+              </Button>
+            </SimpleTooltip>
 
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
                 <Button
                   size="icon-xs"
                   variant="ghost"
+                  aria-label="更多操作"
                 >
-                  <component
-                    :is="MoreVertical24Regular"
-                    class="h-3.5 w-3.5"
-                  />
+                  <MoreVertical class="size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem @click="openEditModal(table)">
-                  <component
-                    :is="Edit24Regular"
-                    class="h-3.5 w-3.5 mr-1.5"
-                  />
+                  <Edit3 class="size-3.5 mr-1.5" />
                   编辑规则
                 </DropdownMenuItem>
                 <DropdownMenuItem @click="toggleFinish(table)">
-                  <component
-                    :is="TableDismiss24Regular"
-                    class="h-3.5 w-3.5 mr-1.5"
-                  />
+                  <Power class="size-3.5 mr-1.5" />
                   {{ isActive(table) ? '结束征集' : '重新开启' }}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -500,19 +491,13 @@ async function confirmDelete() {
                   class="text-destructive"
                   @click="promptDelete(table)"
                 >
-                  <component
-                    :is="Delete24Regular"
-                    class="h-3.5 w-3.5 mr-1.5"
-                  />
+                  <Trash2 class="size-3.5 mr-1.5" />
                   删除征集
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <component
-              :is="ArrowRight24Regular"
-              class="h-4 w-4 text-muted-foreground ml-1"
-            />
+            <ChevronRight class="size-4 text-muted-foreground ml-0.5 hidden sm:inline" />
           </div>
         </div>
       </div>
@@ -543,13 +528,13 @@ async function confirmDelete() {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>删除视频征集</AlertDialogTitle>
-          <AlertDialogDescription class="text-xs">
+          <AlertDialogDescription>
             确定删除“{{ tableToDelete?.name }}”吗？此操作无法撤销。
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel @click="deleteModalVisible = false"> 取消 </AlertDialogCancel>
-          <AlertDialogAction @click="confirmDelete"> 确定删除 </AlertDialogAction>
+          <AlertDialogCancel @click="deleteModalVisible = false">取消</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDelete">确定删除</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

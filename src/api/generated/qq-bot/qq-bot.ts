@@ -66,7 +66,7 @@ export const postApiQqBotGroupsNotify = async (
   return vtsuruMutator<ResponseResult>(getPostApiQqBotGroupsNotifyUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(qqBotNotifyRequest),
   })
 }
@@ -96,7 +96,7 @@ export const postApiQqBotGroupsUnbind = async (
   return vtsuruMutator<ResponseResult>(getPostApiQqBotGroupsUnbindUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(qqBotUnbindRequest),
   })
 }

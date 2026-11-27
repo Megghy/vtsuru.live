@@ -97,7 +97,7 @@ export const postApiPointApplyDuplicateGuardsFix = async (
   return vtsuruMutator<ResponseResultOfPointGuardDuplicateApplyResult>(getPostApiPointApplyDuplicateGuardsFixUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestApplyPointGuardDuplicateFixModel),
   })
 }
@@ -127,7 +127,7 @@ export const postApiPointBatchDeleteUser = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiPointBatchDeleteUserUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(tempRequestDelUserModel),
   })
 }
@@ -157,7 +157,7 @@ export const postApiPointBatchUpdateExpress = async (
   return vtsuruMutator<ResponseResultOfResponseBatchUpdateExpressResult>(getPostApiPointBatchUpdateExpressUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestBatchUpdateExpressModel),
   })
 }
@@ -187,7 +187,7 @@ export const postApiPointBatchUpdateOrderStatus = async (
   return vtsuruMutator<ResponseResultOfInt32Array>(getPostApiPointBatchUpdateOrderStatusUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestBatchUpdateOrderStatusModel),
   })
 }
@@ -220,7 +220,7 @@ export const postApiPointBuyBatch = async (
   return vtsuruMutator<ResponseResultOfListOfResponsePointOrder2UserModel>(getPostApiPointBuyBatchUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestBuyBatchModel),
   })
 }
@@ -250,7 +250,7 @@ export const postApiPointBuy = async (
   return vtsuruMutator<ResponseResultOfResponsePointOrder2UserModel>(getPostApiPointBuyUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestBuyPointGoodsModel),
   })
 }
@@ -306,7 +306,7 @@ export const postApiPointConsumeUserPoint = async (
   return vtsuruMutator<ResponseResultOfPointConsumeResult>(getPostApiPointConsumeUserPointUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestConsumeUserPointModel),
   })
 }
@@ -360,7 +360,7 @@ export const postApiPointDeleteOrders = async (
   return vtsuruMutator<ResponseResult>(getPostApiPointDeleteOrdersUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiPointDeleteOrdersBody),
   })
 }
@@ -681,7 +681,7 @@ export const postApiPointSeasonReset = async (
   return vtsuruMutator<ResponseResultOfResponseSeasonResetResult>(getPostApiPointSeasonResetUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestSeasonResetModel),
   })
 }
@@ -737,7 +737,7 @@ export const postApiPointServiceOrderOwnerUpdate = async (
   return vtsuruMutator<ResponseResultOfResponsePointOrder2OwnerModel>(getPostApiPointServiceOrderOwnerUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(serviceOwnerUpdateRequest),
   })
 }
@@ -793,7 +793,7 @@ export const postApiPointServiceOrderUserUpdate = async (
   return vtsuruMutator<ResponseResultOfResponsePointOrder2UserModel>(getPostApiPointServiceOrderUserUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(serviceUserUpdateRequest),
   })
 }
@@ -823,7 +823,7 @@ export const postApiPointTestPoint = async (
   return vtsuruMutator<ResponseResultOfResponseTestPointModel>(getPostApiPointTestPointUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestTestPointModel),
   })
 }
@@ -853,7 +853,7 @@ export const postApiPointToggleGoodsPin = async (
   return vtsuruMutator<ResponseResultOfBoolean>(getPostApiPointToggleGoodsPinUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestToggleGoodsPinModel),
   })
 }
@@ -883,7 +883,7 @@ export const postApiPointUpdateGoodsStatus = async (
   return vtsuruMutator<ResponseResultOfResponsePointGoodsModel>(getPostApiPointUpdateGoodsStatusUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestUpdateGoodsStatusModel),
   })
 }
@@ -913,7 +913,7 @@ export const postApiPointUpdateGoods = async (
   return vtsuruMutator<ResponseResultOfResponsePointGoodsModel>(getPostApiPointUpdateGoodsUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPointGoodsModel),
   })
 }
@@ -943,7 +943,7 @@ export const postApiPointUpdateOrderExpress = async (
   return vtsuruMutator<ResponseResult>(getPostApiPointUpdateOrderExpressUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestUpdateOrderExpressModel),
   })
 }
@@ -973,7 +973,7 @@ export const postApiPointUpdateOrdersStatus = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiPointUpdateOrdersStatusUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestSetOrderStatusModel),
   })
 }
@@ -1003,7 +1003,7 @@ export const postApiPointUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiPointUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(settingPoint),
   })
 }
@@ -1148,7 +1148,7 @@ export const postApiPointUserUpdateAddress = async (
   return vtsuruMutator<ResponseResultOfShippingAddressInfo>(getPostApiPointUserUpdateAddressUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(shippingAddressInfo),
   })
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Dismiss16Regular from '@vicons/fluent/es/Dismiss16Regular'
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
@@ -18,6 +19,8 @@ import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { toast } from '@/shared/utils'
+import { buildBiliAuthRoute } from '@/shared/utils/authRedirect'
+import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
 
 interface RegisterModel {
   username: string
@@ -52,6 +55,13 @@ const emit = defineEmits<{
 }>()
 
 const account = useAccount()
+const route = useRoute()
+const router = useRouter()
+
+function goBiliOneClickLogin() {
+  emit('close')
+  void router.push(buildBiliAuthRoute(route.fullPath))
+}
 
 const registerModel = ref<RegisterModel>({
   username: '',
@@ -585,6 +595,24 @@ onUnmounted(() => {
               </Button>
             </div>
           </div>
+
+          <div class="relative py-1">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t border-border/70" />
+            </div>
+            <div class="relative flex justify-center text-[11px]">
+              <span class="bg-popover px-2 text-muted-foreground">或免密快捷登录</span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            class="w-full gap-2"
+            @click="goBiliOneClickLogin"
+          >
+            <BilibiliIcon class="size-4 text-[#fb7299]" />
+            Bilibili 弹幕一键登录
+          </Button>
         </TabsContent>
 
         <!-- 注册面板 -->
@@ -652,16 +680,16 @@ onUnmounted(() => {
           class="pt-3 space-y-3"
         >
           <p class="text-xs text-muted-foreground leading-relaxed m-0">
-            已关联 B 站的账号，也可以重新认证身份后设置新密码。
+            已关联 B 站的账号，可直接通过弹幕一键登录后在账户设置中重设密码。
           </p>
 
           <Button
-            as="a"
-            href="/bili-auth"
             variant="outline"
-            class="w-full"
+            class="w-full gap-2"
+            @click="goBiliOneClickLogin"
           >
-            通过 B 站认证重置密码
+            <BilibiliIcon class="size-4 text-[#fb7299]" />
+            通过 B 站弹幕一键登录
           </Button>
 
           <FormField label="注册邮箱">

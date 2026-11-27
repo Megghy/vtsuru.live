@@ -172,7 +172,7 @@ async function submit() {
         <p>{{ isPaused ? '暂不接受新提问，你可以继续浏览已公开的问答。' : '说说你正在想的事。' }}</p>
       </div>
       <Button
-        v-if="!isUserLoggedIn"
+        v-if="!isIdentified"
         variant="secondary"
         class="history-action gap-1.5"
         @click="emit('openHistory')"
@@ -185,10 +185,10 @@ async function submit() {
         variant="secondary"
         class="history-action gap-1.5"
         :disabled="isSelf"
-        @click="router.push({ name: 'manage-questionBox', query: { send: '1' } })"
+        @click="router.push({ name: 'bili-user-qa' })"
       >
         <History class="size-3.5" />
-        已发送
+        我的棉花糖
       </Button>
     </header>
 
@@ -235,13 +235,22 @@ async function submit() {
             <ArrowRight class="size-3.5" />
           </Button>
           <Button
-            v-if="!isUserLoggedIn"
+            v-if="!isIdentified"
             variant="outline"
             class="gap-1.5"
             @click="emit('openHistory')"
           >
             <History class="size-3.5" />
             查看本地记录
+          </Button>
+          <Button
+            v-else
+            variant="outline"
+            class="gap-1.5"
+            @click="router.push({ name: 'bili-user-qa' })"
+          >
+            <History class="size-3.5" />
+            查看我的棉花糖
           </Button>
         </div>
       </div>
@@ -422,9 +431,16 @@ async function submit() {
           </div>
           <div
             v-else-if="!allowUnregistedUser"
-            class="text-xs text-destructive"
+            class="flex items-center justify-between gap-2 flex-wrap text-xs text-destructive"
           >
             <span>对方已禁止未登录用户提问，请先登录或完成 B 站认证</span>
+            <Button
+              size="xs"
+              variant="outline"
+              @click="router.push({ name: 'bili-auth', query: { redirect: $route.fullPath } })"
+            >
+              B 站一键认证
+            </Button>
           </div>
           <div
             v-else

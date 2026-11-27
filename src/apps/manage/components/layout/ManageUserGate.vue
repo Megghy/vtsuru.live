@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/shared/ui/input'
 import { Spin } from '@/shared/ui/spin'
 import { useMessage } from '@/shared/utils'
+import { buildBiliAuthRoute } from '@/shared/utils/authRedirect'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const auth = useBiliAuth()
@@ -22,7 +23,11 @@ const message = useMessage()
 const isMigrating = ref(false)
 const migrationError = ref('')
 const migrationLink = computed(() => createBiliAuthUrl(CURRENT_HOST, auth.replacementToken ?? ''))
-const isReady = computed(() => auth.isAuthed && auth.biliAuth.id > 0 && !auth.isInvalid)
+const isBiliReady = computed(() => auth.isAuthed && auth.biliAuth.id > 0 && !auth.isInvalid)
+const requiresBiliAuth = computed(() => route.meta.requiresBiliAuth !== false)
+const isReady = computed(() =>
+  requiresBiliAuth.value ? isBiliReady.value : isBiliReady.value || accountInfo.value.id > 0,
+)
 
 async function clearAuthFromUrl() {
   const query = { ...route.query }
@@ -141,11 +146,11 @@ onMounted(async () => {
         <CardTitle class="text-base">
           {{ auth.isInvalid ? 'Bilibili 认证已失效' : '先完成 Bilibili 认证' }}
         </CardTitle>
-        <CardDescription class="text-xs"> 认证后即可查看积分、订单和积分记录。 </CardDescription>
+        <CardDescription class="text-xs">认证后即可查看积分、订单、投稿、点播与互动记录。</CardDescription>
       </CardHeader>
       <CardFooter class="flex justify-center p-0 pt-6">
-        <Button @click="router.push({ name: 'bili-auth' })">
-          {{ auth.isInvalid ? '重新认证' : accountInfo.id ? '绑定 Bilibili' : '开始认证' }}
+        <Button @click="router.push(buildBiliAuthRoute(route.fullPath))">
+          {{ auth.isInvalid ? '重新认证' : accountInfo.id ? '绑定 Bilibili' : 'B 站弹幕一键认证' }}
         </Button>
       </CardFooter>
     </Card>

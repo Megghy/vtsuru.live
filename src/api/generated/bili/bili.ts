@@ -73,7 +73,7 @@ export const postApiBiliParseCollection = async (
   return vtsuruMutator<ResponseResultOfBiliCollectionParseResult>(getPostApiBiliParseCollectionUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(parseCollectionRequest),
   })
 }
@@ -212,7 +212,7 @@ export const postApiBiliTianxuanRecord = async (
   return vtsuruMutator<ResponseResultOfObject>(getPostApiBiliTianxuanRecordUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(recordTianxuanRequest),
   })
 }

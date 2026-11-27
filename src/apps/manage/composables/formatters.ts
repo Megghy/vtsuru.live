@@ -33,13 +33,15 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 
-/** 秒数 → mm:ss */
+/** 秒数 → HH:MM:SS 或 MM:SS */
 export function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60)
+  const safe = Math.max(0, Math.floor(seconds || 0))
+  const h = Math.floor(safe / 3600)
+  const m = Math.floor((safe % 3600) / 60)
     .toString()
     .padStart(2, '0')
-  const s = Math.floor(seconds % 60)
+  const s = Math.floor(safe % 60)
     .toString()
     .padStart(2, '0')
-  return `${m}:${s}`
+  return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`
 }

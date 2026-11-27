@@ -1,6 +1,9 @@
 import { DuplicateVideoPolicy, VideoFrom, VideoStatus } from '@/api/generated/model'
 import type { ReponseVideoCollectVideo, ResponseVideoCollectModel } from '@/api/generated/model'
 import type { ObsWidgetTheme } from '@/apps/obs-store/components/shared/theme'
+import { formatVideoDuration, normalizeBiliCoverUrl } from '@/shared/utils/videoCollect'
+
+export { formatVideoDuration, normalizeBiliCoverUrl }
 
 export type VideoCollectMode = 'watch' | 'summary' | 'manual'
 
@@ -52,21 +55,6 @@ export const DEFAULT_VIDEO_COLLECT_STATE: VideoCollectState = {
   manualCover: '',
   manualIndexLabel: '1 / 12',
   manualDuration: '03:42',
-}
-
-export function normalizeBiliCoverUrl(url?: string | null) {
-  if (!url) return ''
-  return url.trim().replace(/^http:\/\//i, 'https://')
-}
-
-export function formatVideoDuration(seconds: number) {
-  const safe = Math.max(0, Math.floor(seconds || 0))
-  const hours = Math.floor(safe / 3600)
-  const minutes = Math.floor((safe % 3600) / 60)
-  const secs = safe % 60
-  return hours > 0
-    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-    : `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
 export function createSampleVideoCollectTable(nowMs = Date.now()): ResponseVideoCollectModel {

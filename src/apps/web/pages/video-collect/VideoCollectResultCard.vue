@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import ArrowSwap24Regular from '@vicons/fluent/es/ArrowSwap24Regular'
-import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
-import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
-import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
-import Comment24Regular from '@vicons/fluent/es/Comment24Regular'
-import Heart24Regular from '@vicons/fluent/es/Heart24Regular'
-import Open24Regular from '@vicons/fluent/es/Open24Regular'
-import Person24Regular from '@vicons/fluent/es/Person24Regular'
-import Question24Regular from '@vicons/fluent/es/Question24Regular'
+import {
+  ArrowLeftRight,
+  Check,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  Heart,
+  HelpCircle,
+  MessageSquare,
+  Play,
+  Radio,
+  User,
+} from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import type { VideoCollectInfo, VideoData } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { SimpleTooltip } from '@/shared/ui/tooltip'
+import { formatVideoDuration, normalizeBiliCoverUrl } from '@/shared/utils/videoCollect'
 
 const props = withDefaults(
   defineProps<{
@@ -22,32 +29,29 @@ const props = withDefaults(
     revealed?: boolean
     watched?: boolean
     featured?: boolean
+    canPushObs?: boolean
   }>(),
   {
     presentation: 'plain',
     revealed: true,
     watched: false,
     featured: false,
+    canPushObs: false,
   },
 )
 
 const emit = defineEmits<{
   select: []
+  play: []
+  pushToObs: []
   toggleWatched: []
   toggleReveal: []
 }>()
 
 const primarySender = computed(() => props.item.info.senders[0])
 const otherSendersCount = computed(() => Math.max(0, props.item.info.senders.length - 1))
-
-function formatDuration(seconds: number) {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const remainingSeconds = seconds % 60
-  return hours > 0
-    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
-    : `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
-}
+const coverUrl = computed(() => normalizeBiliCoverUrl(props.item.video.cover))
+const videoPage = computed(() => Math.max(1, props.item.info.page || 1))
 
 function handleCardClick() {
   if (props.presentation === 'flip' && !props.revealed) {
@@ -77,40 +81,43 @@ function handleCardClick() {
       >
         <div class="video-result-card__media">
           <img
-            :src="item.video.cover.replace('http://', 'https://')"
+            :src="coverUrl"
             :alt="item.video.title"
             loading="eager"
             referrerpolicy="no-referrer"
           />
 
-          <!-- 分区标签 -->
+          <!-- 分区与分 P 标签 -->
           <span
-            v-if="item.video.partitionName"
+            v-if="item.video.partitionName || videoPage > 1"
             class="media-badge partition-badge"
           >
-            {{ item.video.partitionName }}
+            <template v-if="item.video.partitionName">{{ item.video.partitionName }}</template>
+            <template v-if="item.video.partitionName && videoPage > 1"> · </template>
+            <template v-if="videoPage > 1">P{{ videoPage }}</template>
           </span>
 
           <!-- 时长 -->
           <span class="media-badge duration-badge">
-            <component
-              :is="Clock24Regular"
-              class="size-3"
-            />
-            {{ formatDuration(item.video.length) }}
+            <Clock class="size-3" />
+            {{ formatVideoDuration(item.video.length) }}
           </span>
 
           <!-- 快速已看切换按钮 -->
           <Button
             variant="ghost"
-            size="xs"
-            class="watch-toggle-btn h-auto py-1 px-2.5 rounded-full"
+            size="none"
+            class="watch-toggle-btn"
             :class="{ 'is-active': watched }"
             :aria-label="watched ? '标记为未看' : '标记为已看'"
             @click.stop.prevent="emit('toggleWatched')"
           >
-            <component
-              :is="watched ? CheckmarkCircle24Regular : Checkmark24Regular"
+            <CheckCircle2
+              v-if="watched"
+              class="size-3.5"
+            />
+            <Check
+              v-else
               class="size-3.5"
             />
             <span>{{ watched ? '已看' : '未看' }}</span>
@@ -118,92 +125,138 @@ function handleCardClick() {
         </div>
 
         <div class="video-result-card__details">
-          <!-- 标题与外链 -->
+          <!-- 标题与快捷操作 -->
           <div class="title-row">
-            <strong
-              class="video-title"
-              :title="item.video.title"
+            <SimpleTooltip :content="item.video.title">
+              <strong class="video-title">
+                {{ item.video.title }}
+              </strong>
+            </SimpleTooltip>
+
+            <div
+              class="flex items-center gap-0.5 shrink-0"
+              @click.stop
             >
-              {{ item.video.title }}
-            </strong>
-            <Button
-              variant="ghost"
-              size="xs"
-              class="open-link-btn size-7 text-muted-foreground"
-              aria-label="在哔哩哔哩打开"
-              @click.stop.prevent="emit('select')"
-            >
-              <component
-                :is="Open24Regular"
-                class="size-4"
-              />
-            </Button>
+              <SimpleTooltip content="站内播放预览">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="站内播放预览"
+                  @click.stop.prevent="emit('play')"
+                >
+                  <Play class="size-3.5" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip
+                v-if="canPushObs"
+                content="同步到 OBS 鉴赏角标"
+              >
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="同步到 OBS 鉴赏角标"
+                  @click.stop.prevent="emit('pushToObs')"
+                >
+                  <Radio class="size-3.5 text-primary" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip content="在哔哩哔哩打开">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="在哔哩哔哩打开"
+                  @click.stop.prevent="emit('select')"
+                >
+                  <ExternalLink class="size-3.5" />
+                </Button>
+              </SimpleTooltip>
+            </div>
           </div>
 
           <!-- UP 主与 BV 号 -->
           <div class="meta-row">
-            <span
-              class="owner"
-              :title="`UP 主: ${item.video.ownerName}`"
-            >
-              <component
-                :is="Person24Regular"
-                class="size-3.5"
-              />
-              <span class="owner-name">{{ item.video.ownerName }}</span>
-            </span>
+            <SimpleTooltip :content="`UP 主: ${item.video.ownerName}`">
+              <span class="owner">
+                <User class="size-3.5 shrink-0" />
+                <span class="owner-name">{{ item.video.ownerName }}</span>
+              </span>
+            </SimpleTooltip>
             <code class="bvid-code">{{ item.info.bvid }}</code>
           </div>
 
-          <!-- 粉丝推荐理由 (最核心展示区) -->
+          <!-- 粉丝推荐理由 -->
           <div
             v-if="primarySender"
             class="recommend-block"
           >
             <div class="recommend-author">
               <span class="sender-tag">
-                <component
-                  :is="Heart24Regular"
-                  class="size-3.5"
-                />
+                <Heart class="size-3.5 shrink-0" />
                 <span class="sender-name">{{ primarySender.sender || '匿名粉丝' }}</span>
               </span>
-              <Badge
-                v-if="otherSendersCount > 0"
-                variant="secondary"
-                class="extra-senders-tag text-[10px] h-4.5 px-1 font-normal"
-              >
-                +{{ otherSendersCount }} 人推荐
-              </Badge>
+
+              <Popover v-if="otherSendersCount > 0">
+                <PopoverTrigger as-child>
+                  <Badge
+                    variant="secondary"
+                    size="xs"
+                    class="cursor-pointer shrink-0 hover:bg-secondary/80"
+                    @click.stop
+                  >
+                    +{{ otherSendersCount }} 人推荐
+                  </Badge>
+                </PopoverTrigger>
+                <PopoverContent
+                  class="w-72 p-2.5 space-y-2 text-xs"
+                  @click.stop
+                >
+                  <div class="font-semibold text-foreground">全部推荐人 ({{ item.info.senders.length }})</div>
+                  <div class="space-y-1.5 max-h-52 overflow-y-auto scrollbar-thin pr-1">
+                    <div
+                      v-for="(sender, sIdx) in item.info.senders"
+                      :key="sIdx"
+                      class="p-1.5 rounded bg-muted/40 border border-border/60 space-y-0.5"
+                    >
+                      <div class="font-medium text-foreground">{{ sender.sender || '匿名粉丝' }}</div>
+                      <p
+                        v-if="sender.description"
+                        class="text-[11px] text-muted-foreground leading-relaxed m-0"
+                      >
+                        “{{ sender.description }}”
+                      </p>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
-            <p
+            <SimpleTooltip
               v-if="primarySender.description"
-              class="recommend-quote"
-              :title="primarySender.description"
+              :content="primarySender.description"
             >
-              <component
-                :is="Comment24Regular"
-                class="quote-icon size-3 inline-block"
-              />
-              <span>{{ primarySender.description }}</span>
-            </p>
+              <p class="recommend-quote">
+                <MessageSquare class="quote-icon size-3 inline-block" />
+                <span>{{ primarySender.description }}</span>
+              </p>
+            </SimpleTooltip>
             <span
               v-else
               class="recommend-empty-note"
-              >推荐了此视频</span
             >
+              推荐了此视频
+            </span>
           </div>
 
           <!-- 若无推荐人但有 B 站原简介 -->
-          <p
+          <SimpleTooltip
             v-else-if="item.video.description"
-            class="video-desc"
-            :title="item.video.description"
+            :content="item.video.description"
           >
-            {{ item.video.description }}
-          </p>
+            <p class="video-desc">
+              {{ item.video.description }}
+            </p>
+          </SimpleTooltip>
 
-          <!-- 兜底占位，防止高频切换时因缺块产生高度跳动 -->
+          <!-- 兜底占位 -->
           <div
             v-else
             class="empty-desc-slot"
@@ -220,16 +273,13 @@ function handleCardClick() {
         >
           <span class="flip-order">#{{ String(index + 1).padStart(2, '0') }}</span>
           <Button
-            variant="ghost"
+            variant="outline"
             size="xs"
-            class="flip-back-btn h-auto py-0.5 px-2"
+            class="flip-back-btn gap-1"
             aria-label="重新盖上"
             @click.stop="emit('toggleReveal')"
           >
-            <component
-              :is="ArrowSwap24Regular"
-              class="size-3.5"
-            />
+            <ArrowLeftRight class="size-3" />
             盖上
           </Button>
         </div>
@@ -248,10 +298,7 @@ function handleCardClick() {
         <span class="mystery-number">{{ String(index + 1).padStart(2, '0') }}</span>
         <div class="mystery-center">
           <div class="mystery-icon-circle">
-            <component
-              :is="Question24Regular"
-              class="size-6"
-            />
+            <HelpCircle class="size-6" />
           </div>
           <strong class="mystery-text">点击揭晓</strong>
           <span class="mystery-hint">TAP TO REVEAL</span>
@@ -291,13 +338,13 @@ function handleCardClick() {
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--muted);
-  border: var(--ui-border-width) var(--ui-border-style) var(--border);
+  background: var(--card);
+  border: var(--ui-border-width, 1px) var(--ui-border-style, solid) var(--border);
   border-radius: var(--radius);
   box-shadow: var(--ui-shadow);
   backface-visibility: hidden;
   transition:
-    transform 0.5s cubic-bezier(0.2, 0.8, 0.25, 1),
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.25, 1),
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
@@ -329,11 +376,11 @@ function handleCardClick() {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.35s ease;
+  transition: transform 0.25s ease;
 }
 
 .video-result-card:hover .video-result-card__media img {
-  transform: scale(1.035);
+  transform: scale(1.03);
 }
 
 .media-badge {
@@ -357,7 +404,7 @@ function handleCardClick() {
   top: 8px;
   left: 8px;
   font-weight: 500;
-  background: rgb(0 0 0 / 60%);
+  background: rgb(0 0 0 / 62%);
 }
 
 .duration-badge {
@@ -374,28 +421,31 @@ function handleCardClick() {
   gap: 4px;
   align-items: center;
   padding: 4px 8px;
-  color: rgb(255 255 255 / 88%);
+  color: rgb(255 255 255 / 90%);
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
   background: rgb(0 0 0 / 65%);
   backdrop-filter: blur(6px);
-  border: 1px solid rgb(255 255 255 / 18%);
+  border: 1px solid rgb(255 255 255 / 20%);
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .watch-toggle-btn:hover {
   background: rgb(0 0 0 / 85%);
-  border-color: rgb(255 255 255 / 40%);
-  transform: scale(1.05);
+  border-color: rgb(255 255 255 / 45%);
+  transform: scale(1.04);
 }
 
 .watch-toggle-btn.is-active {
-  color: #fff;
-  background: color-mix(in srgb, #10b981 85%, #000);
-  border-color: #10b981;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .video-result-card__details {
@@ -408,11 +458,10 @@ function handleCardClick() {
   box-sizing: border-box;
 }
 
-/* 焦点卡片（抽取舞台与逐看舞台）严格锁定内容高度，确保任何视频切换零抖动 */
 .is-featured .video-result-card__details {
-  height: 148px;
-  min-height: 148px;
-  max-height: 148px;
+  height: 152px;
+  min-height: 152px;
+  max-height: 152px;
   overflow: hidden;
 }
 
@@ -425,9 +474,9 @@ function handleCardClick() {
 .is-featured .recommend-block,
 .is-featured .video-desc,
 .is-featured .empty-desc-slot {
-  height: 56px;
-  min-height: 56px;
-  max-height: 56px;
+  height: 58px;
+  min-height: 58px;
+  max-height: 58px;
   margin-top: auto;
   overflow: hidden;
   box-sizing: border-box;
@@ -457,24 +506,6 @@ function handleCardClick() {
   color: var(--primary);
 }
 
-.open-link-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px;
-  color: var(--muted-foreground);
-  background: transparent;
-  border: 0;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.open-link-btn:hover {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
-}
-
 .meta-row {
   display: flex;
   align-items: center;
@@ -502,7 +533,8 @@ function handleCardClick() {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 11px;
   color: var(--muted-foreground);
-  opacity: 0.75;
+  opacity: 0.78;
+  flex-shrink: 0;
 }
 
 .recommend-block {
@@ -539,12 +571,6 @@ function handleCardClick() {
   white-space: nowrap;
 }
 
-.extra-senders-tag {
-  font-size: 10px;
-  padding: 0 4px;
-  height: 18px;
-}
-
 .recommend-quote {
   display: -webkit-box;
   margin: 0;
@@ -565,7 +591,6 @@ function handleCardClick() {
 
 .quote-icon {
   margin-right: 4px;
-  font-size: 12px;
   vertical-align: -1px;
   color: var(--primary);
 }
@@ -588,12 +613,12 @@ function handleCardClick() {
   padding: 4px 8px;
   color: var(--muted-foreground);
   font-size: 11px;
-  background: color-mix(in srgb, var(--border) 20%, transparent);
+  background: color-mix(in srgb, var(--border) 22%, transparent);
   border-radius: 4px;
 }
 
 .empty-desc-text {
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .is-watched .video-result-card__content {
@@ -606,14 +631,13 @@ function handleCardClick() {
   filter: none;
 }
 
-/* 翻牌模式角标与快捷控制 */
 .flip-revealed-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 6px 12px;
   border-top: 1px dashed var(--border);
-  background: color-mix(in srgb, var(--muted) 80%, transparent);
+  background: color-mix(in srgb, var(--muted) 75%, transparent);
 }
 
 .flip-order {
@@ -623,26 +647,6 @@ function handleCardClick() {
   color: var(--primary);
 }
 
-.flip-back-btn {
-  display: inline-flex;
-  gap: 3px;
-  align-items: center;
-  padding: 3px 8px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.flip-back-btn:hover {
-  color: var(--primary);
-  border-color: var(--primary);
-}
-
-/* 背面样式（神秘盲盒面） */
 .mystery-face {
   position: absolute;
   inset: 0;
@@ -653,8 +657,8 @@ function handleCardClick() {
   padding: 24px;
   color: var(--primary);
   background:
-    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 70%),
-    var(--muted);
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%),
+    var(--card);
   border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
   cursor: pointer;
   text-align: center;
@@ -700,16 +704,15 @@ function handleCardClick() {
   justify-content: center;
   width: 52px;
   height: 52px;
-  font-size: 26px;
   color: var(--primary);
   background: color-mix(in srgb, var(--primary) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
   border-radius: 50%;
-  transition: transform 0.25s ease;
+  transition: transform 0.2s ease;
 }
 
 .mystery-face:hover .mystery-icon-circle {
-  transform: scale(1.1) rotate(6deg);
+  transform: scale(1.08) rotate(6deg);
 }
 
 .mystery-text {
@@ -725,7 +728,6 @@ function handleCardClick() {
   opacity: 0.7;
 }
 
-/* 翻转机制 */
 .is-flip .mystery-face {
   display: flex;
 }

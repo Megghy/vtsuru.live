@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
-import { fetchPublicForumExists } from '@/apps/user-page/api'
 import {
   getEnabledUserFunctions,
   isUserFeatureEnabled,
   USER_FEATURE_DEFINITION_MAP,
 } from '@/apps/user-page/featureNavigation'
 import type { UserFeatureKey } from '@/apps/user-page/featureNavigation'
-import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -26,48 +24,14 @@ const values = computed<Record<string, unknown>>(() =>
 )
 const configuredItems = computed(() => (Array.isArray(values.value.items) ? values.value.items : []))
 const enabledFunctions = computed(() => getEnabledUserFunctions(props.userInfo))
-const forumQuery = useUserPageRuntimeQuery<boolean>({
-  key: () => `forum-exists:${props.userInfo?.id ?? 0}`,
-  ttlMs: 60_000,
-  loader: (signal) => fetchPublicForumExists(props.userInfo!.id, { signal }),
-})
-const needsForum = computed(() =>
-  configuredItems.value.some((item) => {
-    const value = item && typeof item === 'object' && !Array.isArray(item) ? (item as Record<string, unknown>) : {}
-    return value.key === 'forum' && value.hidden !== true
-  }),
-)
-
-async function loadForumAvailability() {
-  if (!props.userInfo?.id || !needsForum.value) {
-    forumQuery.cancel()
-    return
-  }
-  try {
-    await forumQuery.execute()
-  } catch (error) {
-    console.error('用户页功能入口加载讨论区状态失败', error)
-  }
-}
-
-onMounted(() => {
-  void loadForumAvailability()
-})
-watch(
-  () => [props.userInfo?.id, needsForum.value] as const,
-  () => {
-    void loadForumAvailability()
-  },
-)
 
 const availableFeatures = computed(() =>
   configuredItems.value.flatMap((item) => {
     const value = item && typeof item === 'object' && !Array.isArray(item) ? (item as Record<string, unknown>) : {}
     if (value.hidden === true || typeof value.key !== 'string' || !(value.key in USER_FEATURE_DEFINITION_MAP)) return []
     const feature = USER_FEATURE_DEFINITION_MAP[value.key as UserFeatureKey]
-    const enabled =
-      feature.key === 'forum' ? forumQuery.data.value === true : isUserFeatureEnabled(feature, enabledFunctions.value)
-    return enabled ? [feature] : []
+    if (feature.key === 'forum') return []
+    return isUserFeatureEnabled(feature, enabledFunctions.value) ? [feature] : []
   }),
 )
 </script>

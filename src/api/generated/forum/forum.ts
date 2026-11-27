@@ -12,8 +12,10 @@ import type {
   GetApiForumGetForumParams,
   GetApiForumGetTopicParams,
   GetApiForumGetTopicsParams,
+  GetApiForumMyActivityParams,
   PaginationResponseOfListOfResponseForumCommentBaseModel,
   PaginationResponseOfListOfResponseForumTopicSimpleModel,
+  PaginationResponseOfListOfResponseMyForumActivityItem,
   PostApiForumApplyParams,
   PostApiForumLikeCommentParams,
   PostApiForumLikeTopicParams,
@@ -91,7 +93,7 @@ export const postApiForumCreate = async (
   return vtsuruMutator<ResponseResultOfResponseForumModel>(getPostApiForumCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestCreateForum),
   })
 }
@@ -586,8 +588,32 @@ export const postApiForumManageUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiForumManageUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(forumSetting),
+  })
+}
+
+export const getGetApiForumMyActivityUrl = (params?: GetApiForumMyActivityParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/forum/my-activity?${stringifiedParams}` : `/api/forum/my-activity`
+}
+
+export const getApiForumMyActivity = async (
+  params?: GetApiForumMyActivityParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<PaginationResponseOfListOfResponseMyForumActivityItem> => {
+  return vtsuruMutator<PaginationResponseOfListOfResponseMyForumActivityItem>(getGetApiForumMyActivityUrl(params), {
+    ...options,
+    method: 'GET',
   })
 }
 
@@ -616,7 +642,7 @@ export const postApiForumPostComment = async (
   return vtsuruMutator<ResponseResultOfResponseForumCommentBaseModel>(getPostApiForumPostCommentUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPostComment),
   })
 }
@@ -646,7 +672,7 @@ export const postApiForumPostReply = async (
   return vtsuruMutator<ResponseResultOfResponseForumCommentReplyBaseModel>(getPostApiForumPostReplyUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPostReply),
   })
 }
@@ -676,7 +702,7 @@ export const postApiForumPostTopic = async (
   return vtsuruMutator<ResponseResultOfResponseForumTopicModel>(getPostApiForumPostTopicUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPostTopic),
   })
 }
@@ -706,7 +732,7 @@ export const postApiForumUpdate = async (
   return vtsuruMutator<ResponseResult>(getPostApiForumUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestCreateForum),
   })
 }

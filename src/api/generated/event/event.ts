@@ -88,7 +88,7 @@ export const postApiEventGuardDelete = async (
   return vtsuruMutator<ResponseResultOfString>(getPostApiEventGuardDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(deleteGuardEventRequest),
   })
 }
@@ -118,7 +118,7 @@ export const postApiEventGuardManual = async (
   return vtsuruMutator<ResponseResultOfEventModel>(getPostApiEventGuardManualUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(manualGuardEventRequest),
   })
 }
@@ -159,7 +159,7 @@ export const postApiEventUpdateV2 = async (
   return vtsuruMutator<ResponseResultOfResponseEventModel>(getPostApiEventUpdateV2Url(params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(eventModel),
   })
 }
@@ -200,7 +200,7 @@ export const postApiEventUpdateV3 = async (
   return vtsuruMutator<ResponseResultOfResponseEventModelV3>(getPostApiEventUpdateV3Url(params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestEventModelV3),
   })
 }
@@ -241,7 +241,7 @@ export const postApiEventUpdate = async (
   return vtsuruMutator<ResponseResultOfString>(getPostApiEventUpdateUrl(params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(eventModel),
   })
 }

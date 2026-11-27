@@ -12,6 +12,8 @@ import type {
   GetApiQueueGetActiveAndSettingsParams,
   GetApiQueueGetActiveParams,
   GetApiQueueGetParams,
+  GetApiQueueMyRecordsParams,
+  PaginationResponseOfListOfResponseMyQueueModel,
   PaginationResponseOfListOfResponseQueueModel,
   PostApiQueueAddParams,
   PostApiQueueCancelFromWebParams,
@@ -104,7 +106,7 @@ export const postApiQueueBatchStatus = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiQueueBatchStatusUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchQueueStatusModel),
   })
 }
@@ -182,7 +184,7 @@ export const postApiQueueDelete = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiQueueDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiQueueDeleteBody),
   })
 }
@@ -327,6 +329,30 @@ export const postApiQueueJoinFromWeb = async (
   })
 }
 
+export const getGetApiQueueMyRecordsUrl = (params?: GetApiQueueMyRecordsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/queue/my-records?${stringifiedParams}` : `/api/queue/my-records`
+}
+
+export const getApiQueueMyRecords = async (
+  params?: GetApiQueueMyRecordsParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<PaginationResponseOfListOfResponseMyQueueModel> => {
+  return vtsuruMutator<PaginationResponseOfListOfResponseMyQueueModel>(getGetApiQueueMyRecordsUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
 export const getPostApiQueueNextBatchUrl = (params?: PostApiQueueNextBatchParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -376,7 +402,7 @@ export const postApiQueuePin = async (
   return vtsuruMutator<ResponseResultOfBoolean>(getPostApiQueuePinUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(toggleQueuePinModel),
   })
 }
@@ -432,7 +458,7 @@ export const postApiQueueReorder = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiQueueReorderUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiQueueReorderBody),
   })
 }
@@ -462,7 +488,7 @@ export const postApiQueueReplaceMember = async (
   return vtsuruMutator<ResponseResultOfReplaceQueueMemberResult>(getPostApiQueueReplaceMemberUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(replaceQueueMemberModel),
   })
 }
@@ -542,7 +568,7 @@ export const postApiQueueTryAdd = async (
   return vtsuruMutator<ResponseResultOfResponseQueueModel>(getPostApiQueueTryAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(eventModel),
   })
 }
@@ -572,7 +598,7 @@ export const postApiQueueUpdateItem = async (
   return vtsuruMutator<ResponseResultOfResponseQueueModel>(getPostApiQueueUpdateItemUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateQueueItemModel),
   })
 }
@@ -602,7 +628,7 @@ export const postApiQueueUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiQueueUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(settingQueue),
   })
 }

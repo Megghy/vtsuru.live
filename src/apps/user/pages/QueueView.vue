@@ -246,10 +246,14 @@ async function handleCancelSelf(item: ResponseQueueModel) {
   if (!props.userInfo?.id) return
   cancellingId.value = item.id
   try {
-    const res = await postApiQueueCancelFromWeb({
-      target: props.userInfo.id,
-      id: item.id,
-    })
+    const headers = Object.fromEntries(await biliAuth.getBiliAuthHeaders())
+    const res = await postApiQueueCancelFromWeb(
+      {
+        target: props.userInfo.id,
+        id: item.id,
+      },
+      Object.keys(headers).length > 0 ? { headers } : undefined,
+    )
     if (res.code === 200) {
       message.success(
         res.data?.pointRefunded && res.data.refundedAmount > 0
@@ -380,7 +384,7 @@ onUnmounted(() => {
               </span>
               <RouterLink
                 v-else
-                to="/bili-auth"
+                :to="{ name: 'bili-auth', query: { redirect: $route.fullPath } }"
                 class="text-primary underline underline-offset-2"
               >
                 绑定 B 站账号以加入排队

@@ -41,7 +41,7 @@ export const postApiSupportTickets = async (
   return vtsuruMutator<ResponseResultOfSupportTicketModel>(getPostApiSupportTicketsUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(createSupportTicketModel),
   })
 }
@@ -86,7 +86,7 @@ export const postApiSupportTicketsIdMessages = async (
   return vtsuruMutator<ResponseResultOfSupportTicketMessageModel>(getPostApiSupportTicketsIdMessagesUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(addSupportTicketMessageModel),
   })
 }
@@ -117,7 +117,7 @@ export const patchApiSupportTicketsIdPreferences = async (
   return vtsuruMutator<ResponseResult>(getPatchApiSupportTicketsIdPreferencesUrl(id), {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateSupportTicketPreferencesModel),
   })
 }

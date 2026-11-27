@@ -18,7 +18,6 @@ import type { ResponseUserInfo } from '@/api/generated/model'
 import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import {
   fetchBiliProfile,
-  fetchPublicForumExists,
   fetchPublicUserInfo,
   fetchUserPagesSettingsByUserId,
 } from '@/apps/user-page/api'
@@ -99,7 +98,11 @@ const registerAndLoginModalVisiable = ref(false)
 async function openAudienceEntry() {
   registerAndLoginModalVisiable.value = false
   await useAuth.sessionReady
-  void router.push({ name: useAuth.isAuthed ? 'bili-user-points' : 'bili-auth' })
+  void router.push(
+    useAuth.isAuthed
+      ? { name: 'bili-user-points' }
+      : { name: 'bili-auth', query: { redirect: route.fullPath } },
+  )
 }
 const sider = ref()
 const { width: siderWidth } = useElementSize(sider)
@@ -138,7 +141,6 @@ type UserNavGroup = {
 }
 
 const navGroups = shallowRef<UserNavGroup[]>([])
-const forumExists = ref(false)
 const userPagesSettings = ref<UserPagesSettings | null>(null)
 const publicCustomCss = computed(() => {
   const css = userPagesSettings.value?.customCss
@@ -406,8 +408,8 @@ function updateMenuOptions() {
 
   const enabledFunctions = getEnabledUserFunctions(userInfo.value)
   baseItems.push(
-    ...USER_FEATURE_DEFINITIONS.filter((feature) =>
-      feature.key === 'forum' ? forumExists.value : isUserFeatureEnabled(feature, enabledFunctions),
+    ...USER_FEATURE_DEFINITIONS.filter(
+      (feature) => feature.key !== 'forum' && isUserFeatureEnabled(feature, enabledFunctions),
     ).map((feature) => ({
       label: feature.label,
       key: feature.routeName,
@@ -511,17 +513,9 @@ async function loadPublicUser(userId: string | string[] | undefined, signal: Abo
   }
   if (signal.aborted) return
 
-  forumExists.value = false
   updateMenuOptions()
   loadStatus.value = 'ready'
   void requestBiliUserData(fetchedUserInfo, signal)
-  void fetchPublicForumExists(fetchedUserInfo.id, { signal })
-    .then((exists) => {
-      if (signal.aborted) return
-      forumExists.value = exists === true
-      if (forumExists.value) updateMenuOptions()
-    })
-    .catch(() => {})
 }
 
 watch(
@@ -686,6 +680,20 @@ function scrollToTop() {
               <span v-if="isDesktop">{{ WORKSPACE_LABELS[lastWorkspace] }}</span>
             </Button>
           </template>
+
+          <!-- 纯 BiliAuth 观众操作 -->
+          <Button
+            v-else-if="useAuth.isAuthed"
+            size="xs"
+            @click="$router.push({ name: 'bili-user-points' })"
+          >
+            <component
+              :is="WindowWrench20Filled"
+              class="size-4"
+              :class="{ 'mr-1': isDesktop }"
+            />
+            <span v-if="isDesktop">用户中心</span>
+          </Button>
 
           <!-- 未登录用户操作 -->
           <Button
@@ -1035,11 +1043,11 @@ function scrollToTop() {
         >
           <AlertDescription>
             <div class="text-center text-xs">
-              查看积分和订单，用 Bilibili 认证即可，不用注册。主播或需要提问时再登录。
+              查积分、订单、棉花糖、投稿与点播记录，发一条 B 站弹幕即可一键登录。
             </div>
             <div class="flex justify-center mt-2">
               <Button @click="openAudienceEntry">
-                {{ useAuth.isAuthed ? '查看积分和订单' : '开始 Bilibili 认证' }}
+                {{ useAuth.isAuthed ? '进入用户中心' : 'B 站弹幕一键登录' }}
               </Button>
             </div>
           </AlertDescription>

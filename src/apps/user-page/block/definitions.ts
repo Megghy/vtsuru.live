@@ -639,7 +639,7 @@ export const SHARED_BLOCK_DEFINITIONS = [
     '功能入口',
     'interaction',
     ['歌单', '提问箱', '签到', '积分', '论坛', '日程'],
-    { items: USER_FEATURE_KEYS.map((key) => ({ key })) },
+    { items: USER_FEATURE_KEYS.filter((key) => key !== 'forum').map((key) => ({ key })) },
     validateFeatureNav,
     true,
   ),

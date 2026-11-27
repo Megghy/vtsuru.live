@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import Key24Regular from '@vicons/fluent/es/Key24Regular'
-import Mail24Regular from '@vicons/fluent/es/Mail24Regular'
+import { KeyRound, Mail } from 'lucide-vue-next'
 import { computed, onUnmounted, ref } from 'vue'
 
 import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
@@ -37,6 +36,8 @@ let timerId: ReturnType<typeof setInterval> | null = null
 const saving = ref(false)
 
 const emailAction = computed(() => (account.value.bindEmail ? '修改邮箱' : '绑定邮箱'))
+const hasPassword = computed(() => account.value.hasPassword !== false)
+const passwordAction = computed(() => (hasPassword.value ? '修改密码' : '设置密码'))
 
 function startCountdown(seconds = 60) {
   countdownSeconds.value = seconds
@@ -101,8 +102,12 @@ async function saveEmail() {
 }
 
 async function savePassword() {
-  if (!oldPassword.value || !password.value) {
-    message.warning('请填写当前密码和新密码')
+  if (hasPassword.value && !oldPassword.value) {
+    message.warning('请填写当前旧密码')
+    return
+  }
+  if (!password.value) {
+    message.warning('请填写新密码')
     return
   }
   if (password.value !== passwordAgain.value) {
@@ -112,18 +117,19 @@ async function savePassword() {
   saving.value = true
   try {
     const result = await postApiAccountChangePassword({
-      oldPassword: oldPassword.value,
+      oldPassword: hasPassword.value ? oldPassword.value : '',
       password: password.value,
     })
     if (result.code !== 200) throw new Error(result.message)
     cookie.value = { cookie: result.data, refreshDate: Date.now() }
+    await GetSelfAccount()
     passwordModalVisible.value = false
     oldPassword.value = ''
     password.value = ''
     passwordAgain.value = ''
-    message.success('密码已修改')
+    message.success(hasPassword.value ? '密码已修改' : '登录密码已设置')
   } catch (error) {
-    message.error(`修改失败：${responseError(error)}`)
+    message.error(`${hasPassword.value ? '修改' : '设置'}失败：${responseError(error)}`)
   } finally {
     saving.value = false
   }
@@ -164,10 +170,7 @@ defineExpose({ reset })
       <article class="flex-between gap-3 p-3 rounded-md border border-border/60 bg-muted/30">
         <div class="flex items-center gap-3 min-w-0">
           <div class="h-8 w-8 rounded-md bg-primary/10 text-primary flex-center shrink-0">
-            <component
-              :is="Mail24Regular"
-              class="h-4 w-4"
-            />
+            <Mail class="size-4" />
           </div>
           <div class="flex flex-col min-w-0">
             <strong class="text-xs font-medium text-foreground">邮箱</strong>
@@ -196,25 +199,32 @@ defineExpose({ reset })
       <article class="flex-between gap-3 p-3 rounded-md border border-border/60 bg-muted/30">
         <div class="flex items-center gap-3 min-w-0">
           <div class="h-8 w-8 rounded-md bg-primary/10 text-primary flex-center shrink-0">
-            <component
-              :is="Key24Regular"
-              class="h-4 w-4"
-            />
+            <KeyRound class="size-4" />
           </div>
           <div class="flex flex-col min-w-0">
             <strong class="text-xs font-medium text-foreground">登录密码</strong>
-            <span class="text-xs text-muted-foreground">定期更新密码可以降低账号风险</span>
+            <span class="text-xs text-muted-foreground">
+              {{ hasPassword ? '定期更新密码可以降低账号风险' : '当前为 B 站弹幕一键登录账号，可按需设置密码' }}
+            </span>
           </div>
         </div>
 
-        <Button
-          size="xs"
-          variant="outline"
-          class="shrink-0"
-          @click="passwordModalVisible = true"
-        >
-          修改密码
-        </Button>
+        <div class="flex items-center gap-2 shrink-0">
+          <Badge
+            v-if="!hasPassword"
+            variant="outline"
+            size="sm"
+          >
+            未设置
+          </Badge>
+          <Button
+            size="xs"
+            variant="outline"
+            @click="passwordModalVisible = true"
+          >
+            {{ passwordAction }}
+          </Button>
+        </div>
       </article>
     </div>
   </section>
@@ -278,12 +288,19 @@ defineExpose({ reset })
   <Dialog v-model:open="passwordModalVisible">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-base"> 修改登录密码 </DialogTitle>
-        <DialogDescription class="text-xs"> 请输入当前旧密码以及两次新密码。 </DialogDescription>
+        <DialogTitle class="text-base">{{ hasPassword ? '修改登录密码' : '设置登录密码' }}</DialogTitle>
+        <DialogDescription class="text-xs">
+          {{
+            hasPassword
+              ? '请输入当前旧密码以及两次新密码。'
+              : '设置密码后，可使用用户名或 B 站 UID 加密码登录（需 6-64 位且含字母与数字）。'
+          }}
+        </DialogDescription>
       </DialogHeader>
 
       <div class="space-y-3 py-2">
         <Input
+          v-if="hasPassword"
           v-model="oldPassword"
           type="password"
           placeholder="当前旧密码"
@@ -291,7 +308,7 @@ defineExpose({ reset })
         <Input
           v-model="password"
           type="password"
-          placeholder="新密码"
+          placeholder="新密码（6-64位，需包含字母和数字）"
         />
         <Input
           v-model="passwordAgain"
@@ -313,7 +330,7 @@ defineExpose({ reset })
           :loading="saving"
           @click="savePassword"
         >
-          确认修改
+          确认{{ hasPassword ? '修改' : '设置' }}
         </Button>
       </DialogFooter>
     </DialogContent>

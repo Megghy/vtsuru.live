@@ -43,7 +43,7 @@ export const postApiStorageTargetsCreate = async (
   return vtsuruMutator<ResponseResultOfResponseStorageTarget>(getPostApiStorageTargetsCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestStorageTarget),
   })
 }
@@ -181,7 +181,7 @@ export const postApiStorageTargetsUpdate = async (
   return vtsuruMutator<ResponseResultOfResponseStorageTarget>(getPostApiStorageTargetsUpdateUrl(params), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestStorageTarget),
   })
 }

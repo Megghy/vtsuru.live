@@ -78,7 +78,7 @@ export const postApiObsSceneIdDraft = async (
   return vtsuruMutator<ResponseResultOfResponseSceneProjectDetail>(getPostApiObsSceneIdDraftUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestSaveDraft),
   })
 }
@@ -109,7 +109,7 @@ export const putApiObsSceneIdDraft = async (
   return vtsuruMutator<ResponseResultOfResponseSceneProjectDetail>(getPutApiObsSceneIdDraftUrl(id), {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestSaveDraft),
   })
 }
@@ -140,7 +140,7 @@ export const postApiObsSceneIdPublish = async (
   return vtsuruMutator<ResponseResultOfResponseSceneProjectDetail>(getPostApiObsSceneIdPublishUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestPublishScene),
   })
 }
@@ -185,7 +185,7 @@ export const postApiObsSceneIdSwitchScene = async (
   return vtsuruMutator<ResponseResultOfResponseSwitchSceneResult>(getPostApiObsSceneIdSwitchSceneUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestSwitchScene),
   })
 }
@@ -255,7 +255,7 @@ export const postApiObsSceneCreate = async (
   return vtsuruMutator<ResponseResultOfResponseSceneProjectDetail>(getPostApiObsSceneCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestCreateSceneProject),
   })
 }

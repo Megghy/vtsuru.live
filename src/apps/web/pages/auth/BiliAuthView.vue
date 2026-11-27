@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
-import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
-import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
-import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
-import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
-import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
-import EyeOff24Regular from '@vicons/fluent/es/EyeOff24Regular'
-import Key24Regular from '@vicons/fluent/es/Key24Regular'
-import Live24Regular from '@vicons/fluent/es/Live24Regular'
-import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
-import Open24Regular from '@vicons/fluent/es/Open24Regular'
-import ShieldCheckmark24Regular from '@vicons/fluent/es/ShieldCheckmark24Regular'
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Copy,
+  ExternalLink,
+  KeyRound,
+  LogOut,
+  Radio,
+  ShieldCheck,
+  XCircle,
+} from 'lucide-vue-next'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import { prepareBiliAccount } from '@/api/account'
-import type { BiliAccountProof } from '@/api/account'
+import { applyAccountSession, logoutAccount, useAccount } from '@/api/account'
 import { getApiBiliAuthStatus, postApiBiliAuthStart } from '@/api/generated/bili-auth-v2/bili-auth-v2'
-import BiliAccountSetup from '@/apps/account/components/BiliAccountSetup.vue'
-import { createBiliAuthUrl } from '@/apps/account/components/biliAuthCredential'
+import { type BiliAuthExchangeAction, exchangeBiliAccount } from '@/api/viewer-records'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
-import { CURRENT_HOST } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Spin } from '@/shared/ui/spin'
 import { toast } from '@/shared/utils'
+import { DEFAULT_USER_HOME, sanitizeRedirectPath } from '@/shared/utils/authRedirect'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
 
@@ -37,23 +37,31 @@ interface AuthStartModel {
 }
 
 const steps = [
-  { title: '准备认证', detail: '创建一次性认证流程' },
-  { title: '直播间确认', detail: '使用目标账号发送认证码' },
-  { title: '完成连接', detail: '设置本站登录密码' },
+  { title: '发起认证', detail: '获取一次性弹幕认证码' },
+  { title: '直播间确认', detail: '发送弹幕确认账号归属' },
+  { title: '自动登录', detail: '一步完成连接并返回' },
 ]
 
+const route = useRoute()
+const router = useRouter()
+const account = useAccount()
 const biliAuth = useBiliAuth()
+
 const guidKey = usePersistedStorage('Bili.Auth.Key', uuidv4())
-const currentToken = computed(() => (biliAuth.usesAccountIdentity ? null : biliAuth.currentToken))
-const accountProof = ref<BiliAccountProof>()
-const accountSetupError = ref('')
 const startModel = ref<AuthStartModel>()
-const currentStep = ref(currentToken.value ? 2 : 0)
+const currentStep = ref(0)
 const timeLeft = ref(0)
 const timeOut = ref(false)
 const isStarting = ref(false)
-const showPasswordLink = ref(false)
-const authUrl = computed(() => createBiliAuthUrl(CURRENT_HOST, currentToken.value ?? ''))
+const isExchanging = ref(false)
+const exchangeError = ref('')
+const completedAction = ref<BiliAuthExchangeAction | null>(null)
+
+const redirectTarget = computed(() => sanitizeRedirectPath(route.query.redirect, DEFAULT_USER_HOME))
+const hasCustomRedirect = computed(() => redirectTarget.value !== DEFAULT_USER_HOME)
+const alreadyBoundAccount = computed(() => Boolean(account.value.id && account.value.biliUserAuthInfo?.id))
+const isBindingExistingAccount = computed(() => Boolean(account.value.id && !account.value.biliUserAuthInfo?.id))
+
 let timer: ReturnType<typeof setInterval> | undefined
 let countdownTimer: ReturnType<typeof setInterval> | undefined
 let pendingStatus: Promise<void> | undefined
@@ -94,6 +102,39 @@ function syncStatus() {
   return pendingStatus
 }
 
+async function finishWithExchange(key: string) {
+  isExchanging.value = true
+  exchangeError.value = ''
+  currentStep.value = 2
+  try {
+    const response = await exchangeBiliAccount(key)
+    if (response.code !== 200 || !response.data?.token) {
+      throw new Error(response.message || '未能完成站内账号连接')
+    }
+    applyAccountSession({
+      account: response.data.account,
+      token: response.data.token,
+    })
+    completedAction.value = response.data.action
+    guidKey.value = uuidv4()
+
+    const tip =
+      response.data.action === 'created'
+        ? '认证成功，已自动创建并登录账号'
+        : response.data.action === 'bound'
+          ? '已成功绑定 Bilibili 账号'
+          : 'Bilibili 一键登录成功'
+    toast.success(tip)
+
+    await router.replace(redirectTarget.value)
+  } catch (error) {
+    guidKey.value = uuidv4()
+    exchangeError.value = error instanceof Error ? error.message : String(error)
+  } finally {
+    isExchanging.value = false
+  }
+}
+
 async function readStatus() {
   const key = guidKey.value
   const response = await getApiBiliAuthStatus({ key })
@@ -109,14 +150,7 @@ async function readStatus() {
   if (response.code === 200) {
     stopPolling()
     clearInterval(countdownTimer)
-    // 认证完成不签发独立凭据, 必须在 BiliAccountSetup 设置密码/绑定账号后以站内账号身份使用
-    const prepared = await prepareBiliAccount(key)
-    if (key !== guidKey.value) return
-    accountProof.value = prepared.code === 200 ? prepared.data : undefined
-    accountSetupError.value = prepared.code === 200 ? '' : prepared.message
-    guidKey.value = uuidv4()
-    currentStep.value = 2
-    toast.success('认证成功')
+    await finishWithExchange(key)
     return
   }
 
@@ -130,6 +164,7 @@ async function readStatus() {
 
 async function startVerify() {
   isStarting.value = true
+  exchangeError.value = ''
   try {
     const response = await postApiBiliAuthStart({
       key: guidKey.value,
@@ -166,24 +201,27 @@ function restart() {
   startModel.value = undefined
   currentStep.value = 0
   timeOut.value = false
-  accountProof.value = undefined
-  accountSetupError.value = ''
-}
-
-function authenticateAnotherAccount() {
-  restart()
-  if (!biliAuth.usesAccountIdentity) biliAuth.logout()
+  exchangeError.value = ''
+  completedAction.value = null
   guidKey.value = uuidv4()
 }
 
+function switchAndLogout() {
+  biliAuth.logout()
+  logoutAccount()
+}
+
 onMounted(async () => {
-  if (currentToken.value) return
+  if (alreadyBoundAccount.value) {
+    currentStep.value = 2
+    return
+  }
   try {
     await syncStatus()
     if (currentStep.value === 1 && !timeOut.value) {
       clearInterval(countdownTimer)
       countdownTimer = setInterval(updateTimeLeft, 1000)
-      startPolling(5000)
+      startPolling(3000)
     }
   } catch (error) {
     console.error('[bili-auth] 恢复认证状态失败', error)
@@ -218,14 +256,21 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="my-[58px] max-[840px]:my-8">
-          <p class="m-0 mb-3 text-[#fb7299] text-xs font-bold">ACCOUNT CONNECTION</p>
+          <p class="m-0 mb-3 text-[#fb7299] text-xs font-bold">ONE-STEP AUTH</p>
           <h1 class="m-0 text-foreground text-[38px] leading-tight max-[840px]:text-[32px] max-[520px]:text-[28px]">
-            连接你的<br class="max-[840px]:hidden" /><span class="text-[#fb7299]">Bilibili 账户</span>
+            {{ isBindingExistingAccount ? '绑定你的' : '连接你的' }}<br class="max-[840px]:hidden" /><span
+              class="text-[#fb7299]"
+              >Bilibili 账户</span
+            >
           </h1>
           <p
             class="max-w-[340px] mt-[22px] mb-0 text-muted-foreground text-[15px] leading-[1.8] max-[840px]:max-w-[560px] max-[520px]:text-sm"
           >
-            通过一条直播间弹幕确认身份，连接后即可使用面向观众的互动功能。
+            {{
+              isBindingExistingAccount
+                ? '发一条认证弹幕即可将 B 站身份绑定到当前账号，绑定后自动返回原页面。'
+                : '发送一条直播间弹幕即可自动登录或创建账号，无需额外设置密码，完成后自动返回。'
+            }}
           </p>
         </div>
 
@@ -242,10 +287,9 @@ onBeforeUnmount(() => {
             <span
               class="step-marker relative z-1 grid size-8 box-border text-[13px] font-bold bg-popover border border-border rounded-full place-items-center max-[840px]:size-7"
             >
-              <component
-                :is="CheckmarkCircle24Regular"
+              <CheckCircle2
                 v-if="currentStep > index"
-                class="size-5"
+                class="size-4"
               />
               <span v-else>{{ index + 1 }}</span>
             </span>
@@ -259,14 +303,11 @@ onBeforeUnmount(() => {
         <div
           class="trust-note grid grid-cols-[22px_minmax(0,1fr)] gap-[11px] items-start pt-5 mt-auto max-[840px]:mt-[26px]"
         >
-          <component
-            :is="ShieldCheckmark24Regular"
-            class="size-5 shrink-0"
-          />
+          <ShieldCheck class="size-5 shrink-0" />
           <p class="flex flex-col gap-[3px] m-0">
             <strong class="text-foreground text-[13px]">无需 B 站密码或 Cookie</strong
             ><span class="text-muted-foreground text-xs leading-[1.55] max-[520px]:hidden"
-              >认证码仅用于确认当前 Bilibili 账号归属。</span
+              >认证码仅用于确认 B 站账号归属，登录密码与邮箱可在日后按需补充。</span
             >
           </p>
         </div>
@@ -285,32 +326,31 @@ onBeforeUnmount(() => {
             class="state-content w-full max-w-[440px]"
           >
             <div class="state-icon state-icon--brand grid size-[54px] mb-6 rounded-lg place-items-center">
-              <component
-                :is="Key24Regular"
-                class="size-6"
-              />
+              <KeyRound class="size-6" />
             </div>
             <p class="m-0 mb-3 text-[#fb7299] text-xs font-bold">准备认证</p>
-            <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">用弹幕完成身份确认</h2>
+            <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">
+              {{ isBindingExistingAccount ? '绑定到当前站内账号' : '用弹幕一键登录' }}
+            </h2>
             <p class="mt-3.5 mb-7 text-muted-foreground text-sm leading-[1.75]">
-              开始后，你会获得一个一次性认证码。请在 5 分钟内用需要认证的账号发送它。
+              {{
+                isBindingExistingAccount
+                  ? `当前已登录「${account.name}」，发完认证码后会自动绑定你的 Bilibili 身份。`
+                  : '开始后会生成一个 5 分钟有效的一次性认证码，用你的 B 站账号发送后将自动登录。'
+              }}
             </p>
 
             <div class="grid grid-cols-2 gap-2 mb-7 max-[520px]:grid-cols-1">
               <span
                 class="flex gap-[7px] items-center min-w-0 py-[11px] px-3 text-muted-foreground text-xs bg-muted border border-border rounded-md"
-                ><component
-                  :is="Clock24Regular"
-                  class="size-4 shrink-0 text-[#00aeec]"
-                />大约 1 分钟</span
               >
+                <Clock class="size-4 shrink-0 text-[#00aeec]" />约 30 秒完成
+              </span>
               <span
                 class="flex gap-[7px] items-center min-w-0 py-[11px] px-3 text-muted-foreground text-xs bg-muted border border-border rounded-md"
-                ><component
-                  :is="Live24Regular"
-                  class="size-4 shrink-0 text-[#00aeec]"
-                />需要打开直播间</span
               >
+                <Radio class="size-4 shrink-0 text-[#00aeec]" />发一条弹幕即自动跳转
+              </span>
             </div>
 
             <Button
@@ -319,11 +359,17 @@ onBeforeUnmount(() => {
               :disabled="isStarting"
               @click="startVerify"
             >
-              {{ isStarting ? '处理中...' : '开始认证' }}
-              <component
-                :is="ArrowRight24Regular"
-                class="size-4"
-              />
+              {{ isStarting ? '正在生成认证码...' : '开始认证' }}
+              <ArrowRight class="size-4" />
+            </Button>
+
+            <Button
+              v-if="hasCustomRedirect"
+              variant="ghost"
+              class="w-full mt-2 text-muted-foreground"
+              @click="router.push(redirectTarget)"
+            >
+              暂不认证，返回原页面
             </Button>
           </div>
 
@@ -333,11 +379,11 @@ onBeforeUnmount(() => {
             class="state-content w-full max-w-[440px]"
           >
             <div class="live-status inline-flex gap-[9px] items-center mb-[18px] text-[#00aeec] text-xs font-bold">
-              <i />正在等待直播间消息
+              <i />正在等待直播间弹幕
             </div>
             <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">发送这条认证码</h2>
             <p class="mt-3.5 mb-7 text-muted-foreground text-sm leading-[1.75]">
-              复制认证码，用目标 Bilibili 账号发送到指定直播间。
+              复制认证码，用你的 Bilibili 账号发送到指定直播间，收到后会自动完成登录。
             </p>
 
             <div class="flex-between py-[13px] text-muted-foreground text-[13px] border-y border-border">
@@ -358,10 +404,7 @@ onBeforeUnmount(() => {
                 aria-label="复制认证码"
                 @click="copyText(startModel?.code ?? '', '已复制认证码')"
               >
-                <component
-                  :is="Copy24Regular"
-                  class="size-4"
-                />
+                <Copy class="size-4" />
               </Button>
             </div>
 
@@ -375,14 +418,13 @@ onBeforeUnmount(() => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                前往直播间
-                <component
-                  :is="Open24Regular"
-                  class="size-4"
-                />
+                前往直播间发送
+                <ExternalLink class="size-4" />
               </a>
             </Button>
-            <p class="mt-[15px] mb-0 text-muted-foreground text-xs text-center">发送后页面会自动完成认证，无需刷新。</p>
+            <p class="mt-[15px] mb-0 text-muted-foreground text-xs text-center">
+              发送后页面会自动完成登录并跳转，无需手动刷新。
+            </p>
           </div>
 
           <div
@@ -391,15 +433,12 @@ onBeforeUnmount(() => {
             class="state-content w-full max-w-[440px]"
           >
             <div class="state-icon state-icon--error grid size-[54px] mb-6 rounded-lg place-items-center">
-              <component
-                :is="Dismiss24Regular"
-                class="size-6 text-destructive"
-              />
+              <XCircle class="size-6 text-destructive" />
             </div>
-            <p class="m-0 mb-3 text-[#d03050] text-xs font-bold">认证已结束</p>
+            <p class="m-0 mb-3 text-destructive text-xs font-bold">认证已结束</p>
             <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">本次认证已超时</h2>
             <p class="mt-3.5 mb-7 text-muted-foreground text-sm leading-[1.75]">
-              一次性认证码已经失效，请重新开始认证流程。
+              一次性认证码已经失效，请重新发起认证。
             </p>
             <Button
               size="lg"
@@ -411,114 +450,96 @@ onBeforeUnmount(() => {
           </div>
 
           <div
+            v-else-if="isExchanging"
+            key="exchanging"
+            class="state-content w-full max-w-[440px] flex flex-col items-center text-center py-8 gap-3"
+          >
+            <Spin size="large" />
+            <h2 class="m-0 text-foreground text-xl font-semibold">正在完成登录...</h2>
+            <p class="m-0 text-xs text-muted-foreground">已确认你的 Bilibili 身份，正在自动进入页面。</p>
+          </div>
+
+          <div
+            v-else-if="exchangeError"
+            key="exchange-error"
+            class="state-content w-full max-w-[440px]"
+          >
+            <div class="state-icon state-icon--error grid size-[54px] mb-6 rounded-lg place-items-center">
+              <AlertTriangle class="size-6 text-destructive" />
+            </div>
+            <p class="m-0 mb-3 text-destructive text-xs font-bold">无法完成连接</p>
+            <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">账号绑定存在冲突</h2>
+            <p class="mt-3.5 mb-6 text-muted-foreground text-sm leading-[1.75]">
+              {{ exchangeError }}
+            </p>
+            <div class="flex flex-col gap-2">
+              <Button
+                v-if="account.id"
+                size="lg"
+                variant="destructive"
+                class="w-full"
+                @click="switchAndLogout"
+              >
+                <LogOut class="size-4 mr-1.5" />
+                退出当前账号并重新认证
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                class="w-full"
+                @click="restart"
+              >
+                重新发起认证
+              </Button>
+            </div>
+          </div>
+
+          <div
             v-else
             key="success"
             class="state-content w-full max-w-[440px]"
           >
             <div class="state-icon state-icon--success grid size-[54px] mb-6 rounded-lg place-items-center">
-              <component
-                :is="CheckmarkCircle24Regular"
-                class="size-6 text-emerald-500"
-              />
+              <CheckCircle2 class="size-6 text-emerald-500" />
             </div>
-            <p class="m-0 mb-3 text-[#18a058] text-xs font-bold">身份已确认</p>
+            <p class="m-0 mb-3 text-emerald-600 dark:text-emerald-400 text-xs font-bold">身份已连接</p>
             <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">
-              {{ biliAuth.isAuthed ? '账户已成功连接' : '还差一步：设置本站密码' }}
+              {{ completedAction ? '已完成登录' : '当前账号已绑定 Bilibili' }}
             </h2>
-            <p class="mt-3.5 mb-7 text-muted-foreground text-sm leading-[1.75]">之后使用 B 站 UID 和本站密码登录。</p>
+            <p class="mt-3.5 mb-6 text-muted-foreground text-sm leading-[1.75]">
+              已连接 <strong class="text-foreground">{{ account.biliUserAuthInfo?.name || account.name }}</strong>
+              <span
+                v-if="account.biliUserAuthInfo?.userId"
+                class="font-mono ml-1"
+                >(UID {{ account.biliUserAuthInfo.userId }})</span
+              >，随时可以在用户中心查看你的积分、棉花糖、投稿与点播记录。
+            </p>
 
-            <BiliAccountSetup
-              :proof="accountProof"
-              :error="accountSetupError"
-              @restart="authenticateAnotherAccount"
-            />
-
-            <template v-if="currentToken">
-              <label
-                class="block mb-2 text-foreground text-[13px] font-semibold"
-                for="bili-login-link"
-                >专属登录链接</label
-              >
-              <div class="relative flex items-center">
-                <Input
-                  id="bili-login-link"
-                  :type="showPasswordLink ? 'text' : 'password'"
-                  :model-value="authUrl"
-                  readonly
-                  class="pr-16 font-mono"
-                />
-                <div class="absolute right-1.5 flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    class="size-6 text-muted-foreground"
-                    aria-label="显示/隐藏"
-                    @click="showPasswordLink = !showPasswordLink"
-                  >
-                    <component
-                      :is="showPasswordLink ? EyeOff24Regular : Eye24Regular"
-                      class="size-3.5"
-                    />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    class="size-6 text-muted-foreground"
-                    aria-label="复制登录链接"
-                    @click="copyText(authUrl, '已复制登录链接')"
-                  >
-                    <component
-                      :is="Copy24Regular"
-                      class="size-3.5"
-                    />
-                  </Button>
-                </div>
-              </div>
-
-              <div
-                class="security-notice grid grid-cols-[22px_minmax(0,1fr)] gap-[11px] items-start py-[13px] px-3.5 mb-6 rounded"
-              >
-                <component
-                  :is="LockClosed24Regular"
-                  class="size-4 shrink-0 mt-px"
-                />
-                <p class="flex flex-col gap-[3px] m-0">
-                  <strong class="text-foreground text-[13px]">请妥善保管此链接</strong
-                  ><span class="text-xs leading-[1.55]">任何获得链接的人都能以你的身份登录。</span>
-                </p>
-              </div>
-            </template>
-
-            <div
-              v-if="biliAuth.isAuthed"
-              class="success-actions flex flex-col gap-2 pt-2"
-            >
+            <div class="flex flex-col gap-2">
               <Button
                 size="lg"
-                class="w-full bg-[#18a058] hover:bg-[#18a058]/90 text-white"
-                @click="$router.push({ name: 'bili-user-points' })"
+                class="w-full bg-emerald-600 hover:bg-emerald-600/90 text-white"
+                @click="router.push(redirectTarget)"
               >
-                查看我的积分
-                <component
-                  :is="ArrowRight24Regular"
-                  class="size-4"
-                />
+                {{ hasCustomRedirect ? '返回原页面' : '进入用户中心' }}
+                <ArrowRight class="size-4" />
               </Button>
               <Popconfirm
-                positive-text="继续"
+                positive-text="退出并切换"
                 negative-text="取消"
-                title="切换账号提示"
-                @positive-click="authenticateAnotherAccount"
+                title="切换其他 Bilibili 账号？"
+                @positive-click="switchAndLogout"
               >
                 <template #trigger>
                   <Button
                     variant="outline"
                     size="lg"
                     class="w-full"
-                    >认证其他账号</Button
                   >
+                    切换其他账号
+                  </Button>
                 </template>
-                这会退出当前账号。请先保存登录链接，再继续认证其他账号。
+                这会退出当前登录状态，之后可用另一个 B 站账号发弹幕一键登录。
               </Popconfirm>
             </div>
           </div>

@@ -13,6 +13,8 @@ import type {
   GetApiLiveRequestGetActiveParams,
   GetApiLiveRequestGetParams,
   GetApiLiveRequestGetTodayParams,
+  GetApiLiveRequestMyRequestsParams,
+  PaginationResponseOfListOfResponseMySongRequestModel,
   PaginationResponseOfListOfResponseSongRequestModel,
   PostApiLiveRequestActiveParams,
   PostApiLiveRequestAddFromWebParams,
@@ -155,7 +157,7 @@ export const postApiLiveRequestBatchStatus = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestBatchStatusUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchLiveRequestStatusModel),
   })
 }
@@ -261,7 +263,7 @@ export const postApiLiveRequestDelete = async (
   return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiLiveRequestDeleteBody),
   })
 }
@@ -437,6 +439,35 @@ export const getApiLiveRequestGet = async (
   })
 }
 
+export const getGetApiLiveRequestMyRequestsUrl = (params?: GetApiLiveRequestMyRequestsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/live-request/my-requests?${stringifiedParams}`
+    : `/api/live-request/my-requests`
+}
+
+export const getApiLiveRequestMyRequests = async (
+  params?: GetApiLiveRequestMyRequestsParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<PaginationResponseOfListOfResponseMySongRequestModel> => {
+  return vtsuruMutator<PaginationResponseOfListOfResponseMySongRequestModel>(
+    getGetApiLiveRequestMyRequestsUrl(params),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
+
 export const getPostApiLiveRequestPinUrl = () => {
   return `/api/live-request/pin`
 }
@@ -462,7 +493,7 @@ export const postApiLiveRequestPin = async (
   return vtsuruMutator<ResponseResultOfBoolean>(getPostApiLiveRequestPinUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(toggleLiveRequestPinModel),
   })
 }
@@ -518,7 +549,7 @@ export const postApiLiveRequestReorder = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiLiveRequestReorderUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiLiveRequestReorderBody),
   })
 }
@@ -598,7 +629,7 @@ export const postApiLiveRequestTryAdd = async (
   return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestTryAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(eventModel),
   })
 }
@@ -628,7 +659,7 @@ export const postApiLiveRequestUpdateItem = async (
   return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestUpdateItemUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(updateLiveRequestItemModel),
   })
 }
@@ -658,7 +689,7 @@ export const postApiLiveRequestUpdateSetting = async (
   return vtsuruMutator<ResponseResult>(getPostApiLiveRequestUpdateSettingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(settingSongRequest),
   })
 }

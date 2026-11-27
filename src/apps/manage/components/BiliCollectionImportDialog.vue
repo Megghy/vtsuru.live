@@ -11,12 +11,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Empty } from '@/shared/ui/empty'
 import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
+import { formatVideoDuration, normalizeBiliCoverUrl } from '@/shared/utils/videoCollect'
 
 const props = defineProps<{
   open: boolean
   title?: string
   description?: string
   confirmLabel?: string
+  maxSelect?: number
 }>()
 
 const emit = defineEmits<{
@@ -31,12 +33,6 @@ const items = ref<BiliCollectionVideoItem[]>([])
 const selectedBvids = ref<Set<string>>(new Set())
 
 const selectedItems = computed(() => items.value.filter((item) => selectedBvids.value.has(item.bvid)))
-
-function formatDuration(sec: number): string {
-  const m = Math.floor(sec / 60)
-  const s = sec % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
 
 function formatPlay(n: number): string {
   if (n >= 10000) return `${(n / 10000).toFixed(1).replace(/\.0$/, '')}万`
@@ -53,9 +49,12 @@ async function handleParse() {
     const res = await parseBiliCollection(urlInput.value.trim())
     sourceTitle.value = res.title
     items.value = res.items
-    selectedBvids.value = new Set(res.items.map((i) => i.bvid))
+    const limit = props.maxSelect && props.maxSelect > 0 ? props.maxSelect : res.items.length
+    selectedBvids.value = new Set(res.items.slice(0, limit).map((i) => i.bvid))
     if (res.items.length === 0) {
       toast.info('未解析到可用视频')
+    } else if (props.maxSelect && res.items.length > props.maxSelect) {
+      toast.success(`解析到 ${res.items.length} 个视频，已默认勾选前 ${props.maxSelect} 个（单次导入上限）`)
     } else {
       toast.success(`解析到 ${res.items.length} 个视频（${res.title}）`)
     }
@@ -68,13 +67,28 @@ async function handleParse() {
 
 function toggleSelect(bvid: string) {
   const next = new Set(selectedBvids.value)
-  if (next.has(bvid)) next.delete(bvid)
-  else next.add(bvid)
+  if (next.has(bvid)) {
+    next.delete(bvid)
+  } else {
+    if (props.maxSelect && next.size >= props.maxSelect) {
+      toast.warning(`单次最多选择 ${props.maxSelect} 个视频`)
+      return
+    }
+    next.add(bvid)
+  }
   selectedBvids.value = next
 }
 
 function selectAll(checked: boolean) {
-  selectedBvids.value = checked ? new Set(items.value.map((i) => i.bvid)) : new Set()
+  if (!checked) {
+    selectedBvids.value = new Set()
+    return
+  }
+  const limit = props.maxSelect && props.maxSelect > 0 ? props.maxSelect : items.value.length
+  selectedBvids.value = new Set(items.value.slice(0, limit).map((i) => i.bvid))
+  if (props.maxSelect && items.value.length > props.maxSelect) {
+    toast.info(`单次最多导入 ${props.maxSelect} 个，已选中前 ${props.maxSelect} 个`)
+  }
 }
 
 function handleConfirm() {
@@ -164,7 +178,7 @@ function handleConfirm() {
               />
               <img
                 v-if="item.cover"
-                :src="item.cover"
+                :src="normalizeBiliCoverUrl(item.cover)"
                 referrerpolicy="no-referrer"
                 class="w-16 aspect-video rounded-sm object-cover shrink-0 bg-muted"
               />
@@ -172,7 +186,7 @@ function handleConfirm() {
                 <div class="text-xs font-medium truncate">{{ item.title }}</div>
                 <div class="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
                   <span class="font-mono">{{ item.bvid }}</span>
-                  <span>{{ formatDuration(item.duration) }}</span>
+                  <span>{{ formatVideoDuration(item.duration) }}</span>
                   <span class="inline-flex items-center gap-0.5">
                     <Play class="size-3" />
                     {{ formatPlay(item.play) }}

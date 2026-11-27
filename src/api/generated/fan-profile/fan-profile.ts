@@ -64,7 +64,7 @@ export const postApiFanProfileAiExtractLive = async (
   return vtsuruMutator<ResponseResultOfExtractLiveFactsResponse>(getPostApiFanProfileAiExtractLiveUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(extractLiveFactsRequest),
   })
 }
@@ -94,7 +94,7 @@ export const postApiFanProfileAiSummarize = async (
   return vtsuruMutator<ResponseResultOfFanDetailResponse>(getPostApiFanProfileAiSummarizeUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(fanAiSummarizeRequest),
   })
 }
@@ -150,7 +150,7 @@ export const postApiFanProfileCreate = async (
   return vtsuruMutator<ResponseResultOfFanDetailResponse>(getPostApiFanProfileCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(createManualFanRequest),
   })
 }
@@ -254,7 +254,7 @@ export const postApiFanProfileFactResolve = async (
   return vtsuruMutator<ResponseResultOfFanDetailResponse>(getPostApiFanProfileFactResolveUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(resolveCandidateFactRequest),
   })
 }
@@ -284,7 +284,7 @@ export const postApiFanProfileImportNotes = async (
   return vtsuruMutator<ResponseResultOfImportLocalNotesResponse>(getPostApiFanProfileImportNotesUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(importLocalNotesRequest),
   })
 }
@@ -338,7 +338,7 @@ export const postApiFanProfileMemoryAdd = async (
   return vtsuruMutator<ResponseResultOfFanMemoryItem>(getPostApiFanProfileMemoryAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(addFanMemoryRequest),
   })
 }
@@ -368,7 +368,7 @@ export const postApiFanProfileMemoryDelete = async (
   return vtsuruMutator<ResponseResultOfBoolean>(getPostApiFanProfileMemoryDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(deleteFanMemoryRequest),
   })
 }
@@ -398,7 +398,7 @@ export const postApiFanProfileMerge = async (
   return vtsuruMutator<ResponseResultOfFanDetailResponse>(getPostApiFanProfileMergeUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(mergeFanProfileRequest),
   })
 }
@@ -428,7 +428,7 @@ export const postApiFanProfileQuickNote = async (
   return vtsuruMutator<ResponseResultOfFanProfileDashboardItem>(getPostApiFanProfileQuickNoteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(quickNoteRequest),
   })
 }
@@ -482,7 +482,7 @@ export const postApiFanProfileSave = async (
   return vtsuruMutator<ResponseResultOfFanDetailResponse>(getPostApiFanProfileSaveUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(saveFanProfileRequest),
   })
 }
@@ -512,7 +512,7 @@ export const postApiFanProfileStar = async (
   return vtsuruMutator<ResponseResultOfBoolean>(getPostApiFanProfileStarUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(toggleFanStarRequest),
   })
 }
@@ -542,7 +542,7 @@ export const postApiFanProfileSyncMedals = async (
   return vtsuruMutator<ResponseResultOfObject>(getPostApiFanProfileSyncMedalsUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(syncFanMedalsRequest),
   })
 }

@@ -41,7 +41,7 @@ export const postApiFollowingId = async (
   return vtsuruMutator<ResponseResult>(getPostApiFollowingIdUrl(id), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(followRequest),
   })
 }

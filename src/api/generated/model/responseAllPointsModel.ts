@@ -10,4 +10,10 @@ import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 export interface ResponseAllPointsModel {
   owner: ResponseUserBasicInfo
   points: number
+  /** @nullable */
+  lastCheckInAt?: number | null
+  consecutiveCheckInDays: number
+  totalCheckInDays: number
+  /** @nullable */
+  recentCheckInDates?: number[] | null
 }

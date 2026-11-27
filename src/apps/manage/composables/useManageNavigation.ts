@@ -22,15 +22,25 @@ import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
 import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
 import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
 import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
-import { Users } from 'lucide-vue-next'
+import {
+  Clapperboard,
+  History,
+  ListMusic,
+  MessageSquareHeart,
+  Receipt,
+  Settings,
+  Users,
+  Wallet,
+} from 'lucide-vue-next'
 import { computed, type Component, type Ref } from 'vue'
 
 import type { ResponseAccountInfo } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
-export type ManageNavGroupId = 'favorites' | 'user' | 'common' | 'data' | 'tools' | 'danmaku'
+export type UserNavGroupId = 'user-assets' | 'user-activity' | 'user-account'
+export type ManageNavGroupId = 'favorites' | 'user' | UserNavGroupId | 'common' | 'data' | 'tools' | 'danmaku'
 export type ManageNavGroupKey = `group-${ManageNavGroupId}`
-export type StreamerNavGroupId = Exclude<ManageNavGroupId, 'favorites' | 'user'>
+export type StreamerNavGroupId = Exclude<ManageNavGroupId, 'favorites' | 'user' | UserNavGroupId>
 
 export interface ManageNavItem {
   key: string
@@ -122,30 +132,58 @@ const USER_WORKSPACE_ITEMS: ManageNavItem[] = [
   {
     key: 'bili-user-points',
     label: '我的积分',
-    icon: BookCoins20Filled,
+    description: '各频道积分余额与打卡连签',
+    icon: Wallet,
     to: { name: 'bili-user-points' },
-    group: 'user',
+    group: 'user-assets',
   },
   {
     key: 'bili-user-orders',
     label: '我的订单',
-    icon: Receipt24Regular,
+    description: '礼物兑换与服务委托订单',
+    icon: Receipt,
     to: { name: 'bili-user-orders' },
-    group: 'user',
+    group: 'user-assets',
   },
   {
     key: 'bili-user-history',
     label: '积分记录',
-    icon: History24Regular,
+    description: '各频道积分获取与消耗流水',
+    icon: History,
     to: { name: 'bili-user-history' },
-    group: 'user',
+    group: 'user-assets',
+  },
+  {
+    key: 'bili-user-qa',
+    label: '我的棉花糖',
+    description: '已发送的提问、回复与追问',
+    icon: MessageSquareHeart,
+    to: { name: 'bili-user-qa' },
+    group: 'user-activity',
+  },
+  {
+    key: 'bili-user-video-collect',
+    label: '我的视频投稿',
+    description: '视频征集投稿进度与撤回',
+    icon: Clapperboard,
+    to: { name: 'bili-user-video-collect' },
+    group: 'user-activity',
+  },
+  {
+    key: 'bili-user-requests',
+    label: '点播与排队',
+    description: '点歌与排队历史及自助撤回',
+    icon: ListMusic,
+    to: { name: 'bili-user-requests' },
+    group: 'user-activity',
   },
   {
     key: 'bili-user-settings',
     label: '账户设置',
-    icon: Settings24Regular,
+    description: '收货地址、密码与 B 站绑定',
+    icon: Settings,
     to: { name: 'bili-user-settings' },
-    group: 'user',
+    group: 'user-account',
   },
 ]
 

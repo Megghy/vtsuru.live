@@ -7,7 +7,7 @@ import { toast } from 'vue-sonner'
 import { useAccount } from '@/api/account'
 import { VideoStatus } from '@/api/generated/model'
 import type { ReponseVideoCollectVideo, ResponseVideoCollectModel } from '@/api/generated/model'
-import { getApiVideoCollectGet, getApiVideoCollectGetActive } from '@/api/generated/video-collect/video-collect'
+import { getApiVideoCollectGet, getApiVideoCollectGetAll } from '@/api/generated/video-collect/video-collect'
 import { OBS_WIDGET_THEME_OPTIONS } from '@/apps/obs-store/components/shared/theme'
 import type { ObsWidgetTheme } from '@/apps/obs-store/components/shared/theme'
 import ObsWidgetWorkbench from '@/apps/obs-store/components/store/ObsWidgetWorkbench.vue'
@@ -22,6 +22,7 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { getVideoCollectLifecycleLabel, getVideoCollectLifecycleState } from '@/shared/utils/videoCollect'
 
 import {
   createSampleVideoCollectItems,
@@ -58,25 +59,31 @@ const tables = ref<ResponseVideoCollectModel[]>([])
 const acceptedVideos = ref<ReponseVideoCollectVideo[]>([])
 const loadingData = ref(false)
 const sampleVideos = createSampleVideoCollectItems()
+let tableSeq = 0
+let detailSeq = 0
 
 async function loadTableDetail(tableId: string) {
+  const seq = ++detailSeq
   if (!tableId) {
     acceptedVideos.value = []
     return
   }
   try {
     const res = await getApiVideoCollectGet({ id: tableId })
+    if (seq !== detailSeq) return
     if (res.code === 200 && res.data) {
       acceptedVideos.value = (res.data.videos ?? []).filter((v) => v.info.status === VideoStatus.Accepted)
     } else {
       acceptedVideos.value = []
     }
   } catch {
+    if (seq !== detailSeq) return
     acceptedVideos.value = []
   }
 }
 
-async function loadActiveTables(notify = false) {
+async function loadTables(notify = false) {
+  const seq = ++tableSeq
   if (!account.value.id) {
     tables.value = []
     acceptedVideos.value = []
@@ -84,8 +91,14 @@ async function loadActiveTables(notify = false) {
   }
   loadingData.value = true
   try {
-    const res = await getApiVideoCollectGetActive({ id: String(account.value.id) })
-    tables.value = res.code === 200 && Array.isArray(res.data) ? res.data : []
+    const res = await getApiVideoCollectGetAll()
+    if (seq !== tableSeq) return
+    const raw = res.code === 200 && Array.isArray(res.data) ? res.data : []
+    tables.value = [...raw].sort(
+      (a, b) =>
+        Number(getVideoCollectLifecycleState(a) === 'finished') -
+          Number(getVideoCollectLifecycleState(b) === 'finished') || b.createAt - a.createAt,
+    )
 
     const selectedExists = tables.value.some((t) => t.id === state.value.selectedTableId)
     const targetId = selectedExists ? state.value.selectedTableId : (tables.value[0]?.id ?? '')
@@ -102,16 +115,16 @@ async function loadActiveTables(notify = false) {
       toast.success('已刷新视频征集列表与投稿')
     }
   } catch {
-    if (notify) toast.error('拉取视频征集数据失败，请稍后重试')
+    if (notify && seq === tableSeq) toast.error('拉取视频征集数据失败，请稍后重试')
   } finally {
-    loadingData.value = false
+    if (seq === tableSeq) loadingData.value = false
   }
 }
 
 watch(
   () => account.value.id,
   () => {
-    void loadActiveTables(false)
+    void loadTables(false)
   },
   { immediate: true },
 )
@@ -143,13 +156,18 @@ function selectVideoByIndex(index: number) {
     currentBvid: target?.info.bvid || '',
   })
 }
+
+function formatTableOption(table: ResponseVideoCollectModel) {
+  const label = getVideoCollectLifecycleLabel(getVideoCollectLifecycleState(table))
+  return `${table.name} · ${label} (${table.videoCount}/${table.maxVideoCount})`
+}
 </script>
 
 <template>
   <ObsWidgetWorkbench
     component-id="video-collect"
     title="视频征集投稿角标"
-    version="v1.0"
+    version="v1.1"
     obs-path="/obs-store/video-collect"
     recommended-size="440 × 150 px"
     :channel-id="channelId"
@@ -172,7 +190,7 @@ function selectVideoByIndex(index: number) {
           size="xs"
           class="gap-1"
           :disabled="loadingData"
-          @click="loadActiveTables(true)"
+          @click="loadTables(true)"
         >
           <RefreshCw
             class="size-3.5"
@@ -199,11 +217,12 @@ function selectVideoByIndex(index: number) {
         </ToggleGroup>
       </FormField>
 
-      <!-- 活跃征集表选择（鉴赏/摘要模式） -->
+      <!-- 征集表选择（支持进行中与已结束表） -->
       <template v-if="state.mode !== 'manual'">
         <FormField
           v-if="!state.useSampleData"
           label="当前征集活动"
+          description="支持选择进行中与已结束的征集活动进行茶话会鉴赏"
         >
           <Select
             :model-value="state.selectedTableId || tables[0]?.id || ''"
@@ -211,7 +230,7 @@ function selectVideoByIndex(index: number) {
             @update:model-value="(val) => handleSelectTable(String(val || ''))"
           >
             <SelectTrigger class="w-full">
-              <SelectValue :placeholder="tables.length ? '选择视频征集活动' : '暂无进行中的征集活动'" />
+              <SelectValue :placeholder="tables.length ? '选择视频征集活动' : '暂无视频征集活动'" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem
@@ -219,7 +238,7 @@ function selectVideoByIndex(index: number) {
                 :key="table.id"
                 :value="table.id"
               >
-                {{ table.name }} ({{ table.videoCount }}/{{ table.maxVideoCount }})
+                {{ formatTableOption(table) }}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -269,11 +288,12 @@ function selectVideoByIndex(index: number) {
             v-if="activeList.length > 0"
             class="max-h-48 overflow-y-auto scrollbar-thin rounded-md border border-border bg-card p-1 space-y-1"
           >
-            <button
+            <Button
               v-for="(item, idx) in activeList"
               :key="item.info.bvid || item.video.id || idx"
-              type="button"
-              class="w-full text-left flex items-center gap-2 p-1.5 rounded-md border transition-colors cursor-pointer"
+              variant="ghost"
+              size="none"
+              class="w-full text-left justify-start flex items-center gap-2 p-1.5 rounded-md border transition-colors font-normal"
               :class="
                 idx === activeIndex
                   ? 'border-brand bg-brand-soft/60 text-foreground'
@@ -300,7 +320,7 @@ function selectVideoByIndex(index: number) {
                   投稿: {{ item.info.senders[0]?.sender || '匿名观众' }} · {{ formatVideoDuration(item.video.length) }}
                 </div>
               </div>
-            </button>
+            </Button>
           </div>
 
           <div
@@ -313,7 +333,7 @@ function selectVideoByIndex(index: number) {
 
         <SettingRow
           title="示例数据预览"
-          description="无活跃征集表时展示模拟投稿方便排版"
+          description="无征集表时展示模拟投稿方便排版"
           variant="compact"
           type="switch"
           :model-value="state.useSampleData"

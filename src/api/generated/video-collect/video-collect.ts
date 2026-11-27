@@ -9,15 +9,28 @@ import { vtsuruMutator } from '../../orval-mutator'
 import type {
   GetApiVideoCollectGetActiveParams,
   GetApiVideoCollectGetParams,
+  GetApiVideoCollectMyAllSubmissionsParams,
+  GetApiVideoCollectMySubmissionsParams,
+  PaginationResponseOfListOfResponseMyVideoSubmissionModel,
   PostApiVideoCollectDeleteParams,
   PostApiVideoCollectFinishParams,
+  PostApiVideoCollectRemoveVideoParams,
   PostApiVideoCollectSetStatusParams,
+  PostApiVideoCollectWithdrawParams,
   RequestAddVideo,
   RequestBatchImportVideos,
+  RequestBatchSetStatus,
+  RequestRemoveSender,
+  RequestResolveVideo,
+  RequestSetWatched,
   RequestVideoTable,
   ResponseResult,
   ResponseResultOfIEnumerableOfResponseVideoCollectModel,
+  ResponseResultOfReponseVideoCollectVideoArray,
   ResponseResultOfResponseBatchImportVideos,
+  ResponseResultOfResponseBatchSetStatus,
+  ResponseResultOfResponseBiliVideoZoneArray,
+  ResponseResultOfResponseResolveVideo,
   ResponseResultOfResponseVideoCollectDetail,
   ResponseResultOfResponseVideoCollectModel,
 } from '../model'
@@ -47,7 +60,7 @@ export const postApiVideoCollectAdd = async (
   return vtsuruMutator<ResponseResult>(getPostApiVideoCollectAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestAddVideo),
   })
 }
@@ -77,8 +90,38 @@ export const postApiVideoCollectBatchImport = async (
   return vtsuruMutator<ResponseResultOfResponseBatchImportVideos>(getPostApiVideoCollectBatchImportUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestBatchImportVideos),
+  })
+}
+
+export const getPostApiVideoCollectBatchSetStatusUrl = () => {
+  return `/api/video-collect/batch-set-status`
+}
+
+export const postApiVideoCollectBatchSetStatus = async (
+  requestBatchSetStatus?: RequestBatchSetStatus,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseBatchSetStatus> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseBatchSetStatus>(getPostApiVideoCollectBatchSetStatusUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestBatchSetStatus),
   })
 }
 
@@ -107,7 +150,7 @@ export const postApiVideoCollectCreate = async (
   return vtsuruMutator<ResponseResultOfResponseVideoCollectModel>(getPostApiVideoCollectCreateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestVideoTable),
   })
 }
@@ -226,6 +269,160 @@ export const getApiVideoCollectGet = async (
   })
 }
 
+export const getGetApiVideoCollectMyAllSubmissionsUrl = (params?: GetApiVideoCollectMyAllSubmissionsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/video-collect/my-all-submissions?${stringifiedParams}`
+    : `/api/video-collect/my-all-submissions`
+}
+
+export const getApiVideoCollectMyAllSubmissions = async (
+  params?: GetApiVideoCollectMyAllSubmissionsParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<PaginationResponseOfListOfResponseMyVideoSubmissionModel> => {
+  return vtsuruMutator<PaginationResponseOfListOfResponseMyVideoSubmissionModel>(
+    getGetApiVideoCollectMyAllSubmissionsUrl(params),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
+
+export const getGetApiVideoCollectMySubmissionsUrl = (params?: GetApiVideoCollectMySubmissionsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/video-collect/my-submissions?${stringifiedParams}`
+    : `/api/video-collect/my-submissions`
+}
+
+export const getApiVideoCollectMySubmissions = async (
+  params?: GetApiVideoCollectMySubmissionsParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfReponseVideoCollectVideoArray> => {
+  return vtsuruMutator<ResponseResultOfReponseVideoCollectVideoArray>(getGetApiVideoCollectMySubmissionsUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetApiVideoCollectPartitionsUrl = () => {
+  return `/api/video-collect/partitions`
+}
+
+export const getApiVideoCollectPartitions = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseBiliVideoZoneArray> => {
+  return vtsuruMutator<ResponseResultOfResponseBiliVideoZoneArray>(getGetApiVideoCollectPartitionsUrl(), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getPostApiVideoCollectRemoveSenderUrl = () => {
+  return `/api/video-collect/remove-sender`
+}
+
+export const postApiVideoCollectRemoveSender = async (
+  requestRemoveSender?: RequestRemoveSender,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResult>(getPostApiVideoCollectRemoveSenderUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestRemoveSender),
+  })
+}
+
+export const getPostApiVideoCollectRemoveVideoUrl = (params?: PostApiVideoCollectRemoveVideoParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/video-collect/remove-video?${stringifiedParams}`
+    : `/api/video-collect/remove-video`
+}
+
+export const postApiVideoCollectRemoveVideo = async (
+  params?: PostApiVideoCollectRemoveVideoParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  return vtsuruMutator<ResponseResult>(getPostApiVideoCollectRemoveVideoUrl(params), {
+    ...options,
+    method: 'POST',
+  })
+}
+
+export const getPostApiVideoCollectResolveVideoUrl = () => {
+  return `/api/video-collect/resolve-video`
+}
+
+export const postApiVideoCollectResolveVideo = async (
+  requestResolveVideo?: RequestResolveVideo,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseResolveVideo> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfResponseResolveVideo>(getPostApiVideoCollectResolveVideoUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestResolveVideo),
+  })
+}
+
 export const getPostApiVideoCollectSetStatusUrl = (params?: PostApiVideoCollectSetStatusParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -249,6 +446,36 @@ export const postApiVideoCollectSetStatus = async (
   return vtsuruMutator<ResponseResult>(getPostApiVideoCollectSetStatusUrl(params), {
     ...options,
     method: 'POST',
+  })
+}
+
+export const getPostApiVideoCollectSetWatchedUrl = () => {
+  return `/api/video-collect/set-watched`
+}
+
+export const postApiVideoCollectSetWatched = async (
+  requestSetWatched?: RequestSetWatched,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResult>(getPostApiVideoCollectSetWatchedUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestSetWatched),
   })
 }
 
@@ -277,7 +504,33 @@ export const postApiVideoCollectUpdate = async (
   return vtsuruMutator<ResponseResultOfResponseVideoCollectModel>(getPostApiVideoCollectUpdateUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestVideoTable),
+  })
+}
+
+export const getPostApiVideoCollectWithdrawUrl = (params?: PostApiVideoCollectWithdrawParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/video-collect/withdraw?${stringifiedParams}`
+    : `/api/video-collect/withdraw`
+}
+
+export const postApiVideoCollectWithdraw = async (
+  params?: PostApiVideoCollectWithdrawParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResult> => {
+  return vtsuruMutator<ResponseResult>(getPostApiVideoCollectWithdrawUrl(params), {
+    ...options,
+    method: 'POST',
   })
 }

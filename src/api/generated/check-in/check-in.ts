@@ -89,7 +89,7 @@ export const postApiCheckinBatchCheckIn = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiCheckinBatchCheckInUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(batchCheckInRequest),
   })
 }

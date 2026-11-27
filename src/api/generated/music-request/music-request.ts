@@ -46,7 +46,7 @@ export const postApiMusicRequestAdd = async (
   return vtsuruMutator<ResponseResultOfListOfResponseSongModel>(getPostApiMusicRequestAddUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(addSongModel),
   })
 }
@@ -89,7 +89,7 @@ export const postApiMusicRequestDelete = async (
   return vtsuruMutator<ResponseResultOfInt32>(getPostApiMusicRequestDeleteUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(postApiMusicRequestDeleteBody),
   })
 }
@@ -262,7 +262,7 @@ export const postApiMusicRequestUpdateWaiting = async (
   return vtsuruMutator<ResponseResultOfWitingListModel>(getPostApiMusicRequestUpdateWaitingUrl(), {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json-patch+json', ...getHeaders(options?.headers) },
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(witingListModel),
   })
 }

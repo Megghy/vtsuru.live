@@ -7,6 +7,7 @@
  */
 
 export interface ChangePasswordRequest {
-  oldPassword: string
+  /** @nullable */
+  oldPassword?: string | null
   password: string
 }

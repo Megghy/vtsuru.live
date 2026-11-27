@@ -27,6 +27,7 @@ export interface ResponseAccountInfo {
   currentQuestionId?: number | null
   consumptionSettings: UserConsumptionSetting
   isEmailVerified: boolean
+  hasPassword: boolean
   eventFetcherState: EventFetcherStateModel
   biliAuthCodeStatus: BiliAuthCodeStatusType
   /** @nullable */

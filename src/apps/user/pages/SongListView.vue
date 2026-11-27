@@ -332,7 +332,7 @@ onMounted(async () => {
             </span>
             <RouterLink
               v-else
-              to="/bili-auth"
+              :to="{ name: 'bili-auth', query: { redirect: $route.fullPath } }"
               class="text-primary underline underline-offset-2"
             >
               绑定 B 站账号以查询并使用积分

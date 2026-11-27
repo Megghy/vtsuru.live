@@ -14,11 +14,6 @@
         "operationId": "postApiAccountBiliAuthComplete",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompleteAccountBiliAuthRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CompleteAccountBiliAuthRequest"
@@ -60,6 +55,55 @@
         }
       }
     },
+    "/api/account/bili-auth/exchange": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "postApiAccountBiliAuthExchange",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeAccountBiliAuthRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeAccountBiliAuthRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeAccountBiliAuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfExchangeAccountBiliAuthResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfExchangeAccountBiliAuthResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfExchangeAccountBiliAuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/account/bili-auth/prepare": {
       "post": {
         "tags": [
@@ -68,11 +112,6 @@
         "operationId": "postApiAccountBiliAuthPrepare",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/PrepareAccountBiliAuthRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PrepareAccountBiliAuthRequest"
@@ -427,11 +466,6 @@
         "operationId": "postApiAccountChangePassword",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangePasswordRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ChangePasswordRequest"
@@ -484,11 +518,6 @@
         "operationId": "postApiAccountLogin",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LoginModel"
@@ -571,11 +600,6 @@
         "operationId": "postApiAccountRegister",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RegisterModel"
@@ -951,9 +975,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": { }
-            },
             "application/json": {
               "schema": { }
             },
@@ -1000,14 +1021,6 @@
         "operationId": "postApiAccountUpdateEnableFunctions",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/FunctionTypes"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -1069,11 +1082,6 @@
         "operationId": "postApiAccountUpdateSetting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserSetting"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UserSetting"
@@ -1135,9 +1143,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": { }
-            },
             "application/json": {
               "schema": { }
             },
@@ -1453,11 +1458,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssistantScheduleRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssistantScheduleRequest"
@@ -1523,11 +1523,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssistantUpdateRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssistantUpdateRequest"
@@ -1739,11 +1734,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssistantConversationRenameRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssistantConversationRenameRequest"
@@ -1831,11 +1821,6 @@
         "operationId": "postApiAssistantMessage",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssistantMessageRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssistantMessageRequest"
@@ -1945,11 +1930,6 @@
         "operationId": "postApiBiliAuthMigrate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BiliAuthTokenRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BiliAuthTokenRequest"
@@ -2189,11 +2169,6 @@
         "operationId": "postApiBiliParseCollection",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ParseCollectionRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ParseCollectionRequest"
@@ -2497,11 +2472,6 @@
         "operationId": "postApiBiliTianxuanRecord",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RecordTianxuanRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RecordTianxuanRequest"
@@ -2664,11 +2634,6 @@
         "operationId": "postApiCheckinBatchCheckIn",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchCheckInRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchCheckInRequest"
@@ -3157,11 +3122,6 @@
         "operationId": "postApiEventGuardDelete",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteGuardEventRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DeleteGuardEventRequest"
@@ -3214,11 +3174,6 @@
         "operationId": "postApiEventGuardManual",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ManualGuardEventRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ManualGuardEventRequest"
@@ -3291,14 +3246,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/EventModel"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -3378,11 +3325,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestEventModelV3"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestEventModelV3"
@@ -3455,14 +3397,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/EventModel"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -3524,11 +3458,6 @@
         "operationId": "postApiFanProfileAiExtractLive",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExtractLiveFactsRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ExtractLiveFactsRequest"
@@ -3581,11 +3510,6 @@
         "operationId": "postApiFanProfileAiSummarize",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/FanAiSummarizeRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/FanAiSummarizeRequest"
@@ -3689,11 +3613,6 @@
         "operationId": "postApiFanProfileCreate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateManualFanRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateManualFanRequest"
@@ -3947,11 +3866,6 @@
         "operationId": "postApiFanProfileFactResolve",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResolveCandidateFactRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ResolveCandidateFactRequest"
@@ -4004,11 +3918,6 @@
         "operationId": "postApiFanProfileImportNotes",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ImportLocalNotesRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ImportLocalNotesRequest"
@@ -4144,11 +4053,6 @@
         "operationId": "postApiFanProfileMemoryAdd",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddFanMemoryRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AddFanMemoryRequest"
@@ -4201,11 +4105,6 @@
         "operationId": "postApiFanProfileMemoryDelete",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteFanMemoryRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DeleteFanMemoryRequest"
@@ -4258,11 +4157,6 @@
         "operationId": "postApiFanProfileMerge",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/MergeFanProfileRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/MergeFanProfileRequest"
@@ -4315,11 +4209,6 @@
         "operationId": "postApiFanProfileQuickNote",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/QuickNoteRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/QuickNoteRequest"
@@ -4416,11 +4305,6 @@
         "operationId": "postApiFanProfileSave",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/SaveFanProfileRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SaveFanProfileRequest"
@@ -4473,11 +4357,6 @@
         "operationId": "postApiFanProfileStar",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ToggleFanStarRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ToggleFanStarRequest"
@@ -4530,11 +4409,6 @@
         "operationId": "postApiFanProfileSyncMedals",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/SyncFanMedalsRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SyncFanMedalsRequest"
@@ -4776,11 +4650,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/FollowRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/FollowRequest"
@@ -4967,11 +4836,6 @@
         "operationId": "postApiForumCreate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestCreateForum"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestCreateForum"
@@ -5942,11 +5806,6 @@
         "operationId": "postApiForumManageUpdateSetting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForumSetting"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ForumSetting"
@@ -5991,6 +5850,71 @@
         ]
       }
     },
+    "/api/forum/my-activity": {
+      "get": {
+        "tags": [
+          "Forum"
+        ],
+        "operationId": "getApiForumMyActivity",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "topics"
+            }
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyForumActivityItem"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyForumActivityItem"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyForumActivityItem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/forum/post-comment": {
       "post": {
         "tags": [
@@ -5999,11 +5923,6 @@
         "operationId": "postApiForumPostComment",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestPostComment"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestPostComment"
@@ -6056,11 +5975,6 @@
         "operationId": "postApiForumPostReply",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestPostReply"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestPostReply"
@@ -6113,11 +6027,6 @@
         "operationId": "postApiForumPostTopic",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestPostTopic"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestPostTopic"
@@ -6170,11 +6079,6 @@
         "operationId": "postApiForumUpdate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestCreateForum"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestCreateForum"
@@ -6580,11 +6484,6 @@
         "operationId": "postApiLiveRequestBatchStatus",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchLiveRequestStatusModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchLiveRequestStatusModel"
@@ -6779,15 +6678,6 @@
         "operationId": "postApiLiveRequestDelete",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -7189,6 +7079,82 @@
         ]
       }
     },
+    "/api/live-request/my-requests": {
+      "get": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "getApiLiveRequestMyRequests",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SongRequestStatus"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMySongRequestModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMySongRequestModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMySongRequestModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/live-request/pin": {
       "post": {
         "tags": [
@@ -7197,11 +7163,6 @@
         "operationId": "postApiLiveRequestPin",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
@@ -7302,15 +7263,6 @@
         "operationId": "postApiLiveRequestReorder",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -7484,11 +7436,6 @@
         "operationId": "postApiLiveRequestTryAdd",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/EventModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/EventModel"
@@ -7541,11 +7488,6 @@
         "operationId": "postApiLiveRequestUpdateItem",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateLiveRequestItemModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateLiveRequestItemModel"
@@ -7598,11 +7540,6 @@
         "operationId": "postApiLiveRequestUpdateSetting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Setting_SongRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Setting_SongRequest"
@@ -7989,11 +7926,6 @@
         "operationId": "postApiLiveReplay",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestSaveLiveReplay"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestSaveLiveReplay"
@@ -8268,11 +8200,6 @@
         "operationId": "postApiLotteryLiveUpdateUsers",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateLiveLotteryUsersModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateLiveLotteryUsersModel"
@@ -8322,14 +8249,6 @@
         "operationId": "postApiMusicRequestAdd",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/AddSongModel"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -8424,15 +8343,6 @@
         "operationId": "postApiMusicRequestDelete",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -8760,11 +8670,6 @@
         "operationId": "postApiMusicRequestUpdateWaiting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/WitingListModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/WitingListModel"
@@ -9058,11 +8963,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestSaveDraft"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestSaveDraft"
@@ -9124,11 +9024,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestSaveDraft"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestSaveDraft"
@@ -9192,11 +9087,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestPublishScene"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestPublishScene"
@@ -9304,11 +9194,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestSwitchScene"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestSwitchScene"
@@ -9467,11 +9352,6 @@
         "operationId": "postApiObsSceneCreate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestCreateSceneProject"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestCreateSceneProject"
@@ -9963,11 +9843,6 @@
         "operationId": "postApiObsStoreSyncUpdateState",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestObsSyncUpdate"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestObsSyncUpdate"
@@ -10053,11 +9928,6 @@
         "operationId": "postApiOpenLiveHeartbeat",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestStartOpenLiveModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestStartOpenLiveModel"
@@ -10140,11 +10010,6 @@
         "operationId": "getApiOpenLiveStart",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestStartOpenLiveModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestStartOpenLiveModel"
@@ -10192,11 +10057,6 @@
         "operationId": "postApiOpenLiveStart",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestStartOpenLiveModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestStartOpenLiveModel"
@@ -10509,11 +10369,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateOrgInviteModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateOrgInviteModel"
@@ -10678,11 +10533,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateOrgStreamerInviteModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateOrgStreamerInviteModel"
@@ -10852,11 +10702,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrgMemberPermissionModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgMemberPermissionModel"
@@ -10920,11 +10765,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RemoveOrgMemberModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RemoveOrgMemberModel"
@@ -10988,11 +10828,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrgMemberRoleModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgMemberRoleModel"
@@ -11255,11 +11090,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrgOrderExpressModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgOrderExpressModel"
@@ -11323,11 +11153,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrgServiceOrderModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgServiceOrderModel"
@@ -11391,11 +11216,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrgOrdersStatusModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgOrdersStatusModel"
@@ -11519,11 +11339,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Setting_Point"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Setting_Point"
@@ -11639,11 +11454,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RemoveOrgStreamerModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RemoveOrgStreamerModel"
@@ -11751,11 +11561,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateStreamerSelfPermissionModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateStreamerSelfPermissionModel"
@@ -11819,11 +11624,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrgStreamerModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgStreamerModel"
@@ -12035,11 +11835,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/TransferOrgOwnerModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TransferOrgOwnerModel"
@@ -12103,11 +11898,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrgModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOrgModel"
@@ -12160,11 +11950,6 @@
         "operationId": "postApiOrgCreate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateOrgModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateOrgModel"
@@ -12502,11 +12287,6 @@
         "operationId": "postApiPointApplyDuplicateGuardsFix",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestApplyPointGuardDuplicateFixModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestApplyPointGuardDuplicateFixModel"
@@ -12559,14 +12339,6 @@
         "operationId": "postApiPointBatchDeleteUser",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/TempRequestDelUserModel"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -12628,11 +12400,6 @@
         "operationId": "postApiPointBatchUpdateExpress",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestBatchUpdateExpressModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestBatchUpdateExpressModel"
@@ -12685,11 +12452,6 @@
         "operationId": "postApiPointBatchUpdateOrderStatus",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestBatchUpdateOrderStatusModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestBatchUpdateOrderStatusModel"
@@ -12743,11 +12505,6 @@
         "operationId": "postApiPointBuyBatch",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestBuyBatchModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestBuyBatchModel"
@@ -12800,11 +12557,6 @@
         "operationId": "postApiPointBuy",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestBuyPointGoodsModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestBuyPointGoodsModel"
@@ -12933,11 +12685,6 @@
         "operationId": "postApiPointConsumeUserPoint",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestConsumeUserPointModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestConsumeUserPointModel"
@@ -13033,15 +12780,6 @@
         "operationId": "postApiPointDeleteOrders",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int32"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -13844,11 +13582,6 @@
         "operationId": "postApiPointSeasonReset",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestSeasonResetModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestSeasonResetModel"
@@ -13944,11 +13677,6 @@
         "operationId": "postApiPointServiceOrderOwnerUpdate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ServiceOwnerUpdateRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ServiceOwnerUpdateRequest"
@@ -14044,11 +13772,6 @@
         "operationId": "postApiPointServiceOrderUserUpdate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ServiceUserUpdateRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ServiceUserUpdateRequest"
@@ -14101,11 +13824,6 @@
         "operationId": "postApiPointTestPoint",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestTestPointModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestTestPointModel"
@@ -14158,11 +13876,6 @@
         "operationId": "postApiPointToggleGoodsPin",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestToggleGoodsPinModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestToggleGoodsPinModel"
@@ -14215,11 +13928,6 @@
         "operationId": "postApiPointUpdateGoodsStatus",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestUpdateGoodsStatusModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestUpdateGoodsStatusModel"
@@ -14272,11 +13980,6 @@
         "operationId": "postApiPointUpdateGoods",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestPointGoodsModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestPointGoodsModel"
@@ -14329,11 +14032,6 @@
         "operationId": "postApiPointUpdateOrderExpress",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestUpdateOrderExpressModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestUpdateOrderExpressModel"
@@ -14386,11 +14084,6 @@
         "operationId": "postApiPointUpdateOrdersStatus",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestSetOrderStatusModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestSetOrderStatusModel"
@@ -14443,11 +14136,6 @@
         "operationId": "postApiPointUpdateSetting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Setting_Point"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Setting_Point"
@@ -14736,11 +14424,6 @@
         "operationId": "postApiPointUserUpdateAddress",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShippingAddressInfo"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ShippingAddressInfo"
@@ -14886,11 +14569,6 @@
         "operationId": "postApiQaBatch",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestBatchQAOperation"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestBatchQAOperation"
@@ -15303,10 +14981,7 @@
               }
             }
           }
-        },
-        "security": [
-          { }
-        ]
+        }
       }
     },
     "/api/qa/get-tags": {
@@ -15770,11 +15445,6 @@
         "operationId": "postApiQaUpdateSetting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Setting_QuestionDisplay"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Setting_QuestionDisplay"
@@ -15994,11 +15664,6 @@
         "operationId": "postApiQqBotGroupsNotify",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/QqBotNotifyRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/QqBotNotifyRequest"
@@ -16051,11 +15716,6 @@
         "operationId": "postApiQqBotGroupsUnbind",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/QqBotUnbindRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/QqBotUnbindRequest"
@@ -16194,11 +15854,6 @@
         "operationId": "postApiQueueBatchStatus",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchQueueStatusModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchQueueStatusModel"
@@ -16342,15 +15997,6 @@
         "operationId": "postApiQueueDelete",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -16698,6 +16344,75 @@
         }
       }
     },
+    "/api/queue/my-records": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "getApiQueueMyRecords",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QueueStatus"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyQueueModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyQueueModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyQueueModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/queue/next-batch": {
       "post": {
         "tags": [
@@ -16749,11 +16464,6 @@
         "operationId": "postApiQueuePin",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ToggleQueuePinModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ToggleQueuePinModel"
@@ -16854,15 +16564,6 @@
         "operationId": "postApiQueueReorder",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -16927,11 +16628,6 @@
         "operationId": "postApiQueueReplaceMember",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReplaceQueueMemberModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ReplaceQueueMemberModel"
@@ -17108,11 +16804,6 @@
         "operationId": "postApiQueueTryAdd",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/EventModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/EventModel"
@@ -17165,11 +16856,6 @@
         "operationId": "postApiQueueUpdateItem",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateQueueItemModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateQueueItemModel"
@@ -17222,11 +16908,6 @@
         "operationId": "postApiQueueUpdateSetting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Setting_Queue"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Setting_Queue"
@@ -17337,11 +17018,6 @@
         "operationId": "postApiScheduleAddBatch",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestAddBatchScheduleModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestAddBatchScheduleModel"
@@ -17509,11 +17185,6 @@
         "operationId": "postApiScheduleCopy",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestCopyScheduleModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestCopyScheduleModel"
@@ -17753,11 +17424,6 @@
         "operationId": "postApiScheduleUpdate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestUpdateScheduleModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestUpdateScheduleModel"
@@ -17810,14 +17476,6 @@
         "operationId": "postApiSongListAdd",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/AddSongModel"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -17879,15 +17537,6 @@
         "operationId": "postApiSongListDeleteBatch",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -18166,11 +17815,6 @@
         "operationId": "postApiSongListMergeDuplicates",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/MergeDuplicateSongsModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/MergeDuplicateSongsModel"
@@ -18223,15 +17867,6 @@
         "operationId": "postApiSongListReorder",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -18393,11 +18028,6 @@
         "operationId": "postApiSongListUpdateBatchAuthor",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchUpdate"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchUpdate"
@@ -18450,11 +18080,6 @@
         "operationId": "postApiSongListUpdateBatchDisabled",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchUpdateBool"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchUpdateBool"
@@ -18507,11 +18132,6 @@
         "operationId": "postApiSongListUpdateBatchLanguage",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchUpdateLanguage"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchUpdateLanguage"
@@ -18564,11 +18184,6 @@
         "operationId": "postApiSongListUpdateBatchOption",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchUpdateOption"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchUpdateOption"
@@ -18621,11 +18236,6 @@
         "operationId": "postApiSongListUpdateBatchPin",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchUpdateBool"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchUpdateBool"
@@ -18678,11 +18288,6 @@
         "operationId": "postApiSongListUpdateBatchTag",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchUpdate"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BatchUpdate"
@@ -18735,14 +18340,6 @@
         "operationId": "postApiSongListUpdateBatch",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/UpdateSongModel"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -18804,11 +18401,6 @@
         "operationId": "postApiSongListUpdate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSongModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateSongModel"
@@ -18871,14 +18463,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/AddSongModel"
-                }
-              }
-            },
             "application/json": {
               "schema": {
                 "type": "array",
@@ -18940,11 +18524,6 @@
         "operationId": "postApiStorageTargetsCreate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestStorageTarget"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestStorageTarget"
@@ -19179,11 +18758,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestStorageTarget"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestStorageTarget"
@@ -19236,11 +18810,6 @@
         "operationId": "postApiSupportTickets",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSupportTicketModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateSupportTicketModel"
@@ -19345,11 +18914,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddSupportTicketMessageModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AddSupportTicketMessageModel"
@@ -19413,11 +18977,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSupportTicketPreferencesModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateSupportTicketPreferencesModel"
@@ -19624,11 +19183,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AzureTTSRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AzureTTSRequest"
@@ -19717,11 +19271,6 @@
         ],
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AzureTTSRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AzureTTSRequest"
@@ -20167,11 +19716,6 @@
         "operationId": "postApiTtsSynthesize",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/TtsSynthesizeRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TtsSynthesizeRequest"
@@ -20377,11 +19921,6 @@
         "operationId": "postApiUserConfigSet",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateConfigModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateConfigModel"
@@ -20560,11 +20099,6 @@
         "operationId": "postApiUserIndexUpdateSetting",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Setting_Index"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Setting_Index"
@@ -20723,11 +20257,6 @@
         "operationId": "postApiUserPagesPublish",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserPagesModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateUserPagesModel"
@@ -20813,11 +20342,6 @@
         "operationId": "postApiUserPagesSaveDraft",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserPagesModel"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateUserPagesModel"
@@ -21012,11 +20536,6 @@
         "operationId": "postApiVideoCollectAdd",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestAddVideo"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestAddVideo"
@@ -21066,11 +20585,6 @@
         "operationId": "postApiVideoCollectBatchImport",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestBatchImportVideos"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestBatchImportVideos"
@@ -21115,6 +20629,58 @@
         ]
       }
     },
+    "/api/video-collect/batch-set-status": {
+      "post": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "postApiVideoCollectBatchSetStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchSetStatus"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchSetStatus"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBatchSetStatus"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchSetStatus"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchSetStatus"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBatchSetStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/video-collect/create": {
       "post": {
         "tags": [
@@ -21123,11 +20689,6 @@
         "operationId": "postApiVideoCollectCreate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestVideoTable"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestVideoTable"
@@ -21374,6 +20935,286 @@
         }
       }
     },
+    "/api/video-collect/my-all-submissions": {
+      "get": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "getApiVideoCollectMyAllSubmissions",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/VideoStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyVideoSubmissionModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyVideoSubmissionModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginationResponseOfListOfResponseMyVideoSubmissionModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/video-collect/my-submissions": {
+      "get": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "getApiVideoCollectMySubmissions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfReponseVideoCollectVideoArray"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfReponseVideoCollectVideoArray"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfReponseVideoCollectVideoArray"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/video-collect/partitions": {
+      "get": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "getApiVideoCollectPartitions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBiliVideoZoneArray"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBiliVideoZoneArray"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseBiliVideoZoneArray"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/video-collect/remove-sender": {
+      "post": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "postApiVideoCollectRemoveSender",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestRemoveSender"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestRemoveSender"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestRemoveSender"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/video-collect/remove-video": {
+      "post": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "postApiVideoCollectRemoveVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bvid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/video-collect/resolve-video": {
+      "post": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "postApiVideoCollectResolveVideo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestResolveVideo"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestResolveVideo"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestResolveVideo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseResolveVideo"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseResolveVideo"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseResolveVideo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/video-collect/set-status": {
       "post": {
         "tags": [
@@ -21401,8 +21242,67 @@
             "schema": {
               "$ref": "#/components/schemas/VideoStatus"
             }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/video-collect/set-watched": {
+      "post": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "postApiVideoCollectSetWatched",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSetWatched"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSetWatched"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSetWatched"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -21438,11 +21338,6 @@
         "operationId": "postApiVideoCollectUpdate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestVideoTable"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestVideoTable"
@@ -21487,6 +21382,52 @@
         ]
       }
     },
+    "/api/video-collect/withdraw": {
+      "post": {
+        "tags": [
+          "VideoCollect"
+        ],
+        "operationId": "postApiVideoCollectWithdraw",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bvid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/vote/create": {
       "post": {
         "tags": [
@@ -21495,11 +21436,6 @@
         "operationId": "postApiVoteCreate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestCreateBulletVote"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestCreateBulletVote"
@@ -21638,11 +21574,6 @@
         "operationId": "postApiVoteExtend",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestExtendVote"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestExtendVote"
@@ -21821,11 +21752,6 @@
         "operationId": "postApiVoteMergeOption",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestMergeVoteOption"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestMergeVoteOption"
@@ -22007,11 +21933,6 @@
         "operationId": "postApiVoteRemoveOption",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestRemoveVoteOption"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestRemoveVoteOption"
@@ -22097,11 +22018,6 @@
         "operationId": "postApiVoteSaveConfig",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/VoteConfig"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/VoteConfig"
@@ -22154,11 +22070,6 @@
         "operationId": "postApiVoteTiebreakDraw",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestTiebreakDraw"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestTiebreakDraw"
@@ -22211,11 +22122,6 @@
         "operationId": "postApiVoteTiebreakOvertime",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestTiebreakOvertime"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestTiebreakOvertime"
@@ -22268,11 +22174,6 @@
         "operationId": "postApiVoteTryVote",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestProcessVoteEvent"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestProcessVoteEvent"
@@ -22545,11 +22446,6 @@
         "operationId": "postApiVtsuruSendEmail",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/SendEmailRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SendEmailRequest"
@@ -22602,11 +22498,6 @@
         "operationId": "postApiVtsuruTranslate",
         "requestBody": {
           "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/TranslateRequest"
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TranslateRequest"
@@ -23778,7 +23669,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "答复前\"工作过程\"的有序片段, 与前端 AssistantProcessStep 对应。\nKind=reasoning 时 Text 有效; Kind=tool 时 Tool 有效。按时序排列以还原交错过程。"
+        "description": "答复前\"工作过程\"的有序片段, 与前端 AssistantProcessStep 对应。\r\nKind=reasoning 时 Text 有效; Kind=tool 时 Tool 有效。按时序排列以还原交错过程。"
       },
       "AssistantProposalDto": {
         "required": [
@@ -24699,13 +24590,13 @@
       },
       "ChangePasswordRequest": {
         "required": [
-          "oldPassword",
           "password"
         ],
         "type": "object",
         "properties": {
           "oldPassword": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "password": {
             "type": "string"
@@ -25379,6 +25270,39 @@
             "description": "通过GuidHelper判断是UserId还是OpenId",
             "format": "uuid",
             "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExchangeAccountBiliAuthRequest": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExchangeAccountBiliAuthResponse": {
+        "required": [
+          "account",
+          "token",
+          "action"
+        ],
+        "type": "object",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/ResponseAccountInfo"
+          },
+          "token": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -28433,6 +28357,186 @@
         "additionalProperties": false,
         "description": "分页响应信封：code / message / data / pn / ps / total / more"
       },
+      "PaginationResponseOfListOfResponseMyForumActivityItem": {
+        "required": [
+          "code",
+          "data",
+          "more",
+          "pn",
+          "ps",
+          "total",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "ps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseMyForumActivityItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "分页响应信封：code / message / data / pn / ps / total / more"
+      },
+      "PaginationResponseOfListOfResponseMyQueueModel": {
+        "required": [
+          "code",
+          "data",
+          "more",
+          "pn",
+          "ps",
+          "total",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "ps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseMyQueueModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "分页响应信封：code / message / data / pn / ps / total / more"
+      },
+      "PaginationResponseOfListOfResponseMySongRequestModel": {
+        "required": [
+          "code",
+          "data",
+          "more",
+          "pn",
+          "ps",
+          "total",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "ps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseMySongRequestModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "分页响应信封：code / message / data / pn / ps / total / more"
+      },
+      "PaginationResponseOfListOfResponseMyVideoSubmissionModel": {
+        "required": [
+          "code",
+          "data",
+          "more",
+          "pn",
+          "ps",
+          "total",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "ps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseMyVideoSubmissionModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "分页响应信封：code / message / data / pn / ps / total / more"
+      },
       "PaginationResponseOfListOfResponseNotifaction": {
         "required": [
           "code",
@@ -29592,6 +29696,33 @@
         },
         "additionalProperties": false
       },
+      "RequestBatchSetStatus": {
+        "required": [
+          "id",
+          "bvids",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bvids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/VideoStatus"
+          },
+          "rejectReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "RequestBatchUpdateExpressModel": {
         "required": [
           "items",
@@ -30316,6 +30447,27 @@
         },
         "additionalProperties": false
       },
+      "RequestRemoveSender": {
+        "required": [
+          "id",
+          "bvid",
+          "senderIndex"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bvid": {
+            "type": "string"
+          },
+          "senderIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "RequestRemoveVoteOption": {
         "required": [
           "optionText"
@@ -30325,6 +30477,22 @@
           "optionText": {
             "minLength": 1,
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestResolveVideo": {
+        "required": [
+          "video"
+        ],
+        "type": "object",
+        "properties": {
+          "video": {
+            "type": "string"
+          },
+          "tableId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -30415,6 +30583,29 @@
           },
           "status": {
             "$ref": "#/components/schemas/PointOrderStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestSetWatched": {
+        "required": [
+          "id",
+          "bvids",
+          "watched"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bvids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "watched": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -30780,6 +30971,7 @@
           "settings",
           "consumptionSettings",
           "isEmailVerified",
+          "hasPassword",
           "eventFetcherState",
           "biliAuthCodeStatus",
           "blackList",
@@ -30821,6 +31013,9 @@
             "$ref": "#/components/schemas/UserConsumptionSetting"
           },
           "isEmailVerified": {
+            "type": "boolean"
+          },
+          "hasPassword": {
             "type": "boolean"
           },
           "eventFetcherState": {
@@ -30970,7 +31165,9 @@
       "ResponseAllPointsModel": {
         "required": [
           "owner",
-          "points"
+          "points",
+          "consecutiveCheckInDays",
+          "totalCheckInDays"
         ],
         "type": "object",
         "properties": {
@@ -30980,6 +31177,27 @@
           "points": {
             "type": "number",
             "format": "double"
+          },
+          "lastCheckInAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "consecutiveCheckInDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCheckInDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recentCheckInDates": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -31183,6 +31401,31 @@
           "skipped": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseBatchSetStatus": {
+        "required": [
+          "updated",
+          "skipped",
+          "failed"
+        ],
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false
@@ -31421,6 +31664,47 @@
           },
           "syncEnabled": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseBiliPartitionItem": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseBiliVideoZone": {
+        "required": [
+          "id",
+          "name",
+          "subs"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseBiliPartitionItem"
+            }
           }
         },
         "additionalProperties": false
@@ -32452,6 +32736,266 @@
             "type": "integer",
             "format": "int64",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseMyForumActivityItem": {
+        "required": [
+          "kind",
+          "id",
+          "forumId",
+          "forumName",
+          "forumOwner",
+          "topicId",
+          "topicTitle",
+          "contentPreview",
+          "createAt",
+          "likeCount",
+          "commentCount",
+          "isPinned",
+          "isLocked"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "forumId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "forumName": {
+            "type": "string"
+          },
+          "forumOwner": {
+            "$ref": "#/components/schemas/ResponseUserBasicInfo"
+          },
+          "topicId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "topicTitle": {
+            "type": "string"
+          },
+          "contentPreview": {
+            "type": "string"
+          },
+          "createAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "likeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "commentCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "isLocked": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseMyQueueModel": {
+        "required": [
+          "id",
+          "target",
+          "owner",
+          "status",
+          "from",
+          "pointRefunded",
+          "priorityLevel",
+          "createAt",
+          "canCancel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "target": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/ResponseUserBasicInfo"
+          },
+          "status": {
+            "$ref": "#/components/schemas/QueueStatus"
+          },
+          "from": {
+            "$ref": "#/components/schemas/QueueFrom"
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "giftPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "pointCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "pointRefunded": {
+            "type": "boolean"
+          },
+          "priorityLevel": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "batchNo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "createAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "startAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "finishAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "canCancel": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseMySongRequestModel": {
+        "required": [
+          "id",
+          "target",
+          "owner",
+          "songName",
+          "status",
+          "from",
+          "pointRefunded",
+          "priorityLevel",
+          "createAt",
+          "canCancel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "target": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/ResponseUserBasicInfo"
+          },
+          "songName": {
+            "type": "string"
+          },
+          "song": {
+            "$ref": "#/components/schemas/ResponseSongModel"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SongRequestStatus"
+          },
+          "from": {
+            "$ref": "#/components/schemas/SongRequestFrom"
+          },
+          "price": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "pointCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "pointRefunded": {
+            "type": "boolean"
+          },
+          "priorityLevel": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "startSingAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "finishAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "canCancel": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseMyVideoSubmissionModel": {
+        "required": [
+          "tableId",
+          "shortId",
+          "tableName",
+          "tableFinished",
+          "tableEndAt",
+          "owner",
+          "video",
+          "canWithdraw"
+        ],
+        "type": "object",
+        "properties": {
+          "tableId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shortId": {
+            "type": "string"
+          },
+          "tableName": {
+            "type": "string"
+          },
+          "tableFinished": {
+            "type": "boolean"
+          },
+          "tableEndAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/ResponseUserBasicInfo"
+          },
+          "video": {
+            "$ref": "#/components/schemas/ReponseVideoCollectVideo"
+          },
+          "canWithdraw": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -34009,6 +34553,40 @@
         },
         "additionalProperties": false
       },
+      "ResponseResolveVideo": {
+        "required": [
+          "video",
+          "page",
+          "pageCount",
+          "eligible",
+          "alreadyExists"
+        ],
+        "type": "object",
+        "properties": {
+          "video": {
+            "$ref": "#/components/schemas/VideoData"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "ruleError": {
+            "type": "string",
+            "nullable": true
+          },
+          "alreadyExists": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "ResponseResult": {
         "required": [
           "code",
@@ -34388,6 +34966,28 @@
           },
           "data": {
             "$ref": "#/components/schemas/EventModel"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfExchangeAccountBiliAuthResponse": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ExchangeAccountBiliAuthResponse"
           }
         },
         "additionalProperties": false,
@@ -36380,6 +36980,32 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfReponseVideoCollectVideoArray": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReponseVideoCollectVideo"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfResponseAccountInfo": {
         "required": [
           "code",
@@ -36494,6 +37120,28 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfResponseBatchSetStatus": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseBatchSetStatus"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfResponseBatchUpdateExpressResult": {
         "required": [
           "code",
@@ -36599,6 +37247,32 @@
           },
           "data": {
             "$ref": "#/components/schemas/ResponseBiliLiveReserveModel"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfResponseBiliVideoZoneArray": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseBiliVideoZone"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false,
@@ -37447,6 +38121,28 @@
           },
           "data": {
             "$ref": "#/components/schemas/ResponseQueueStatsModel"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfResponseResolveVideo": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResponseResolveVideo"
           }
         },
         "additionalProperties": false,
@@ -42333,7 +43029,9 @@
       "VideoCollectInfo": {
         "required": [
           "senders",
-          "status"
+          "status",
+          "watched",
+          "page"
         ],
         "type": "object",
         "properties": {
@@ -42348,6 +43046,20 @@
           },
           "status": {
             "$ref": "#/components/schemas/VideoStatus"
+          },
+          "rejectReason": {
+            "type": "string",
+            "description": "拒绝理由（仅在拒绝时可选填写）。",
+            "nullable": true
+          },
+          "watched": {
+            "type": "boolean",
+            "description": "主播是否已观看（服务端持久化，多端同步）。"
+          },
+          "page": {
+            "type": "integer",
+            "description": "多 P 视频推荐分 P（默认第 1 P）。",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -43188,7 +43900,7 @@
     },
     {
       "name": "StorageTarget",
-      "description": "用户的自定义存储目标。能改的只有名称、凭据与启用状态：\n地址一旦改动，历史文件就再也定位不到，因此改地址一律等价于新建目标。"
+      "description": "用户的自定义存储目标。能改的只有名称、凭据与启用状态：\r\n地址一旦改动，历史文件就再也定位不到，因此改地址一律等价于新建目标。"
     },
     {
       "name": "SupportTicket"

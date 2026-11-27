@@ -480,6 +480,30 @@ const staticItems = computed<CommandItem[]>(() => {
     })
   }
 
+  // 3.5 观众中心（我的积分、订单与互动记录）
+  const viewerEntries: { name: string; label: string; desc: string; kw: string[] }[] = [
+    { name: 'bili-user-points', label: '我的积分与签到', desc: '各频道积分余额与打卡连签', kw: ['points', 'checkin', '积分', '签到', '打卡'] },
+    { name: 'bili-user-orders', label: '我的订单', desc: '实物、虚拟与服务委托订单', kw: ['orders', 'goods', '订单', '兑换'] },
+    { name: 'bili-user-history', label: '积分记录', desc: '各频道积分收支流水', kw: ['history', 'point', '积分记录', '流水'] },
+    { name: 'bili-user-qa', label: '我的棉花糖', desc: '查看我发出的提问、回复与追问', kw: ['qa', 'marshmallow', '棉花糖', '提问箱', '已发送'] },
+    { name: 'bili-user-video-collect', label: '我的视频投稿', desc: '跨主播查看视频征集审核进度与撤回', kw: ['video', 'collect', '投稿', '视频征集'] },
+    { name: 'bili-user-requests', label: '我的点播与排队', desc: '点歌、排队历史与自助撤回', kw: ['song', 'request', 'queue', '点歌', '点播', '排队'] },
+    { name: 'bili-user-settings', label: '观众账户设置', desc: '收货地址、密码与 B 站身份绑定', kw: ['settings', 'address', '账户设置', '地址'] },
+    { name: 'bili-auth', label: 'Bilibili 弹幕一键认证', desc: '通过弹幕一键登录或绑定 B 站身份', kw: ['bili', 'auth', '认证', '一键登录'] },
+  ]
+  for (const entry of viewerEntries) {
+    items.push({
+      id: `viewer-${entry.name}`,
+      group: '观众中心',
+      scope: 'manage',
+      label: entry.label,
+      description: entry.desc,
+      keywords: [entry.label, ...entry.kw],
+      icon: Compass,
+      run: () => goRoute(entry.name),
+    })
+  }
+
   // 4. 管理后台与直播互动
   const manageEntries: { name: string; label: string; desc?: string; kw: string[] }[] = [
     { name: 'manage-index', label: '管理面板', desc: '账号状态、Token 与功能开关', kw: ['dashboard', 'panel', '面板'] },
@@ -531,7 +555,6 @@ const staticItems = computed<CommandItem[]>(() => {
       kw: ['video', 'collect', '视频征集'],
     },
     { name: 'manage-lottery', label: '动态抽奖', desc: 'B 站动态转发/评论抽奖', kw: ['dynamic', '动态抽奖'] },
-    { name: 'manage-forum', label: '粉丝讨论区', desc: '讨论区帖子与版务管理', kw: ['forum', '讨论区'] },
     { name: 'manage-obsStore', label: 'OBS 组件库', desc: '纯前端轻量 OBS 挂件生态', kw: ['obs', 'store', '组件库'] },
     { name: 'manage-qqBot', label: 'QQ 群机器人', desc: '开播通知与群指令绑定', kw: ['qq', 'bot', '机器人'] },
     { name: 'manage-feedback', label: '反馈工单', desc: '问题反馈与进度追踪', kw: ['feedback', '工单'] },

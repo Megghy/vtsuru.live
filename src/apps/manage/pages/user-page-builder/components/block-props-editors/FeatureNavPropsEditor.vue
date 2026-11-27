@@ -15,11 +15,13 @@ const props = defineProps<{ block: BlockNode }>()
 const { arrayProp } = useBlockPropsEditor(() => props.block)
 const items = arrayProp<{ key: UserFeatureKey; hidden?: boolean }>('items')
 
+const ACTIVE_FEATURE_KEYS = USER_FEATURE_KEYS.filter((key) => key !== 'forum')
+
 // 自动补全新增的功能键（如排队队列），兼容历史保存的 featureNav 配置
 watch(
   items,
   (list) => {
-    for (const key of USER_FEATURE_KEYS) {
+    for (const key of ACTIVE_FEATURE_KEYS) {
       if (!list.some((it) => it.key === key)) {
         list.push({ key })
       }
@@ -29,8 +31,11 @@ watch(
 )
 
 const itemsModel = computed({
-  get: () => items.value,
-  set: (value) => items.value.splice(0, items.value.length, ...value),
+  get: () => items.value.filter((it) => it.key !== 'forum'),
+  set: (value) => {
+    const hiddenForum = items.value.filter((it) => it.key === 'forum')
+    items.value.splice(0, items.value.length, ...value, ...hiddenForum)
+  },
 })
 
 function setVisible(item: { hidden?: boolean }, visible: boolean) {
