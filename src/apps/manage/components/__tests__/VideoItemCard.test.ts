@@ -52,7 +52,7 @@ describe('VideoItemCard.vue', () => {
     expect(wrapper.text()).toContain('02:05')
   })
 
-  it('待审核状态下显示「通过」和「拒绝」按钮并能触发 updateStatus', async () => {
+  it('待审核状态下显示「通过」「拒绝」与删除按钮，并触发对应事件', async () => {
     const wrapper = mount(VideoItemCard, {
       props: {
         videoInfo: mockVideoInfo,
@@ -61,13 +61,18 @@ describe('VideoItemCard.vue', () => {
     })
 
     const buttons = wrapper.findAll('.video-actions button')
-    expect(buttons.length).toBe(2)
+    expect(buttons.length).toBe(3)
     expect(buttons[0].text()).toContain('通过')
     expect(buttons[1].text()).toContain('拒绝')
+    expect(buttons[2].attributes('aria-label')).toBe('彻底删除此投稿')
 
     await buttons[0].trigger('click')
     expect(wrapper.emitted('updateStatus')).toBeTruthy()
     expect(wrapper.emitted('updateStatus')![0]).toEqual([VideoStatus.Accepted, mockVideoInfo])
+
+    await buttons[1].trigger('click')
+    expect(wrapper.emitted('reject')).toBeTruthy()
+    expect(wrapper.emitted('reject')![0]).toEqual([mockVideoInfo, mockVideoData.title])
   })
 
   it('多推荐人时能触发展开折叠', async () => {
@@ -92,11 +97,10 @@ describe('VideoItemCard.vue', () => {
       },
     })
 
-    const tag = wrapper.find('.more-senders-pill')
-    expect(tag.exists()).toBe(true)
-    expect(tag.text()).toContain('共 2 人')
+    const toggleButton = wrapper.findAll('button').find((btn) => btn.text().includes('共 2 人'))
+    expect(toggleButton).toBeTruthy()
 
-    await tag.trigger('click')
+    await toggleButton!.trigger('click')
     expect(wrapper.text()).toContain('粉丝小红')
   })
 })
