@@ -5,6 +5,7 @@ import { transformHtmlImages } from '@/shared/services/imageTransform'
 import { ImageLightbox, useHtmlImagePreview } from '@/shared/ui/image-preview'
 
 import BlockCard from '../BlockCard.vue'
+import { resolveRichTextImageUrls } from '../richTextImages'
 import { sanitizeRichText } from '../richTextSanitizer'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
@@ -16,12 +17,15 @@ const config = computed(() => {
       : {}
   return {
     html: typeof value.html === 'string' ? value.html : '',
+    imagesFile: Array.isArray(value.imagesFile) ? value.imagesFile : [],
     framed: typeof value.framed === 'boolean' ? value.framed : false,
     backgrounded: typeof value.backgrounded === 'boolean' ? value.backgrounded : false,
   }
 })
 
-const safeHtml = computed(() => transformHtmlImages(sanitizeRichText(config.value.html)))
+const safeHtml = computed(() =>
+  transformHtmlImages(resolveRichTextImageUrls(sanitizeRichText(config.value.html), config.value.imagesFile)),
+)
 const richTextImagePreview = useHtmlImagePreview()
 </script>
 

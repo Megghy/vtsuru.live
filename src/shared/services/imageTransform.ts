@@ -185,7 +185,7 @@ function hasCloudPresignParams(parsed: URL): boolean {
   )
 }
 
-function isGatewayUrl(parsed: URL): boolean {
+export function isGatewayUrl(parsed: URL): boolean {
   if (SKIP_EXT_PATTERN.test(parsed.pathname)) return false
   if (hasCloudPresignParams(parsed)) return false
 

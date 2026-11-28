@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   AlertTriangle,
+  ArrowRightLeft,
   Award,
   CheckCircle2,
   Mail,
@@ -25,6 +26,7 @@ import {
   fetchFansMedalMemberList,
 } from '@/apps/client/api/bili-guard-fans'
 import { useBatchPrivateMessageQueue } from '@/apps/client/store/useBatchPrivateMessageQueue'
+import GuardReconcilePanel from './GuardReconcilePanel.vue'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -200,6 +202,13 @@ onMounted(() => {
         </Badge>
       </TabsTrigger>
       <TabsTrigger
+        value="reconcile"
+        class="gap-1.5"
+      >
+        <ArrowRightLeft class="size-3.5" />
+        舰长事件对账
+      </TabsTrigger>
+      <TabsTrigger
         value="medals"
         class="gap-1.5"
       >
@@ -329,6 +338,14 @@ onMounted(() => {
           </div>
         </CardContent>
       </Card>
+    </TabsContent>
+
+    <!-- 舰长事件对账与补录 -->
+    <TabsContent
+      value="reconcile"
+      class="pt-3 space-y-3"
+    >
+      <GuardReconcilePanel />
     </TabsContent>
 
     <!-- 粉丝团 -->

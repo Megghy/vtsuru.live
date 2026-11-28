@@ -113,9 +113,6 @@ function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unknown) {
 
   return {
     surfaceBg: effectiveIsDark ? `rgba(24, 24, 27, ${surfaceAlpha})` : `rgba(255, 255, 255, ${surfaceAlpha})`,
-    surfaceBgHover: effectiveIsDark
-      ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.16)})`
-      : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.1)})`,
     borderColor: `rgba(148, 163, 184, ${borderAlpha})`,
   }
 }
@@ -138,6 +135,20 @@ function applyColorOpacity(value: string, opacity: number) {
 function mixWithTransparent(value: string, amount: number) {
   const color = parseUserPageColor(value)
   return formatRgb({ ...color, alpha: (color.alpha ?? 1) * amount })
+}
+
+function mixRgbColor(base: string, target: string, ratio: number, alpha?: number) {
+  const from = parseUserPageColor(base)
+  const to = parseUserPageColor(target)
+  const clamped = Math.min(1, Math.max(0, ratio))
+  const keep = 1 - clamped
+  return formatRgb({
+    mode: 'rgb',
+    r: from.r * keep + to.r * clamped,
+    g: from.g * keep + to.g * clamped,
+    b: from.b * keep + to.b * clamped,
+    alpha: alpha ?? from.alpha ?? 1,
+  })
 }
 
 export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean, canvasColor?: string) {
@@ -177,10 +188,12 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     customSurface || (backgroundColor ? mixWithTransparent(backgroundColor, 0.32) : defaultCardSurface)
   const popoverColor = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.max(92, appearance.surfaceOpacity ?? 92))
-    : applyColorOpacity(siteTokens.elevated, 94)
-  const surfaceHover = backgroundColor
-    ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
-    : surfaceVars.surfaceBgHover
+    : applyColorOpacity(siteTokens.elevated, effectiveIsDark ? 94 : 97)
+  // 次级表面（secondary / accent / muted）统一基于当前表面底色向前景色偏移，
+  // 避免默认亮色或自定义 backgroundColor 下次级按钮与弹窗/卡片底色融为一体。
+  const surfaceBase = backgroundColor || (effectiveIsDark ? siteTokens.surface : siteTokens.elevated)
+  const secondarySurface = mixRgbColor(surfaceBase, surfaceText, effectiveIsDark ? 0.14 : 0.12, 0.94)
+  const mutedSurface = mixRgbColor(surfaceBase, surfaceText, effectiveIsDark ? 0.09 : 0.06, 0.9)
   const borderColor = surfaceVars.borderColor
   const radius = `${appearance.radius}px`
 
@@ -200,11 +213,11 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--brand-foreground': resolveReadableForeground(pagePrimary, controlBg, effectiveIsDark),
     '--brand-soft': `color-mix(in srgb, ${pagePrimary} 12%, transparent)`,
     '--brand-tint': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
-    '--secondary': surfaceHover,
+    '--secondary': secondarySurface,
     '--secondary-foreground': surfaceText,
-    '--muted': surfaceHover,
+    '--muted': mutedSurface,
     '--muted-foreground': textPalette.muted,
-    '--accent': surfaceHover,
+    '--accent': secondarySurface,
     '--accent-foreground': surfaceText,
     '--border': borderColor,
     '--input': borderColor,

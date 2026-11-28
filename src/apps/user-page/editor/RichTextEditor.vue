@@ -5,6 +5,7 @@ import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { onBeforeUnmount, shallowRef, watch } from 'vue'
 
 import type { APIFileModel } from '@/api/generated/model'
+import { filterUsedRichTextImages, resolveRichTextImageUrls } from '@/apps/user-page/block/richTextImages'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode, toast } from '@/shared/utils'
 
@@ -119,26 +120,18 @@ function handleCreated(editor: unknown) {
   editorRef.value = editor
 }
 
-function extractImageSrcs(value: string) {
-  const trimmed = value.trim()
-  if (!trimmed) return new Set<string>()
-  const doc = new DOMParser().parseFromString(trimmed, 'text/html')
-  const srcs = new Set<string>()
-  doc.querySelectorAll('img').forEach((img) => {
-    const src = img.getAttribute('src')
-    if (src) srcs.add(src)
-  })
-  return srcs
-}
-
 watch(
-  () => html.value,
-  (v) => {
-    const srcs = extractImageSrcs(v)
-    const next = imagesFile.value.filter((f) => srcs.has(f.path))
-    if (next.length !== imagesFile.value.length) imagesFile.value = next
+  [() => html.value, () => imagesFile.value],
+  ([currentHtml, currentFiles]) => {
+    const resolved = resolveRichTextImageUrls(currentHtml, currentFiles)
+    if (resolved !== currentHtml) {
+      html.value = resolved
+      return
+    }
+    const next = filterUsedRichTextImages(currentHtml, currentFiles)
+    if (next.length !== currentFiles.length) imagesFile.value = next
   },
-  { flush: 'post' },
+  { immediate: true, flush: 'post' },
 )
 
 onBeforeUnmount(() => {

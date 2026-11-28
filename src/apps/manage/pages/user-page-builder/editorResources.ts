@@ -1,3 +1,4 @@
+import { filterUsedRichTextImages, resolveRichTextImageUrls } from '@/apps/user-page/block/richTextImages'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettings } from '@/apps/user-page/types'
 
@@ -47,18 +48,6 @@ export function collectFileRefsFromSettings(settings: UserPagesSettings): FileRe
     .toSorted((a, b) => a.id - b.id)
 }
 
-export function extractImageSrcs(value: string) {
-  const trimmed = value.trim()
-  if (!trimmed) return new Set<string>()
-  const doc = new DOMParser().parseFromString(trimmed, 'text/html')
-  const srcs = new Set<string>()
-  doc.querySelectorAll('img').forEach((img) => {
-    const src = img.getAttribute('src')
-    if (src) srcs.add(src)
-  })
-  return srcs
-}
-
 export function normalizeRichTextImagesFile(
   settings: UserPagesSettings,
   ensurePropsObject: (block: BlockNode) => Record<string, any>,
@@ -76,8 +65,8 @@ export function normalizeRichTextImagesFile(
         const propsObj = ensurePropsObject(b)
         if (typeof propsObj.html !== 'string') return
         if (!Array.isArray(propsObj.imagesFile)) return
-        const srcs = extractImageSrcs(propsObj.html)
-        propsObj.imagesFile = propsObj.imagesFile.filter((f: any) => typeof f?.path !== 'string' || srcs.has(f.path))
+        propsObj.html = resolveRichTextImageUrls(propsObj.html, propsObj.imagesFile)
+        propsObj.imagesFile = filterUsedRichTextImages(propsObj.html, propsObj.imagesFile)
       })
     }
     walk(p.blocks)

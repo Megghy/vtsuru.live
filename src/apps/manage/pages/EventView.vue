@@ -7,7 +7,8 @@ import List16Filled from '@vicons/fluent/es/List16Filled'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { ArrowRightLeft } from 'lucide-vue-next'
 
 import { useAccount } from '@/api/account'
 import { getApiEventGet, postApiEventGuardDelete, postApiEventGuardManual } from '@/api/generated/event/event'
@@ -16,7 +17,7 @@ import { EventDataTypes, type EventModel } from '@/api/generated/model'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
-import { AVATAR_URL } from '@/shared/config'
+import { AVATAR_URL, isTauri } from '@/shared/config'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import {
   AlertDialog,
@@ -36,6 +37,7 @@ import { DateRangePicker } from '@/shared/ui/date-picker'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -64,6 +66,11 @@ interface GuardStatsModel {
 const accountInfo = useAccount()
 const message = useMessage()
 const { run } = useApiAction()
+const inDesktopClient = isTauri()
+const reconcileSheetOpen = ref(false)
+const AsyncGuardReconcilePanel = inDesktopClient
+  ? defineAsyncComponent(() => import('@/apps/client/components/fans/GuardReconcilePanel.vue'))
+  : null
 
 // 日期范围与快捷方式
 const curDate = new Date()
@@ -617,7 +624,18 @@ function onTabChange(value: string | number) {
             v-if="selectedType === EventDataTypes.Guard"
             class="p-3 rounded-lg border border-border bg-muted/20 space-y-2.5"
           >
-            <div class="text-xs font-semibold text-muted-foreground">补录上舰流水记录</div>
+            <div class="flex-between flex-wrap gap-2">
+              <div class="text-xs font-semibold text-muted-foreground">补录上舰流水记录</div>
+              <Button
+                v-if="inDesktopClient"
+                variant="outline"
+                size="xs"
+                @click="reconcileSheetOpen = true"
+              >
+                <ArrowRightLeft class="size-3.5 mr-1" />
+                从 B 站后台流水对账补录
+              </Button>
+            </div>
             <div class="flex items-center gap-2 flex-wrap">
               <Input
                 v-model="manualGuardUname"
@@ -1113,5 +1131,25 @@ function onTabChange(value: string | number) {
         </TabsContent>
       </Tabs>
     </Card>
+
+    <Sheet
+      v-if="inDesktopClient && AsyncGuardReconcilePanel"
+      v-model:open="reconcileSheetOpen"
+    >
+      <SheetContent class="sm:max-w-3xl w-full overflow-y-auto scrollbar-thin">
+        <SheetHeader class="mb-3">
+          <SheetTitle>舰长事件对账与补录</SheetTitle>
+          <SheetDescription>
+            从 B 站主播后台拉取大航海收礼流水，核对缺失与疑似改名记录并同步到事件列表
+          </SheetDescription>
+        </SheetHeader>
+        <component
+          :is="AsyncGuardReconcilePanel"
+          :initial-start-date="startDateInput"
+          :initial-end-date="endDateInput"
+          @synced="fetchData(true)"
+        />
+      </SheetContent>
+    </Sheet>
   </div>
 </template>

@@ -80,4 +80,26 @@ describe('getUserPageThemeCssVars 主色', () => {
     expect(sameColor(darkVars['--background'], '#1e1b2e')).toBe(true)
     expect(sameColor(darkVars['--popover'], '#1e1b2e')).toBe(true)
   })
+
+  it('次级按钮 --secondary 在亮暗默认及自定义背景色下均与 --popover 拉开清晰色阶', () => {
+    const cases = [
+      getUserPageThemeCssVars({}, false),
+      getUserPageThemeCssVars({}, true),
+      getUserPageThemeCssVars({ backgroundColor: '#fff1f5' }, false),
+      getUserPageThemeCssVars({ backgroundColor: '#1e1b2e' }, true),
+    ]
+
+    for (const vars of cases) {
+      const secondary = parseRgb(vars['--secondary'])
+      const popover = parseRgb(vars['--popover'])
+      expect(secondary).toBeDefined()
+      expect(popover).toBeDefined()
+      const maxChannelDelta = Math.max(
+        Math.abs(secondary!.r - popover!.r),
+        Math.abs(secondary!.g - popover!.g),
+        Math.abs(secondary!.b - popover!.b),
+      )
+      expect(maxChannelDelta).toBeGreaterThanOrEqual(0.08)
+    }
+  })
 })
